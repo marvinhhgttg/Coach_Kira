@@ -543,35 +543,53 @@ function runKiraGeminiSupervisor() {
 
 
     // ------------------------------------------------------------
-    // SCHRITT 0: TE-BALANCE JAGD (BRUTE FORCE)
+    // SCHRITT 0: TE-BALANCE JAGD (FAST PATH)
     // ------------------------------------------------------------
-    SpreadsheetApp.flush(); 
-    
+    // Ziel: Keine Full-Sheet Reads. Wir lesen nur Header + is_today Spalte + 1 Zelle.
+    // (flush ist hier in der Regel nicht nötig und kostet Zeit)
+
     let teResult = { val: 0, text: "0,0%", source: "NONE" };
 
     // VERSUCH A: KK_TIMELINE
     try {
-        const sheet = ss.getSheetByName('KK_TIMELINE');
-        const data = sheet.getDataRange().getValues(); 
-        const headers = data[0].map(h => h.toString().toLowerCase().trim());
-        const colIdxTE = headers.findIndex(h => h.includes('te_balance') || h.includes('te balance'));
-        const colIdxToday = headers.indexOf('is_today');
+      const sheet = ss.getSheetByName('KK_TIMELINE');
+      if (sheet) {
+        const lastRow = sheet.getLastRow();
+        const lastCol = sheet.getLastColumn();
+        if (lastRow >= 2 && lastCol >= 1) {
+          const headers = sheet.getRange(1, 1, 1, lastCol)
+            .getValues()[0]
+            .map(h => String(h).toLowerCase().trim());
 
-        if (colIdxTE > -1 && colIdxToday > -1) {
-            for (let i = data.length - 1; i > 0; i--) {
-                if (data[i][colIdxToday] == 1) {
-                    let val = data[i][colIdxTE];
-                    if (val && val !== "") {
-                        teResult.val = (typeof val === 'number') ? val : parseFloat(String(val).replace(',','.').replace('%',''))/100;
-                        if (teResult.val > 1) teResult.val = teResult.val / 100;
-                        teResult.text = (teResult.val * 100).toFixed(1).replace('.', ',') + "%";
-                        teResult.source = "TIMELINE";
-                    }
-                    break;
-                }
+          const colIdxTE = headers.findIndex(h => h.includes('te_balance') || h.includes('te balance'));
+          const colIdxToday = headers.indexOf('is_today');
+
+          if (colIdxTE > -1 && colIdxToday > -1) {
+            // Nur is_today lesen
+            const isTodayCol = sheet.getRange(2, colIdxToday + 1, lastRow - 1, 1).getValues();
+            let todayRow = -1;
+            for (let i = isTodayCol.length - 1; i >= 0; i--) {
+              if (Number(String(isTodayCol[i][0]).replace(',', '.')) === 1) { todayRow = i + 2; break; }
             }
+
+            if (todayRow > 0) {
+              const raw = sheet.getRange(todayRow, colIdxTE + 1).getValue();
+              let val = (typeof raw === 'number') ? raw : parseGermanFloat_(String(raw).replace('%', ''));
+              if (Number.isFinite(val)) {
+                // Prozent-Strings: 9,3% -> 0.093
+                if (String(raw).includes('%')) val = val / 100;
+                if (val > 1) val = val / 100;
+                teResult.val = val;
+                teResult.text = (val * 100).toFixed(1).replace('.', ',') + "%";
+                teResult.source = "TIMELINE";
+              }
+            }
+          }
         }
-    } catch(e) { console.warn("Timeline Scan Error: " + e.message); }
+      }
+    } catch(e) {
+      console.warn("Timeline Scan Error: " + e.message);
+    }
 
     // VERSUCH B: FORECAST (Backup)
     if (teResult.source === "NONE" || teResult.val === 0) {
@@ -744,10 +762,13 @@ if (datenPaket?.heute) {
        }
     } catch(e) {}
 
-    Logger.log("📊 Aktualisiere RIS...");
-    try { updateHistoryWithRIS(); } catch (e) {}
-    try { exportLookerChartsData(); } catch (e) {}
-    
+    // ------------------------------------------------------------
+    // SCHRITT 6: NACHARBEIT (ASYNC)
+    // ------------------------------------------------------------
+    // Diese Schritte können (je nach Datenmenge) viel Zeit kosten. Damit der Supervisor
+    // schneller fertig ist, laufen sie asynchron in einem Trigger.
+    schedulePostWork_();
+
     Logger.log("✅ Supervisor-Prozess komplett abgeschlossen.");
     logToSheet('INFO', `✅ KI-Bewertung V137 erfolgreich.`);
     hb_(ss, HB_RUN_ID, "END_OK", "Supervisor fertig");
@@ -757,6 +778,72 @@ if (datenPaket?.heute) {
     hb_(ss, HB_RUN_ID, "END_ERROR", e && e.message ? e.message : String(e));
     logToSheet('ERROR', `🛑 FEHLER im Supervisor: ${e.message}`);
     logToSheet('ERROR', `Stack: ${e.stack}`);
+  }
+}
+
+
+/**
+ * Schedules heavy post-processing work to run asynchronously.
+ * Keeps `runKiraGeminiSupervisor()` fast and less likely to hit execution limits.
+ */
+function schedulePostWork_() {
+  try {
+    // Remove older pending post-work triggers to avoid piling up.
+    const triggers = ScriptApp.getProjectTriggers();
+    triggers.forEach(t => {
+      try {
+        if (t.getHandlerFunction && t.getHandlerFunction() === 'runPostWork_') {
+          ScriptApp.deleteTrigger(t);
+        }
+      } catch (_) {}
+    });
+
+    // Schedule a single run shortly after the supervisor finishes.
+    ScriptApp.newTrigger('runPostWork_')
+      .timeBased()
+      .after(15 * 1000)
+      .create();
+
+    logToSheet('INFO', '[PostWork] Trigger scheduled (runPostWork_ in ~15s)');
+  } catch (e) {
+    // If trigger creation fails, we keep the supervisor successful.
+    logToSheet('WARN', `[PostWork] Could not schedule trigger: ${e.message}`);
+  }
+}
+
+/**
+ * Runs heavy post-processing tasks outside the main supervisor execution.
+ */
+function runPostWork_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  try {
+    logToSheet('INFO', '[PostWork] Start');
+
+    try {
+      logToSheet('INFO', '[PostWork] updateHistoryWithRIS()');
+      updateHistoryWithRIS();
+    } catch (e) {
+      logToSheet('WARN', `[PostWork] updateHistoryWithRIS failed: ${e.message}`);
+    }
+
+    try {
+      logToSheet('INFO', '[PostWork] exportLookerChartsData()');
+      exportLookerChartsData();
+    } catch (e) {
+      logToSheet('WARN', `[PostWork] exportLookerChartsData failed: ${e.message}`);
+    }
+
+    logToSheet('INFO', '[PostWork] Done');
+  } finally {
+    // Clean up our trigger so it won't repeat.
+    try {
+      const triggers = ScriptApp.getProjectTriggers();
+      triggers.forEach(t => {
+        if (t.getHandlerFunction && t.getHandlerFunction() === 'runPostWork_') {
+          ScriptApp.deleteTrigger(t);
+        }
+      });
+    } catch (_) {}
   }
 }
 
