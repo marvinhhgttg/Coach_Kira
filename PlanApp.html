@@ -1375,7 +1375,7 @@ function runKiraAiCheck() {
                         ${data.recommendations.map((val, i) => `
                             <div style="flex:0 0 42px; text-align:center;">
                                 <div style="font-size:0.5rem; color:var(--text-muted);">T${i+1}</div>
-                                <div style="font-weight:bold; font-size:0.8rem; color:var(--primary);">${val}</div>
+                                <div style="font-weight:bold; font-size:0.8rem; color:var(--primary);">${escapeHtml(val)}</div>
                             </div>
                         `).join('')}
                     </div>

@@ -323,12 +323,23 @@
       document.getElementById('entry-count').innerText = count + " Einträge angezeigt";
   }
 
+  function escapeHtml(input) {
+    const s = String(input ?? "");
+    return s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
   function renderLog(data, limit) {
     const body = document.getElementById('log-body');
     if (!body) return;
     body.innerHTML = ''; 
     
     if (!data || data.length === 0) {
+        // Static HTML is OK here, but keep it purely static.
         body.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Keine Daten gefunden.</td></tr>';
         return;
     }
@@ -393,16 +404,16 @@ if (sgVal > 189) {
       // 4. HTML Zusammenbau
       tr.innerHTML = `
         <td>
-          <div class="val-main">${entry.datum}</div>
-          <div class="val-sub">${entry.phase} | ${entry.sport || "Pause"}</div>
+          <div class="val-main">${escapeHtml(entry.datum)}</div>
+          <div class="val-sub">${escapeHtml(entry.phase)} | ${escapeHtml(entry.sport || "Pause")}</div>
         </td>
         <td>
-          <div class="val-main">${entry.load}</div>
-          <div class="val-sub">AE: ${entry.teAerobic} | AN: ${entry.teAnaerobic}</div>
+          <div class="val-main">${escapeHtml(entry.load)}</div>
+          <div class="val-sub">AE: ${escapeHtml(entry.teAerobic)} | AN: ${escapeHtml(entry.teAnaerobic)}</div>
         </td>
         <td>
-          <div class="val-main" style="color:${sgCol} !important;">${displaySg}</div>
-          <div class="val-sub">Trend: ${entry.ctlTrend}</div>
+          <div class="val-main" style="color:${sgCol} !important;">${escapeHtml(displaySg)}</div>
+          <div class="val-sub">Trend: ${escapeHtml(entry.ctlTrend)}</div>
         </td>
         <td style="text-align:center;">
           ${v3Icons}
@@ -413,7 +424,7 @@ if (sgVal > 189) {
             </span>
         </td>
         <td>
-          <div class="val-main">${String(entry.rhr || "-").replace('%','')}</div>
+          <div class="val-main">${escapeHtml(String(entry.rhr || "-").replace('%',''))}</div>
         </td>
       `;
       body.appendChild(tr);

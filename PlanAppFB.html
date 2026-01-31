@@ -457,7 +457,9 @@ function renderGateInfo() {
 
   const box = $("gateBox");
   if (!box) return;
-  box.innerHTML = `<span class="${cls}">${txt}</span>`;
+  // Safe rendering (avoid HTML injection)
+  box.textContent = txt;
+  box.className = cls;
 }
 
 function gateLevel() {
@@ -634,6 +636,20 @@ zone:  (Array.isArray(simBase?.plannedZones)  && simBase.plannedZones[i])  ? Str
   }
 }
 
+function escapeHtml(input) {
+  const s = String(input ?? "");
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function escapeAttr(input) {
+  return escapeHtml(input);
+}
+
 function renderTable() {
   const tbody = document.querySelector("#planTable tbody");
   if (!tbody) return;
@@ -642,17 +658,17 @@ function renderTable() {
   days.forEach((day, i) => {
     const tr = document.createElement("tr");
 
-    tr.innerHTML += `<td><b>${day.dateStr}</b></td>`;
+    tr.innerHTML += `<td><b>${escapeHtml(day.dateStr)}</b></td>`;
     const ph = normPhase(simBase?.phases?.[i] || "A1");
-    tr.innerHTML += `<td class="mono">${ph}</td>`;
+    tr.innerHTML += `<td class="mono">${escapeHtml(ph)}</td>`;
 
     tr.innerHTML += `
   <td>
     <div class="row" style="gap:10px;">
-      <input id="loadR_${i}" type="range" min="0" max="300" value="${day.load}"
+      <input id="loadR_${i}" type="range" min="0" max="300" value="${escapeAttr(day.load)}"
              oninput="onLoadLive(${i}, this.value)" />
-      <span class="pill mono" id="loadLbl_${i}" title="aktuelle Load">${day.load}</span>
-      <input id="loadN_${i}" type="number" min="0" max="300" value="${day.load}" style="width:70px"
+      <span class="pill mono" id="loadLbl_${i}" title="aktuelle Load">${escapeHtml(day.load)}</span>
+      <input id="loadN_${i}" type="number" min="0" max="300" value="${escapeAttr(day.load)}" style="width:70px"
              oninput="onLoadLive(${i}, this.value)" />
     </div>
   </td>`;
@@ -661,11 +677,11 @@ function renderTable() {
     tr.innerHTML += `
       <td>
         <select onchange="onIntent(${i}, this.value)">
-          ${INTENTS.map(x=>`<option value="${x.key}" ${x.key===day.intent?"selected":""}>${x.label}</option>`).join("")}
+          ${INTENTS.map(x=>`<option value="${escapeAttr(x.key)}" ${x.key===day.intent?"selected":""}>${escapeHtml(x.label)}</option>`).join("")}
         </select>
       </td>`;
 
-    tr.innerHTML += `<td>${day.focusLow}/${day.focusHigh}/${day.focusAna}</td>`;
+    tr.innerHTML += `<td>${escapeHtml(day.focusLow)}/${escapeHtml(day.focusHigh)}/${escapeHtml(day.focusAna)}</td>`;
 
     tr.innerHTML += `
       <td><input type="number" step="0.1" value="${day.teAe}" style="width:60px" onchange="onTe(${i}, 'ae', this.value)" /></td>

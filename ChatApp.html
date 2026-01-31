@@ -214,7 +214,8 @@
                 console.log("Fehler beim Laden der History: " + err);
                 // Fallback, falls Laden fehlschlägt
                 const hist = document.getElementById('chat-history');
-                hist.innerHTML = '<div class="msg msg-kira">Verbindung steht. Konnte Historie nicht laden (Backend-Funktion fehlt?), aber ich höre dich.</div>';
+                // Use textContent (no HTML injection risk)
+                hist.textContent = 'Verbindung steht. Konnte Historie nicht laden (Backend-Funktion fehlt?), aber ich höre dich.';
             })
             .getChatHistoryForUI(50); // Lädt die letzten 50 Nachrichten
     }

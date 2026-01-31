@@ -600,6 +600,16 @@
     status.textContent = warn ? warn : `Fertig. α_CTL=${fmt(alphaCTL,4)} | maxStimCTL=${fmt(maxStimCTL,1)}.`;
   }
 
+  function escapeHtml(input){
+    const s = String(input ?? "");
+    return s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
   function renderKpis(rows, meta){
     const el = document.getElementById('kpis');
     el.innerHTML = "";
@@ -623,7 +633,7 @@
     pills.forEach(p=>{
       const div = document.createElement('div');
       div.className = "pill";
-      div.innerHTML = `${p.k}: <strong>${p.v}</strong>`;
+      div.innerHTML = `${escapeHtml(p.k)}: <strong>${escapeHtml(p.v)}</strong>`;
       el.appendChild(div);
     });
   }
@@ -637,7 +647,7 @@
       tr.innerHTML = `
         <td>${r.day}</td>
         <td>${r.date || ""}</td>
-        <td style="text-align:left;">${r.dayType}</td>
+        <td style="text-align:left;">${escapeHtml(r.dayType)}</td>
         <td>${fmt(r.load,0)}</td>
         <td>${r.dLoad===null ? "" : fmt(r.dLoad,0)}</td>
         <td>${fmt(r.stimATL,1)}</td>

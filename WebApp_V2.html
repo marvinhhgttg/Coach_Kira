@@ -1511,16 +1511,16 @@ if (data.planData && data.planData.length > 0) {
         
         row.innerHTML = `
             <td style="vertical-align: middle;">
-              <span class="text-date">${day.tag}</span><br>
-              <small style="color:var(--text-muted)">${formatDateShort(day.datum)}</small>
+              <span class="text-date">${escapeHtml(day.tag)}</span><br>
+              <small style="color:var(--text-muted)">${escapeHtml(formatDateShort(day.datum))}</small>
             </td>
             <td style="vertical-align: middle;">
-              <div style="font-weight:bold; color:var(--text-main);">${day.sport || '---'}</div>
-              <div style="font-size:0.75rem; color:var(--primary); font-weight:800;">ZONE: ${day.zone || 'N/A'}</div>
+              <div style="font-weight:bold; color:var(--text-main);">${escapeHtml(day.sport || '---')}</div>
+              <div style="font-size:0.75rem; color:var(--primary); font-weight:800;">ZONE: ${escapeHtml(day.zone || 'N/A')}</div>
             </td>
             <td style="text-align:center; vertical-align: middle;">
               <span class="badge ${loadClass}" style="padding:4px 8px; border-radius:4px; font-family:monospace; border:1px solid;">
-                ${day.load}
+                ${escapeHtml(day.load)}
               </span>
             </td>
             <td style="text-align:center; vertical-align: middle; font-family:monospace; font-size:0.8rem;">
@@ -1546,13 +1546,13 @@ if (data.planData && data.planData.length > 0) {
                 if (rev.loadSoll > 0 && rev.loadIst > rev.loadSoll * 1.2) istStyle = "color:var(--orange); font-weight:bold;";
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td style="color:var(--text-main); font-size:0.75rem;">${rev.datum}</td>
+                    <td style="color:var(--text-main); font-size:0.75rem;">${escapeHtml(rev.datum)}</td>
                     <td style="font-weight:bold; ${istStyle}">${rev.loadIst}</td>
                     <td style="color:var(--text-main);">${rev.loadSoll}</td>
                     <td style="font-size:0.75rem;">${rev.atl}</td>
                     <td style="font-size:0.75rem;">${rev.ctl}</td>
                     <td style="font-size:0.75rem;">${rev.acwr}</td>
-                    <td style="font-size:0.8rem; line-height:1.3; color:var(--text-main); white-space:pre-wrap;">${rev.text}</td>
+                    <td style="font-size:0.8rem; line-height:1.3; color:var(--text-main); white-space:pre-wrap;">${escapeHtml(rev.text)}</td>
                 `;
                 reviewBody.appendChild(row);
             });
@@ -1585,7 +1585,7 @@ if (data.planData && data.planData.length > 0) {
                     letter-spacing: 0.5px; 
                     border-bottom: 2px solid var(--border-color);
                 ">
-                    ${groupName}
+                    ${escapeHtml(groupName)}
                 </td>
             `;
             
@@ -1638,7 +1638,7 @@ if (data.planData && data.planData.length > 0) {
                     row.innerHTML = `
                       <td style="width: 40%; padding-left:15px; color:var(--text-main); vertical-align:middle;">
                         <div style="display:flex; align-items:center; gap: 5px;">
-                            <span style="font-weight:600; font-size:0.9rem;">${score.metrik}</span>
+                            <span style="font-weight:600; font-size:0.9rem;">${escapeHtml(score.metrik)}</span>
                             ${sparklineSVG} 
                         </div>
                         ${barHtml}
@@ -1646,14 +1646,14 @@ if (data.planData && data.planData.length > 0) {
                       <td style="width: 20%; vertical-align:middle; text-align:right; padding-right:15px;">
                         <div style="display:flex; flex-direction:column; align-items:flex-end;">
                            <span class="${ampelClass}" style="font-weight:bold; font-size:1.1rem; font-family:'Roboto Condensed'; white-space:nowrap;">
-                             ${displayRaw}
+                             ${escapeHtml(displayRaw)}
                            </span>
                            <span style="font-weight:bold; font-size:1.1rem; font-family:'Roboto Condensed'; color:var(--text-muted); margin-top:2px; white-space:nowrap;">
-                             SCORE: ${score.num_score}
+                             SCORE: ${escapeHtml(score.num_score)}
                            </span>
                         </div>
                       </td>
-                      <td style="color: var(--text-muted); font-size: 0.8rem; vertical-align:middle; line-height:1.3; padding: 8px;">${comment}</td>
+                      <td style="color: var(--text-muted); font-size: 0.8rem; vertical-align:middle; line-height:1.3; padding: 8px;">${escapeHtml(comment)}</td>
                     `;
                     scoreTable.appendChild(row);
                 }
@@ -1680,12 +1680,12 @@ if (data.planData && data.planData.length > 0) {
                  const row = document.createElement('tr');
                  row.innerHTML = `
                    <td style="width:30%; font-weight:bold; color:var(--text-main); vertical-align:top; padding-top:12px;">
-                      <span style="display:block; margin-bottom:6px; font-family:'Roboto Condensed';">${cat}</span>
-                      <span class="hist-status ${colorClass}">
-                        ${ampelText}
+                      <span style="display:block; margin-bottom:6px; font-family:'Roboto Condensed';">${escapeHtml(cat)}</span>
+                      <span class="hist-status ${escapeAttr(colorClass)}">
+                        ${escapeHtml(ampelText)}
                       </span>
                    </td>
-                   <td style="font-size:0.85rem; line-height:1.4; color:var(--text-main); vertical-align:top; padding-top:12px;">${text}</td>
+                   <td style="font-size:0.85rem; line-height:1.4; color:var(--text-main); vertical-align:top; padding-top:12px;">${escapeHtml(text)}</td>
                  `;
                  histTable.appendChild(row);
             });
@@ -1786,16 +1786,18 @@ const div = document.createElement('div');
 div.style.cssText = "display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);";
 const infoDiv = document.createElement('div');
 infoDiv.style.cssText = "width: 80px; font-weight: bold; font-size: 0.9rem; color: var(--text-main);";
-infoDiv.innerHTML = `${s.weekday}<br><span style="font-weight:normal; font-size:0.8rem; color:var(--text-muted)">${formatDateShort(s.date)}</span>`;
+// Safe text rendering (avoid HTML injection)
+infoDiv.innerHTML = `${escapeHtml(s.weekday)}<br><span style="font-weight:normal; font-size:0.8rem; color:var(--text-muted)">${escapeHtml(formatDateShort(s.date))}</span>`;
 
 const loadClass = getLoadClass(s.load);
 
-const inputSport = `<input type="text" id="s_sport_${i}" value="${s.sport}" class="plan-input-text" style="width: 90px;" placeholder="Sport">`;
-const inputZone = `<input type="text" id="s_zone_${i}" value="${s.zone || ''}" class="plan-input" style="width: 70px;" placeholder="Zone">`;
-const inputLoad = `<input type="number" id="s_load_${i}" value="${s.load}" class="plan-input ${loadClass}" style="width: 60px;" placeholder="Load" oninput="colorizeLoadInput(this)">`;
+// Escape attribute values to avoid breaking HTML on quotes etc.
+const inputSport = `<input type="text" id="s_sport_${i}" value="${escapeAttr(s.sport)}" class="plan-input-text" style="width: 90px;" placeholder="Sport">`;
+const inputZone = `<input type="text" id="s_zone_${i}" value="${escapeAttr(s.zone || '')}" class="plan-input" style="width: 70px;" placeholder="Zone">`;
+const inputLoad = `<input type="number" id="s_load_${i}" value="${escapeAttr(s.load)}" class="plan-input ${loadClass}" style="width: 60px;" placeholder="Load" oninput="colorizeLoadInput(this)">`;
 const teAe = s.te_aerobic_target || 0.0; const teAn = s.te_anaerobic_target || 0.0;
-const inputTE = `<div style="display: flex; flex-direction: column; gap: 2px;"><input type="number" step="0.1" id="s_te_ae_${i}" value="${teAe}" class="plan-input" style="width: 50px; font-size: 0.8rem;"
-title="Aerob"><input type="number" step="0.1" id="s_te_an_${i}" value="${teAn}" class="plan-input" style="width: 50px; font-size: 0.8rem;" title="Anaerob"></div>`;
+const inputTE = `<div style="display: flex; flex-direction: column; gap: 2px;"><input type="number" step="0.1" id="s_te_ae_${i}" value="${escapeAttr(teAe)}" class="plan-input" style="width: 50px; font-size: 0.8rem;"
+title="Aerob"><input type="number" step="0.1" id="s_te_an_${i}" value="${escapeAttr(teAn)}" class="plan-input" style="width: 50px; font-size: 0.8rem;" title="Anaerob"></div>`;
 
 div.innerHTML = infoDiv.outerHTML + inputSport + inputZone + inputLoad + inputTE;
 container.appendChild(div);
@@ -1987,6 +1989,23 @@ function setUnsaved(status) {
     unsavedChanges = status;
     const badge = document.getElementById('unsaved-badge');
     if(badge) badge.style.display = status ? 'inline' : 'none';
+}
+
+// --- HTML escaping helpers (client-side) ---
+// Use for any dynamic data inserted via innerHTML / template strings.
+function escapeHtml(input) {
+  const s = String(input ?? '');
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// For attribute values inside HTML strings.
+function escapeAttr(input) {
+  return escapeHtml(input);
 }
 
 // --- In WebApp_V2.html <script> Bereich ---
