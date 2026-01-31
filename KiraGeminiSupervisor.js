@@ -2502,12 +2502,21 @@ const heuteData = Object.assign({}, heuteDataLower, heuteDataRaw);
  * (V7-Logik): Wandelt ein Header-Array und ein Daten-Array in ein Objekt um.
  */
 function arrayToObject(headers, data) {
-  let obj = {};
+  const obj = {};
   headers.forEach((header, index) => {
     let value = data[index];
-    if (typeof value === 'string' && value.includes(',') && !isNaN(parseFloat(value.replace(',', '.')))) {
-      value = parseFloat(value.replace(',', '.'));
+
+    // Robust numeric coercion for strings that *look* like numbers.
+    // Avoid touching arbitrary text values.
+    if (typeof value === 'string') {
+      const s = value.trim();
+      const looksNumeric = /\d/.test(s) && /^[\s\d.,%+\-]+$/.test(s);
+      if (looksNumeric) {
+        const n = extractNumericValue_(s);
+        if (Number.isFinite(n)) value = n;
+      }
     }
+
     obj[header] = value;
   });
   return obj;
@@ -2515,14 +2524,17 @@ function arrayToObject(headers, data) {
 
 /**
  * (V7-Logik): Hilfsfunktion zum Parsen von Zahlen.
+ *
+ * Note: Prefer `parseGermanFloat_` / `extractNumericValue_` for robust handling
+ * of German decimal comma + thousands separators.
  */
 function parseGermanFloat(value) {
   if (typeof value === 'number') return value;
   if (typeof value === 'string') {
-    const num = parseFloat(value.replace(',', '.'));
-    return isNaN(num) ? value : num; 
+    const n = parseGermanFloat_(value);
+    return Number.isFinite(n) ? n : value;
   }
-  return value; 
+  return value;
 }
 
 function parseGermanFloat_(value) {
@@ -2570,15 +2582,15 @@ function extractNumericValue_(raw) {
 function cleanNumberFromKI(text) {
   if (typeof text === 'number') return text;
   if (typeof text !== 'string') return text;
-  
-  let cleanText = text.replace(/,/g, ''); 
-  const match = cleanText.match(/-?[\d\.]+/); 
-  
-  if (match) {
-    const num = parseFloat(match[0]);
-    return isNaN(num) ? text : num;
-  }
-  return text; 
+
+  // Try to extract a numeric token from the text and parse it robustly.
+  // Supports German formats like "1,23", "1.689", "9,3%", "52 bpm".
+  const m = String(text).match(/-?\d[\d\s\.,%]*/);
+  if (!m) return text;
+
+  const token = m[0];
+  const n = extractNumericValue_(token);
+  return Number.isFinite(n) ? n : text;
 }
 
 /**
