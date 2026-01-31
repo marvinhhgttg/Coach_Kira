@@ -6,16 +6,6 @@ const TIMELINE_SHEET_NAME = 'KK_TIMELINE'; // Zielblatt für Werte
 const PLANAPP_SNAPSHOT_KEY = 'PLANAPP_SNAPSHOT_V1';
 const KK_BUILD_ID = '2026-01-26__charts_fix_01';
 
-/**
- * DEBUG/DIAG: Dump representative spreadsheet data into Apps Script logs.
- *
- * IMPORTANT:
- * - Logger.log writes to the Apps Script execution log (View → Logs / Executions).
- * - It does NOT automatically go into the GitHub repo.
- *   Workflow: run debugDump() in Apps Script → copy/paste log output into chat (or a file).
- *
- * Privacy: by default we only dump headers + a few rows. Increase limits consciously.
- */
 function debugDump(options) {
   const opt = Object.assign({
     maxRowsPerSheet: 20,
@@ -105,7 +95,6 @@ function debugDump(options) {
 
   Logger.log('=== /debugDump ===');
 }
-
 
 function _readPlanAppSnapshot_() {
   const props = PropertiesService.getDocumentProperties();
