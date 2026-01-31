@@ -1,0 +1,2660 @@
+<!DOCTYPE html>
+<html data-theme="light">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kira PlanApp - Strategische Simulation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* --- THEME VARIABLES --- */
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --header-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --input-bg: #ffffff;
+      --primary: #2563eb;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --purple: #d400ff;
+      --blue-btn: #0ea5e9; /* Sky Blue */
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    /* CHART CONTAINER */
+    .chart-wrapper {
+        position: relative;
+        height: 500px;
+        width: 100%;
+        margin-top: 20px;
+        background: var(--card-bg);
+        border-radius: 8px;
+        padding: 10px;
+        border: 1px solid var(--border-color);
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #121212;
+      --card-bg: #181818;
+      --header-bg: #121212;
+      --text-main: #f0f0f0;
+      --text-muted: #888888;
+      --border-color: #333333;
+      --input-bg: #222222;
+      --primary: #55aaff;
+      --success: #00cc66;
+      --warning: #ffaa00;
+      --danger: #ff4444;
+      --purple: #e066ff;
+      --shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      margin: 0; padding: 15px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    .header-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-bottom: 15px; border-bottom: 1px solid var(--border-color);
+      margin-bottom: 20px;
+    }
+    .start-title { 
+      font-family: 'Roboto Condensed', sans-serif; font-weight: 800; 
+      text-transform: uppercase; letter-spacing: 2px; color: var(--primary);
+    }
+
+    .theme-switch {
+      background: var(--border-color); border: none; padding: 8px 12px;
+      border-radius: 20px; cursor: pointer; color: var(--text-main);
+      font-size: 0.9rem; transition: all 0.2s;
+    }
+
+    .card {
+      background: var(--card-bg); border-radius: 12px;
+      border: 1px solid var(--border-color); overflow: hidden;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    /* Briefing Style */
+    .briefing-card {
+      border: 1px solid var(--primary);
+      background: linear-gradient(to right, rgba(37, 99, 235, 0.05), transparent);
+      display: none; 
+    }
+
+    .card-header {
+      background: var(--bg-color); padding: 15px 20px;
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .sim-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .sim-table th { 
+      background: var(--bg-color); color: var(--text-muted); 
+      text-transform: uppercase; font-size: 0.65rem; padding: 10px;
+      text-align: center; border-bottom: 2px solid var(--border-color);
+    }
+    .sim-table td { 
+      padding: 10px 5px; border-bottom: 1px solid var(--border-color); 
+      vertical-align: middle; background: var(--card-bg);
+    }
+
+    .plan-text-input {
+      width: 100%; background: var(--input-bg); border: 1px solid var(--border-color);
+      color: var(--text-main); border-radius: 4px; font-size: 0.75rem;
+      padding: 4px; text-align: left;
+    }
+    .te-input {
+      width: 45px; background: var(--input-bg); border: 1px solid var(--border-color);
+      color: var(--text-main); border-radius: 4px; font-size: 0.7rem;
+      text-align: center; padding: 2px 0;
+    }
+    .te-input.aerob { border-left: 3px solid var(--success); }
+    .te-input.anaerob { border-left: 3px solid var(--danger); }
+
+    .sim-slider {
+      -webkit-appearance: none; width: 100%; height: 4px;
+      background: var(--border-color); border-radius: 2px; outline: none;
+    }
+    .sim-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 14px; height: 14px;
+      background: var(--primary); border-radius: 50%; cursor: pointer;
+      box-shadow: 0 0 5px var(--primary); border: 2px solid white;
+    }
+
+    .val-box { font-family: 'Courier New', monospace; font-weight: bold; }
+    .text-date { color: var(--primary); font-family: 'Roboto Condensed', sans-serif; font-weight: 700; }
+    
+    .btn-save {
+      background: var(--success); color: white; border: none;
+      padding: 8px 20px; border-radius: 6px; font-weight: 800;
+      font-family: 'Roboto Condensed', sans-serif; cursor: pointer;
+      transition: all 0.2s;
+    }
+    [data-theme="dark"] .btn-save { color: black; }
+    
+    .btn-ai {
+      background: var(--primary); color: white; border: none;
+      padding: 6px 15px; border-radius: 6px; font-weight: 700;
+      font-size: 0.75rem; font-family: 'Roboto Condensed', sans-serif; cursor: pointer;
+    }
+
+    #simBody td { vertical-align: middle; }
+
+    #loader {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.4); display: none; justify-content: center;
+      align-items: center; z-index: 1000; flex-direction: column;
+      backdrop-filter: blur(3px);
+    }
+    .spinner {
+      width: 40px; height: 40px; border: 4px solid var(--border-color);
+      border-top: 4px solid var(--primary); border-radius: 50%;
+      animation: spin 1s linear infinite; margin-bottom: 15px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Legende Styles */
+    .legend-box {
+        display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px; padding: 10px;
+        background: var(--bg-color); border-radius: 8px; font-size: 0.75rem;
+    }
+    .legend-item { display: flex; align-items: center; gap: 5px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+    /* Lock Button Styles */
+    .lock-btn {
+        cursor: pointer;
+        color: var(--text-muted);
+        opacity: 0.4;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+    }
+    .lock-btn:hover { opacity: 0.8; }
+    
+    /* Aktiver Zustand (Fixiert) */
+    .lock-btn.locked {
+        color: var(--purple); /* Lila signalisiert: User-Override */
+        opacity: 1.0;
+        transform: scale(1.1);
+    }
+
+    /* ===== NAVIGATION (WebApp_V2-Style, light-kompatibel) ===== */
+.header-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--border-color);
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.header-tools {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.nav-pill {
+  background: rgba(30, 41, 59, 0.06);
+  border: 1px solid rgba(30, 41, 59, 0.18);
+  color: var(--text-main);
+  padding: 8px 14px;
+  border-radius: 4px; /* „taktischer“ Look */
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.nav-pill:hover {
+  background: rgba(30, 41, 59, 0.10);
+  border-color: rgba(30, 41, 59, 0.35);
+  transform: translateY(-1px);
+}
+
+.nav-pill.primary {
+  background: rgba(37, 99, 235, 0.12);
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.08);
+}
+
+.nav-pill.primary:hover {
+  background: rgba(37, 99, 235, 0.18);
+}
+
+.nav-pill i {
+  font-size: 0.9rem;
+  opacity: 0.95;
+}
+/* ===== /NAVIGATION ===== */
+
+
+  </style>
+</head>
+<body>
+
+<div id="loader"><div class="spinner"></div><div style="color:var(--primary); font-size: 0.7rem; font-weight: bold; letter-spacing: 2px; text-transform: uppercase;" id="loader-text">Syncing System...</div></div>
+
+<div class="container">
+  <div class="header-bar">
+  <div class="header-content">
+
+    <div class="start-title">
+      PlanApp <span style="color:var(--text-muted); font-weight:300;">| Taktik-Modul</span>
+    </div>
+
+    <div class="header-tools">
+      <button class="nav-pill primary" onclick="navGoto('plan')" title="Strategische Planung">
+        <i class="fas fa-chess-board"></i> Planer
+      </button>
+
+      <button class="nav-pill" onclick="navGoto('planfb')" title="Garmin/Firstbeat PlanApp (neu)">
+        <i class="fas fa-bullseye"></i> PlanFB
+      </button>
+
+      <button class="nav-pill" onclick="navGoto('prime')" title="Prime Range Finder">
+        <i class="fas fa-crown"></i> Prime
+      </button>
+
+      <button class="nav-pill" onclick="navGoto('lab')" title="LoadLab">
+        <i class="fas fa-flask"></i> Lab
+      </button>
+
+      <button class="nav-pill" onclick="navGoto('rtp')" title="RTP Smoothstep Simulator">
+        <i class="fas fa-wave-square"></i> RTP
+      </button>
+
+      <button class="nav-pill" onclick="navGoto('log')" title="Tactical Log">
+        <i class="fas fa-scroll"></i> Log
+      </button>
+
+      <button class="nav-pill" onclick="navGoto(null)" title="Dashboard (WebApp_V2)">
+        <i class="fas fa-th-large"></i> Dash
+      </button>
+
+      <span id="sim-status" class="nav-pill" style="cursor:default; opacity:0.85;">
+  Status: ...
+</span>
+
+<button id="themeBtn" class="nav-pill" onclick="toggleTheme()" title="Theme umschalten">
+  🌙 Dark
+</button>
+
+    </div>
+
+  </div>
+</div>
+
+
+  <div class="card briefing-card" id="briefing-container" style="display:flex;">
+    <div class="card-body p-3">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 style="color: var(--primary); font-family: 'Roboto Condensed'; font-weight: 800; margin: 0; text-transform: uppercase; letter-spacing: 1px;">
+          <i class="fas fa-brain mr-2"></i>Strategisches Briefing (GPT-4o)
+        </h6>
+        <span id="briefing-time" style="font-size: 0.6rem; color: var(--text-muted);"></span>
+      </div>
+      <div id="briefing-text" style="font-size: 0.85rem; line-height: 1.5; color: var(--text-main); font-style: italic;">
+        Lade strategischen Kontext...
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-3 p-2" style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:8px; box-shadow: var(--shadow); flex-wrap: wrap; gap:10px;">
+    
+    <div style="display:flex; gap:20px; align-items:center;">
+        <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase;">Gain:</span>
+            <input type="number" id="targetGainInput" value="180" style="width:50px; padding:4px; border-radius:4px; border:1px solid var(--border-color); text-align:center; font-weight:bold; font-family:'Roboto Condensed'; color:var(--primary);">
+            <button class="btn-ai" style="background:#d400ff; color:white; font-size:0.7rem; border:none;" onclick="autoLevelLoads()">
+                <i class="fas fa-chart-line mr-1"></i> SET
+            </button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px; border-left: 1px solid var(--border-color); padding-left:20px;">
+            <span style="font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase;">ACWR:</span>
+            <input type="number" id="targetAcwrInput" value="1.0" step="0.1" style="width:50px; padding:4px; border-radius:4px; border:1px solid var(--border-color); text-align:center; font-weight:bold; font-family:'Roboto Condensed'; color:#0ea5e9;">
+            <button class="btn-ai" style="background:#0ea5e9; color:white; font-size:0.7rem; border:none;" onclick="autoLevelACWR()">
+                <i class="fas fa-balance-scale mr-1"></i> SET
+            </button>
+        </div>
+    </div>
+
+    <button class="btn-ai" id="btn-ai-check" onclick="runKiraAiCheck()">
+      <i class="fas fa-magic mr-1"></i> STRATEGIE PRÜFEN
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div style="font-size: 0.9rem; font-weight: bold;"><i class="fas fa-microchip mr-2" style="color:var(--primary)"></i> Strategische Simulation (14 Tage)</div>
+      <div style="display:flex; gap:10px; align-items:center;">
+  <button class="btn-ai" style="background:var(--warning);" onclick="recalibrateSnapshot()">REKALIBRIEREN</button>
+  <button class="btn-save" onclick="saveSimPlan()">SPEICHERN & KALENDER SYNC</button>
+</div>
+    </div>
+    <div style="overflow-x: auto;">
+      <table class="sim-table">
+        <thead>
+          <tr>
+            <th>Datum</th>
+            <th width="30px"><i class="fas fa-lock" style="color:var(--text-muted)"></i></th> <th width="20%">Last (ESS)</th>
+            <th width="12%">Sport</th>
+            <th width="7%">Zone</th>
+            <th width="10%">TE (Ae/An)</th>
+            <th>ATL</th>
+            <th>CTL</th>
+            <th>ACWR</th>
+            <th>Smart Gain</th>
+            <th width="40px">V3</th> </tr>
+        </thead>
+        <tbody id="simBody"></tbody>
+      </table>
+    </div>
+    
+    <div class="legend-box">
+        <div style="font-weight:bold; color:var(--text-muted);">Smart Gains Legende:</div>
+        <div class="legend-item"><div class="dot" style="background:var(--danger)"></div> < 39 Detraining</div>
+<div class="legend-item"><div class="dot" style="background:var(--warning)"></div> 39-95 Maintenance</div>
+<div class="legend-item"><div class="dot" style="background:var(--success)"></div> 95–142 Productive</div>
+<div class="legend-item"><div class="dot" style="background:var(--purple)"></div> 142–189 Prime</div>
+<div class="legend-item"><div class="dot" style="background:var(--danger)"></div> > 189 Danger</div>
+
+    </div>
+
+    <div style="margin-top: 20px; padding: 20px; background: rgba(37, 99, 235, 0.03); border-radius: 12px; border: 1px solid var(--border-color); font-size: 0.85rem; line-height: 1.6; color: var(--text-main);">
+    
+    <h4 style="margin-top: 0; color: var(--primary); font-family: 'Roboto Condensed', sans-serif; text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+        <i class="fas fa-project-diagram"></i> Smart Gains V3 – Die analytische Instanz
+    </h4>
+    
+    <p style="margin: 15px 0; color: var(--text-muted);">
+        Smart Gains V3 ist kein simpler Belastungsrechner, sondern dein <strong>biologisches Gewissen</strong>. Während V2 rein mathematisch vorging, bewertet V3 nun die <strong>Adaptations-Effizienz</strong>: Kann dein Körper den Trainingsreiz aktuell überhaupt in Fitness ummünzen?
+    </p>
+
+    <div style="background: var(--card-bg); padding: 20px; border-radius: 10px; border: 1.5px solid var(--primary); margin-bottom: 20px; display: flex; justify-content: center; align-items: center; font-family: 'Roboto Condensed', sans-serif; font-weight: 700; color: var(--text-main); font-size: 1.1rem; gap: 6px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);">
+        <span>SG <sub style="font-size: 0.65rem;">V3</sub> = (Trend × 2.0 + </span>
+        <div style="display: inline-flex; flex-direction: column; align-items: center; line-height: 1; font-size: 0.9rem;">
+            <span style="border-bottom: 2px solid var(--text-main); padding: 0 6px;">CTL</span>
+            <span style="padding-top: 3px;">10</span>
+        </div>
+        <span>) − (</span>
+        <div style="display: inline-flex; flex-direction: column; align-items: center; line-height: 1; font-size: 0.9rem;">
+            <span style="border-bottom: 2px solid var(--text-main); padding: 0 6px;">Strain</span>
+            <span style="padding-top: 3px;">500</span>
+        </div>
+        <span>× BioMod) − Mono</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        
+        <div style="background: var(--card-bg); padding: 12px; border-radius: 8px; border-left: 4px solid var(--success);">
+            <strong style="color: var(--success); font-family: 'Roboto Condensed'; text-transform: uppercase; font-size: 0.75rem;">
+                <i class="fas fa-chart-line mr-1"></i> Der Wachstums-Motor (Trend)
+            </strong><br>
+            <span style="font-size: 0.8rem;">
+                V3 vergleicht deine Fitness (CTL) von heute mit dem Wert von vor 7 Tagen. Dieser <strong>Wachstums-Trend</strong> wird doppelt gewichtet. Steigt die Kurve, signalisiert das System einen positiven "Return on Investment". Fällt die Kurve im harten Training, verpufft deine Energie wirkungslos.
+            </span>
+        </div>
+
+        <div style="background: var(--card-bg); padding: 12px; border-radius: 8px; border-left: 4px solid var(--primary);">
+            <strong style="color: var(--primary); font-family: 'Roboto Condensed'; text-transform: uppercase; font-size: 0.75rem;">
+                <i class="fas fa-heartbeat mr-1"></i> Das Regenerations-Veto (BioMod)
+            </strong><br>
+            <span style="font-size: 0.8rem;">
+                Dein biologisches Kapital: Sinken <strong>HRV (< 40ms)</strong> oder <strong>Schlaf (< 70)</strong>, steigen die physiologischen Kosten (Strain) jeder Einheit sofort um <strong>50%</strong>. Harte Reize in diesem Zustand führen zu "Junk Miles" – du verbrennst Ressourcen, ohne stärker zu werden.
+            </span>
+        </div>
+
+        <div style="background: var(--card-bg); padding: 12px; border-radius: 8px; border-left: 4px solid var(--warning);">
+            <strong style="color: var(--warning); font-family: 'Roboto Condensed'; text-transform: uppercase; font-size: 0.75rem;">
+                <i class="fas fa-balance-scale mr-1"></i> Struktur & Varianz (Mono)
+            </strong><br>
+            <span style="font-size: 0.8rem;">
+                Stagnation durch Gleichförmigkeit: Wenn das Training der letzten 7 Tage zu monoton war <strong>(Monotony > 2.0)</strong>, zieht V3 pauschal <strong>15 Punkte</strong> ab. Der Körper benötigt den Wechsel zwischen harten Reizen und echter Ruhe, um Adaptationsprozesse zu triggern.
+            </span>
+        </div>
+
+        <div style="background: var(--card-bg); padding: 12px; border-radius: 8px; border-left: 4px solid var(--text-muted);">
+            <strong style="color: var(--text-muted); font-family: 'Roboto Condensed'; text-transform: uppercase; font-size: 0.75rem;">
+                <i class="fas fa-shield-alt mr-1"></i> Der Status-Bonus (Robustheit)
+            </strong><br>
+            <span style="font-size: 0.8rem;">
+                Ein hohes Fitness-Level <strong>(CTL/10)</strong> wirkt als Puffer. Je fitter du bist, desto robuster reagiert dein System auf kurzfristige Belastungsspitzen. Dieser Bonus belohnt dich für dein bereits erarbeitetes Fundament und stabilisiert den Score in harten Phasen.
+            </span>
+        </div>
+
+    </div>
+
+    <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 10px; font-style: italic; color: var(--text-muted); text-align: center; font-size: 0.8rem;">
+        <i class="fas fa-info-circle mr-1"></i> 
+        Ein Score im <strong>Prime-Bereich (> 100)</strong> ist eine Freigabe für maximale Belastung. Rutscht der Wert in den <strong>Verschleiß</strong>, ist Erholung die einzige produktive Antwort.
+    </div>
+</div>
+
+    <div class="chart-wrapper">
+        <canvas id="simChart"></canvas>
+    </div>
+    <div id="tsbMiniDash" style="
+  display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+  margin: 6px 0 14px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--card-bg);
+  box-shadow: var(--shadow);
+">
+  <div style="display:flex; align-items:center; gap:10px;">
+    <div id="tsbMiniAmpelDot" style="
+      width:14px; height:14px; border-radius:50%;
+      background: var(--text-muted);
+      box-shadow: 0 0 0 3px rgba(100,116,139,0.15);
+    "></div>
+    <div style="font-family:'Roboto Condensed',sans-serif; font-weight:800; letter-spacing:1px; text-transform:uppercase; font-size:0.8rem;">
+      Status: <span id="tsbMiniAmpelText" style="color:var(--text-muted);">—</span>
+    </div>
+  </div>
+
+  <div style="flex:1 1 360px; font-size:0.9rem; color:var(--text-main);">
+    <span style="color:var(--text-muted); font-weight:700;">Kommentar:</span>
+    <span id="tsbMiniComment">—</span>
+  </div>
+
+  <div style="flex:1 1 360px; font-size:0.9rem; color:var(--text-main);">
+    <span style="color:var(--text-muted); font-weight:700;">Forecast:</span>
+    <span id="tsbMiniWarn">—</span>
+  </div>
+</div>
+    <div class="chart-wrapper">
+        <canvas id="tsbPerfChart"></canvas>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;">
+  <button class="btn-ai" id="btn-ai-coach" onclick="runCoachKiraAnalysis()">
+    <i class="fas fa-brain mr-1"></i> COACH-KIRA AUSWERTUNG
+  </button>
+</div>
+
+<div id="coachKiraOutput" style="
+  margin-top:10px;
+  padding:12px;
+  border:1px solid var(--border-color);
+  border-radius:10px;
+  background:var(--card-bg);
+  box-shadow: var(--shadow);
+  display:none;
+  font-size:0.9rem;
+  line-height:1.5;
+"></div>
+  </div>
+</div>
+
+<script>
+let simBase = null;
+let userGainOverride = false;
+let tsbPerfChart = null;
+let simLast = null; // <- hält die letzte komplette Simulation für die AI
+const COACH_KIRA_STORAGE_KEY = "coachKiraLastAnalysis";
+const KIRA_BRIEFING_STORAGE_KEY = "planappLastKiraBriefing";
+
+// --- Phase Targets (tagesbasiert) ---
+const PHASE_TARGETS = {
+  E:  { sg: 80,  acwr: 0.90 },
+  A1: { sg: 120,  acwr: 1.00 },
+  A2: { sg: 150, acwr: 1.05 },
+  A3: { sg: 180, acwr: 1.10 },
+  A:  { sg: 150, acwr: 1.05 } // Fallback
+};
+
+const SAFETY = {
+  acwrMax: 1.25,        // harte Bremse
+  sgDanger: 181,        // Danger-Grenze
+  minLoadCutoff: 10     // <10 -> 0 (wie du wolltest)
+};
+
+// ===== SG ZONEN (zentral, aus PrimeRangeFinder) =====
+const SG_ZONES = {
+  DETRAIN_MAX: 39,   // <39
+  MAINT_MAX:   95,   // 39–95
+  PROD_MAX:   142,   // 95–142
+  PRIME_MAX:  189    // 142–189
+  // >189 = Overload
+};
+
+
+// ===== DYNAMISCHE TSB-SCHWELLEN (abhängig von CTL) =====
+// Idee: Bei höherem CTL darf TSB "negativer" sein, ohne sofort rot zu werden.
+// Caps verhindern Freifahrtschein.
+function tsbThresholdsByCTL(ctl, bioModOn=false, monoOn=false) {
+  const c = Number(ctl) || 0;
+
+  // pro 10 CTL -> 2 Punkte mehr negativer erlaubt
+  let shift = 0.2 * c;
+
+  // Wenn BioMod / Monotonie aktiv: konservativer
+  if (bioModOn) shift *= 0.6;
+  if (monoOn)   shift *= 0.8;
+
+  // Basis (dein bisheriger Ansatz)
+  const tiredBase = -20;
+  const overBase  = -40;
+
+  // Caps (nicht tiefer als...)
+  const tiredMin = -50;
+  const overMin  = -90;
+
+  return {
+    TSB_TIRED:     Math.max(tiredBase - shift, tiredMin),
+    TSB_OVERREACH: Math.max(overBase  - shift, overMin),
+  };
+}
+
+// optional: wenn du "Danger" als Safety-Grenze nutzt:
+SAFETY.sgDanger = SG_ZONES.PRIME_MAX; // oder SG_ZONES.PRIME_MAX + 0 (deine Wahl)
+
+
+
+function getPhaseBadgeStyle(phaseRaw) {
+  const p = (phaseRaw ? String(phaseRaw) : "A").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+  // E = Entlastung (blau)
+  if (p === "E")  return { p, color: "var(--primary)", border: "var(--primary)", bg: "rgba(37, 99, 235, 0.12)" };
+
+  // Aufbauphasen als klare Farben
+  if (p === "A1") return { p, color: "var(--warning)", border: "var(--warning)", bg: "rgba(245, 158, 11, 0.14)" }; // Orange
+  if (p === "A2") return { p, color: "var(--danger)",  border: "var(--danger)",  bg: "rgba(239, 68, 68, 0.14)" }; // Rot
+  if (p === "A3") return { p, color: "var(--purple)",  border: "var(--purple)",  bg: "rgba(212, 0, 255, 0.12)" }; // Lila
+
+  // Fallback: A oder anderes -> neutral/erkennbar
+  if (p.startsWith("A")) return { p, color: "var(--success)", border: "var(--success)", bg: "rgba(16, 185, 129, 0.10)" };
+
+  // Unbekannt
+  return { p, color: "var(--text-muted)", border: "var(--text-muted)", bg: "rgba(100, 116, 139, 0.08)" };
+}
+
+function normPhase(phaseRaw) {
+  return (phaseRaw ? String(phaseRaw) : "A").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+function getDayTargets(i) {
+  const p = normPhase(simBase?.phases?.[i] || "A");
+  const base = PHASE_TARGETS[p] || (p.startsWith("A") ? PHASE_TARGETS.A : PHASE_TARGETS.E);
+
+  // Guardrails (V3-Logik wie du sie schon hast)
+  const bioModOn = (simBase.hrvToday < 40 || simBase.sleepToday < 70);
+  const monoOn   = (simBase.monoToday > 2.0);
+
+  let sg = base.sg;
+  let acwr = base.acwr;
+
+  // Wenn BioMod aktiv: Ziele runter, v.a. A3
+  if (bioModOn) {
+    sg = Math.min(sg, 110);
+    acwr = Math.min(acwr, 1.00);
+  }
+  // Wenn Monotonie hoch: auch etwas konservativer
+  if (monoOn) {
+    sg = Math.max(60, sg - 10);
+    acwr = Math.min(acwr, 1.02);
+  }
+
+  return { phase: p, targetSG: sg, targetACWR: acwr, bioModOn, monoOn };
+}
+
+
+function phaseTargetGain(phaseRaw) {
+  const p = (phaseRaw ? String(phaseRaw) : "A").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+  // Defaults (meine Empfehlung)
+  if (p === "E")  return 80;
+  if (p === "A1") return 120;
+  if (p === "A2") return 150;
+  if (p === "A3") return 180;
+
+  // Fallback: „A“ oder unbekannt
+  if (p.startsWith("A")) return 100;
+  return 80;
+}
+
+function applyAutoTargetGain() {
+  const inp = document.getElementById("targetGainInput");
+  if (!inp || userGainOverride || !simBase || !Array.isArray(simBase.phases)) return;
+
+  const startI = simBase.todayIsClosed ? 1 : 0;
+  const ph = simBase.phases[startI] || simBase.phases[0] || "A";
+
+  inp.value = phaseTargetGain(ph);
+}
+
+
+
+let currentLoads = [];
+let myChart = null; // Chart Instanz
+// NEU: Speichert den Lock-Status für jeden Tag
+let lockedDays = new Array(14).fill(false); 
+
+function escapeHtml(str) {
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+// Robust: kann auch so ein Sheet-„quoted JSON“ schlucken (""briefing"")
+function parseFutureStatusJson(raw) {
+  let s = String(raw ?? "").trim();
+  if (!s) return null;
+
+  try {
+    return JSON.parse(s);
+  } catch (e1) {
+    // Fall: Zelle enthält JSON als quoted string mit "" statt "
+    // Beispiel: "{ ""briefing"": ""..."" }"
+    try {
+      if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+        s = s.slice(1, -1);
+      }
+      s = s.replace(/""/g, '"');      // "" -> "
+      s = s.replace(/\\n/g, "\n");    // \n -> newline (falls vorhanden)
+      return JSON.parse(s);
+    } catch (e2) {
+      return null;
+    }
+  }
+}
+
+function onKiraBriefingReceived(rawBriefing) {
+  // rawBriefing kann JSON-String oder Text sein
+  const payload = String(rawBriefing ?? "").trim();
+
+  // 1) persistieren
+  localStorage.setItem(
+    KIRA_BRIEFING_STORAGE_KEY,
+    JSON.stringify({
+      savedAt: new Date().toISOString(),
+      briefing: payload
+    })
+  );
+
+  // 2) rendern
+  renderFutureStatusIntoBriefing(payload);
+}
+
+function restoreKiraBriefingFromCache() {
+  const cached = localStorage.getItem(KIRA_BRIEFING_STORAGE_KEY);
+  if (!cached) return false;
+
+  try {
+    const parsed = JSON.parse(cached);
+    if (parsed?.briefing) {
+      renderFutureStatusIntoBriefing(parsed.briefing);
+      console.log("[KiraBriefing] Restored from", parsed.savedAt);
+      return true;
+    }
+  } catch (e) {
+    localStorage.removeItem(KIRA_BRIEFING_STORAGE_KEY);
+  }
+  return false;
+}
+
+function renderFutureStatusIntoBriefing(rawJsonString) {
+  const el = document.getElementById("briefing-text");
+  if (!el) return;
+
+  const data = parseFutureStatusJson(rawJsonString);
+
+  // Wenn Parsing fehlschlägt: zeige Rohtext (besser als leer)
+  if (!data) {
+    el.innerText = String(rawJsonString ?? "");
+    return;
+  }
+
+  const briefing = data.briefing ?? "";
+  const recs = Array.isArray(data.recommendations) ? data.recommendations : [];
+
+  const recTable = recs.length
+    ? `
+      <div style="margin-bottom:15px; background:rgba(37, 99, 235, 0.1); padding:10px; border-radius:8px; border:1px solid var(--primary);">
+        <span style="font-size:0.65rem; font-weight:800; color:var(--primary); text-transform:uppercase; display:block; margin-bottom:8px;">
+          <i class="fas fa-chess-knight mr-1"></i> Recommendations
+        </span>
+        <div style="display:flex; gap:4px; overflow-x:auto; padding-bottom:5px;">
+          ${recs.map((val, i) => `
+            <div style="flex:0 0 42px; text-align:center;">
+              <div style="font-size:0.5rem; color:var(--text-muted);">T${i+1}</div>
+              <div style="font-weight:bold; font-size:0.8rem; color:var(--primary);">${escapeHtml(val)}</div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `
+    : "";
+
+  // briefing als Text (white-space:pre-wrap damit Absätze bleiben)
+  el.innerHTML =
+    recTable +
+    `<div style="line-height:1.6; white-space:pre-wrap;">${escapeHtml(briefing)}</div>`;
+}
+
+
+window.onload = function () {
+  // --- Theme + Cache restore (safe) ---
+  const savedTheme = localStorage.getItem("planAppTheme") || "light";
+  setTheme(savedTheme);
+
+  // Briefing aus Cache anzeigen (falls vorhanden)
+  try {
+    restoreKiraBriefingFromCache();
+  } catch (e) {
+    console.warn("[KiraBriefing] restore failed:", e);
+  }
+
+  // Wenn du Gain manuell anfasst: Auto-Target nicht mehr überschreiben
+  const gainInp = document.getElementById("targetGainInput");
+  if (gainInp) {
+    gainInp.addEventListener("input", () => {
+      userGainOverride = true;
+    });
+  }
+
+  // Loader an
+  const loaderEl = document.getElementById("loader");
+  const loaderTextEl = document.getElementById("loader-text");
+  if (loaderEl) loaderEl.style.display = "flex";
+
+  // --- Backend call ---
+  google.script.run
+    .withSuccessHandler(function (base) {
+      try {
+        simBase = base;
+
+        // Phase-Autotarget initial setzen (nur wenn kein Override)
+        applyAutoTargetGain();
+
+        // Loads + Locks
+        currentLoads = Array.isArray(base?.plannedLoads) ? [...base.plannedLoads] : new Array(14).fill(0);
+
+        if (Array.isArray(base?.lockedDays) && base.lockedDays.length > 0) {
+          lockedDays = base.lockedDays;
+        } else {
+          lockedDays = new Array(14).fill(false);
+        }
+
+        // Kira-Briefing: Server bevorzugen, sonst Cache lassen
+        if (base?.kiraBriefing && String(base.kiraBriefing).trim()) {
+          onKiraBriefingReceived(base.kiraBriefing); // persist + render
+        }
+
+        // Loader aus
+        if (loaderEl) loaderEl.style.display = "none";
+
+        // Status
+        const snapTxt = base?.snapshotActive
+          ? `📌 Snapshot aktiv (${new Date(base.snapshotCreatedAt).toLocaleDateString("de-DE")})`
+          : "LIVE";
+        const st = document.getElementById("sim-status");
+        if (st) st.innerText = `Status: ${snapTxt} ● ` + new Date().toLocaleTimeString();
+
+        // Charts + Table init/render
+        initChart();
+        initTsbPerfChart();
+        renderTable();
+
+        // Coach-Kira Cache restore (fix: nur EIN try/catch, keine kaputten Klammern)
+        const cachedCoach = localStorage.getItem(COACH_KIRA_STORAGE_KEY);
+        if (cachedCoach) {
+          try {
+            const parsed = JSON.parse(cachedCoach);
+            if (parsed?.analysis) {
+              renderCoachKiraJson(parsed.analysis);
+              console.log("[Coach-Kira] Restored analysis from", parsed.savedAt);
+            }
+          } catch (e) {
+            console.warn("[Coach-Kira] Cache invalid, clearing");
+            localStorage.removeItem(COACH_KIRA_STORAGE_KEY);
+          }
+        }
+
+        // Simulation rechnen (füllt Tabellenwerte + Charts)
+        updateSimulation();
+      } catch (err) {
+        console.error("[window.onload] successHandler crashed:", err);
+        if (loaderTextEl) {
+          loaderTextEl.innerText = "❌ UI-FEHLER: " + (err?.message || err);
+          loaderTextEl.style.color = "var(--danger)";
+        }
+        // Loader sichtbar lassen, damit du den Fehler siehst
+        if (loaderEl) loaderEl.style.display = "flex";
+      }
+    })
+    .withFailureHandler(function (err) {
+      console.error("getSimStartValues FAILED:", err);
+      if (loaderTextEl) {
+        loaderTextEl.innerText = "❌ LADE-FEHLER: " + (err?.message || err);
+        loaderTextEl.style.color = "var(--danger)";
+      }
+      // optional: Loader NICHT ausblenden, damit du den Fehler siehst
+      if (loaderEl) loaderEl.style.display = "flex";
+    })
+    .getSimStartValues();
+};
+
+function loadDataFromServer() {
+    const loader = document.getElementById('loader');
+    const loaderText = document.getElementById('loader-text');
+    
+    loader.style.display = 'flex';
+    loaderText.innerText = "Lade Strategie & Daten...";
+    loaderText.style.color = "var(--primary)";
+
+    google.script.run.withSuccessHandler(function(base) {
+        simBase = base;
+        currentLoads = [...base.plannedLoads]; 
+        
+        // Locks vom Server übernehmen
+        if (base.lockedDays && base.lockedDays.length > 0) {
+            lockedDays = base.lockedDays;
+        } else {
+            lockedDays = new Array(14).fill(false);
+        }
+        
+        const briefingText = document.getElementById('briefing-text');
+        // Direkter Durchgriff auf den sauberen Text vom Backend
+        onKiraBriefingReceived(base.kiraBriefing);
+
+        
+        // Loader ausblenden & Status updaten
+        loader.style.display = 'none';
+        document.getElementById('sim-status').innerText = "Status: Aktualisiert ● " + new Date().toLocaleTimeString();
+        
+        // UI neu zeichnen
+        renderTable();     
+        updateSimulation(); 
+    })
+    .withFailureHandler(function(err) {
+        loaderText.innerText = "❌ LADE-FEHLER: " + err.message;
+        loaderText.style.color = "var(--danger)";
+    })
+    .getSimStartValues();
+}
+
+function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('planAppTheme', theme);
+    const btn = document.getElementById('themeBtn');
+if (btn) btn.innerHTML = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+
+}
+
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    setTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+function renderTable() {
+    const tbody = document.getElementById('simBody');
+    tbody.innerHTML = '';
+    const startDate = new Date(simBase.startDate);
+    for(let i=0; i<14; i++) {
+        const d = new Date(startDate);
+        d.setDate(d.getDate() + i);
+        const dStr = d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' });
+        const phaseInfo = getPhaseBadgeStyle(simBase.phases[i]);
+const phase = phaseInfo.p;
+const phaseColor = phaseInfo.color;
+const phaseBg = phaseInfo.bg;
+const phaseBorder = phaseInfo.border || phaseColor;
+
+// --- NEU: Tages-Zielzeile unter dem Phase-Badge ---
+const targets = getDayTargets(i);
+const targetLine = `🎯 SG ${targets.targetSG} | ACWR ${targets.targetACWR.toFixed(2)}`;
+
+
+
+        const startVal = currentLoads[i];
+        
+        // Lock Status für die Anzeige
+        const isLocked = lockedDays[i];
+        const lockIconClass = isLocked ? 'fa-lock locked' : 'fa-lock-open';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+    <td class="text-date text-center" style="font-size:0.75rem;">
+      ${dStr}<br><span style="font-size: 0.6rem; color: ${phaseColor}; background: ${phaseBg}; border: 1px solid ${phaseBorder};
+ padding: 0px 3px; border-radius: 2px; font-weight: bold;">${phase}</span>
+ <br><span style="font-size:0.55rem; color:var(--text-muted); font-weight:600;">${targetLine}</span>
+
+
+    </td>
+    <td class="text-center" style="width:30px;">
+        <i class="fas ${lockIconClass} lock-btn" id="lock_icon_${i}" onclick="toggleLock(${i})"></i>
+    </td>
+    <td>
+        <input type="range" class="sim-slider" min="0" max="300" step="1" value="${startVal}" oninput="changeLoad(${i}, this.value)">
+        <div class="text-center mt-1 small"><span id="val_${i}" style="color:var(--warning); font-weight:bold;">${startVal}</span> ESS</div>
+    </td>
+    <td><input type="text" class="plan-text-input" id="sport_${i}" value="${simBase.plannedSports[i] || ''}"></td>
+    <td><input type="text" class="plan-text-input text-center" id="zone_${i}" value="${simBase.plannedZones[i] || ''}"></td>
+    <td>
+        <div style="display:flex; flex-direction:column; gap:2px; align-items:center;">
+          <input type="number" step="0.1" class="te-input aerob" id="teAe_${i}" value="${(simBase.plannedTeAe[i] || 0).toFixed(1)}">
+          <input type="number" step="0.1" class="te-input anaerob" id="teAn_${i}" value="${(simBase.plannedTeAn[i] || 0).toFixed(1)}">
+        </div>
+    </td>
+    <td class="text-center val-box" id="atl_${i}" style="color:var(--text-muted); font-size:0.75rem;">-</td>
+    <td class="text-center val-box" id="ctl_${i}" style="color:var(--text-muted); font-size:0.75rem;">-</td>
+    <td class="text-center val-box font-weight-bold" id="acwr_${i}" style="font-size:0.8rem;">-</td>
+    <td class="text-center" id="sg_cell_${i}"><span class="val-box" id="sg_${i}" style="font-size:0.8rem;">-</span></td>
+    <td class="text-center" id="v3_status_${i}" style="font-size: 1.1rem;"></td> `;
+        tbody.appendChild(tr);
+    }
+}
+
+// Funktion zum Umschalten des Locks
+function toggleLock(i) {
+    lockedDays[i] = !lockedDays[i]; 
+    const icon = document.getElementById('lock_icon_' + i);
+    if(lockedDays[i]) {
+        icon.classList.remove('fa-lock-open');
+        icon.classList.add('fa-lock', 'locked');
+    } else {
+        icon.classList.remove('fa-lock', 'locked');
+        icon.classList.add('fa-lock-open');
+    }
+}
+
+function changeLoad(idx, val) {
+    currentLoads[idx] = parseFloat(val);
+    document.getElementById('val_'+idx).innerText = val;
+    updateSimulation();
+}
+
+function getSeedState(simBase) {
+  // Erwartete Felder vom Backend (empfohlen):
+  // simBase.atlYesterday, simBase.ctlYesterday, simBase.ctlHistoryYesterday (7 Werte bis inkl. gestern)
+  const atl0 =
+    (simBase.atlYesterday ?? simBase.atl_yesterday ?? simBase.atlPrev ?? simBase.atl_prev ?? simBase.atl);
+
+  const ctl0 =
+    (simBase.ctlYesterday ?? simBase.ctl_yesterday ?? simBase.ctlPrev ?? simBase.ctl_prev ?? simBase.ctl);
+
+  // History muss CTL(t-7..t-1) enthalten, also "bis gestern"
+  let hist = [];
+  if (Array.isArray(simBase.ctlHistoryYesterday) && simBase.ctlHistoryYesterday.length) {
+    hist = [...simBase.ctlHistoryYesterday];
+  } else if (Array.isArray(simBase.ctlHistory) && simBase.ctlHistory.length) {
+    hist = [...simBase.ctlHistory];
+  }
+
+  // Robustheit: auf genau 7 Werte bringen
+  // (Wenn zu lang: die letzten 7 nehmen; wenn zu kurz: mit ctl0 vorne auffüllen)
+  hist = hist.slice(-7);
+  while (hist.length < 7) hist.unshift(ctl0);
+
+  return { atl0, ctl0, hist };
+}
+
+
+
+// --- UPDATE SIMULATION (Engine V3 - "Biological Intelligence") ---
+function updateSimulation() {
+    if(!simBase) return;
+    
+    const seed = getSeedState(simBase);
+let tATL = seed.atl0;
+let tCTL = seed.ctl0;
+// let chartTSB = [];
+let history = [...seed.hist];
+    
+    const cfg = simBase.config;
+    const p = (val) => {
+        if (typeof val === 'number') return val;
+        if (!val) return 0;
+        return parseFloat(String(val).replace(',', '.'));
+    };
+
+    // Konstanten laden
+    const S_ATL = p(cfg.S_ATL);
+    const B_ATL = p(cfg.B_ATL);
+    const wH_ATL = p(cfg.wH_ATL) || 0;
+    const wS_ATL = p(cfg.wS_ATL) || 0;
+    const alpha_ATL_up = p(cfg.alpha_ATL_up);
+    const alpha_ATL_down = p(cfg.alpha_ATL_down);
+    const cap_up_ATL = p(cfg.cap_up_ATL) || 1000;
+    const cap_down_ATL = p(cfg.cap_down_ATL) || 1000;
+    const S_CTL = p(cfg.S_CTL);
+    const B_CTL = p(cfg.B_CTL);
+    const alpha_CTL = p(cfg.alpha_CTL); 
+    // NEU: CTL Sleep-Gewichte + Defaults
+const wH_CTL = p(cfg.wH_CTL) || 0;
+const wS_CTL = p(cfg.wS_CTL) || 0;
+
+const sleepHoursDefault = p(simBase.sleepHoursDefault) || p(cfg.sleep_hours_default) || 0;
+const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_default) || 0;
+
+
+    // Bio-Marker für V3 (Konstant für die 14-Tage-Vorschau)
+    const recoveryMod = (simBase.hrvToday < 40 || simBase.sleepToday < 70) ? 1.5 : 1.0;
+    const monotonyPenalty = (simBase.monoToday > 2.0) ? 15 : 0;
+
+    let chartLoads = [], chartCTL = [], chartACWR = [], chartTSB = [], chartSG = [], chartLabels = [];
+    const startDate = new Date(simBase.startDate);
+
+    // --- HEUTE-FIX (nur wenn geschlossen): Row 0 nicht berechnen, sondern als Seed anzeigen ---
+if (simBase.todayIsClosed) {
+    const atl0 = tATL; // Seed ist HEUTE final
+    const ctl0 = tCTL;
+    const acwr0 = atl0 / (ctl0 || 1);
+    const tsb = tCTL - tATL;
+
+    // UI für Zeile 0 setzen
+    const atlEl0 = document.getElementById('atl_0');
+    const ctlEl0 = document.getElementById('ctl_0');
+    const acwrEl0 = document.getElementById('acwr_0');
+
+    if (atlEl0) atlEl0.innerText = Math.round(atl0);
+    if (ctlEl0) ctlEl0.innerText = Math.round(ctl0);
+
+    if (acwrEl0) {
+        acwrEl0.innerText = acwr0.toFixed(2);
+        acwrEl0.style.color = (acwr0 > 1.30) ? 'var(--danger)' : (acwr0 >= 0.80) ? 'var(--success)' : 'var(--text-muted)';
+    }
+
+    // Chart-Daten für Tag 0
+    chartLoads.push(currentLoads[0]);
+    chartCTL.push(Math.round(ctl0));
+    chartACWR.push(acwr0.toFixed(2));
+    const tsb0 = ctl0 - atl0;
+    chartTSB.push(Math.round(tsb0));
+    chartSG.push(null);
+
+    const d0 = new Date(startDate);
+    chartLabels.push(d0.toLocaleDateString('de-DE', {weekday:'short', day:'2-digit'}));
+
+    let sg0;
+
+// Prio 1: observed SG aus Timeline/Backend
+if (Number.isFinite(simBase?.smartGainsToday_obs)) {
+  sg0 = Number(simBase.smartGainsToday_obs);
+} else {
+  // Fallback: bisherige lokale Berechnung
+  const ctl7DaysAgo0 = (history && history.length) ? history[0] : ctl0;
+
+  const trendComp0  = (ctl0 - ctl7DaysAgo0) * 2.0;
+  const statusComp0 = ctl0 / 10.0;
+  const strainEst0  = atl0 * 7;
+  const costComp0   = (strainEst0 / 500.0) * recoveryMod;
+
+  sg0 = trendComp0 + statusComp0 - costComp0 - monotonyPenalty;
+}
+
+
+// UI für SG0 setzen
+const sgEl0 = document.getElementById('sg_0');
+const sgCell0 = document.getElementById('sg_cell_0');
+
+if (sgEl0) sgEl0.innerText = (sg0 > 0 ? "+" : "") + sg0.toFixed(1);
+
+if (sgCell0) {
+  if (sg0 > SG_ZONES.PRIME_MAX) {
+  // OVERLOAD
+  sgCell0.style.color = 'var(--danger)';
+  sgCell0.style.background = 'rgba(239, 68, 68, 0.2)';
+} else if (sg0 >= SG_ZONES.PROD_MAX) {
+  // PRIME
+  sgCell0.style.color = 'var(--purple)';
+  sgCell0.style.background = 'rgba(212, 0, 255, 0.15)';
+} else if (sg0 >= SG_ZONES.MAINT_MAX) {
+  // PRODUCTIVE
+  sgCell0.style.color = 'var(--success)';
+  sgCell0.style.background = 'rgba(16, 185, 129, 0.15)';
+} else if (sg0 >= SG_ZONES.DETRAIN_MAX) {
+  // MAINTENANCE
+  sgCell0.style.color = 'var(--warning)';
+  sgCell0.style.background = 'rgba(245, 158, 11, 0.15)';
+} else {
+  // DETRAINING
+  sgCell0.style.color = 'var(--danger)';
+  sgCell0.style.background = 'rgba(239, 68, 68, 0.1)';
+}
+}
+
+// Chart: statt null jetzt SG0 rein
+chartSG[0] = Math.round(sg0);
+
+// Wichtig: History "bis heute" fortschreiben, sonst stimmt Trend ab morgen nicht
+if (history.length >= 7) history.shift();
+history.push(ctl0);
+
+}
+
+const startI = simBase.todayIsClosed ? 1 : 0;
+
+    for(let i=startI; i<14; i++) {
+        const load = currentLoads[i];
+
+        // NEU: Sleep Inputs (Tag 0 = HEUTE echt; Zukunft = Default)
+const sleepH = (i === 0) ? p(simBase.sleepHoursToday) : sleepHoursDefault;
+const sleepS = (i === 0) ? p(simBase.sleepScoreToday) : sleepScoreDefault;
+
+        
+        // --- 1. ATL (Glättung & Caps) ---
+        const dailyImpactATL = (S_ATL * load) + B_ATL + (wH_ATL * sleepH) + (wS_ATL * sleepS);
+        const isGoingUp = dailyImpactATL > tATL;
+        const alphaToUse = isGoingUp ? alpha_ATL_up : alpha_ATL_down;
+        let rawNewATL = ((1 - alphaToUse) * tATL) + (alphaToUse * dailyImpactATL);
+
+        // ✅ DEBUG GENAU HIER (nur Tag 0)
+if (i === 0) {
+  console.log("[PLANAPP] Seed ATL/CTL (gestern):", tATL, tCTL);
+  console.log("[PLANAPP] Load/Sleep:", load, sleepH, sleepS);
+  console.log("[PLANAPP] StimATL:", dailyImpactATL, "alpha:", alphaToUse, "rawATL:", rawNewATL);
+  console.log("[PLANAPP] Caps:", (tATL - cap_down_ATL), (tATL + cap_up_ATL));
+}
+        
+        tATL = Math.min(Math.max(rawNewATL, tATL - cap_down_ATL), tATL + cap_up_ATL);
+        
+        // --- 2. CTL ---
+        const dailyImpactCTL = (S_CTL * load) + B_CTL + (wH_CTL * sleepH) + (wS_CTL * sleepS);
+        // ✅ DEBUG GENAU HIER (nur Tag 0)
+  if (i === 0) {
+    console.log("[PLANAPP] Seed (gestern) ATL/CTL:", tATL, tCTL);
+    console.log("[PLANAPP] Heute Load:", load, "SleepH:", sleepH, "SleepS:", sleepS);
+    console.log("[PLANAPP] Stimuli ATL/CTL:", dailyImpactATL, dailyImpactCTL);
+  }
+        tCTL = ((1 - alpha_CTL) * tCTL) + (alpha_CTL * dailyImpactCTL);
+        const acwr = tATL / (tCTL || 1);
+
+
+
+        // --- 3. SMART GAINS V3 ---
+        let ctl7DaysAgo = (history.length > 0) ? history[0] : tCTL; 
+        
+        const trendComp = (tCTL - ctl7DaysAgo) * 2.0; 
+        const statusComp = tCTL / 10.0;               
+        const strainEst = (tATL * 7); 
+        const costComp = (strainEst / 500.0) * recoveryMod; 
+        
+        let sg = trendComp + statusComp - costComp - monotonyPenalty;
+
+        // --- UI UPDATES ---
+        const atlEl = document.getElementById('atl_'+i);
+const ctlEl = document.getElementById('ctl_'+i);
+const acwrEl = document.getElementById('acwr_'+i);
+
+if (atlEl) atlEl.innerText = Math.round(tATL);
+if (ctlEl) ctlEl.innerText = Math.round(tCTL);
+        if(acwrEl) {
+            acwrEl.innerText = acwr.toFixed(2);
+            acwrEl.style.color = (acwr > 1.30) ? 'var(--danger)' : (acwr >= 0.80) ? 'var(--success)' : 'var(--text-muted)';
+        }
+        
+        // --- SMART GAINS V3 FARBLOGIK ---
+        const sgEl = document.getElementById('sg_'+i);
+        const sgCell = document.getElementById('sg_cell_'+i);
+        if(sgEl && sgCell) {
+            sgEl.innerText = (sg > 0 ? "+" : "") + sg.toFixed(1);
+            
+            if (sg > SG_ZONES.PRIME_MAX) {
+  // OVERLOAD
+  sgCell.style.color = 'var(--danger)';
+  sgCell.style.background = 'rgba(239, 68, 68, 0.2)';
+} else if (sg >= SG_ZONES.PROD_MAX) {
+  // PRIME
+  sgCell.style.color = 'var(--purple)';
+  sgCell.style.background = 'rgba(212, 0, 255, 0.15)';
+} else if (sg >= SG_ZONES.MAINT_MAX) {
+  // PRODUCTIVE
+  sgCell.style.color = 'var(--success)';
+  sgCell.style.background = 'rgba(16, 185, 129, 0.15)';
+} else if (sg >= SG_ZONES.DETRAIN_MAX) {
+  // MAINTENANCE
+  sgCell.style.color = 'var(--warning)';
+  sgCell.style.background = 'rgba(245, 158, 11, 0.15)';
+} else {
+  // DETRAINING
+  sgCell.style.color = 'var(--danger)';
+  sgCell.style.background = 'rgba(239, 68, 68, 0.1)';
+}
+        }
+
+        // --- START V3 STATUS-ICONS (LIVE) ---
+        const v3El = document.getElementById('v3_status_'+i);
+        if(v3El) {
+            let statusHtml = "";
+            // BioMod aktiv? (HRV oder Schlaf schlecht)
+            if (simBase.hrvToday < 40 || simBase.sleepToday < 70) {
+                statusHtml += `<span title="BioMod Aktiv: Erhöhte Strain-Kosten" style="color:var(--danger); cursor:help;">🧬</span>`;
+            }
+            // Monotony aktiv?
+            if (simBase.monoToday > 2.0) {
+                statusHtml += `<span title="Monotonie-Strafe: Einseitiger Reiz" style="color:var(--warning); cursor:help; margin-left:4px;">🔁</span>`;
+            }
+            v3El.innerHTML = statusHtml || '<span style="color:var(--success); opacity:0.3; font-size:0.7rem;">OK</span>';
+        }
+        // --- ENDE V3 STATUS-ICONS ---
+        
+        // Daten für Chart
+        chartLoads.push(load); // Nur EINMAL hinzufügen!
+        chartCTL.push(Math.round(tCTL));
+        chartACWR.push(acwr.toFixed(2));
+        const tsb = tCTL - tATL;
+        chartTSB.push(Math.round(tsb));
+        chartSG.push(Math.round(sg));
+        
+        const d = new Date(startDate); d.setDate(d.getDate() + i);
+        chartLabels.push(d.toLocaleDateString('de-DE', {weekday:'short', day:'2-digit'}));
+
+        // Historie rotieren (Gedächtnis)
+        if (history.length >= 7) history.shift(); 
+        history.push(tCTL);
+    }
+    
+    // ✅ Labels fürs Bubble-Chart global verfügbar machen
+    window.chartLabels = chartLabels;
+
+    // ✅ Simulation für Coach-Kira persistieren (AI Button braucht das)
+simLast = {
+  generatedAt: new Date().toISOString(),
+  startDate: simBase?.startDate,
+  todayIsClosed: !!simBase?.todayIsClosed,
+  snapshotActive: !!simBase?.snapshotActive,
+  snapshotCreatedAt: simBase?.snapshotCreatedAt,
+
+  // Inputs
+  plannedLoads: [...currentLoads],
+  plannedSports: [...(simBase?.plannedSports || [])],
+  plannedZones:  [...(simBase?.plannedZones  || [])],
+  phases:        [...(simBase?.phases || [])],
+  lockedDays:    [...(lockedDays || [])],
+
+  // Outputs (deine berechneten Serien)
+  labels: [...chartLabels],
+  loads:  [...chartLoads],
+  ctl:    [...chartCTL],
+  acwr:   [...chartACWR].map(v => Number(String(v).replace(",", "."))), // sicher numerisch
+  tsb:    [...chartTSB],
+  sg:     [...chartSG],
+
+  // Bio / Kontext
+  hrvToday: simBase?.hrvToday,
+  sleepToday: simBase?.sleepToday,
+  monoToday: simBase?.monoToday,
+  sleepHoursToday: simBase?.sleepHoursToday,
+  sleepScoreToday: simBase?.sleepScoreToday,
+
+  // config (falls AI die Engine-Parameter braucht)
+  config: simBase?.config || {}
+};
+
+    updateChart(chartLabels, chartLoads, chartCTL, chartACWR, chartSG);
+    updateTsbPerfChart(chartTSB, chartSG, chartLoads, chartLabels);
+    updateTrendArrow(tsbPerfChart, chartTSB, chartSG);
+    tsbPerfChart.update("none");
+    updateTsbMiniDashboard(chartTSB, chartSG, chartACWR, chartLoads, chartLabels);
+}
+
+function runKiraAiCheck() {
+    const btn = document.getElementById('btn-ai-check');
+    const briefingCard = document.getElementById('briefing-container');
+    const briefingText = document.getElementById('briefing-text');
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> KIRA RECHNET...';
+    // briefingCard.style.display = 'block';
+    briefingText.innerHTML = '<div style="color:var(--primary); font-family:monospace;">Sende Daten an Orbit-Station... <br>Analysiere 14-Tage-Architektur...</div>';
+
+    let simData = [];
+    try {
+        const dateElements = document.querySelectorAll('.text-date');
+        for(let i=0; i<14; i++) {
+            simData.push({
+                tag: i + 1,
+                // Datum säubern (nur Text, ohne HTML tags)
+                datum: dateElements[i] ? dateElements[i].innerText.replace(/\n/g, ' ') : "Tag " + (i+1),
+                load: currentLoads[i], // Das sind die Werte von den Schiebereglern!
+                sport: document.getElementById('sport_'+i).value,
+                zone: document.getElementById('zone_'+i).value,
+                phase: simBase.phases[i]
+            });
+        }
+    } catch (e) {
+        console.error("Daten-Sammelfehler:", e);
+        briefingText.innerHTML = "❌ Fehler beim Sammeln der Tabellendaten.";
+        btn.disabled = false;
+        return;
+    }
+
+    google.script.run.withSuccessHandler(function(jsonResponse) {
+        try {
+            const data = JSON.parse(jsonResponse);
+            const textElement = document.getElementById('briefing-text');
+            
+            let recTable = `
+                <div style="margin-bottom:15px; background:rgba(37, 99, 235, 0.1); padding:10px; border-radius:8px; border:1px solid var(--primary);">
+                    <span style="font-size:0.65rem; font-weight:800; color:var(--primary); text-transform:uppercase; display:block; margin-bottom:8px;">
+                        <i class="fas fa-chess-knight mr-1"></i> Kiras strategische Last-Empfehlung:
+                    </span>
+                    <div style="display:flex; gap:4px; overflow-x:auto; padding-bottom:5px;">
+                        ${data.recommendations.map((val, i) => `
+                            <div style="flex:0 0 42px; text-align:center;">
+                                <div style="font-size:0.5rem; color:var(--text-muted);">T${i+1}</div>
+                                <div style="font-weight:bold; font-size:0.8rem; color:var(--primary);">${val}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            textElement.innerHTML =
+  recTable + `<div style="line-height:1.6; white-space:pre-wrap;">${escapeHtml(data.briefing || "")}</div>`;
+        } catch (e) {
+            document.getElementById('briefing-text').innerText = jsonResponse; 
+        }
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-magic mr-1"></i> STRATEGIE PRÜFEN';
+    })
+    .withFailureHandler(function(err) {
+        briefingText.innerHTML = `<div style="color:var(--danger); font-weight:bold;">❌ Verbindung zu Kira unterbrochen:</div><div style="font-size:0.8rem;">${err}</div>`;
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-magic mr-1"></i> STRATEGIE PRÜFEN';
+    })
+    .getStrategicKiraBriefing(simData);
+}
+
+function runCoachKiraAnalysis() {
+  const btn = document.getElementById("btn-ai-coach");
+  const briefingCard = document.getElementById("briefing-container");
+  const briefingText = document.getElementById("briefing-text");
+
+  if (!simLast) {
+    alert("Keine Simulationsdaten vorhanden (simLast ist leer). Erst Simulation laufen lassen.");
+    return;
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> KIRA ANALYSIERT...';
+  }
+
+  // Ausgabe-Card nutzen (die hast du schon)
+  if (briefingCard) briefingCard.style.display = "flex";
+  if (briefingText) {
+    briefingText.innerHTML = '<div style="color:var(--primary); font-family:monospace;">Sende Simulationsdaten an Coach-Kira...<br>Erzeuge striktes JSON...</div>';
+  }
+
+  google.script.run
+    .withSuccessHandler(function(resp) {
+      let data = null;
+      try {
+        data = (typeof resp === "string") ? JSON.parse(resp) : resp;
+      } catch (e) {
+        console.error("Coach JSON parse failed:", e, resp);
+        if (briefingText) briefingText.innerText = "❌ JSON_PARSE_FEHLER:\n" + String(resp);
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-brain mr-1"></i> COACH-KIRA AUSWERTUNG';
+        }
+        return;
+      }
+
+      renderCoachKiraJson(data);
+
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-brain mr-1"></i> COACH-KIRA AUSWERTUNG';
+      }
+    })
+    .withFailureHandler(function(err) {
+      console.error("getCoachKiraAnalysis FAILED:", err);
+      if (briefingText) briefingText.innerHTML =
+        `<div style="color:var(--danger); font-weight:bold;">❌ Coach-Kira Fehler:</div>
+         <div style="font-size:0.8rem;">${escapeHtml(err?.message || err)}</div>`;
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-brain mr-1"></i> COACH-KIRA AUSWERTUNG';
+      }
+    })
+    .getCoachKiraAnalysis(simLast); // ✅ Backend erwartet Object oder String
+}
+
+function onCoachKiraAnalysisReceived(resultJson) {
+  localStorage.setItem(COACH_KIRA_STORAGE_KEY, JSON.stringify({
+    savedAt: new Date().toISOString(),
+    analysis: resultJson
+  }));
+  renderCoachKiraJson(resultJson);
+}
+
+function renderCoachKiraJson(data) {
+  const briefingText = document.getElementById("briefing-text");
+  const briefingTime = document.getElementById("briefing-time");
+  if (!briefingText) return;
+
+  // defensive defaults
+  const status = data?.status || {};
+  const ampel = String(status.ampel || "YELLOW").toUpperCase();
+  const oneLiner = status.oneLiner || "";
+
+  const badgeColor =
+    ampel === "GREEN" ? "var(--success)" :
+    ampel === "RED"   ? "var(--danger)"  :
+    "var(--warning)";
+
+  const badgeBg =
+    ampel === "GREEN" ? "rgba(16,185,129,0.12)" :
+    ampel === "RED"   ? "rgba(239,68,68,0.12)" :
+    "rgba(245,158,11,0.12)";
+
+  if (briefingTime && data?.generatedAt) {
+    try { briefingTime.textContent = new Date(data.generatedAt).toLocaleString("de-DE"); } catch(e) {}
+  }
+
+  const list = (arr, mapper) =>
+    Array.isArray(arr) && arr.length ? arr.map(mapper).join("") : `<div style="color:var(--text-muted);">—</div>`;
+
+  briefingText.innerHTML = `
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-weight:900; font-family:'Roboto Condensed'; letter-spacing:1px; text-transform:uppercase;">
+          Coach-Kira Analyse
+        </span>
+        <span style="padding:2px 8px; border-radius:999px; border:1px solid ${badgeColor}; color:${badgeColor}; background:${badgeBg}; font-size:0.7rem; font-weight:800;">
+          ${escapeHtml(ampel)}
+        </span>
+      </div>
+      <div style="font-size:0.75rem; color:var(--text-muted);">
+        Schema ${escapeHtml(data?.schemaVersion || "—")}
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px; padding:10px; border:1px solid var(--border-color); border-radius:10px; background:var(--card-bg);">
+      <div style="font-weight:800; color:var(--text-main); margin-bottom:6px;">Kurzfazit</div>
+      <div style="color:var(--text-main);">${escapeHtml(oneLiner || "—")}</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+      <div style="padding:10px; border:1px solid var(--border-color); border-radius:10px;">
+        <div style="font-weight:800; margin-bottom:6px;">Erkenntnisse</div>
+        ${list(data?.keyFindings, f => `
+          <div style="margin-bottom:10px;">
+            <div style="font-weight:800;">${escapeHtml(f.title || "")}</div>
+            <div style="font-size:0.8rem; color:var(--text-muted);">${escapeHtml((f.impact || ""))}</div>
+            <ul style="margin:6px 0 0 18px; padding:0; color:var(--text-main); font-size:0.85rem;">
+              ${(Array.isArray(f.evidence) ? f.evidence : []).slice(0,4).map(e => `<li>${escapeHtml(e)}</li>`).join("")}
+            </ul>
+          </div>
+        `)}
+      </div>
+
+      <div style="padding:10px; border:1px solid var(--border-color); border-radius:10px;">
+        <div style="font-weight:800; margin-bottom:6px;">Empfehlungen</div>
+        ${list(data?.recommendations, r => `
+          <div style="margin-bottom:10px;">
+            <div style="font-weight:800;">${escapeHtml(r.title || "")}</div>
+            <div style="font-size:0.85rem; color:var(--text-main);"><b>Aktion:</b> ${escapeHtml(r.action || "")}</div>
+            <div style="font-size:0.8rem; color:var(--text-muted);"><b>Warum:</b> ${escapeHtml(r.why || "")}</div>
+          </div>
+        `)}
+      </div>
+    </div>
+
+    <div style="margin-top:12px; display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+      <div style="padding:10px; border:1px solid var(--border-color); border-radius:10px;">
+        <div style="font-weight:800; margin-bottom:6px;">Risiken</div>
+        ${list(data?.risks, x => `
+          <div style="margin-bottom:10px;">
+            <div style="font-weight:800;">
+              ${escapeHtml(x.title || "")}
+              <span style="margin-left:6px; font-size:0.7rem; padding:1px 6px; border-radius:999px; border:1px solid var(--border-color); color:var(--text-muted);">
+                ${escapeHtml(String(x.severity || "—"))}
+              </span>
+            </div>
+            <div style="font-size:0.8rem;"><b>Trigger:</b> ${escapeHtml(x.trigger || "")}</div>
+            <div style="font-size:0.8rem; color:var(--text-muted);"><b>Mitigation:</b> ${escapeHtml(x.mitigation || "")}</div>
+          </div>
+        `)}
+      </div>
+
+      <div style="padding:10px; border:1px solid var(--border-color); border-radius:10px;">
+        <div style="font-weight:800; margin-bottom:6px;">Load-Adjustments (7 Tage)</div>
+        ${list(data?.loadAdjustments, a => `
+          <div style="display:flex; justify-content:space-between; gap:10px; border-bottom:1px solid var(--border-color); padding:6px 0;">
+            <div style="min-width:90px; color:var(--text-muted); font-size:0.8rem;">
+              ${escapeHtml(a.label || ("D"+a.dayIndex))}
+            </div>
+            <div style="font-weight:800;">
+              ${Number.isFinite(a.load) ? a.load : "—"}
+              <span style="color:var(--text-muted); font-weight:700;">
+                (${Number.isFinite(a.delta) ? (a.delta >= 0 ? "+" : "") + a.delta : "—"})
+              </span>
+            </div>
+            <div style="flex:1; color:var(--text-main); font-size:0.8rem;">
+              ${escapeHtml(a.reason || "")}
+            </div>
+          </div>
+        `)}
+      </div>
+    </div>
+  `;
+}
+
+function saveSimPlan() {
+    // Sicherheits-Check vor dem Senden
+    console.log("Speichern gestartet. Locks:", lockedDays);
+    
+    if(confirm("Diesen Plan speichern?")) {
+        const loader = document.getElementById('loader');
+        const loaderText = document.getElementById('loader-text');
+        
+        loader.style.display = 'flex';
+        loaderText.innerText = "Sende Daten an Server...";
+        
+        // Daten sammeln
+        let teAeList = [], teAnList = [], sports = [], zones = [];
+        try {
+            for(let i=0; i<14; i++) {
+              teAeList.push(document.getElementById('teAe_'+i).value);
+              teAnList.push(document.getElementById('teAn_'+i).value);
+              sports.push(document.getElementById('sport_'+i).value);
+              zones.push(document.getElementById('zone_'+i).value);
+            }
+        } catch(e) {
+            alert("Fehler beim Sammeln der Daten: " + e.message);
+            loader.style.display = 'none';
+            return;
+        }
+
+        // SERVER AUFRUF
+        google.script.run
+        .withSuccessHandler(function(msg) {
+            console.log("Server Antwort:", msg);
+            // Prüfen ob die Antwort ein Fehlertext ist
+            if (String(msg).includes("❌") || String(msg).includes("FEHLER")) {
+                loader.style.display = 'none';
+                alert("🛑 SPEICHERN FEHLGESCHLAGEN!\n\n" + msg);
+            } else {
+                loaderText.innerText = "✅ ERFOLG! Lade neu...";
+                loaderText.style.color = "var(--success)";
+                setTimeout(function() { 
+                    loadDataFromServer(); 
+                }, 1200);
+            }
+        })
+        .withFailureHandler(function(err) {
+            console.error("Server Crash:", err);
+            loader.style.display = 'none';
+            alert("❌ SYSTEM ABSTURZ (FailureHandler):\n" + err.message);
+        })
+        // WICHTIG: 6 Parameter senden!
+        .saveSimulatedPlan(currentLoads, teAeList, teAnList, sports, zones, lockedDays);
+    }
+}
+
+// --- AUTO LEVELERS (V155 - Dual Core) ---
+
+function autoLevelLoads() {
+  if(!simBase) return;
+
+  // Phase-basierter Solver (tagesabhängig)
+  runAutoLevel((sg, acwr, i) => {
+    const t = getDayTargets(i);
+
+    const needMore = (sg < t.targetSG) || (acwr < t.targetACWR);
+    const unsafe = (acwr > SAFETY.acwrMax) || (sg > SAFETY.sgDanger);
+
+    return needMore && !unsafe;
+  });
+}
+
+
+
+/** 2. LEVELER: ZIEL-ACWR (NEU) */
+function autoLevelACWR() {
+    if(!simBase) return;
+    const targetACWR = parseFloat(document.getElementById('targetAcwrInput').value) || 1.0;
+    // Logik: Solange ACWR < Ziel, erhöhe Load.
+    runAutoLevel((sg, acwr) => (acwr < targetACWR)); 
+}
+
+/** GENERISCHE SOLVER FUNKTION (Das Gehirn) */
+function runAutoLevel(conditionFn, opts = {}) {
+    const seed = getSeedState(simBase);
+let tATL = seed.atl0;
+let tCTL = seed.ctl0;
+let history = [...seed.hist];
+    const cfg = simBase.config;
+
+    // --- Solver: gleiche Sleep-Defaults wie updateSimulation ---
+const p = (val) => {
+  if (typeof val === 'number') return val;
+  if (!val) return 0;
+  return parseFloat(String(val).replace(',', '.')) || 0;
+};
+
+const sleepHoursDefault = p(simBase.sleepHoursDefault) || p(cfg.sleep_hours_default) || 0;
+const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_default) || 0;
+
+// Für Solver: Tag 0 = heute echte Werte, sonst Defaults
+const getSleepForDay = (i) => {
+  const sleepH = (i === 0) ? p(simBase.sleepHoursToday) : sleepHoursDefault;
+  const sleepS = (i === 0) ? p(simBase.sleepScoreToday) : sleepScoreDefault;
+  return { sleepH, sleepS };
+};
+
+
+const startI = simBase.todayIsClosed ? 1 : 0;
+
+    for(let i=startI; i<14; i++) {
+        let bestLoad = 0;
+        
+        // Fixierte Tage überspringen wir beim Rechnen
+        if (lockedDays[i]) {
+            bestLoad = currentLoads[i];
+        } else {
+            // Binary Search für den perfekten Load
+            let min = 0; let max = 350;
+            for(let step=0; step<12; step++) {
+                let testLoad = (min + max) / 2;
+                
+                // 1. Sim Physio
+                // 1) Sim Physio (wie updateSimulation, inkl. Sleep)
+const { sleepH, sleepS } = getSleepForDay(i);
+
+// Parsen (cfg kann Strings enthalten)
+const S_ATL = p(cfg.S_ATL);
+const B_ATL = p(cfg.B_ATL);
+const wH_ATL = p(cfg.wH_ATL) || 0;
+const wS_ATL = p(cfg.wS_ATL) || 0;
+
+const S_CTL = p(cfg.S_CTL);
+const B_CTL = p(cfg.B_CTL);
+const wH_CTL = p(cfg.wH_CTL) || 0;
+const wS_CTL = p(cfg.wS_CTL) || 0;
+
+const alpha_ATL_up = p(cfg.alpha_ATL_up);
+const alpha_ATL_down = p(cfg.alpha_ATL_down);
+const alpha_CTL = p(cfg.alpha_CTL);
+
+const cap_up_ATL   = p(cfg.cap_up_ATL)   || 1000;
+const cap_down_ATL = p(cfg.cap_down_ATL) || 1000;
+
+// Stimuli (mit Sleep)
+const stimATL = (S_ATL * testLoad) + B_ATL + (wH_ATL * sleepH) + (wS_ATL * sleepS);
+const stimCTL = (S_CTL * testLoad) + B_CTL + (wH_CTL * sleepH) + (wS_CTL * sleepS);
+
+// ATL smoothing (ohne Caps im Solver – okay; Caps könntest du optional ergänzen)
+const alpha = (stimATL > tATL) ? alpha_ATL_up : alpha_ATL_down;
+const calcATL = (1 - alpha) * tATL + alpha * stimATL;
+
+// CTL smoothing
+const calcCTL = (1 - alpha_CTL) * tCTL + alpha_CTL * stimCTL;
+
+                
+                // 2) Sim Metrics
+const acwr = calcATL / (calcCTL || 1);
+
+// V3 Modifier (wie updateSimulation)
+const recoveryMod = (simBase.hrvToday < 40 || simBase.sleepToday < 70) ? 1.5 : 1.0;
+const monotonyPenalty = (simBase.monoToday > 2.0) ? 15 : 0;
+
+// Smart Gain V3 (exakt)
+const ctl7DaysAgo = (history.length > 0) ? history[0] : calcCTL;
+
+const trendComp = (calcCTL - ctl7DaysAgo) * 2.0;
+const statusComp = calcCTL / 10.0;
+const strainEst = (calcATL * 7);
+const costComp = (strainEst / 500.0) * recoveryMod;
+
+const sg = trendComp + statusComp - costComp - monotonyPenalty;
+
+
+                // 3. Check Condition (Gain oder ACWR)
+                if (conditionFn(sg, acwr, i)) { 
+                    min = testLoad; // Wir brauchen mehr!
+                } else { 
+                    max = testLoad; // Zu viel!
+                }
+                bestLoad = testLoad;
+            }
+        }
+
+// Runden & Limits
+bestLoad = Math.round(bestLoad);
+if (bestLoad < 10) bestLoad = 0;   // <- NEU: alles unter 10 wird 0
+if (bestLoad > 300) bestLoad = 300;
+currentLoads[i] = bestLoad;
+
+
+        // UI Updaten (wenn nicht gelockt)
+        if (!lockedDays[i]) {
+            const slider = document.querySelector(`input[oninput="changeLoad(${i}, this.value)"]`);
+            if(slider) slider.value = bestLoad;
+            const label = document.getElementById('val_'+i);
+            if(label) label.innerText = bestLoad;
+        }
+
+        // Physiologie fortschreiben (IDENTISCH zu updateSimulation, inkl. Sleep + Caps)
+const { sleepH: sleepH_f, sleepS: sleepS_f } = getSleepForDay(i);
+
+// Stimuli (mit Sleep)
+const stimATL_f = (S_ATL * bestLoad) + B_ATL + (wH_ATL * sleepH_f) + (wS_ATL * sleepS_f);
+const stimCTL_f = (S_CTL * bestLoad) + B_CTL + (wH_CTL * sleepH_f) + (wS_CTL * sleepS_f);
+
+// ATL smoothing + Caps (wie updateSimulation)
+const goingUp_f = stimATL_f > tATL;
+const alphaATL_f = goingUp_f ? alpha_ATL_up : alpha_ATL_down;
+
+let rawATL_f = ((1 - alphaATL_f) * tATL) + (alphaATL_f * stimATL_f);
+tATL = Math.min(Math.max(rawATL_f, tATL - cap_down_ATL), tATL + cap_up_ATL);
+
+// CTL smoothing (wie updateSimulation)
+tCTL = ((1 - alpha_CTL) * tCTL) + (alpha_CTL * stimCTL_f);
+
+// Historie rotieren
+if (history.length >= 7) history.shift();
+history.push(tCTL);
+    }
+    // Alles neu zeichnen (Tabelle & Chart)
+    updateSimulation();
+}
+
+// --- CHART LOGIK ---
+function initChart() {
+    const ctx = document.getElementById('simChart').getContext('2d');
+    myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Load (ESS)',
+                    data: [],
+                    backgroundColor: 'rgba(37, 99, 235, 0.6)', // Blau
+                    yAxisID: 'y1',
+                    order: 3
+                },
+                {
+                    type: 'line',
+                    label: 'Smart Gain',
+                    data: [],
+                    borderColor: '#d400ff', // Lila
+                    borderWidth: 2,
+                    tension: 0.3,
+                    pointRadius: 2,
+                    yAxisID: 'y1',
+                    order: 2
+                },
+                {
+                    type: 'line',
+                    label: 'ACWR',
+                    data: [],
+                    borderColor: '#ef4444', // Rot
+                    borderWidth: 2,
+                    borderDash: [5, 5], // Gestrichelt
+                    tension: 0.1,
+                    pointRadius: 0,
+                    yAxisID: 'y2', // LINKE ACHSE
+                    order: 1
+                },
+                {
+                    type: 'line',
+                    label: 'Fitness (CTL)',
+                    data: [],
+                    borderColor: '#10b981', // Grün
+                    borderWidth: 1,
+                    pointRadius: 0,
+                    yAxisID: 'y1',
+                    order: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false, // Wichtig für Performance beim Schieben!
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                y2: { // ACWR Links
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    min: 0.5,
+                    max: 2.0,
+                    title: { display: true, text: 'ACWR' },
+                    grid: { drawOnChartArea: false }
+                },
+                y1: { // Rechts
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: { display: true, text: 'Load / Score' },
+                    grid: { color: 'rgba(200, 200, 200, 0.1)' }
+                },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+}
+
+function sgZone(sg) {
+  if (!Number.isFinite(sg)) return "NA";
+  if (sg > SG_ZONES.PRIME_MAX) return "OVERLOAD";
+  if (sg >= SG_ZONES.PROD_MAX) return "PRIME";
+  if (sg >= SG_ZONES.MAINT_MAX) return "PRODUCTIVE";
+  if (sg >= SG_ZONES.DETRAIN_MAX) return "MAINTENANCE";
+  return "DETRAINING";
+}
+
+function initTsbPerfChart() {
+  const el = document.getElementById("tsbPerfChart");
+  if (!el) return;
+
+  const ctx = el.getContext("2d");
+
+  const SG_THRESHOLD = SG_ZONES.MAINT_MAX;
+
+  // ===== Bubble-Farb-Logik (Ampel) =====
+  // Du kannst hier deine individuellen Schwellen feinjustieren:
+  const SG_DANGER     = SG_ZONES.PRIME_MAX;     // optional: "zu hoch = Gefahr/rot" (dein Beispiel SG>181)
+
+  // ---------- Helpers für Zeit-Farbskala (alt → neu) ----------
+  // t = 0 (alt) .. 1 (neu)
+  const clamp01 = (x) => Math.max(0, Math.min(1, x));
+  const getT = (chartCtx) => {
+    const p = chartCtx?.raw || {};
+    if (Number.isFinite(p.t)) return clamp01(p.t);
+
+    // Fallback: dataIndex/len
+    const i = chartCtx?.dataIndex;
+    const len = chartCtx?.dataset?.data?.length;
+    if (Number.isFinite(i) && Number.isFinite(len) && len > 1) return clamp01(i / (len - 1));
+    return 0.5;
+  };
+
+  // Zeit-Overlay: wir ändern *nur* die Alpha (Transparenz), damit Ampel-Farbe bleibt
+  const alphaByTimeFill = (t) => 0.22 + 0.38 * t;     // alt blasser, neu satter
+  const alphaByTimeStroke = (t) => 0.55 + 0.35 * t;   // alt weicher, neu klarer
+
+  const bubbleFill = (chartCtx) => {
+    const p = chartCtx?.raw || {};
+    const tsb = Number(p.x);
+    const sg  = Number(p.y);
+    const ctl = Number(p.ctl);
+const bioModOn = (simBase?.hrvToday < 40 || simBase?.sleepToday < 70);
+const monoOn   = (simBase?.monoToday > 2.0);
+const th = tsbThresholdsByCTL(ctl, bioModOn, monoOn);
+const TSB_OVERREACH = th.TSB_OVERREACH;
+const TSB_TIRED     = th.TSB_TIRED;
+
+    // neutral, falls unvollständig
+    if (!Number.isFinite(tsb) || !Number.isFinite(sg)) return "rgba(148,163,184,0.35)";
+
+    // Ampel-Basisfarbe:
+    let base = "rgba(16,185,129,1)"; // grün
+    if (tsb <= TSB_OVERREACH || sg >= SG_DANGER) base = "rgba(239,68,68,1)";     // rot
+    else if (tsb <= TSB_TIRED || sg < SG_THRESHOLD) base = "rgba(245,158,11,1)"; // gelb
+
+    // Zeit-Alpha drüberlegen
+    const t = getT(chartCtx);
+    const a = alphaByTimeFill(t);
+    return base.replace(",1)", `,${a})`);
+  };
+
+  const bubbleStroke = (chartCtx) => {
+    const p = chartCtx?.raw || {};
+    const tsb = Number(p.x);
+    const sg  = Number(p.y);
+    const ctl = Number(p.ctl);
+const bioModOn = (simBase?.hrvToday < 40 || simBase?.sleepToday < 70);
+const monoOn   = (simBase?.monoToday > 2.0);
+const th = tsbThresholdsByCTL(ctl, bioModOn, monoOn);
+const TSB_OVERREACH = th.TSB_OVERREACH;
+const TSB_TIRED     = th.TSB_TIRED;
+
+    if (!Number.isFinite(tsb) || !Number.isFinite(sg)) return "rgba(100,116,139,0.75)";
+
+    let base = "rgba(16,185,129,1)";
+    if (tsb <= TSB_OVERREACH || sg >= SG_DANGER) base = "rgba(239,68,68,1)";
+    else if (tsb <= TSB_TIRED || sg < SG_THRESHOLD) base = "rgba(245,158,11,1)";
+
+    const t = getT(chartCtx);
+    const a = alphaByTimeStroke(t);
+    return base.replace(",1)", `,${a})`);
+  };
+
+  // Plugin: Quadranten-Labels (SG=80 / TSB=0)
+  const quadrantLabels = {
+    id: "quadrantLabels",
+    afterDraw(chart) {
+      const { ctx, chartArea, scales } = chart;
+      if (!chartArea || !scales?.x || !scales?.y) return;
+
+      const x0  = scales.x.getPixelForValue(0);
+      const ySG = scales.y.getPixelForValue(SG_THRESHOLD);
+
+      const pad = 8;
+
+      ctx.save();
+      ctx.globalAlpha = 0.75;
+      ctx.font = "12px Inter, system-ui, sans-serif";
+      ctx.fillStyle = "#64748b";
+
+      ctx.fillText("Produktiv + frisch", clampX(x0 + pad), clampY(chartArea.top + 16));
+      ctx.fillText("Produktiv, aber müde", clampX(chartArea.left + pad), clampY(chartArea.top + 16));
+      ctx.fillText("Frisch, aber wenig Reiz", clampX(x0 + pad), clampY(ySG + 16));
+      ctx.fillText("Müde + unproduktiv", clampX(chartArea.left + pad), clampY(ySG + 16));
+
+      ctx.restore();
+
+      function clampX(x) { return Math.min(Math.max(x, chartArea.left + 2), chartArea.right - 2); }
+      function clampY(y) { return Math.min(Math.max(y, chartArea.top + 2), chartArea.bottom - 2); }
+    }
+  };
+
+  // ✅ Plugin: Datum-Labels an Bubbles (Dataset 0)
+  const bubbleDateLabels = {
+    id: "bubbleDateLabels",
+    afterDatasetsDraw(chart, args, pluginOptions) {
+      const { ctx, chartArea } = chart;
+      const dsIndex = pluginOptions?.datasetIndex ?? 0;
+      const ds = chart.data.datasets?.[dsIndex];
+      const meta = chart.getDatasetMeta(dsIndex);
+      if (!ds || !meta?.data?.length) return;
+
+      const fontSize = pluginOptions?.fontSize ?? 11;
+      const dx = pluginOptions?.dx ?? 8;
+      const dy = pluginOptions?.dy ?? -10;
+      const maxLabels = pluginOptions?.maxLabels ?? 999;
+      const minR = pluginOptions?.minR ?? 0;
+
+      ctx.save();
+      ctx.globalAlpha = pluginOptions?.alpha ?? 0.95;
+      ctx.font = `${fontSize}px Inter, system-ui, sans-serif`;
+      ctx.fillStyle = pluginOptions?.color ?? "#0f172a";
+      ctx.textBaseline = "middle";
+
+      const stroke = pluginOptions?.stroke ?? true;
+      if (stroke) {
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = pluginOptions?.strokeColor ?? "rgba(255,255,255,0.9)";
+      }
+
+      let shown = 0;
+
+      for (let i = 0; i < meta.data.length; i++) {
+        if (shown >= maxLabels) break;
+
+        const el = meta.data[i];
+        if (!el) continue;
+
+        const raw = ds.data?.[i] || {};
+        const label = (raw.d ?? "").toString();
+        const r = Number(raw.r);
+
+        if (!label) continue;
+        if (Number.isFinite(r) && r < minR) continue;
+
+        const x = el.x, y = el.y;
+        if (x < chartArea.left || x > chartArea.right || y < chartArea.top || y > chartArea.bottom) continue;
+
+        const tx = x + dx;
+        const ty = y + dy;
+
+        if (stroke) ctx.strokeText(label, tx, ty);
+        ctx.fillText(label, tx, ty);
+
+        shown++;
+      }
+
+      ctx.restore();
+    }
+  };
+
+  tsbPerfChart = new Chart(ctx, {
+    type: "bubble",
+    data: {
+      datasets: [
+        {
+          label: "TSB vs SG",
+          data: [],
+          parsing: false,
+
+          // ✅ Ampel + Zeit (Alpha)
+          backgroundColor: bubbleFill,
+          borderColor: bubbleStroke,
+          borderWidth: 1.5,
+          order: 2
+        },
+        {
+          label: "TSB=0",
+          type: "line",
+          data: [{ x: 0, y: -9999 }, { x: 0, y: 9999 }],
+          parsing: false,
+          pointRadius: 0,
+          borderWidth: 1,
+          borderDash: [6, 6],
+          order: 1
+        },
+        {
+          label: "SG=80",
+          type: "line",
+          data: [{ x: -9999, y: SG_THRESHOLD }, { x: 9999, y: SG_THRESHOLD }],
+          parsing: false,
+          pointRadius: 0,
+          borderWidth: 1,
+          borderDash: [6, 6],
+          order: 1
+        },
+
+        // ✅ NEU: Trajektorie (chronologisch verbunden)
+                {
+          label: "Trajektorie",
+          type: "line",
+          data: [],
+          parsing: false,
+          showLine: true,
+          pointRadius: 0,
+          borderWidth: 2,
+          borderDash: [6, 6],
+          borderColor: "rgba(100,116,139,0.85)",
+          order: 0
+        },   // ✅ <-- DIESES KOMMA FEHLT BEI DIR
+
+        // ✅ Dataset 4: Trend (Platzhalter)
+        {
+          label: "Trend",
+          type: "line",
+          data: [],
+          parsing: false,
+          showLine: true,
+          pointRadius: 0,
+          borderWidth: 0,
+          order: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const p = ctx.raw || {};
+              const d = p.d ? `${p.d} | ` : "";
+              const x = Number(p.x);
+              const y = Number(p.y);
+              const r = Number(p.r);
+              const tsb = Number.isFinite(x) ? x.toFixed(1) : String(p.x);
+              const sg  = Number.isFinite(y) ? y.toFixed(1) : String(p.y);
+              const ctl = Number(p.ctl);
+const bioModOn = (simBase?.hrvToday < 40 || simBase?.sleepToday < 70);
+const monoOn   = (simBase?.monoToday > 2.0);
+const th = tsbThresholdsByCTL(ctl, bioModOn, monoOn);
+              const rad = Number.isFinite(r) ? Math.round(r) : String(p.r);
+
+              const t = Number.isFinite(p.t) ? p.t : null;
+              const age = (t === null) ? "" : ` | t=${(t*100).toFixed(0)}%`;
+
+              return `${d}TSB=${tsb}, SG=${sg}, r=${rad}${age} | CTL=${Number.isFinite(ctl)?ctl.toFixed(0):"?"} | Tired=${th.TSB_TIRED.toFixed(0)} Over=${th.TSB_OVERREACH.toFixed(0)}`;
+            }
+          }
+        },
+        legend: { position: "top" },
+
+        bubbleDateLabels: {
+          datasetIndex: 0,
+          fontSize: 11,
+          dx: 8,
+          dy: -10,
+          alpha: 0.95,
+          stroke: true,
+          maxLabels: 14,
+          minR: 0
+        }
+      },
+
+      scales: {
+        x: {
+          type: "linear",
+          title: { display: true, text: "TSB (Form)" },
+          min: -80,
+          max: 80,
+          ticks: { stepSize: 20 }
+        },
+        y: {
+          type: "linear",
+          title: { display: true, text: "Smart Gains" },
+          min: 0,
+          max: 200,
+          ticks: { stepSize: 20 }
+        }
+      }
+    },
+    plugins: [quadrantLabels, bubbleDateLabels]
+  });
+}
+
+function bubbleColor(ctx) {
+  const p = ctx?.raw || {};
+  const tsb = Number(p.x);
+  const sg  = Number(p.y);
+
+  // Falls Werte fehlen: neutral
+  if (!Number.isFinite(tsb) || !Number.isFinite(sg)) return "rgba(148,163,184,0.35)";
+
+  // Deine Schwellen
+  const SG_T = SG_ZONES.MAINT_MAX;      // produktiv ab MAINT_MAX? (bei dir: 95)
+const SG_DANGER = SG_ZONES.PRIME_MAX; // Overload ab >189 (siehe unten)
+  const TSB_OVERREACH = -90;
+  const TSB_TIRED     = -50;
+
+  // === Regeln (Ampel) ===
+  // Rot: Danger oder Overreach
+  if (sg >= SG_DANGER || tsb <= TSB_OVERREACH) {
+    return "rgba(239,68,68,0.40)";   // rot
+  }
+
+  // Gelb: produktiv aber müde / oder unproduktiv
+  if (tsb <= TSB_TIRED || sg < SG_T) {
+    return "rgba(245,158,11,0.40)";  // gelb
+  }
+
+  // Grün: produktiv & nicht stark müde
+  return "rgba(16,185,129,0.40)";    // grün
+}
+
+function bubbleBorderColor(ctx) {
+  const p = ctx?.raw || {};
+  const tsb = Number(p.x);
+  const sg  = Number(p.y);
+
+  if (!Number.isFinite(tsb) || !Number.isFinite(sg)) return "rgba(100,116,139,0.70)";
+
+  const SG_T = SG_ZONES.MAINT_MAX;      // produktiv ab MAINT_MAX? (bei dir: 95)
+const SG_DANGER = SG_ZONES.PRIME_MAX; // Overload ab >189 (siehe unten)
+  const TSB_OVERREACH = -90;
+  const TSB_TIRED     = -50;
+
+  if (sg >= SG_DANGER || tsb <= TSB_OVERREACH) return "rgba(239,68,68,0.90)";
+  if (tsb <= TSB_TIRED || sg < SG_T) return "rgba(245,158,11,0.90)";
+  return "rgba(16,185,129,0.90)";
+}
+
+function updateChart(labels, loads, ctls, acwrs, sgs) {
+    if (!myChart) return;
+    myChart.data.labels = labels;
+    myChart.data.datasets[0].data = loads;
+    myChart.data.datasets[1].data = sgs;
+    myChart.data.datasets[2].data = acwrs;
+    myChart.data.datasets[3].data = ctls;
+    myChart.update('none'); // 'none' verhindert Animationen
+}
+
+function recalibrateSnapshot() {
+  const loader = document.getElementById('loader');
+  const loaderText = document.getElementById('loader-text');
+
+  loader.style.display = 'flex';
+  loaderText.innerText = "Rekalibriere Snapshot...";
+  loaderText.style.color = "var(--primary)";
+
+  userGainOverride = false; // optional: Auto-Target wieder erlauben
+
+  google.script.run
+    .withSuccessHandler(function() {
+      loadDataFromServer(); // lädt dann mit neuem Snapshot
+    })
+    .withFailureHandler(function(err) {
+      loaderText.innerText = "❌ Snapshot-Fehler: " + (err && err.message ? err.message : err);
+      loaderText.style.color = "var(--danger)";
+      setTimeout(() => { loader.style.display = 'none'; }, 2000);
+    })
+    .refreshPlanAppSnapshot();
+}
+
+// ===== NAV HELPERS (wie WebApp_V2: page routing über pubUrl) =====
+function navServerUrl() {
+  // pubUrl kommt aus doGet(): template.pubUrl = appUrl;
+  // Falls pubUrl nicht gesetzt ist, fallback auf aktuelle Basis-URL
+  const templ = (typeof pubUrl === "string" && pubUrl && !pubUrl.includes("?=")) ? pubUrl : null;
+  if (templ) return templ;
+
+  // fallback: aktuelle URL bis vor '?'
+  return window.location.href.split("?")[0];
+}
+
+function navGoto(page) {
+  const base = navServerUrl();
+  const url = page ? (base + "?page=" + encodeURIComponent(page)) : base;
+
+  // gleiche Seite wechseln (wie Navigation)
+  window.location.href = url;
+}
+// ===== /NAV HELPERS =====
+
+function updateTsbPerfChart(tsbArr, sgArr, loadArr, labelArr) {
+  if (!tsbPerfChart) return;
+
+  const N = 14;
+
+  // Optional: Overlap sichtbar machen
+  const ENABLE_JITTER = true;
+  const JITTER_X = 0.25;
+  const JITTER_Y = 0.25;
+
+  // Bubble-Size
+  const R_MIN = 14;
+  const R_MAX = 80;
+  const R_EXP = 1.4;
+
+  console.groupCollapsed("[TSBvsSG] updateTsbPerfChart()");
+  try {
+    console.log("LEN", {
+      tsb: Array.isArray(tsbArr) ? tsbArr.length : null,
+      sg:  Array.isArray(sgArr)  ? sgArr.length  : null,
+      load:Array.isArray(loadArr)? loadArr.length: null,
+      labels: Array.isArray(labelArr) ? labelArr.length : null
+    });
+    const peek = (a) => {
+      if (!Array.isArray(a) || a.length === 0) return a;
+      const n = a.length;
+      return { first: a.slice(0, 3), last: a.slice(Math.max(0, n - 3)) };
+    };
+    console.log("PEEK", { tsb: peek(tsbArr), sg: peek(sgArr), load: peek(loadArr), labels: peek(labelArr) });
+  } catch (e) {
+    console.warn("[TSBvsSG] Debug header failed:", e);
+  }
+
+  const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+  const toNum = (v) => {
+    const n = Number(String(v ?? "").replace(",", "."));
+    return Number.isFinite(n) ? n : NaN;
+  };
+  const jitter = (v, amp) => v + (Math.random() - 0.5) * amp;
+
+  // Bubble Size Scaling
+  const finiteLoads = (loadArr || []).map(toNum).filter(Number.isFinite);
+  const Lmin = finiteLoads.length ? Math.min(...finiteLoads) : 0;
+  const Lmax = finiteLoads.length ? Math.max(...finiteLoads) : 1;
+
+  const rOf = (L) => {
+    const Ln = toNum(L);
+    if (!Number.isFinite(Ln)) return R_MIN;
+    const t = (Lmax === Lmin) ? 0.5 : (Ln - Lmin) / (Lmax - Lmin);
+    const tt = Math.pow(clamp(t, 0, 1), R_EXP);
+    return clamp(R_MIN + tt * (R_MAX - R_MIN), R_MIN, R_MAX);
+  };
+
+  const pts = [];
+  const dropped = [];
+
+  for (let i = 0; i < N; i++) {
+    const rawX = tsbArr?.[i];
+    const rawY = sgArr?.[i];
+    const rawL = loadArr?.[i];
+
+    let x = toNum(rawX);
+    let y = toNum(rawY);
+
+    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+      dropped.push({ i, tsb: rawX, sg: rawY, load: rawL, label: labelArr?.[i] });
+      continue;
+    }
+
+    if (ENABLE_JITTER) {
+      x = jitter(x, JITTER_X);
+      y = jitter(y, JITTER_Y);
+    }
+
+    // ✅ Datum an den Punkt heften
+    const d = (labelArr?.[i] ?? "").toString();
+
+    // ✅ Zeitindex 0..1 (alt -> neu), für Zeit-Farbskalierung in init (Alpha)
+    const t = (N <= 1) ? 1 : (i / (N - 1));
+
+    // CTL pro Tag für dynamische TSB-Schwellen: wir holen CTL aus simLast (Output-Serie)
+const ctl = Number(simLast?.ctl?.[i]);
+pts.push({ x, y, r: rOf(rawL), d, t, ctl });
+  }
+
+  console.log("PTS", pts.length, pts);
+
+  try {
+    const key = (p) => `${Math.round(p.x * 10) / 10}|${Math.round(p.y * 10) / 10}`;
+    const uniq = new Set(pts.map(key));
+    console.log("UNIQUE_XY (≈0.1)", uniq.size, "von", pts.length);
+  } catch (e) {}
+
+  console.log("DROPPED", dropped.length, dropped);
+
+  // ✅ Dataset 0: Bubbles
+  tsbPerfChart.data.datasets[0].data = pts;
+
+  // ✅ Dataset 3: Trajektorie (chronologisch verbinden)
+  // (Index 3 muss in initTsbPerfChart existieren!)
+  if (tsbPerfChart.data.datasets[3]) {
+    tsbPerfChart.data.datasets[3].data = pts.map(p => ({ x: p.x, y: p.y }));
+  }
+
+  // ✅ Achsen nur setzen (ohne scales zu ersetzen!)
+  try {
+    if (pts.length && tsbPerfChart.options?.scales?.x && tsbPerfChart.options?.scales?.y) {
+      const xs = pts.map(p => p.x);
+      const ys = pts.map(p => p.y);
+      const xmin = Math.min(...xs), xmax = Math.max(...xs);
+      const ymin = Math.min(...ys), ymax = Math.max(...ys);
+      const padX = (xmax - xmin) * 0.08 || 10;
+      const padY = (ymax - ymin) * 0.08 || 10;
+
+      tsbPerfChart.options.scales.x.min = xmin - padX;
+      tsbPerfChart.options.scales.x.max = xmax + padX;
+      tsbPerfChart.options.scales.y.min = ymin - padY;
+      tsbPerfChart.options.scales.y.max = ymax + padY;
+
+      tsbPerfChart.options.scales.x.ticks = tsbPerfChart.options.scales.x.ticks || {};
+      tsbPerfChart.options.scales.y.ticks = tsbPerfChart.options.scales.y.ticks || {};
+      tsbPerfChart.options.scales.x.ticks.maxTicksLimit = 7;
+      tsbPerfChart.options.scales.y.ticks.maxTicksLimit = 7;
+    }
+  } catch (e) {
+    console.warn("[TSBvsSG] axis set skipped/failed:", e);
+  }
+
+  tsbPerfChart.update("none");
+  console.groupEnd();
+}
+
+function updateTsbMiniDashboard(tsbArr, sgArr, acwrArr, loadArr, labelArr) {
+  // --- UI elements ---
+  const dot = document.getElementById("tsbMiniAmpelDot");
+  const tx  = document.getElementById("tsbMiniAmpelText");
+  const cm  = document.getElementById("tsbMiniComment");
+  const wn  = document.getElementById("tsbMiniWarn");
+  if (!dot || !tx || !cm || !wn) return;
+
+  // --- Thresholds (deine Individualisierung) ---
+  const SG_T = SG_ZONES.MAINT_MAX;      // produktiv ab MAINT_MAX? (bei dir: 95)
+const SG_DANGER = SG_ZONES.PRIME_MAX; // Overload ab >189 (siehe unten)
+  const ACWR_MAX  = (SAFETY?.acwrMax ?? 1.25);
+
+  // TSB Heuristiken (Sportwiss. Daumenregeln, anpassbar)
+  const bioModOn = (simBase?.hrvToday < 40 || simBase?.sleepToday < 70);
+const monoOn   = (simBase?.monoToday > 2.0);
+
+// MiniDash nutzt CTL Tag 0 aus simLast (oder aus DOM, wenn simLast fehlt)
+let ctl0 = Number(simLast?.ctl?.[0]);
+if (!Number.isFinite(ctl0)) {
+  const ctlEl0 = document.getElementById("ctl_0");
+  ctl0 = Number(ctlEl0?.innerText);
+}
+
+const th = tsbThresholdsByCTL(ctl0, bioModOn, monoOn);
+const TSB_OVERREACH = th.TSB_OVERREACH;
+const TSB_TIRED     = th.TSB_TIRED;
+const TSB_FRESH     = +10; // kannst du später auch dynamisieren, lasse ich erstmal fix
+
+  // Horizon fürs "Forecast kippt" (anpassbar)
+  const LOOKAHEAD_DAYS = 7;
+
+  // --- Helpers ---
+  const toNum = (v) => {
+    const n = Number(String(v ?? "").replace(",", "."));
+    return Number.isFinite(n) ? n : NaN;
+  };
+
+  const N = Math.min(
+    14,
+    Array.isArray(tsbArr) ? tsbArr.length : 0,
+    Array.isArray(sgArr)  ? sgArr.length  : 0,
+    Array.isArray(acwrArr)? acwrArr.length: 0,
+    Array.isArray(loadArr)? loadArr.length: 0,
+    Array.isArray(labelArr)? labelArr.length: 0
+  );
+
+  if (!N) {
+    tx.textContent = "—";
+    cm.textContent = "Keine Daten.";
+    wn.textContent = "—";
+    dot.style.background = "var(--text-muted)";
+    dot.style.boxShadow = "0 0 0 3px rgba(100,116,139,0.15)";
+    tx.style.color = "var(--text-muted)";
+    return;
+  }
+
+  // Wir nehmen Tag 0 als "heute/Start" (bei todayIsClosed hast du ihn ja explizit gesetzt)
+  const i0 = 0;
+
+  const tsb0  = toNum(tsbArr[i0]);
+  const sg0   = toNum(sgArr[i0]);
+  const acwr0 = toNum(acwrArr[i0]);
+  const load0 = toNum(loadArr[i0]);
+  const d0    = String(labelArr[i0] ?? "").trim();
+
+  // --- Ampel-Logik (kompakt, aber robust) ---
+  // Grundidee:
+  // Grün = produktiv & nicht in Overreach
+  // Gelb = produktiv, aber Ermüdung / Risk steigt
+  // Rot  = Danger / ACWR zu hoch / Overreach-Fenster
+  let level = "green";
+
+  const redTriggers = [
+  Number.isFinite(sg0) && sg0 > SG_ZONES.PRIME_MAX,
+  Number.isFinite(acwr0) && acwr0 > ACWR_MAX,
+  Number.isFinite(tsb0) && tsb0 <= TSB_OVERREACH
+].some(Boolean);
+
+  const yellowTriggers = [
+  Number.isFinite(tsb0) && tsb0 <= TSB_TIRED,
+  Number.isFinite(sg0) && sg0 < SG_ZONES.MAINT_MAX,
+  Number.isFinite(acwr0) && acwr0 >= (ACWR_MAX - 0.05)
+].some(Boolean);
+
+  if (redTriggers) level = "red";
+  else if (yellowTriggers) level = "yellow";
+
+  // --- 1 Satz Kommentar (sportwissenschaftlich, aber nicht romanlang) ---
+  // Fokus: "Was ist heute der Zustand?"
+  let comment = "";
+  const parts = [];
+
+  if (d0) parts.push(`${d0}:`);
+
+  if (Number.isFinite(sg0)) {
+    if (sg0 >= SG_T) parts.push(`SG ${Math.round(sg0)} → produktiver Reiz.`);
+    else parts.push(`SG ${Math.round(sg0)} → unter produktiver Zone.`);
+  }
+
+  if (Number.isFinite(tsb0)) {
+    if (tsb0 <= TSB_OVERREACH) parts.push(`TSB ${tsb0.toFixed(0)} → stark ermüdet (Overreach).`);
+    else if (tsb0 <= TSB_TIRED) parts.push(`TSB ${tsb0.toFixed(0)} → müde.`);
+    else if (tsb0 >= TSB_FRESH) parts.push(`TSB ${tsb0.toFixed(0)} → eher frisch.`);
+    else parts.push(`TSB ${tsb0.toFixed(0)} → neutral.`);
+  }
+
+  if (Number.isFinite(acwr0)) {
+    parts.push(`ACWR ${acwr0.toFixed(2)}.`);
+  }
+
+  comment = parts.join(" ");
+
+  // --- Forecast-Warnung: "wohin kippt das System?" ---
+  // Wir suchen das *erste* Kippen-Ereignis innerhalb LOOKAHEAD_DAYS:
+  // A) SG fällt unter 80
+  // B) ACWR überschreitet max
+  // C) TSB fällt unter -40 (Overreach)
+  let warn = "Keine Warnung in Sicht.";
+
+  const maxI = Math.min(N - 1, i0 + LOOKAHEAD_DAYS);
+
+  const findFirst = (pred) => {
+    for (let i = i0; i <= maxI; i++) if (pred(i)) return i;
+    return -1;
+  };
+
+  const iSgDrop = findFirst(i => Number.isFinite(toNum(sgArr[i])) && toNum(sgArr[i]) < SG_T);
+  const iAcwrHi = findFirst(i => Number.isFinite(toNum(acwrArr[i])) && toNum(acwrArr[i]) > ACWR_MAX);
+  const iTsbLow = findFirst(i => Number.isFinite(toNum(tsbArr[i])) && toNum(tsbArr[i]) <= TSB_OVERREACH);
+
+  // Priorität: harte Risiken zuerst
+  if (iAcwrHi >= 0) {
+    warn = `In ${iAcwrHi - i0} Tagen: ACWR > ${ACWR_MAX.toFixed(2)} (${String(labelArr[iAcwrHi] ?? "")}).`;
+  } else if (iTsbLow >= 0) {
+    warn = `In ${iTsbLow - i0} Tagen: TSB ≤ ${TSB_OVERREACH} (${String(labelArr[iTsbLow] ?? "")}) → Overreach-Fenster, Entlastung einplanen.`;
+  } else if (iSgDrop >= 0) {
+    warn = `In ${iSgDrop - i0} Tagen: SG fällt unter ${SG_T} (${String(labelArr[iSgDrop] ?? "")}) → Reiz kippt Richtung „unproduktiv“.`;
+  } else {
+    // Bonus: wenn SG sehr hoch + TSB sehr negativ => "Überziehen"
+    const iOver = findFirst(i => {
+      const tsb = toNum(tsbArr[i]), sg = toNum(sgArr[i]);
+      return Number.isFinite(tsb) && Number.isFinite(sg) && tsb < -30 && sg > 160;
+    });
+    if (iOver >= 0) {
+      warn = `In ${iOver - i0} Tagen: „hoch wirksam aber teuer“ (TSB < -30 & SG > 160) → 1–2 Tage Entlastung danach einbauen.`;
+    }
+  }
+
+  // --- UI render ---
+  const setAmpel = (lvl) => {
+    if (lvl === "green") {
+      dot.style.background = "var(--success)";
+      dot.style.boxShadow = "0 0 0 3px rgba(16,185,129,0.18)";
+      tx.textContent = "GRÜN";
+      tx.style.color = "var(--success)";
+      return;
+    }
+    if (lvl === "yellow") {
+      dot.style.background = "var(--warning)";
+      dot.style.boxShadow = "0 0 0 3px rgba(245,158,11,0.18)";
+      tx.textContent = "GELB";
+      tx.style.color = "var(--warning)";
+      return;
+    }
+    dot.style.background = "var(--danger)";
+    dot.style.boxShadow = "0 0 0 3px rgba(239,68,68,0.18)";
+    tx.textContent = "ROT";
+    tx.style.color = "var(--danger)";
+  };
+
+  setAmpel(level);
+  cm.textContent = comment;
+  wn.textContent = warn;
+}
+
+function applyNiceAxes(chart, xs, ys){
+  const fx = xs.filter(Number.isFinite);
+  const fy = ys.filter(Number.isFinite);
+
+  // Defaults
+  let xmin = -80, xmax = 80;
+  let ymin = 0,   ymax = 200;
+
+  if (fx.length) {
+    const minX = Math.min(...fx), maxX = Math.max(...fx);
+    const padX = Math.max(10, (maxX - minX) * 0.2);
+    xmin = Math.max(-120, Math.floor((minX - padX) / 10) * 10);
+    xmax = Math.min( 120, Math.ceil ((maxX + padX) / 10) * 10);
+  }
+
+  if (fy.length) {
+    const minY = Math.min(...fy), maxY = Math.max(...fy);
+    const padY = Math.max(10, (maxY - minY) * 0.2);
+    ymin = Math.max(0, Math.floor((minY - padY) / 10) * 10);
+    ymax = Math.min(300, Math.ceil ((maxY + padY) / 10) * 10);
+  }
+
+  chart.options.scales.x.min = xmin;
+  chart.options.scales.x.max = xmax;
+  chart.options.scales.y.min = ymin;
+  chart.options.scales.y.max = ymax;
+}
+
+function calcTrendVector(tsbArr, sgArr, k = 3) {
+  if (!Array.isArray(tsbArr) || !Array.isArray(sgArr)) return null;
+  if (tsbArr.length < k * 2) return null;
+
+  const mean = (a) => a.reduce((s,v)=>s+v,0)/a.length;
+
+  const prevTSB = mean(tsbArr.slice(-2*k, -k));
+  const prevSG  = mean(sgArr.slice(-2*k, -k));
+
+  const currTSB = mean(tsbArr.slice(-k));
+  const currSG  = mean(sgArr.slice(-k));
+
+  return {
+    x0: prevTSB,
+    y0: prevSG,
+    x1: currTSB,
+    y1: currSG,
+    dx: currTSB - prevTSB,
+    dy: currSG - prevSG
+  };
+}
+
+function updateTrendArrow(chart, tsbArr, sgArr) {
+  const v = calcTrendVector(tsbArr, sgArr, 3);
+  if (!v) return;
+
+  const color =
+    v.dy >= 0 && v.dx >= -50 ? "#16a34a" :
+    v.dy >= 0 ? "#f59e0b" :
+    "#dc2626";
+
+  chart.data.datasets[4] = {
+    label: "Trend",
+    type: "line",
+    data: [
+      { x: v.x0, y: v.y0 },
+      { x: v.x1, y: v.y1 }
+    ],
+    parsing: false,
+    borderColor: color,
+    borderWidth: 3,
+    pointRadius: [0, 6],
+    pointStyle: ["circle", "triangle"],
+    pointRotation: 90,
+    tension: 0
+  };
+}
+
+</script>
+</body>
+</html>

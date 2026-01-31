@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html data-theme="light" id="main-html">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coach Kira - Tactical Logbook</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* --- THEMES --- */
+    :root {
+      /* LIGHT MODE */
+      --bg-color: #f3f4f6;
+      --card-bg: #ffffff;
+      --card-highlight: #f9fafb;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border-color: #e5e7eb;
+      
+      /* COLORS */
+      --primary: #2563eb; 
+      --prime: #d400ff; 
+      --success: #059669; 
+      --warning: #d97706; 
+      --danger: #dc2626;
+      --neutral: #9ca3af;
+      
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="dark"] {
+      /* DARK MODE */
+      --bg-color: #0d1117; 
+      --card-bg: #161b22; 
+      --card-highlight: #21262d;
+      --text-main: #c9d1d9; 
+      --text-muted: #8b949e; 
+      --border-color: #30363d;
+      
+      /* COLORS ADJUSTED FOR DARK MODE */
+      --primary: #58a6ff; 
+      --prime: #e879f9; 
+      --success: #2ea043; 
+      --warning: #d29922; 
+      --danger: #f85149;
+      --neutral: #6e7681;
+      
+      --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    }
+
+    /* --- BASIS LAYOUT --- */
+    body { 
+        font-family: 'Inter', sans-serif; 
+        background-color: var(--bg-color); 
+        color: var(--text-main); 
+        margin: 0; 
+        padding: 20px; 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .log-container { 
+        width: 100%; 
+        max-width: 1000px; 
+        background: var(--card-bg); 
+        border-radius: 12px; 
+        box-shadow: var(--shadow); 
+        border: 1px solid var(--border-color);
+        overflow: hidden; 
+    }
+
+    .header { 
+        padding: 20px; 
+        border-bottom: 1px solid var(--border-color); 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+    }
+
+    .title { 
+        font-family: 'Roboto Condensed', sans-serif; 
+        font-weight: 700; 
+        font-size: 1.2rem; 
+        text-transform: uppercase; 
+        letter-spacing: 1px; 
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* --- FILTER BAR (NEU) --- */
+    .filter-bar {
+        padding: 10px 20px;
+        background: var(--card-highlight);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+    }
+
+    .filter-btn {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+        padding: 6px 12px;
+        border-radius: 15px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-family: 'Roboto Condensed';
+        font-weight: bold;
+        transition: all 0.2s;
+    }
+
+    .filter-btn:hover { border-color: var(--primary); color: var(--primary); }
+    
+    .filter-btn.active {
+        background: var(--primary);
+        color: #ffffff;
+        border-color: var(--primary);
+    }
+
+    /* --- BUTTONS --- */
+    .theme-btn {
+        background: var(--card-highlight);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        padding: 8px 12px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.2s;
+    }
+    .theme-btn:hover { transform: scale(1.05); border-color: var(--primary); }
+
+    /* --- TABELLE --- */
+    .table-responsive { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+
+    .chart-card {
+  padding: 15px 20px;
+  background: var(--card-bg);
+  border-top: 1px solid var(--border-color);
+}
+
+.chart-wrapper {
+  position: relative;
+  height: 420px;
+  width: 100%;
+}
+
+    
+    th { 
+        text-align: left; 
+        padding: 12px 15px; 
+        color: var(--text-muted); 
+        font-size: 0.7rem; 
+        text-transform: uppercase; 
+        border-bottom: 2px solid var(--border-color); 
+        background-color: var(--card-highlight);
+    }
+    
+    td { 
+        padding: 12px 15px; 
+        border-bottom: 1px solid var(--border-color); 
+        vertical-align: middle; 
+    }
+    
+    tr:last-child td { border-bottom: none; }
+    tr:hover { background-color: var(--card-highlight); }
+
+    /* --- TYPOGRAFIE IN DER TABELLE --- */
+    .val-main { font-weight: 700; font-family: 'Roboto Condensed'; font-size: 1rem; color: var(--text-main); }
+    .val-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+    
+    /* --- BADGES (ACWR) --- */
+    .badge { 
+        display: inline-block; 
+        padding: 4px 10px; 
+        border-radius: 6px; 
+        font-weight: bold; 
+        font-family: 'Roboto Condensed';
+        font-size: 0.9rem; 
+        border: 1px solid transparent;
+    }
+
+    /* Loader Overlay */
+    #loader-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); z-index: 999;
+        display: flex; justify-content: center; align-items: center;
+        backdrop-filter: blur(3px);
+        font-family: 'Roboto Condensed'; color: white; font-weight: bold; font-size: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+
+<div id="loader-overlay">Lade Logbuch...</div>
+
+<div class="log-container">
+  <div class="header">
+    <div class="title">
+        <span>📜 Tactical Logbook</span>
+        <span id="entry-count" style="font-size:0.7rem; color:var(--text-muted); font-weight:normal; background:var(--card-highlight); padding:2px 8px; border-radius:10px;">0 Einträge</span>
+    </div>
+    <div style="display:flex; gap:10px;">
+        <button class="theme-btn" onclick="initLog()" title="Aktualisieren">🔄</button>
+        <button class="theme-btn" onclick="toggleTheme()" id="themeBtn" title="Design wechseln">🌗</button>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+      <button class="filter-btn active" id="btn-30" onclick="setRange(30)">30 Tage</button>
+      <button class="filter-btn" id="btn-90" onclick="setRange(90)">90 Tage</button>
+      <button class="filter-btn" id="btn-365" onclick="setRange(365)">1 Jahr</button>
+      <button class="filter-btn" id="btn-all" onclick="setRange(9999)">Alles</button>
+  </div>
+
+  <div style="padding: 10px 20px; background: var(--card-highlight); border-bottom: 1px solid var(--border-color); font-size: 0.75rem; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+      <span style="font-weight: bold; color: var(--primary);">V3-SYSTEM:</span>
+      <span title="HRV < (Baseline - 2)">H - BioMOD</span>
+      <span title="Monotonie > 2.0">M - Monotonie</span>
+      <span style="color: var(--success); font-weight: bold;">OK</span> = System stabil
+  </div>
+
+ <div class="chart-card">
+    <div class="chart-wrapper">
+      <canvas id="tacticalChart"></canvas>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Datum / Phase</th>
+          <th>Load (Ist)</th>
+          <th>Smart Gain</th>
+          <th>V3 Status</th>
+          <th>ACWR</th>
+          <th>Readiness</th>
+        </tr>
+      </thead>
+      <tbody id="log-body"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  let fullLogData = []; 
+  let tacticalChart = null;
+
+
+
+  // --- THEME LOGIK ---
+  function initTheme() {
+      const saved = localStorage.getItem('tacticalTheme') || 'light';
+      document.documentElement.setAttribute('data-theme', saved);
+  }
+
+  function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('tacticalTheme', next);
+  }
+
+  // --- STARTUP ---
+  window.onload = function() {
+      initTheme();
+      initLog();
+  };
+
+  function initLog() {
+    const overlay = document.getElementById('loader-overlay');
+    overlay.style.display = 'flex';
+    overlay.innerText = "Lade Logbuch...";
+    
+    google.script.run
+      .withSuccessHandler(data => {
+  try {
+    fullLogData = data || [];
+    setRange(30);
+  } catch (e) {
+    console.error("[TACTICAL] Render crash:", e);
+    overlay.innerText = "❌ RENDER-FEHLER: " + e.message;
+    overlay.style.color = "var(--danger)";
+    return;
+  }
+  overlay.style.display = 'none';
+})
+
+      .withFailureHandler(err => {
+        overlay.innerText = "❌ SERVER-FEHLER: " + err.message;
+        overlay.style.color = "var(--danger)";
+      })
+      .getTacticalLogData();
+  }
+
+  // --- FILTER FUNKTION ---
+  function setRange(days) {
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      
+      let btnId = 'btn-all';
+      if (days === 30) btnId = 'btn-30';
+      if (days === 90) btnId = 'btn-90';
+      if (days === 365) btnId = 'btn-365';
+      
+      const activeBtn = document.getElementById(btnId);
+      if(activeBtn) activeBtn.classList.add('active');
+
+      renderLog(fullLogData, days);
+      const chartLimit = Math.min(days, 365); // z.B. max 365 Tage ins Chart
+      renderTacticalChart(fullLogData, chartLimit);
+
+      
+      const count = days >= 9999 ? fullLogData.length : Math.min(days, fullLogData.length);
+      document.getElementById('entry-count').innerText = count + " Einträge angezeigt";
+  }
+
+  function renderLog(data, limit) {
+    const body = document.getElementById('log-body');
+    if (!body) return;
+    body.innerHTML = ''; 
+    
+    if (!data || data.length === 0) {
+        body.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Keine Daten gefunden.</td></tr>';
+        return;
+    }
+
+    data.slice(0, limit).forEach(entry => {
+      const tr = document.createElement('tr');
+      
+      // 1. SMART GAINS LOGIK (Korrigiert: Sweetspot-Prinzip)
+      const sgVal = parseFloat((entry.sg + "").replace(',', '.')) || 0;
+      let sgCol = 'var(--text-main)'; 
+
+if (sgVal > 189) { 
+  sgCol = 'var(--danger)';   // Danger / Overkill
+} else if (sgVal >= 142) { 
+  sgCol = 'var(--prime)';    // Prime
+} else if (sgVal >= 95) { 
+  sgCol = 'var(--success)';  // Productive
+} else if (sgVal >= 39) { 
+  sgCol = 'var(--warning)';  // Maintenance
+} else if (sgVal >= 0) { 
+  sgCol = 'var(--danger)';   // Detraining
+} else { 
+  sgCol = 'var(--danger)';   // Destruktiv / Überlastet
+}
+              
+      
+      const displaySg = (sgVal > 0 ? "+" : "") + sgVal.toFixed(0);
+
+      // 2. ACWR LOGIK
+      const acwrVal = parseFloat((entry.acwr + "").replace(',', '.')) || 0;
+      let acwrBadgeBg = 'rgba(217, 119, 6, 0.1)';
+      let acwrBadgeCol = 'var(--warning)';
+      
+      if (acwrVal >= 0.8 && acwrVal <= 1.3) {
+          acwrBadgeBg = 'rgba(5, 150, 105, 0.2)'; 
+          acwrBadgeCol = 'var(--success)';
+      } else if (acwrVal > 1.5) {
+          acwrBadgeBg = 'rgba(220, 38, 38, 0.2)'; 
+          acwrBadgeCol = 'var(--danger)';
+      }
+
+      // --- 3. V3 STATUS (SG_Flags Parser) ---
+      // Wir erwarten vom Server Strings wie "H M" oder "H" oder leer
+      let rawStatus = (entry.v3Status || "").toUpperCase(); 
+      let v3Icons = "";
+
+      if (rawStatus.includes("H")) {
+          v3Icons += '<span title="Bio-Malus (HRV)" style="margin-right:5px; font-size:1.1rem;">H</span>';
+      }
+      if (rawStatus.includes("M")) {
+          v3Icons += '<span title="Monotonie-Abzug" style="margin-right:5px; font-size:1.1rem;">M</span>';
+      }
+      if (rawStatus.includes("R")) { // Falls wir RHR doch nutzen
+          v3Icons += '<span title="RHR erhöht" style="margin-right:5px; font-size:1.1rem;">R</span>';
+      }
+
+      // Fallback: Wenn leer, dann OK
+      if (v3Icons === "") {
+          v3Icons = '<span style="color:var(--success); font-weight:bold; font-size:0.75rem; opacity:0.7;">OK</span>';
+      }
+
+      // 4. HTML Zusammenbau
+      tr.innerHTML = `
+        <td>
+          <div class="val-main">${entry.datum}</div>
+          <div class="val-sub">${entry.phase} | ${entry.sport || "Pause"}</div>
+        </td>
+        <td>
+          <div class="val-main">${entry.load}</div>
+          <div class="val-sub">AE: ${entry.teAerobic} | AN: ${entry.teAnaerobic}</div>
+        </td>
+        <td>
+          <div class="val-main" style="color:${sgCol} !important;">${displaySg}</div>
+          <div class="val-sub">Trend: ${entry.ctlTrend}</div>
+        </td>
+        <td style="text-align:center;">
+          ${v3Icons}
+        </td>
+        <td>
+            <span class="badge" style="background:${acwrBadgeBg}; color:${acwrBadgeCol}; border:1px solid ${acwrBadgeCol}">
+                ${acwrVal.toFixed(2)}
+            </span>
+        </td>
+        <td>
+          <div class="val-main">${String(entry.rhr || "-").replace('%','')}</div>
+        </td>
+      `;
+      body.appendChild(tr);
+    });
+}
+
+function buildChartData(data, limit) {
+  const rows = (data || []).slice(0, limit).reverse(); 
+  // reverse(): älteste links, neueste rechts
+
+  const labels = rows.map(e => String(e.datum || ""));
+  const load = rows.map(e => parseFloat((e.load + "").replace(",", ".")) || 0);
+  const sg   = rows.map(e => parseFloat((e.sg + "").replace(",", ".")) || 0);
+  const ctl  = rows.map(e => parseFloat((e.ctl + "").replace(",", ".")) || 0);
+  const acwr = rows.map(e => parseFloat((e.acwr + "").replace(",", ".")) || 0);
+
+  return { labels, load, sg, ctl, acwr };
+}
+
+function renderTacticalChart(data, limit) {
+  const canvas = document.getElementById("tacticalChart");
+  if (!canvas) return;
+
+  const { labels, load, sg, ctl, acwr } = buildChartData(data, limit);
+
+  const cfg = {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Load",
+          data: load,
+          yAxisID: "yL",
+          order: 3
+        },
+        {
+          type: "line",
+          label: "Smart Gain",
+          data: sg,
+          yAxisID: "yL",
+          tension: 0.25,
+          pointRadius: 2,
+          order: 1
+        },
+        {
+          type: "line",
+          label: "CTL",
+          data: ctl,
+          yAxisID: "yL",
+          tension: 0.15,
+          pointRadius: 0,
+          borderWidth: 2,
+          order: 2
+        },
+        {
+          type: "line",
+          label: "ACWR",
+          data: acwr,
+          yAxisID: "yR",
+          tension: 0.15,
+          pointRadius: 0,
+          borderDash: [6, 4],
+          borderWidth: 2,
+          order: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { display: true }
+      },
+      scales: {
+        yL: {
+          type: "linear",
+          position: "left",
+          title: { display: true, text: "Load / Smart Gain / CTL" }
+        },
+        yR: {
+          type: "linear",
+          position: "right",
+          title: { display: true, text: "ACWR" },
+          suggestedMin: 0.5,
+          suggestedMax: 2.0,
+          grid: { drawOnChartArea: false }
+        },
+        x: {
+          ticks: { maxRotation: 0, autoSkip: true }
+        }
+      }
+    }
+  };
+
+  if (tacticalChart) {
+    tacticalChart.data = cfg.data;
+    tacticalChart.options = cfg.options;
+    tacticalChart.update("none");
+  } else {
+    tacticalChart = new Chart(canvas.getContext("2d"), cfg);
+  }
+}
+
+
+</script>
+
+</body>
+</html>

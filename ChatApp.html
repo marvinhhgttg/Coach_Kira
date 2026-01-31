@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html data-theme="dark">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#121212">
+  
+  <title>Coach Kira - Secure Channel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+
+  <style>
+    /* --- THEME VARIABLES --- */
+    :root {
+      /* LIGHT THEME */
+      --bg-color: #f4f6f8;
+      --header-bg: #1e293b;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+
+      --primary: #2563eb;
+      --prime: #d400ff;
+
+      --input-bg: #fff;
+      --input-border: #cbd5e1;
+      --card-bg: #ffffff;
+    }
+
+    [data-theme="dark"] {
+      /* DARK THEME (Garmin Style - Anthrazit) */
+      --bg-color: #121212; 
+      --header-bg: #121212;
+      --text-main: #e0e0e0;
+      --text-muted: #888888;
+      --border-color: #333333;
+
+      --primary: #55aaff;
+      --prime: #d400ff;
+
+      --input-bg: #222;
+      --input-border: #444;
+      --card-bg: #181818;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      margin: 0; padding: 0;
+      height: 100vh; /* Vollbild */
+      display: flex; flex-direction: column;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Header */
+    .chat-header {
+      background: var(--header-bg);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding: 15px 20px;
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      z-index: 10;
+    }
+    .header-title {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-weight: 700;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-size: 1.1rem;
+    }
+    .theme-switch {
+      background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 0 5px; transition: transform 0.2s;
+    }
+    .theme-switch:active { transform: scale(0.9); }
+
+    /* Main Container */
+    .chat-container {
+      flex-grow: 1;
+      display: flex; flex-direction: column;
+      padding: 15px;
+      max-width: 900px; margin: 0 auto; width: 100%;
+      overflow: hidden; /* Scrollen nur in History */
+    }
+
+    /* History */
+    .chat-history {
+      flex-grow: 1;
+      overflow-y: auto;
+      background: var(--bg-color); /* Transparent zum Body */
+      padding-bottom: 20px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Bubbles */
+    .msg {
+      margin-bottom: 12px; padding: 12px 18px;
+      border-radius: 18px; max-width: 85%;
+      line-height: 1.5; font-size: 1rem;
+      word-wrap: break-word;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .msg-user {
+      background: linear-gradient(135deg, var(--primary), #2563eb);
+      margin-left: auto; text-align: right;
+      color: white; border-bottom-right-radius: 2px;
+    }
+    .msg-kira {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      margin-right: auto; border-bottom-left-radius: 2px;
+    }
+
+    /* Chips */
+    .chat-chips {
+      display: flex; gap: 8px; overflow-x: auto;
+      padding: 10px 2px; flex-shrink: 0;
+      border-top: 1px solid var(--border-color);
+    }
+    .chip {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      padding: 8px 16px; border-radius: 20px;
+      font-size: 0.85rem; white-space: nowrap;
+      cursor: pointer; color: var(--text-main);
+      transition: all 0.2s; font-family: 'Roboto Condensed', sans-serif;
+    }
+    .chip:active { background: var(--primary); color: white; border-color: var(--primary); }
+
+    /* Input Area */
+    .input-area {
+      display: flex; gap: 10px;
+      padding-top: 10px; flex-shrink: 0;
+    }
+    .chat-input {
+      flex-grow: 1; padding: 12px;
+      border: 1px solid var(--input-border);
+      border-radius: 8px; font-size: 16px; outline: none;
+      background: var(--input-bg); color: var(--text-main);
+    }
+    .chat-input:focus { border-color: var(--primary); }
+
+    .btn-send {
+      background-color: var(--primary); color: white;
+      border: none; padding: 0 25px; border-radius: 8px;
+      font-weight: 700; cursor: pointer;
+      font-family: 'Roboto Condensed', sans-serif; text-transform: uppercase;
+      transition: transform 0.2s;
+    }
+    [data-theme="dark"] .btn-send { color: black; }
+    .btn-send:active { transform: scale(0.95); }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+  <div class="chat-header">
+    <div class="header-title">Coach Kira - Secure Channel 🤖</div>
+    <button class="theme-switch" onclick="toggleTheme()" title="Design wechseln">🌗</button>
+  </div>
+
+  <div class="chat-container">
+    <div class="chat-history" id="chat-history">
+      <div style="text-align:center; color:var(--text-muted); padding:20px; font-style:italic;">
+        Lade verschlüsseltes Gedächtnis...
+      </div>
+    </div>
+    
+    <div class="chat-chips">
+      <button class="chip" onclick="quick('Wie ist mein aktueller Status?')">📊 Status</button>
+      <button class="chip" onclick="quick('Analysiere meine HRV.')">❤️ HRV</button>
+      <button class="chip" onclick="quick('Was steht nächste Woche an?')">📅 Vorschau</button>
+      <button class="chip" onclick="quick('Gib mir eine Motivationsrede!')">🔥 Motivation</button>
+    </div>
+
+    <div class="input-area">
+      <input type="text" id="chat-input" class="chat-input" placeholder="Nachricht..." onkeypress="handleKey(event)">
+      <button class="btn-send" onclick="send()">Senden</button>
+    </div>
+  </div>
+
+  <script>
+    // --- INIT & THEME ---
+    window.onload = function() {
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      document.getElementById('chat-input').focus();
+      
+      // NEU: Historie laden beim Start
+      loadChatHistory();
+    };
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const current = html.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+    }
+
+    // --- HISTORY LOGIC ---
+    function loadChatHistory() {
+        google.script.run
+            .withSuccessHandler(renderHistory)
+            .withFailureHandler((err) => { 
+                console.log("Fehler beim Laden der History: " + err);
+                // Fallback, falls Laden fehlschlägt
+                const hist = document.getElementById('chat-history');
+                hist.innerHTML = '<div class="msg msg-kira">Verbindung steht. Konnte Historie nicht laden (Backend-Funktion fehlt?), aber ich höre dich.</div>';
+            })
+            .getChatHistoryForUI(50); // Lädt die letzten 50 Nachrichten
+    }
+
+    function renderHistory(messages) {
+        const historyContainer = document.getElementById('chat-history');
+        if (!historyContainer) return;
+
+        // Container leeren (Lade-Text weg)
+        historyContainer.innerHTML = ''; 
+
+        // Sicherheits-Check: Falls Backend Müll oder Null liefert
+        if (!messages || !Array.isArray(messages)) {
+             // Fallback-Begrüßung
+             addMsg("Verbindung steht. (Keine Historie gefunden). Was gibt's?", 'kira');
+             return;
+        }
+
+        if (messages.length === 0) {
+            // Wenn keine Historie da ist, Standard-Begrüßung
+            addMsg("Verbindung steht. Ich habe Zugriff auf deine aktuellen Daten. Was gibt's?", 'kira');
+        } else {
+            messages.forEach(msg => {
+                // Sender-Check: 'Commander', 'User' oder 'Marc' -> User-Bubble
+                const type = (msg.sender === 'Commander' || msg.sender === 'User' || msg.sender === 'Marc') ? 'user' : 'kira';
+                
+                // Wir nutzen addMsg, aber ohne Animation/ID Rückgabe
+                const div = document.createElement('div');
+                div.className = `msg msg-${type}`;
+                div.innerText = msg.message;
+                
+                // Optional: Timestamp als Tooltip
+                if(msg.timestamp) {
+                    div.title = new Date(msg.timestamp).toLocaleString();
+                }
+                
+                historyContainer.appendChild(div);
+            });
+            // Begrüßung am Ende anhängen (optional)
+            // addMsg("--- Historie Ende ---", 'kira'); 
+        }
+        
+        // Nach unten scrollen
+        historyContainer.scrollTop = historyContainer.scrollHeight;
+    }
+
+    // --- CHAT LOGIC ---
+    function handleKey(e) { if(e.key === 'Enter') send(); }
+    function quick(txt) { document.getElementById('chat-input').value = txt; send(); }
+
+    function send() {
+      const input = document.getElementById('chat-input');
+      const txt = input.value.trim();
+      if(!txt) return;
+
+      addMsg(txt, 'user');
+      input.value = '';
+      const loadId = addMsg('Kira schreibt...', 'kira', true);
+
+      google.script.run
+        .withSuccessHandler(res => { 
+            removeMsg(loadId);
+            
+            // JSON Cleaner
+            let cleanText = res;
+            try {
+                if (typeof res === 'string' && res.trim().startsWith('{')) {
+                    const parsed = JSON.parse(res);
+                    if (parsed.response) cleanText = parsed.response;
+                    else if (parsed.message) cleanText = parsed.message;
+                    else if (parsed.text) cleanText = parsed.text;
+                    else if (parsed.coach_response?.message) cleanText = parsed.coach_response.message;
+                }
+            } catch(e) { console.log("No JSON in ChatApp"); }
+
+            addMsg(cleanText, 'kira'); 
+        })
+        .withFailureHandler(err => { removeMsg(loadId); addMsg("Fehler: " + err, 'kira'); })
+        .askKira(txt);
+    }
+
+    function addMsg(txt, sender, load=false) {
+      const div = document.createElement('div');
+      div.className = `msg msg-${sender}`;
+      div.innerText = txt;
+      if(load) { div.id='loading'; div.style.fontStyle='italic'; div.style.opacity='0.7'; }
+      const hist = document.getElementById('chat-history');
+      hist.appendChild(div);
+      hist.scrollTop = hist.scrollHeight;
+      return div.id;
+    }
+    function removeMsg(id) { const el = document.getElementById(id); if(el) el.remove(); }
+  </script>
+</body>
+</html>

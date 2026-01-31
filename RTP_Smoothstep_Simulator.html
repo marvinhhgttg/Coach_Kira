@@ -1,0 +1,765 @@
+<!-- RTP_Simulator.html  (Apps Script HTML File)
+     Aufruf: .../exec?page=rtp
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RTP Simulator (Load-driven, ATL/CTL true)</title>
+
+  <style>
+    :root{
+      --bg:#0f1115; --card:#161a22; --muted:#9aa4b2; --text:#e6e8ee;
+      --border:#2a3242; --accent:#55aaff;
+      --good:#3ddc97; --warn:#ffd166; --bad:#ff5c7a; --prime:#d400ff;
+      --chip:#0c0f14;
+    }
+    body{ margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:var(--bg); color:var(--text); }
+    .wrap{ padding:14px; max-width:1200px; margin:0 auto; }
+    .card{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:12px; margin-bottom:12px; }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+    .field{ display:flex; flex-direction:column; gap:6px; min-width:160px; flex:1; }
+    label{ font-size:12px; color:var(--muted); }
+    input, select{
+      background:var(--chip); color:var(--text); border:1px solid var(--border);
+      border-radius:10px; padding:10px; outline:none;
+    }
+    input:focus, select:focus{ border-color:var(--accent); }
+    .btns{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    button{
+      background:var(--accent); border:none; color:#061018;
+      padding:10px 12px; border-radius:10px; font-weight:900; cursor:pointer;
+    }
+    button.secondary{ background:transparent; border:1px solid var(--border); color:var(--text); }
+    button:disabled{ opacity:.55; cursor:not-allowed; }
+
+    .hint{ font-size:12px; color:var(--muted); line-height:1.4; margin-top:6px; }
+    .kpi{ display:flex; gap:10px; flex-wrap:wrap; }
+    .pill{ border:1px solid var(--border); border-radius:999px; padding:6px 10px; font-size:12px; color:var(--muted); }
+    .pill strong{ color:var(--text); }
+
+    table{ width:100%; border-collapse:collapse; overflow:hidden; border-radius:12px; border:1px solid var(--border); }
+    th, td{ padding:8px 10px; border-bottom:1px solid var(--border); font-size:12px; text-align:right; }
+    th{ text-align:right; color:var(--muted); background:var(--chip); position:sticky; top:0; z-index:1; }
+    td:first-child, th:first-child{ text-align:left; }
+    tr:last-child td{ border-bottom:none; }
+
+    .band{ display:inline-block; padding:2px 8px; border-radius:999px; font-weight:900; font-size:11px; }
+    .b-detraining{ background:rgba(255,92,122,.18); color:var(--bad); border:1px solid rgba(255,92,122,.35); }
+    .b-maint{ background:rgba(255,209,102,.14); color:var(--warn); border:1px solid rgba(255,209,102,.35); }
+    .b-prod{ background:rgba(61,220,151,.14); color:var(--good); border:1px solid rgba(61,220,151,.35); }
+    .b-prime{ background:rgba(212,0,255,.14); color:var(--prime); border:1px solid rgba(212,0,255,.35); }
+
+    .chartBox{ border:1px solid var(--border); border-radius:12px; background:var(--chip); padding:10px; }
+    .status{ font-size:12px; color:var(--muted); margin-top:8px; }
+    .status.ok{ color:var(--good); }
+    .status.err{ color:var(--bad); }
+    .status.warn{ color:var(--warn); }
+    .small{ font-size:11px; color:var(--muted); }
+    .topbar{ display:flex; justify-content:space-between; gap:10px; align-items:center; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    details{ border:1px solid var(--border); border-radius:12px; padding:10px; background:rgba(0,0,0,0.06); }
+    summary{ cursor:pointer; color:var(--text); font-weight:900; }
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+
+  <div class="card">
+    <div class="topbar">
+      <div>
+        <div style="font-weight:950; font-size:15px;">RTP-Simulator (Load-driven) • ATL/CTL-Fortschreibung • SG als Ampel</div>
+        <div class="hint">
+          Idee: <b>Du planst Load</b> (Ramp + Rest/Deload), daraus werden <span class="mono">ATL</span> und <span class="mono">CTL</span> täglich aktualisiert.
+          <b>SG ist Output</b> (Kontrollsignal), nicht der Load-Regler.
+        </div>
+      </div>
+      <div class="btns">
+        <button class="secondary" onclick="goBack()">← Dashboard</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div class="field" style="min-width:290px;">
+        <label>Preset</label>
+        <select id="preset" onchange="applyPreset()">
+          <option value="">— frei —</option>
+          <option value="tl_1412">Timeline-Beispiel (Start 14.12.2025) – load sequence</option>
+          <option value="p12">Krank 1–2 Tage (schnell zurück)</option>
+          <option value="p35">Krank 3–5 Tage</option>
+          <option value="p610">Krank 6–10 Tage</option>
+          <option value="p1121">Krank 11–21 Tage</option>
+          <option value="p21p">Krank >21 Tage</option>
+        </select>
+        <div class="hint">Presets setzen Ramp-Parameter + Rest/Deload-Pattern. Du kannst alles danach überschreiben.</div>
+      </div>
+
+      <div class="field">
+        <label>Startdatum</label>
+        <input id="startDate" type="date">
+      </div>
+
+      <div class="field">
+        <label>RTP-Tage N (0…N)</label>
+        <input id="nDays" type="number" min="1" step="1" value="10">
+      </div>
+
+      <div class="field">
+        <label>Max Load/Tag (ESS)</label>
+        <input id="maxLoad" type="number" min="0" step="1" value="120">
+      </div>
+
+      <div class="field">
+        <label>Max ΔLoad/Tag (ESS)</label>
+        <input id="maxRise" type="number" min="0" step="1" value="20">
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:10px;">
+      <div class="field">
+        <label>Ramp-Start Load L0 (ESS)</label>
+        <input id="L0" type="number" min="0" step="1" value="20">
+      </div>
+
+      <div class="field">
+        <label>Ramp-Peak Load Lpeak (ESS)</label>
+        <input id="Lpeak" type="number" min="0" step="1" value="110">
+      </div>
+
+      <div class="field">
+        <label>Minimum TRAIN Load (ESS)</label>
+        <input id="minTrain" type="number" min="0" step="1" value="20">
+      </div>
+
+      <div class="field">
+        <label>Active-Recovery Load (ESS)</label>
+        <input id="restLoad" type="number" min="0" step="1" value="10">
+      </div>
+
+      <div class="field" style="min-width:280px;">
+        <label>Resttage (manuell) – z.B. <span class="mono">9,10</span></label>
+        <input id="restDaysManual" type="text" value="">
+        <div class="hint">Tag-Nummern in 0…N. Leer = Preset-Pattern.</div>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:10px;">
+      <div class="field" style="min-width:280px;">
+        <label>Deload-Tage (manuell) – z.B. <span class="mono">8</span></label>
+        <input id="deloadDaysManual" type="text" value="">
+        <div class="hint">Deload ≠ Rest. Deload bekommt reduzierte Last.</div>
+      </div>
+
+      <div class="field">
+        <label>Deload-Load (ESS)</label>
+        <input id="deloadLoad" type="number" min="0" step="1" value="25">
+      </div>
+
+      <div class="field">
+        <label>SG-Bandgrenzen</label>
+        <select id="sgLegend" onchange="renderIfPossible()">
+          <option value="default">Default: &lt;10 / 10–40 / 40–100 / 100–180</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Chart</label>
+        <select id="chartMode" onchange="renderIfPossible()">
+          <option value="load">Load (ESS)</option>
+          <option value="atlctl">ATL & CTL</option>
+          <option value="sg">Smart Gains</option>
+          <option value="combo">Load + SG (dual scaled)</option>
+        </select>
+      </div>
+    </div>
+
+    <details style="margin-top:10px;">
+      <summary>Advanced: ATL/CTL-Model (wie im Sheet, ohne Schlaf)</summary>
+
+      <div class="row" style="margin-top:10px;">
+        <div class="field">
+          <label>ATL start (heute)</label>
+          <input id="atlStart" type="number" step="0.1" value="150">
+        </div>
+        <div class="field">
+          <label>CTL start (heute)</label>
+          <input id="ctlStart" type="number" step="0.1" value="300">
+        </div>
+        <div class="field">
+          <label>CTL vor 7 Tagen (Start-Baseline)</label>
+          <input id="ctl7d" type="number" step="0.1" value="500">
+        </div>
+
+        <div class="field">
+          <label>CTL-7d-Mode</label>
+          <select id="ctl7Mode">
+            <option value="fixed">fixed (konservativ, stabil)</option>
+            <option value="rolling">rolling (simuliert Durchlauf)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div class="field">
+          <label>S_ATL</label>
+          <input id="S_ATL" type="number" step="0.01" value="1">
+        </div>
+        <div class="field">
+          <label>B_ATL</label>
+          <input id="B_ATL" type="number" step="0.01" value="0">
+        </div>
+        <div class="field">
+          <label>alpha_ATL_up</label>
+          <input id="alphaUp" type="number" step="0.01" value="0.35">
+        </div>
+        <div class="field">
+          <label>alpha_ATL_down</label>
+          <input id="alphaDown" type="number" step="0.01" value="0.15">
+        </div>
+        <div class="field">
+          <label>cap_up_ATL</label>
+          <input id="capUp" type="number" step="1" value="40">
+        </div>
+        <div class="field">
+          <label>cap_down_ATL</label>
+          <input id="capDown" type="number" step="1" value="40">
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div class="field">
+          <label>S_CTL</label>
+          <input id="S_CTL" type="number" step="0.01" value="1">
+        </div>
+        <div class="field">
+          <label>B_CTL</label>
+          <input id="B_CTL" type="number" step="0.01" value="0">
+        </div>
+        <div class="field">
+          <label>tauCTL (Tage)</label>
+          <input id="tauCTL" type="number" step="1" value="42">
+          <div class="hint">α_CTL wird aus tauCTL berechnet: <span class="mono">α = 1 - exp(-1/tau)</span></div>
+        </div>
+        <div class="field">
+          <label>SG Formel (ohne Monotonie/Schlaf)</label>
+          <select id="sgFormula">
+            <option value="simple">SG = 2*(CTL - CTL_7d) + CTL/10 - (ATL*7/500)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="hint" style="margin-top:8px;">
+        Hinweis: Wenn <span class="mono">CTL_start</span> viel größer als <span class="mono">(S_CTL*maxLoad+B_CTL)</span> ist, fällt CTL zwangsläufig (skalierungsbedingt).
+      </div>
+    </details>
+
+    <div class="row" style="margin-top:12px;">
+      <div class="btns">
+        <button onclick="runSim()">Berechnen</button>
+        <button class="secondary" onclick="loadTimelineExample()">Timeline-Loads übernehmen</button>
+      </div>
+      <div class="kpi" id="kpis" style="margin-left:auto;"></div>
+    </div>
+
+    <div id="status" class="status"></div>
+  </div>
+
+  <div class="card">
+    <div class="chartBox">
+      <div class="small" style="margin-bottom:6px;">Chart</div>
+      <svg id="chart" width="100%" height="210" viewBox="0 0 900 210" preserveAspectRatio="none"></svg>
+      <div class="hint">
+        Load-Plan: Smoothstep-Rampe von <span class="mono">L0 → Lpeak</span>, optional mit Rest/Deload.
+        ATL: asymmetrische Glättung + Caps. CTL: EWMA (tauCTL).
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+      <div style="font-weight:950;">Tabelle</div>
+      <div class="small">
+        Legende: <span class="band b-detraining">&lt;10</span>
+        <span class="band b-maint">10–40</span>
+        <span class="band b-prod">40–100</span>
+        <span class="band b-prime">100–180</span>
+      </div>
+    </div>
+
+    <div style="max-height:460px; overflow:auto; margin-top:10px;">
+      <table id="tbl">
+        <thead>
+          <tr>
+            <th>Tag</th>
+            <th>Datum</th>
+            <th>DayType</th>
+            <th>Load (ESS)</th>
+            <th>Δ Load</th>
+            <th>Stim ATL</th>
+            <th>ATL alt</th>
+            <th>ATL neu</th>
+            <th>CTL alt</th>
+            <th>CTL neu</th>
+            <th>CTL 7d</th>
+            <th>SG</th>
+            <th>Band</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let lastRows = null;
+
+  // --- Presets (heuristisch, Load-driven) ---
+  // Ziel: echter RTP-Einstieg (keine 10 ESS Dauerlösung), aber mit Sicherheits-Caps über maxRise.
+  const presets = {
+    p12:   { N: 7,  L0: 25, Lpeak: 100, rest: [3], deload: [], deloadLoad: 30 },
+    p35:   { N: 10, L0: 20, Lpeak: 110, rest: [6], deload: [8], deloadLoad: 25 },
+    p610:  { N: 14, L0: 18, Lpeak: 105, rest: [5, 10], deload: [12], deloadLoad: 25 },
+    p1121: { N: 21, L0: 15, Lpeak: 95,  rest: [6, 12, 18], deload: [15], deloadLoad: 25 },
+    p21p:  { N: 28, L0: 12, Lpeak: 85,  rest: [6, 12, 18, 24], deload: [15, 21], deloadLoad: 22 },
+
+    // Timeline-Beispiel: kannst du jederzeit anpassen
+    tl_1412: {
+      N: 10,
+      customLoads: [11, 29, 59, 29, 69, 107, 124, 134, 17, 0, 126], // Tag 0..10
+      rest: [9],
+      deload: [8],
+      deloadLoad: 17
+    }
+  };
+
+  function goBack(){
+    try {
+      if (typeof pubUrl !== "undefined" && pubUrl) window.location.href = pubUrl;
+      else window.history.back();
+    } catch(e){ window.history.back(); }
+  }
+
+  function fmt(n, d=1){
+    if (n === null || n === undefined || Number.isNaN(n)) return "";
+    return Number(n).toFixed(d);
+  }
+
+  function clamp(x, lo, hi){
+    return Math.min(Math.max(x, lo), hi);
+  }
+
+  function smoothstep(u){
+    return (3*u*u - 2*u*u*u);
+  }
+
+  function bandLabel(sg){
+    if (sg < 10) return {txt:"Detraining", cls:"b-detraining"};
+    if (sg < 40) return {txt:"Maintenance", cls:"b-maint"};
+    if (sg < 100) return {txt:"Productive", cls:"b-prod"};
+    if (sg <= 180) return {txt:"Prime", cls:"b-prime"};
+    return {txt:">180", cls:"b-prime"};
+  }
+
+  function parseDays(text){
+    if(!text) return [];
+    const arr = text
+      .split(/[,\s;]+/)
+      .map(s => s.trim())
+      .filter(Boolean)
+      .map(s => parseInt(s,10))
+      .filter(v => Number.isFinite(v));
+    return [...new Set(arr)].sort((a,b)=>a-b);
+  }
+
+  function applyPreset(){
+    const key = document.getElementById('preset').value;
+    const p = presets[key];
+    if(!p) return;
+
+    document.getElementById('nDays').value = p.N ?? 10;
+
+    if(p.customLoads && p.customLoads.length){
+      // timeline preset: set L0/Lpeak from pattern for convenience
+      const loads = p.customLoads;
+      document.getElementById('L0').value = Math.max(0, loads[0] ?? 20);
+      document.getElementById('Lpeak').value = Math.max(0, Math.max(...loads));
+      document.getElementById('restDaysManual').value = (p.rest||[]).join(",");
+      document.getElementById('deloadDaysManual').value = (p.deload||[]).join(",");
+      document.getElementById('deloadLoad').value = p.deloadLoad ?? 25;
+    } else {
+      document.getElementById('L0').value = p.L0 ?? 20;
+      document.getElementById('Lpeak').value = p.Lpeak ?? 110;
+      document.getElementById('restDaysManual').value = (p.rest||[]).join(",");
+      document.getElementById('deloadDaysManual').value = (p.deload||[]).join(",");
+      document.getElementById('deloadLoad').value = p.deloadLoad ?? 25;
+    }
+  }
+
+  function loadTimelineExample(){
+    document.getElementById('preset').value = "tl_1412";
+    applyPreset();
+    runSim();
+  }
+
+  function tauToAlpha(tau){
+    // α = 1 - exp(-1/tau)
+    if(!Number.isFinite(tau) || tau <= 0) return 0.024;
+    return 1 - Math.exp(-1 / tau);
+  }
+
+  function runSim(){
+    const status = document.getElementById('status');
+    status.className = "status";
+    status.textContent = "";
+
+    const presetKey = document.getElementById('preset').value;
+    const p = presets[presetKey] || {};
+
+    const startDateStr = document.getElementById('startDate').value;
+    const startDate = startDateStr ? new Date(startDateStr + "T00:00:00") : null;
+
+    const N = parseInt(document.getElementById('nDays').value, 10);
+    const maxLoad = Number(document.getElementById('maxLoad').value);
+    const maxRise = Number(document.getElementById('maxRise').value);
+
+    const L0 = Number(document.getElementById('L0').value);
+    const Lpeak = Number(document.getElementById('Lpeak').value);
+    const minTrain = Number(document.getElementById('minTrain').value);
+    const restLoad = Number(document.getElementById('restLoad').value);
+
+    const restDays = parseDays(document.getElementById('restDaysManual').value);
+    const deloadDays = parseDays(document.getElementById('deloadDaysManual').value);
+    const deloadLoad = Number(document.getElementById('deloadLoad').value);
+
+    const atlStart = Number(document.getElementById('atlStart').value);
+    const ctlStart = Number(document.getElementById('ctlStart').value);
+    const ctl7d = Number(document.getElementById('ctl7d').value);
+
+    const ctl7Mode = document.getElementById('ctl7Mode').value;
+
+    const S_ATL = Number(document.getElementById('S_ATL').value);
+    const B_ATL = Number(document.getElementById('B_ATL').value);
+    const alphaUp = Number(document.getElementById('alphaUp').value);
+    const alphaDown = Number(document.getElementById('alphaDown').value);
+    const capUp = Number(document.getElementById('capUp').value);
+    const capDown = Number(document.getElementById('capDown').value);
+
+    const S_CTL = Number(document.getElementById('S_CTL').value);
+    const B_CTL = Number(document.getElementById('B_CTL').value);
+    const tauCTL = Number(document.getElementById('tauCTL').value);
+    const alphaCTL = tauToAlpha(tauCTL);
+
+    const required = [N,maxLoad,maxRise,L0,Lpeak,minTrain,restLoad,atlStart,ctlStart,ctl7d,S_ATL,B_ATL,alphaUp,alphaDown,capUp,capDown,S_CTL,B_CTL,tauCTL];
+    if(!required.every(Number.isFinite) || N < 1){
+      status.className = "status err";
+      status.textContent = "Bitte gültige Zahlen setzen (N ≥ 1).";
+      return;
+    }
+
+    // customLoads preset?
+    const customLoads = (p.customLoads && p.customLoads.length) ? p.customLoads.slice(0) : null;
+    const N_eff = customLoads ? (customLoads.length - 1) : N;
+    if(customLoads){
+      document.getElementById('nDays').value = N_eff;
+    }
+
+    // CTL scaling warning
+    const maxStimCTL = S_CTL * maxLoad + B_CTL;
+    let warn = "";
+    if(ctlStart > maxStimCTL * 1.15){
+      warn = `Warnung: CTL_start (${fmt(ctlStart,1)}) >> maxStimCTL (${fmt(maxStimCTL,1)}). CTL wird in der Sim fallen (Skalierung S_CTL/B_CTL prüfen).`;
+    }
+
+    // CTL history for 7d reference
+    const ctlHist = [];
+    // initial 7 days back filled with ctl7d baseline (konservativ)
+    for(let i=0;i<7;i++) ctlHist.push(ctl7d);
+
+    let ATL = atlStart;
+    let CTL = ctlStart;
+
+    const rows = [];
+    let prevLoad = null;
+
+    for(let d=0; d<=N_eff; d++){
+      const u = (N_eff === 0) ? 1 : (d / N_eff);
+      const fu = smoothstep(clamp(u,0,1));
+
+      const isRest = restDays.includes(d);
+      const isDeload = deloadDays.includes(d);
+
+      let loadPlan;
+
+      if(customLoads){
+        loadPlan = Number(customLoads[d] ?? 0);
+      } else if(isRest){
+        loadPlan = restLoad;
+      } else if(isDeload){
+        loadPlan = deloadLoad;
+      } else {
+        // ramp
+        loadPlan = L0 + (Lpeak - L0) * fu;
+        // minimum TRAIN load
+        loadPlan = Math.max(loadPlan, minTrain);
+      }
+
+      // hard caps
+      loadPlan = clamp(loadPlan, 0, maxLoad);
+
+      // daily rise cap (RTP safety)
+      if(prevLoad !== null){
+        loadPlan = Math.min(loadPlan, prevLoad + maxRise);
+      }
+
+      // if a day is explicit rest, force it AFTER rise cap
+      if(!customLoads && isRest){
+        loadPlan = restLoad;
+      }
+      if(!customLoads && isDeload){
+        loadPlan = clamp(deloadLoad, 0, maxLoad);
+        if(prevLoad !== null) loadPlan = Math.min(loadPlan, prevLoad + maxRise);
+      }
+
+      const dayType =
+        (customLoads ? (loadPlan === 0 ? "REST_CUSTOM" : "TRAIN_CUSTOM") :
+          (isRest ? "REST" : (isDeload ? "DELOAD" : "TRAIN"))
+        );
+
+      const dLoad = (prevLoad === null) ? null : (loadPlan - prevLoad);
+      prevLoad = loadPlan;
+
+      // --- ATL update (asymmetric alpha + caps) ---
+      const stimATL = S_ATL * loadPlan + B_ATL;
+      const aATL = (stimATL > ATL) ? alphaUp : alphaDown;
+      const atlRaw = (1 - aATL) * ATL + aATL * stimATL;
+
+      const atlMin = ATL - capDown;
+      const atlMax = ATL + capUp;
+      const ATL_new = clamp(atlRaw, atlMin, atlMax);
+
+      // --- CTL update (EWMA) ---
+      const stimCTL = S_CTL * loadPlan + B_CTL;
+      const CTL_new = (1 - alphaCTL) * CTL + alphaCTL * stimCTL;
+
+      // --- CTL 7d reference ---
+      let ctl7ref;
+      if(ctl7Mode === "fixed"){
+        ctl7ref = ctl7d;
+      } else {
+        ctl7ref = ctlHist[0]; // oldest in 7d window
+      }
+
+      // --- Smart Gains (simplified) ---
+      const SG = (2 * (CTL_new - ctl7ref)) + (CTL_new / 10) - ((ATL_new * 7) / 500);
+
+      // advance history
+      if(ctl7Mode === "rolling"){
+        ctlHist.push(CTL_new);
+        while(ctlHist.length > 7) ctlHist.shift();
+      }
+
+      const b = bandLabel(SG);
+
+      let dateOut = "";
+      if(startDate){
+        const dt = new Date(startDate);
+        dt.setDate(dt.getDate() + d);
+        dateOut = dt.toISOString().slice(0,10);
+      }
+
+      rows.push({
+        day: d, date: dateOut, dayType,
+        load: loadPlan,
+        dLoad,
+        stimATL,
+        atlOld: ATL, atlNew: ATL_new,
+        ctlOld: CTL, ctlNew: CTL_new,
+        ctl7ref,
+        sg: SG,
+        band: b
+      });
+
+      // commit
+      ATL = ATL_new;
+      CTL = CTL_new;
+    }
+
+    lastRows = rows;
+    renderTable(rows);
+    renderChart(rows);
+    renderKpis(rows, { alphaCTL, maxStimCTL, warn });
+
+    status.className = warn ? "status warn" : "status ok";
+    status.textContent = warn ? warn : `Fertig. α_CTL=${fmt(alphaCTL,4)} | maxStimCTL=${fmt(maxStimCTL,1)}.`;
+  }
+
+  function renderKpis(rows, meta){
+    const el = document.getElementById('kpis');
+    el.innerHTML = "";
+
+    const end = rows[rows.length-1];
+    const loads = rows.map(r=>r.load);
+    const avgLoad = loads.reduce((a,b)=>a+b,0)/loads.length;
+    const maxL = Math.max(...loads);
+    const minL = Math.min(...loads);
+    const maxErr = null;
+
+    const pills = [
+      {k:"Ø Load", v: fmt(avgLoad,0)},
+      {k:"Load Min/Max", v: `${fmt(minL,0)} / ${fmt(maxL,0)}`},
+      {k:"ATL Ende", v: fmt(end.atlNew,1)},
+      {k:"CTL Ende", v: fmt(end.ctlNew,1)},
+      {k:"SG Ende", v: fmt(end.sg,1)},
+      {k:"α_CTL", v: fmt(meta.alphaCTL,4)}
+    ];
+
+    pills.forEach(p=>{
+      const div = document.createElement('div');
+      div.className = "pill";
+      div.innerHTML = `${p.k}: <strong>${p.v}</strong>`;
+      el.appendChild(div);
+    });
+  }
+
+  function renderTable(rows){
+    const tbody = document.querySelector('#tbl tbody');
+    tbody.innerHTML = "";
+    rows.forEach(r=>{
+      const b = bandLabel(r.sg);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${r.day}</td>
+        <td>${r.date || ""}</td>
+        <td style="text-align:left;">${r.dayType}</td>
+        <td>${fmt(r.load,0)}</td>
+        <td>${r.dLoad===null ? "" : fmt(r.dLoad,0)}</td>
+        <td>${fmt(r.stimATL,1)}</td>
+        <td>${fmt(r.atlOld,1)}</td>
+        <td>${fmt(r.atlNew,1)}</td>
+        <td>${fmt(r.ctlOld,1)}</td>
+        <td>${fmt(r.ctlNew,1)}</td>
+        <td>${fmt(r.ctl7ref,1)}</td>
+        <td>${fmt(r.sg,1)}</td>
+        <td style="text-align:left;"><span class="band ${b.cls}">${b.txt}</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderIfPossible(){
+    if(lastRows) renderChart(lastRows);
+  }
+
+  function renderChart(rows){
+    const svg = document.getElementById('chart');
+    svg.innerHTML = "";
+
+    const mode = document.getElementById('chartMode').value;
+
+    const W = 900, H = 210;
+    const padL = 44, padR = 14, padT = 12, padB = 26;
+    const w = W - padL - padR;
+    const h = H - padT - padB;
+
+    const xScale = (i) => padL + (i / (rows.length - 1)) * w;
+
+    function drawAxes(){
+      svg.insertAdjacentHTML('beforeend',
+        `<line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>`
+      );
+    }
+
+    function drawPath(vals, yMin, yMax, stroke, dash){
+      const yScale = (v) => padT + (1 - (v - yMin)/(yMax - yMin)) * h;
+      const d = vals.map((v,i)=>`${i===0?'M':'L'} ${xScale(i)} ${yScale(v)}`).join(' ');
+      svg.insertAdjacentHTML('beforeend',
+        `<path d="${d}" fill="none" stroke="${stroke}" stroke-width="2.6" ${dash?`stroke-dasharray="${dash}"`:``}/>`
+      );
+      return yScale;
+    }
+
+    drawAxes();
+
+    if(mode === "load"){
+      const vals = rows.map(r=>r.load);
+      let yMin = 0, yMax = Math.max(...vals);
+      if(yMax === yMin) yMax += 1;
+      drawPath(vals, yMin, yMax, "rgba(85,170,255,0.95)", "");
+      svg.insertAdjacentHTML('beforeend',
+        `<text x="${padL}" y="${padT-2}" fill="rgba(255,255,255,0.45)" font-size="10">Load (ESS)</text>`
+      );
+
+    } else if(mode === "atlctl"){
+      const atl = rows.map(r=>r.atlNew);
+      const ctl = rows.map(r=>r.ctlNew);
+      let yMin = Math.min(...atl, ...ctl);
+      let yMax = Math.max(...atl, ...ctl);
+      if(yMax === yMin) { yMax += 1; yMin -= 1; }
+      drawPath(ctl, yMin, yMax, "rgba(85,170,255,0.95)", "");
+      drawPath(atl, yMin, yMax, "rgba(61,220,151,0.90)", "6 4");
+      svg.insertAdjacentHTML('beforeend',
+        `<text x="${padL}" y="${padT-2}" fill="rgba(255,255,255,0.45)" font-size="10">CTL (solid) / ATL (dashed)</text>`
+      );
+
+    } else if(mode === "sg"){
+      const sg = rows.map(r=>r.sg);
+      let yMin = Math.min(...sg);
+      let yMax = Math.max(...sg);
+      if(yMax === yMin) { yMax += 1; yMin -= 1; }
+
+      // gridlines at legend thresholds
+      [0,10,40,100,180].forEach(m=>{
+        if(m < yMin || m > yMax) return;
+        const y = padT + (1 - (m - yMin)/(yMax - yMin)) * h;
+        svg.insertAdjacentHTML('beforeend',
+          `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+           <text x="${padL-6}" y="${y+4}" fill="rgba(255,255,255,0.35)" font-size="10" text-anchor="end">${m}</text>`
+        );
+      });
+
+      drawPath(sg, yMin, yMax, "rgba(212,0,255,0.85)", "");
+      svg.insertAdjacentHTML('beforeend',
+        `<text x="${padL}" y="${padT-2}" fill="rgba(255,255,255,0.45)" font-size="10">Smart Gains</text>`
+      );
+
+    } else { // combo: load + sg dual scaled
+      const load = rows.map(r=>r.load);
+      const sg = rows.map(r=>r.sg);
+
+      let lMin = 0, lMax = Math.max(...load);
+      if(lMax === lMin) lMax += 1;
+
+      let sMin = Math.min(...sg), sMax = Math.max(...sg);
+      if(sMax === sMin) { sMax += 1; sMin -= 1; }
+
+      // draw load (left-ish)
+      drawPath(load, lMin, lMax, "rgba(85,170,255,0.95)", "");
+      // draw sg normalized onto same canvas by using its own scale via separate yScale
+      drawPath(sg, sMin, sMax, "rgba(212,0,255,0.85)", "6 4");
+
+      svg.insertAdjacentHTML('beforeend',
+        `<text x="${padL}" y="${padT-2}" fill="rgba(255,255,255,0.45)" font-size="10">Load (solid) + SG (dashed, own scale)</text>`
+      );
+    }
+
+    svg.insertAdjacentHTML('beforeend',
+      `<text x="${W-padR}" y="${H-6}" fill="rgba(255,255,255,0.45)" font-size="10" text-anchor="end">Tage</text>`
+    );
+  }
+
+  // Init
+  (function init(){
+    const today = new Date();
+    document.getElementById('startDate').value = today.toISOString().slice(0,10);
+    runSim();
+  })();
+</script>
+</body>
+</html>

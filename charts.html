@@ -1,0 +1,1707 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Coach Kira – Dashboard</title>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#ffffff;
+      --fg:#111827;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --panel:#f9fafb;
+      --accent:#2563eb; /* PlanApp-ish Blue */
+      --ok:#16a34a;
+      --warn:#f59e0b;
+      --bad:#dc2626;
+      --chip:#f3f4f6;
+      --shadow: 0 1px 2px rgba(0,0,0,.06);
+      --radius: 10px;
+      --pad: 14px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    .miniSel{
+  font: inherit;
+  font-size: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 2px 6px;
+  margin-left: 6px;
+  background: #fff;
+}
+.chip select{ color: var(--fg); }
+
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--font);
+      color:var(--fg);
+      background:var(--bg);
+    }
+
+    .topbar{
+      padding:16px 18px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+    .title{
+      font-weight:700;
+      font-size:20px;
+      margin-right:auto;
+    }
+    .pill{
+      font-size:12px;
+      padding:6px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      box-shadow:var(--shadow);
+      color:var(--muted);
+    }
+    .pill b{color:var(--fg); font-weight:700}
+    .statusDot{
+      width:8px;height:8px;border-radius:999px;background:var(--ok);
+      display:inline-block;
+    }
+
+    .wrap{max-width:1200px;margin:0 auto;padding:18px;}
+    .card{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:var(--pad);
+    }
+
+    .controls{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .btn{
+      border:1px solid var(--line);
+      background:#fff;
+      padding:8px 12px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:600;
+      box-shadow:var(--shadow);
+    }
+    .btn.primary{
+      background:var(--accent);
+      border-color:var(--accent);
+      color:#fff;
+    }
+    .field{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border:1px solid var(--line);
+      border-radius:10px;
+      background:#fff;
+      box-shadow:var(--shadow);
+      font-size:13px;
+    }
+    .field label{color:var(--muted)}
+    .field input, .field select{
+      border:0;
+      outline:0;
+      font:inherit;
+      width:auto;
+      min-width:70px;
+    }
+    .hint{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.35;
+    }
+
+    .stack{display:grid;gap:14px;margin-top:14px;}
+    .sectionTitle{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-bottom:8px;
+    }
+    .sectionTitle h2{
+      font-size:14px;
+      margin:0;
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+    .chip{
+      font-size:12px;
+      padding:4px 8px;
+      border-radius:999px;
+      background:var(--chip);
+      border:1px solid var(--line);
+      color:var(--muted);
+    }
+
+    .chartBox{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px;
+    }
+    canvas{width:100%;height:320px;}
+
+    .row2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width: 900px){
+      .row2{grid-template-columns:1fr}
+      canvas{height:300px;}
+    }
+
+    .footer{
+      margin-top:18px;
+      color:var(--muted);
+      font-size:12px;
+      text-align:center;
+    }
+  </style>
+</head>
+
+<body>
+
+<div style="font-family:monospace;padding:6px;border-bottom:1px solid #ccc">
+  CHARTS BUILD: <?!= _debug_build ?>
+</div>
+
+  <div class="topbar">
+    <div class="title">Coach Kira – Charts</div>
+    <div class="pill"><span class="statusDot"></span><b id="modeLabel">Mode:</b> <span id="modeValue">Plan</span></div>
+    <div class="pill"><b id="seedLabel">Seed:</b> <span id="seedValue">ATL=– CTL=–</span></div>
+    <div class="pill"><b id="rangeLabel">Range:</b> <span id="rangeValue">14 Tage</span></div>
+    <div class="pill"><b id="dataLabel">Status:</b> <span id="dataStatus">Daten geladen.</span></div>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <div class="controls">
+        <button class="btn primary" id="btnLoadDemo">Demo-Daten laden</button>
+        <button class="btn" id="btnClear">Leeren</button>
+
+        <div class="field">
+          <label for="selRange">Zeitraum</label>
+          <select id="selRange">
+  <option value="14">14 Tage</option>
+  <option value="30">30 Tage</option>
+  <option value="90">90 Tage</option>
+  <option value="180">180 Tage</option>
+  <option value="360">360 Tage</option>
+  <option value="">Alles</option>
+</select>
+        </div>
+
+        <div class="field">
+          <label for="selMode">Datenmodus</label>
+          <select id="selMode">
+            <option value="plan">Plan (CoachE)</option>
+            <option value="fb">FB (Garmin/Firstbeat)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="acwrMin">ACWR Min</label>
+          <input id="acwrMin" type="number" step="0.01" value="0.90" />
+        </div>
+        <div class="field">
+          <label for="acwrMax">ACWR Max</label>
+          <input id="acwrMax" type="number" step="0.01" value="1.25" />
+        </div>
+      </div>
+
+      <pre id="errBox" style="display:none;white-space:pre-wrap;border:1px solid #fca5a5;background:#fff1f2;padding:10px;border-radius:10px;margin-top:10px"></pre>
+
+      <div class="hint">
+        Logische Abfolge: <b>Training</b> → <b>ACWR/TSB</b> → <b>Recovery</b> → <b>Smart Gains</b> → <b>Ernährung</b>.
+        Später kannst du statt Demo-Daten einfach <code>setDashboardData(json)</code> aufrufen (siehe Script unten).
+      </div>
+    </div>
+
+    <div class="stack" id="cards"></div>
+
+    <div class="footer">Coach Kira Charts – Frontend Skeleton</div>
+  </div>
+
+<script>
+
+  Chart.register(window['chartjs-plugin-annotation']);
+
+// =========================
+// Quadrant / Threshold Config
+// =========================
+const PERF_CFG = {
+  // TSB-Bereiche (x-Achse)
+  tsb: {
+    tiredMax: -90,     // darunter: "tired"
+    freshMin: +0      // darüber: "fresh"
+    // Bereich dazwischen: "neutral"
+  },
+
+  // SG-Bereiche (y-Achse)
+  sg: {
+    lowMax: 39,        // darunter: "low"
+    highMin: 189       // darüber: "high"
+    // Bereich dazwischen: "ok"
+  },
+
+  // Labels (optional)
+  labels: {
+    xTired: "Müde",
+    xNeutral: "Neutral",
+    xFresh: "Frisch",
+    yLow: "niedriger Reiz",
+    yOk: "produktiver Reiz",
+    yHigh: "sehr hoher Reiz"
+  }
+};
+
+/* =========================
+   Cards (UI) – dynamisch aus Config
+   ========================= */
+
+function cardConfig() {
+  // Wichtig: canvasId muss exakt zu deinen Renderfunktionen passen!
+  return [
+    {
+      key: "training",
+      title: "1) Training / Belastung & Form",
+      chips: ["Load (Bar)", "CTL/ATL (Line)", "SG (Line)"],
+      canvasId: "chTraining",
+      rangeSelId: "rngTraining",
+      defaultRange: 30,
+      height: 320
+    },
+    {
+      key: "acwr",
+      title: "2) ACWR / TSB",
+      chips: ["TSB (Bar +/-)", "ACWR (Line) + Band"],
+      canvasId: "chAcwr",
+      rangeSelId: "rngAcwr",
+      defaultRange: 30,
+      height: 320
+    },
+    {
+      key: "recovery",
+      title: "3) Recovery vs Training",
+      chips: ["Load (Bar)", "Recovery Ø7d (Line)"],
+      canvasId: "chRecovery",
+      rangeSelId: "rngRecovery",
+      defaultRange: 30,
+      height: 320
+    },
+    {
+      key: "sg",
+      title: "4) Smart Gains",
+      chips: ["Load (Bar)", "CTL (Line)", "SG (Line)", "CTL Δ7d (Line)"],
+      canvasId: "chSmartGains",
+      rangeSelId: "rngSg",
+      defaultRange: 30,
+      height: 320
+    },
+
+    {
+      key: "fuel",
+      title: "5) Fuel to perform",
+      chips: ["Makros (Stacked Bar)", "Load (Line)"],
+      canvasId: "chFuel",
+      rangeSelId: "rngFuel",
+      defaultRange: 30,
+      height: 320
+    },
+    {
+      key: "sleepBubble",
+      title: "6) Schlaf-Qualitäts-Check",
+      chips: ["Bubble: sleep_h vs score", "Bubble=Load", "Farbe=Wochentag"],
+      canvasId: "chSleepBubble",
+      rangeSelId: "rngSleepBubble",
+      defaultRange: 30,
+      height: 340
+    },
+    {
+      key: "effQuad",
+      title: "7) Smart Gain Effizienz-Quadrant",
+      chips: ["Bubble: x=Load", "y=CTL Δ7d", "Bubble=Load"],
+      canvasId: "chEffQuad",
+      rangeSelId: "rngEffQuad",
+      defaultRange: 90,
+      height: 340
+    },
+    {
+      key: "effMonitor",
+      title: "8) Effizienz-Monitor (FB)",
+      chips: ["CTL vs RHR/HRV", "2 Achsen"],
+      canvasId: "chEffMonitor",
+      rangeSelId: "rngEffMonitor",
+      defaultRange: 90,
+      height: 320
+    },
+
+    // ✅ NEU: 9) TSB vs Performance Proxy (Quadrant)
+    {
+      key: "tsbPerf",
+      title: "9) TSB vs Performance Proxy (SG)",
+      chips: ["Scatter/Quadrant", "x=TSB", "y=SG", "Bubble=Load"],
+      canvasId: "chTsbPerf",
+      rangeSelId: "rngTsbPerf",          // Historie: 14/30/90/180/360/Alles
+      defaultRange: 90,
+      height: 340,
+      viewSelId: "selTsbPerfView",       // Umschalter Historie/Forecast
+      viewOptions: [
+        { value: "hist", label: "Historie" },
+        { value: "fc",   label: "Forecast (14)" }
+      ]
+    },
+
+    {
+      key: "food",
+      title: "10) Ernährung",
+      chips: ["Defizit (Line)", "Makros (Stacked Bar) + Load (Line)"],
+      kind: "row2",
+      canvases: [
+        { canvasId: "chDeficit", height: 320 },
+        { canvasId: "chMacros", height: 320 }
+      ],
+      rangeSelId: "rngFood",
+      defaultRange: 14
+    }
+  ];
+}
+
+function renderCards() {
+  const host = document.getElementById("cards");
+  if (!host) return;
+
+  const cfg = cardConfig();
+  host.innerHTML = cfg.map(c => cardHtml(c)).join("");
+}
+
+function cardHtml(c) {
+  const chips = (c.chips || []).map(t => `<span class="chip">${escapeHtml(t)}</span>`).join("");
+
+  const viewChip = c.viewSelId
+    ? `<span class="chip">
+         View
+         <select class="miniSel" id="${c.viewSelId}">
+           ${(c.viewOptions || []).map(o => `<option value="${escapeHtml(o.value)}">${escapeHtml(o.label)}</option>`).join("")}
+         </select>
+       </span>`
+    : "";
+
+  const rangeChip = c.rangeSelId
+    ? `<span class="chip">Range <select class="miniSel" id="${c.rangeSelId}"></select></span>`
+    : "";
+
+  let body = "";
+  if (c.kind === "row2") {
+    body = `
+      <div class="row2">
+        ${c.canvases.map(x => `
+          <div class="chartBox">
+            <canvas id="${x.canvasId}" style="height:${Number(x.height||320)}px"></canvas>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  } else {
+    body = `
+      <div class="chartBox">
+        <canvas id="${c.canvasId}" style="height:${Number(c.height||320)}px"></canvas>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="card" data-card="${c.key}">
+      <div class="sectionTitle">
+        <h2>${escapeHtml(c.title)}</h2>
+        ${chips}
+        ${viewChip}
+        ${rangeChip}
+      </div>
+      ${body}
+    </div>
+  `;
+}
+
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll("\"", "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function initCardRanges() {
+  const cfg = cardConfig();
+
+  cfg.forEach(c => {
+    // Range Select
+    if (c.rangeSelId) {
+      fillRangeSelect(c.rangeSelId, c.defaultRange || 14);
+
+      const el = document.getElementById(c.rangeSelId);
+      if (el) {
+        el.addEventListener("change", () => {
+          if (window.__DASH_DATA__) setDashboardData(window.__DASH_DATA__);
+        });
+      }
+    }
+
+    // View Select (Historie/Forecast)
+    if (c.viewSelId) {
+      const v = document.getElementById(c.viewSelId);
+      if (v) {
+        // Default: Historie
+        if (!v.value) v.value = (c.viewOptions?.[0]?.value || "hist");
+        v.addEventListener("change", () => {
+          if (window.__DASH_DATA__) setDashboardData(window.__DASH_DATA__);
+        });
+      }
+    }
+  });
+}
+
+  /** PUB_URL aus Template – robust, aber ohne wörtliches "&lt;?=" im HTML */
+(function initPubUrl(){
+  const raw = <?!= JSON.stringify(pubUrl || "") ?>.trim();
+
+  // Template-Signatur "unsichtbar" zusammenbauen (kein "< ?=" als Literal im HTML)
+  const TPL_SIG = "<" + "?=";
+
+  // Standard: nimm die vom Server injizierte /exec URL
+  window.PUB_URL = raw;
+
+  // Falls Template-Auswertung aus irgendeinem Grund nicht gegriffen hat:
+  // (dann steht hier noch "< ?=" drin)
+  if (!window.PUB_URL || window.PUB_URL.includes(TPL_SIG)) {
+    // Fallback ist besser als gar nichts, aber bei googleusercontent kann das falsch sein.
+    window.PUB_URL = window.location.origin + window.location.pathname;
+  }
+})();
+
+/* =========================
+   Minimal helpers
+   ========================= */
+const $ = (id) => document.getElementById(id);
+const box = () => $("errBox");
+function showErr(msg){
+  const b = box();
+  if (!b) return;
+  b.style.display = "block";
+  b.textContent = String(msg || "");
+}
+function hideErr(){
+  const b = box();
+  if (!b) return;
+  b.style.display = "none";
+  b.textContent = "";
+}
+
+function clamp(x, a, b){ return Math.max(a, Math.min(b, x)); }
+function isNum(x){ return Number.isFinite(Number(x)); }
+
+/* =========================
+   Chart instances
+   ========================= */
+let charts = {
+  training: null,
+  acwr: null,
+  recovery: null,
+  sg: null,
+  deficit: null,
+  macros: null,
+
+  // neue Charts
+  fuel: null,
+  sleepQuality: null,
+  effQuad: null,
+  effMon: null,
+  tsbPerf: null
+};
+
+const RANGE_OPTS = [14, 30, 90, 180, 360, "ALL"];
+
+function fillRangeSelect(selId, defVal){
+  const sel = $(selId);
+  if (!sel) return;
+
+  sel.innerHTML = "";
+
+  RANGE_OPTS.forEach(v => {
+    const o = document.createElement("option");
+
+    if (v === "ALL") {
+      o.value = "";
+      o.textContent = "Alles";
+      if (defVal === "ALL" || defVal === "" || defVal === null) o.selected = true;
+    } else {
+      o.value = String(v);
+      o.textContent = `${v} Tage`;
+      if (Number(defVal) === Number(v)) o.selected = true;
+    }
+
+    sel.appendChild(o);
+  });
+}
+
+function sliceData(data, n){
+  const m = clamp(Number(n)||14, 1, 360);
+  const len = data.dates.length;
+  const start = Math.max(0, len - m);
+  const out = {};
+  for (const k of Object.keys(data)){
+    out[k] = Array.isArray(data[k]) ? data[k].slice(start) : data[k];
+  }
+  return out;
+}
+
+
+function destroyAllCharts(){
+  for (const k of Object.keys(charts)) {
+    try {
+      if (charts[k] && typeof charts[k].destroy === "function") {
+        charts[k].destroy();
+      }
+    } catch (_) {}
+    charts[k] = null;
+  }
+}
+
+/* =========================
+   Data contract (expected JSON)
+   =========================
+   {
+     dates: ["2026-01-01", ...],
+     load: [..],
+     ctl: [..],
+     atl: [..],
+     acwr: [..],
+     tsb: [..],
+     smartGains: [..],
+     sleepScore: [..],
+     sleepHours: [..],
+     hrvStatus: [..],
+     tr: [..],
+     deficit: [..],
+     protein: [..],
+     fat: [..],
+     carbs: [..]
+   }*/
+
+function normalizeHeader(h){
+  return String(h || "").trim();
+}
+
+function idxOfHeader(headers, name){
+  const n = normalizeHeader(name).toLowerCase();
+  return headers.findIndex(h => normalizeHeader(h).toLowerCase() === n);
+}
+
+function col(headers, rows, name){
+  const i = idxOfHeader(headers, name);
+  if (i < 0) return null;
+  return rows.map(r => r?.[i]);
+}
+
+function toNum(v){
+  if (v === null || v === undefined || v === "") return null;
+  const n = Number(String(v).replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+}
+
+function toDateLabel(v){
+  if (!v) return "";
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return String(v).slice(0, 10);
+  // de-DE kurz + stabil
+  return d.toLocaleDateString("de-DE", { day:"2-digit", month:"2-digit" });
+}
+
+function timelinePayloadToDash(payload, mode){
+  const headers = payload.headers || [];
+  const rows = payload.rows || [];
+
+  const colAny = (names) => {
+    for (const n of names) {
+      const c = col(headers, rows, n);
+      if (c) return c;
+    }
+    return [];
+  };
+
+  // --- Datum: wir brauchen 2 Dinge ---
+  // 1) dates: Anzeige (dd.mm)
+  // 2) datesIso: stabil (yyyy-mm-dd) für weekday etc.
+  const dateRaw = colAny(["date","datum","day"]);
+  const datesIso = dateRaw.map(v => {
+    if (!v) return "";
+    // Apps Script kann Date-Objekte serialisieren -> im Browser kommt meist string oder Date-kompatibel
+    const d = (v instanceof Date) ? v : new Date(v);
+    if (!isNaN(d.getTime())) return d.toISOString().slice(0,10);
+
+    // Fallback: wenn schon yyyy-mm-dd ist
+    const s = String(v).trim();
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+    return "";
+  });
+
+  const dates = datesIso.map(iso => {
+    if (!iso) return "";
+    const d = new Date(iso + "T00:00:00");
+    if (isNaN(d.getTime())) return iso.slice(5);
+    return d.toLocaleDateString("de-DE", { day:"2-digit", month:"2-digit" });
+  });
+
+  // weekday: 0=So .. 6=Sa
+  const weekday = datesIso.map(iso => {
+    if (!iso) return null;
+    const d = new Date(iso + "T00:00:00");
+    if (isNaN(d.getTime())) return null;
+    return d.getDay();
+  });
+
+  // --- MODE SWITCH: Plan vs FB ---
+  const isFB = (mode === "fb");
+
+  const load = (isFB ? colAny(["load_fb_day","fb_load_day"]) : colAny(["coachE_ESS_day","coache_ess_day","ess_day"]));
+
+  const atl  = (isFB ? colAny(["fbATL_obs"]) : colAny(["coachE_ATL_forecast","coache_atl_forecast"]));
+  const ctl  = (isFB ? colAny(["fbCTL_obs"]) : colAny(["coachE_CTL_forecast","coache_ctl_forecast"]));
+  const acwr = (isFB ? colAny(["fbACWR_obs"]) : colAny(["coachE_ACWR_forecast","coache_acwr_forecast"]));
+  const smartGains = col(headers, rows, "coachE_Smart_Gains") || col(headers, rows, "SG_V3") || [];
+
+  // Recovery
+  const sleepScore = colAny(["sleep_score_0_100","sleep_score","sleepscore"]);
+  const sleepHours = colAny(["sleep_hours","sleep_h","sleepHours","sleep_duration_h","sleep_duration_hours"]);
+
+  const tr = colAny(["Garmin_Training_Readiness","garmin_training_readiness","fb_TR_obs","tr_obs"]);
+
+  // *** DEIN FIX: RHR/HRV Spaltennamen ***
+  const rhr = colAny(["rhr_bpm","rhr","resting_hr","resting_heart_rate"]);
+  const hrv = colAny(["hrv_status","hrv","hrv_rmssd","rmssd"]);
+
+  // Ernährung / Makros (breiteres Mapping)
+  const deficit = colAny(["deficit","cal_deficit","energy_deficit"]);
+  const protein = colAny(["protein_g","protein","protein_grams"]);
+  const carbs   = colAny(["carb_g","carbs_g","carbs","carbohydrates_g","carbohydrate_g"]);
+  const fat     = colAny(["fat_g","fats_g","fat","fett_g","lipid_g"]);
+
+  // TSB (wenn nicht vorhanden: CTL-ATL)
+  const tsb = dates.map((_, i) => {
+    const c = toNum(ctl[i]);
+    const a = toNum(atl[i]);
+    if (c === null || a === null) return null;
+    return c - a;
+  });
+
+  return {
+    dates,
+    datesIso,
+    weekday,
+
+    load: load.map(toNum),
+    ctl:  ctl.map(toNum),
+    atl:  atl.map(toNum),
+    acwr: acwr.map(toNum),
+    tsb,
+
+    sleepScore: sleepScore.map(toNum),
+    sleepHours: sleepHours.map(toNum),
+    tr: tr.map(toNum),
+
+    rhr: rhr.map(toNum),
+    hrv: hrv.map(toNum),
+
+    smartGains: smartGains.map(toNum),
+
+    deficit: deficit.map(toNum),
+    protein: protein.map(toNum),
+    carbs: carbs.map(toNum),
+    fat: fat.map(toNum),
+  };
+}
+
+   
+function setDashboardData(input) {
+  hideErr?.();
+
+  const mode = $("selMode")?.value || "plan";
+  let data = input;
+
+  if (input && input.ok && Array.isArray(input.headers) && Array.isArray(input.rows)) {
+    data = timelinePayloadToDash(input, mode);
+  }
+
+  if (!data || !Array.isArray(data.dates) || data.dates.length === 0) {
+    $("dataStatus").textContent = "Keine Daten (Format passt nicht).";
+    return;
+  }
+
+  window.__DASH_DATA__ = data;
+
+  const last = data.dates.length - 1;
+  const atlSeed = (data.atl?.[last] ?? null);
+  const ctlSeed = (data.ctl?.[last] ?? null);
+  $("seedValue").textContent =
+    (Number.isFinite(atlSeed) && Number.isFinite(ctlSeed))
+      ? `ATL=${Math.round(atlSeed)} CTL=${Math.round(ctlSeed)}`
+      : "ATL=– CTL=–";
+
+  $("rangeValue").textContent = `${data.dates.length} Tage`;
+  $("dataStatus").textContent = "Daten geladen.";
+
+  destroyAllCharts();
+
+  const rangeVal = (selId, defVal = 14) => {
+    const raw = String($(selId)?.value ?? "").trim();
+    if (raw === "") return null;              // Alles
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : defVal;
+  };
+
+  const sliceMaybe = (d, n) => (n === null ? d : sliceData(d, n));
+
+  // helper: history vs forecast split (based on datesIso if present)
+  const splitHistFc = (d) => {
+    const iso = d.datesIso || [];
+    if (!iso.length) return { hist: d, fc: d }; // fallback
+
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const idxHist = [];
+    const idxFc = [];
+
+    for (let i = 0; i < iso.length; i++) {
+      const s = String(iso[i] || "");
+      if (!s) continue;
+      if (s <= todayIso) idxHist.push(i);
+      if (s >= todayIso) idxFc.push(i); // Forecast inkl. heute
+    }
+
+    const pick = (indices) => {
+      const out = {};
+      for (const k of Object.keys(d)) {
+        out[k] = Array.isArray(d[k]) ? indices.map(ii => d[k][ii]) : d[k];
+      }
+      return out;
+    };
+
+    return { hist: pick(idxHist), fc: pick(idxFc) };
+  };
+
+  // 1) Training
+  if (document.getElementById("chTraining") && typeof renderTrainingChart === "function") {
+    renderTrainingChart(sliceMaybe(data, rangeVal("rngTraining", 14)));
+  }
+
+  // 2) ACWR
+  if (document.getElementById("chAcwr") && typeof renderAcwrChart === "function") {
+    renderAcwrChart(sliceMaybe(data, rangeVal("rngAcwr", 14)));
+  }
+
+  // 3) Recovery
+  if (document.getElementById("chRecovery") && typeof renderRecoveryChart === "function") {
+    renderRecoveryChart(sliceMaybe(data, rangeVal("rngRecovery", 14)));
+  }
+
+  // 4) Smart Gains
+  if (document.getElementById("chSmartGains") && typeof renderSgChart === "function") {
+    renderSgChart(sliceMaybe(data, rangeVal("rngSg", 14)));
+  }
+
+  // 5) Fuel to perform
+  if (document.getElementById("chFuel") && typeof renderFuelToPerform === "function") {
+    renderFuelToPerform(sliceMaybe(data, rangeVal("rngFuel", 30)));
+  }
+
+  // 6) Sleep Bubble
+  if (document.getElementById("chSleepBubble") && typeof renderSleepQualityScatter === "function") {
+    renderSleepQualityScatter(sliceMaybe(data, rangeVal("rngSleepBubble", 90)));
+  }
+
+  // 7) Effizienz-Quadrant
+  if (document.getElementById("chEffQuad") && typeof renderEfficiencyQuadrant === "function") {
+    renderEfficiencyQuadrant(sliceMaybe(data, rangeVal("rngEffQuad", 90)));
+  }
+
+  // 8) Effizienz-Monitor
+  if (document.getElementById("chEffMonitor") && typeof renderEfficiencyMonitor === "function") {
+    renderEfficiencyMonitor(sliceMaybe(data, rangeVal("rngEffMonitor", 90)));
+  }
+
+  // ✅ 9) TSB vs SG Quadrant: Historie/Forecast Umschalter
+  if (document.getElementById("chTsbPerf") && typeof renderTsbVsSgQuadrant === "function") {
+    const view = String($("selTsbPerfView")?.value || "hist");
+    const split = splitHistFc(data);
+
+    if (view === "fc") {
+      // Forecast fix 14
+      const fc14 = sliceData(split.fc, 14);
+      renderTsbVsSgQuadrant(fc14, { titleSuffix: "Forecast (14)" });
+    } else {
+      const n = rangeVal("rngTsbPerf", 90); // null => Alles
+      const hist = sliceMaybe(split.hist, n);
+      renderTsbVsSgQuadrant(hist, { titleSuffix: "Historie" });
+    }
+  }
+
+  // 10) Food (Defizit + Makros)
+  if ((document.getElementById("chDeficit") || document.getElementById("chMacros")) && typeof renderFoodCharts === "function") {
+    renderFoodCharts(sliceMaybe(data, rangeVal("rngFood", 14)));
+  }
+}
+
+// ---------- chart helpers ----------
+function numArr(arr){
+  return (arr || []).map(v => {
+    const x = Number(String(v).replace(",", "."));
+    return Number.isFinite(x) ? x : null;
+  });
+}
+
+function renderTrainingChart(d){
+  const labels = d.dates || [];
+  const load = numArr(d.load);
+  const ctl  = numArr(d.ctl);
+  const atl  = numArr(d.atl);
+  const sg   = numArr(d.smartGains);
+
+  const el = $("chTraining");
+  if (!el) return;
+
+  charts.training = new Chart(el, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        { label: "Load", data: load, yAxisID: "yLoad", order: 5 },
+
+        { label: "CTL", data: ctl, type: "line", yAxisID: "yForm",
+          order: 1, pointRadius: 0, tension: 0.25, borderWidth: 2 },
+
+        { label: "ATL", data: atl, type: "line", yAxisID: "yForm",
+          order: 2, pointRadius: 0, tension: 0.25, borderWidth: 2 },
+
+        { label: "Smart Gains", data: sg, type: "line", yAxisID: "ySG",
+          order: 3, pointRadius: 0, tension: 0.25, borderWidth: 2 },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: { legend: { position: "top" } },
+      scales: {
+        yLoad: { beginAtZero: true, title: { display: true, text: "Load" } },
+        yForm: { position: "right", grid: { drawOnChartArea: false }, title: { display: true, text: "ATL/CTL" } },
+        ySG:   { position: "right", offset: true, grid: { drawOnChartArea: false }, title: { display: true, text: "Smart Gains" } },
+        x: { ticks: { maxRotation: 0 } }
+      }
+    }
+  });
+}
+
+function renderRecoveryChart(d){
+  const labels = d.dates || [];
+  const load = numArr(d.load);
+  const rec7 = numArr(d.recovery7);
+
+  // optional: zusätzliche Linien
+  const sleepScore = numArr(d.sleepScore);
+  const tr = numArr(d.tr);
+
+  const el = $("chRecovery");
+  if (!el) return;
+
+  charts.recovery = new Chart(el, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        { label: "Load", data: load, yAxisID: "yLoad", order: 4 },
+
+        { label: "Recovery (Ø7d)", data: rec7, type: "line", yAxisID: "yRec",
+          order: 1, pointRadius: 0, tension: 0.25, borderWidth: 2 },
+
+        // Optional – wenn du sie nicht willst: diese 2 Datasets löschen
+        { label: "SleepScore", data: sleepScore, type: "line", yAxisID: "yRec",
+          order: 2, pointRadius: 0, tension: 0.25, borderWidth: 1 },
+        { label: "TR", data: tr, type: "line", yAxisID: "yRec",
+          order: 3, pointRadius: 0, tension: 0.25, borderWidth: 1 },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: { legend: { position: "top" } },
+      scales: {
+        yLoad: { beginAtZero: true, title: { display: true, text: "Load" } },
+        yRec:  { position: "right", grid: { drawOnChartArea: false }, beginAtZero: true, suggestedMax: 100,
+                 title: { display: true, text: "Recovery / Score" } },
+        x: { ticks: { maxRotation: 0 } }
+      }
+    }
+  });
+}
+
+
+/* =========================
+   Chart renderers
+   ========================= */
+
+function makeLineChart(canvasId, cfg){
+  const el = $(canvasId);
+  if (!el) return null;
+  const ctx = el.getContext("2d");
+  return new Chart(ctx, cfg);
+}
+
+function renderAcwrChart(d){
+  const labels = d.dates || [];
+  const acwr = numArr(d.acwr);
+  const tsb  = numArr(d.tsb);
+
+  const min = Number($("acwrMin")?.value) || 0.90;
+  const max = Number($("acwrMax")?.value) || 1.25;
+
+  const bandMin = labels.map(() => min);
+  const bandMax = labels.map(() => max);
+
+  const tsbPos = tsb.map(v => (Number.isFinite(v) && v > 0) ? v : null);
+  const tsbNeg = tsb.map(v => (Number.isFinite(v) && v < 0) ? v : null);
+
+  const bandLabel = $("acwrBandLabel");
+  if (bandLabel) bandLabel.textContent = `Band ${min.toFixed(2)}..${max.toFixed(2)}`;
+
+  const el = $("chAcwr");
+  if (!el) return;
+
+  charts.acwr = new Chart(el, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        // TSB als farbige Balken (positiv/negativ getrennt)
+        { label: "TSB +", data: tsbPos, yAxisID: "yT", order: 4 },
+        { label: "TSB −", data: tsbNeg, yAxisID: "yT", order: 5 },
+
+        // ACWR Linie
+        { label: "ACWR", data: acwr, type: "line", yAxisID: "yA",
+          order: 1, pointRadius: 0, tension: 0.25, borderWidth: 2 },
+
+        // Band-Linien
+        { label: "Band Min", data: bandMin, type: "line", yAxisID: "yA",
+          order: 2, pointRadius: 0, tension: 0, borderWidth: 1, borderDash: [6,6] },
+        { label: "Band Max", data: bandMax, type: "line", yAxisID: "yA",
+          order: 3, pointRadius: 0, tension: 0, borderWidth: 1, borderDash: [6,6] },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: { legend: { display: true } },
+      scales: {
+        yA: { position: "left", title: { display: true, text: "ACWR" } },
+        yT: { position: "right", grid: { drawOnChartArea: false }, title: { display: true, text: "TSB (CTL-ATL)" } },
+        x:  { ticks: { maxRotation: 0 } }
+      }
+    }
+  });
+}
+
+
+function renderSgChart(d){
+  // SG + CTL Trend (CTL-7d)
+  const ctlTrend = d.dates.map((_,i)=>{
+    const c = d.ctl?.[i];
+    const c7 = (i>=7) ? d.ctl?.[i-7] : d.ctl?.[0];
+    if (!Number.isFinite(c) || !Number.isFinite(c7)) return null;
+    return (c - c7);
+  });
+    const load = numArr(d.load);
+    const ctl = numArr(d.ctl);
+
+    charts.sg = makeLineChart("chSmartGains", {
+    type:"bar",
+    data:{
+      labels:d.dates,
+      datasets:[
+  { label:"Load", data: load, yAxisID:"yLoad", order: 4 },
+  { label:"CTL (roh)", data: ctl, type:"line", yAxisID:"yCTL", pointRadius:0, tension:0.25, borderWidth:2, order: 1 },
+  { label:"Smart Gains", data:d.smartGains, type:"line", yAxisID:"ySG", pointRadius:0, tension:0.25, borderWidth:2, order: 2 },
+  { label:"CTL Trend (Δ7d)", data:ctlTrend, type:"line", yAxisID:"yTR", pointRadius:0, tension:0.25, borderWidth:2, order: 3 },
+]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      interaction:{ mode:"index", intersect:false },
+      plugins:{ legend:{ display:true } },
+      scales:{
+  yLoad:{ beginAtZero:true, title:{ display:true, text:"Load" } },
+
+  yCTL:{ position:"left", grid:{ drawOnChartArea:false }, title:{ display:true, text:"CTL" } },
+
+  ySG:{ position:"right", grid:{ drawOnChartArea:false }, title:{ display:true, text:"Smart Gains" } },
+  yTR:{ position:"right", grid:{ drawOnChartArea:false }, title:{ display:true, text:"CTL Δ7d" } }
+}
+    }
+  });
+}
+
+function renderFoodCharts(d){
+  const labels = d.dates || [];
+
+  // Defizit bleibt separat
+  charts.deficit = makeLineChart("chDeficit", {
+    type:"line",
+    data:{
+      labels,
+      datasets:[
+        { label:"Defizit", data:numArr(d.deficit), tension:0.25, pointRadius:0, borderWidth:2 }
+      ]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{ legend:{ display:true } },
+      interaction:{ mode:"index", intersect:false }
+    }
+  });
+
+  // Fuel to perform: gestapelte Makros + Load Linie
+  const p = numArr(d.protein);
+  const c = numArr(d.carbs);
+  const f = numArr(d.fat);
+  const load = numArr(d.load);
+
+  const el = $("chMacros");
+  if (!el) return;
+
+  charts.macros = new Chart(el, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        { label: "Protein (g)", data: p, stack: "macros", yAxisID: "yM", order: 3 },
+        { label: "Carbs (g)",   data: c, stack: "macros", yAxisID: "yM", order: 4 },
+        { label: "Fat (g)",     data: f, stack: "macros", yAxisID: "yM", order: 5 },
+
+        { label: "Load", data: load, type: "line", yAxisID: "yL",
+          order: 1, pointRadius: 0, tension: 0.25, borderWidth: 2 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: { legend: { display: true } },
+      scales: {
+        yM: { beginAtZero: true, stacked: true, title: { display: true, text: "Makros (g)" } },
+        yL: { position: "right", grid: { drawOnChartArea: false }, beginAtZero: true,
+              title: { display: true, text: "Load" } },
+        x:  { stacked: true, ticks: { maxRotation: 0 } }
+      }
+    }
+  });
+}
+
+function renderFuelToPerform(d){
+  const el = $("chFuel");
+  if (!el) return;
+
+  const labels  = d.dates || [];
+  const load    = numArr(d.load);
+
+  const protein = numArr(d.protein).map(v => Number.isFinite(v) ? v : 0);
+  const carbs   = numArr(d.carbs).map(v => Number.isFinite(v) ? v : 0);
+  const fat     = numArr(d.fat).map(v => Number.isFinite(v) ? v : 0);
+
+  // Wenn alles leer ist: klarer Fehler statt “nichts”
+  const anyMacro = [...protein, ...carbs, ...fat].some(v => Number.isFinite(v));
+  if (!anyMacro) {
+    showErr("Fuel to perform: keine Makro-Daten gefunden (protein/carbs/fat sind leer). Prüfe Header-Mapping in timelinePayloadToDash().");
+  }
+
+  charts.fuel = new Chart(el, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        { label: "Protein (g)", data: protein, stack: "macros", yAxisID: "yM" },
+        { label: "Carbs (g)",   data: carbs,   stack: "macros", yAxisID: "yM" },
+        { label: "Fat (g)",     data: fat,     stack: "macros", yAxisID: "yM" },
+
+        { label: "Load", data: load, type: "line", yAxisID: "yL", pointRadius: 0, tension: 0.25, borderWidth: 2 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: { legend: { position: "top" } },
+      scales: {
+        x:  { stacked: true },
+        yM: { stacked: true, beginAtZero: true, title: { display: true, text: "Makros (g)" } },
+        yL: { position: "right", grid: { drawOnChartArea: false }, beginAtZero: true, title: { display: true, text: "Load" } }
+      }
+    }
+  });
+}
+
+
+/* =========================
+   Demo data generator
+   ========================= */
+function makeDemo(n){
+  const start = new Date();
+  start.setHours(0,0,0,0);
+  const dates = [];
+  for(let i=0;i<n;i++){
+    const d = new Date(start);
+    d.setDate(d.getDate()+i);
+    const iso = d.toISOString().slice(0,10);
+    dates.push(iso);
+  }
+
+  // Garmin-like-ish shapes
+  const load = dates.map((_,i)=> (i%7===1 || i%7===4) ? 0 : Math.round(80 + 60*Math.random()));
+  let ctl = [];
+  let atl = [];
+  let c = 540;
+  let a = 580;
+  const alphaCTL = 0.10;
+  const alphaATL = 0.20;
+
+  for(let i=0;i<n;i++){
+    const L = load[i];
+    // simple stimulus (placeholder)
+    const stim = L; 
+    a = (1-alphaATL)*a + alphaATL*stim;
+    c = (1-alphaCTL)*c + alphaCTL*stim;
+    atl.push(a);
+    ctl.push(c);
+  }
+
+  const acwr = atl.map((v,i)=> {
+    const den = ctl[i] || 1;
+    return den ? (v/den) : NaN;
+  });
+
+  const tsb = ctl.map((v,i)=> v - atl[i]);
+
+  const sleepScore = dates.map(()=> Math.round(65 + 25*Math.random()));
+  const hrvStatus  = dates.map(()=> Math.round(40 + 20*Math.random()));
+  const tr         = dates.map(()=> Math.round(45 + 40*Math.random()));
+
+  const smartGains = dates.map((_,i)=>{
+    const trend = i>=7 ? (ctl[i]-ctl[i-7])*2.0 : (ctl[i]-ctl[0])*2.0;
+    const status = ctl[i]/10.0;
+    const cost = (atl[i]*7)/500.0;
+    return Math.round((trend + status - cost)*10)/10;
+  });
+
+  const deficit = dates.map((_,i)=> (i%7===0) ? -400 : Math.round(-150 + 400*Math.random()));
+  const protein = dates.map(()=> Math.round(110 + 40*Math.random()));
+  const carbs   = dates.map(()=> Math.round(200 + 120*Math.random()));
+  const fat     = dates.map(()=> Math.round(60 + 25*Math.random()));
+
+  return { dates, load, ctl, atl, acwr, tsb, sleepScore, hrvStatus, tr, smartGains, deficit, protein, carbs, fat };
+}
+
+/* =========================
+   UI wiring
+   ========================= */
+function refreshModeLabel(){
+  const m = $("selMode").value;
+  $("modeValue").textContent = (m === "fb") ? "FB (Garmin/Firstbeat)" : "Plan (CoachE)";
+}
+
+$("btnLoadDemo").addEventListener("click", () => {
+  const n = Number($("selRange").value) || 14;
+  refreshModeLabel();
+  setDashboardData(makeDemo(n));
+});
+
+$("btnClear").addEventListener("click", () => {
+  destroyAllCharts();
+  $("seedValue").textContent = "ATL=– CTL=–";
+  $("dataStatus").textContent = "Keine Daten.";
+});
+
+$("selRange").addEventListener("change", async () => {
+  try {
+    const raw = ($("selRange")?.value ?? "").trim();
+const days = raw === "" ? null : (Number(raw) || 14);
+
+    // Alle Mini-Ranges auf denselben Zeitraum setzen (damit nicht “optisch” 14 bleibt)
+    ["rngTraining","rngAcwr","rngRecovery","rngSg","rngFood"].forEach(id => {
+      const el = $(id);
+      if (el) el.value = (days === null) ? "" : String(days);
+    });
+
+    $("dataStatus").textContent = "Lade Daten…";
+    const payload = await fetchTimeline(days, 14);
+    window.__TIMELINE_PAYLOAD__ = payload;
+    setDashboardData(payload);
+  } catch (e) {
+  showErr("Charts-Laden fehlgeschlagen:\n" + (e?.message || e));
+}
+});
+
+$("selMode").addEventListener("change", () => {
+  refreshModeLabel();
+});
+
+$("acwrMin").addEventListener("change", () => {
+  // if charts exist, quick re-render band by reloading current demo
+  if (charts.acwr) $("btnLoadDemo").click();
+});
+$("acwrMax").addEventListener("change", () => {
+  if (charts.acwr) $("btnLoadDemo").click();
+});
+
+// Initial state
+refreshModeLabel();
+
+
+//$("btnLoadDemo").click();
+
+async function fetchTimeline(days, futureDays) {
+  const base = getExecBaseUrl(); // MUSS .../exec sein, nicht userCodeAppPanel
+  const u = new URL(base);
+
+  u.searchParams.set("mode", "timeline");
+
+  // days (Historie) – null/"" => Alles
+  if (days === null || days === undefined || String(days).trim() === "") {
+    u.searchParams.delete("days");
+  } else {
+    const d = Number(days);
+    if (Number.isFinite(d) && d > 0) u.searchParams.set("days", String(Math.floor(d)));
+    else u.searchParams.delete("days");
+  }
+
+  // future (Forecast)
+  if (futureDays === null || futureDays === undefined || String(futureDays).trim() === "") {
+    u.searchParams.delete("future");
+  } else {
+    const f = Number(futureDays);
+    if (Number.isFinite(f) && f > 0) u.searchParams.set("future", String(Math.floor(f)));
+    else u.searchParams.delete("future");
+  }
+
+  let res, text, ct;
+  try {
+    res = await fetch(u.toString(), {
+  cache: "no-store",
+  credentials: "omit",
+  redirect: "follow",
+  headers: { "Accept": "application/json" }
+});
+  } catch (err) {
+    throw new Error(`Fetch-Request fehlgeschlagen (URL: ${u.toString()}): ${err?.message || err}`);
+  }
+
+  ct = (res.headers.get("content-type") || "").toLowerCase();
+  text = await res.text();
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status} (URL: ${u.toString()}): ${text.slice(0, 200)}`);
+  }
+  if (!ct.includes("application/json")) {
+    throw new Error(
+      `Timeline liefert kein JSON (content-type: ${ct || "?"}, URL: ${u.toString()}). ` +
+      `Start: ${text.slice(0, 200)}`
+    );
+  }
+
+  let j;
+  try { j = JSON.parse(text); }
+  catch (err) { throw new Error(`JSON-Parse-Fehler: ${err?.message || err}. Start: ${text.slice(0, 200)}`); }
+
+  if (!j || j.error) throw new Error(j?.message || "timeline fetch failed");
+  if (!j.ok) throw new Error("timeline payload not ok");
+  return j;
+}
+
+async function initChartsPage() {
+  hideErr();
+  try {
+    // Dropdown: "" bedeutet "Alles"
+    const raw = String($("selRange")?.value ?? "").trim();
+    const days = raw === "" ? null : (Number(raw) || 14);
+
+    // Für deinen Forecast-Usecase immer future=14 mitziehen
+    const payload = await fetchTimeline(days, 14);
+
+    window.__TIMELINE_PAYLOAD__ = payload;
+    setDashboardData(payload);
+  } catch (e) {
+    showErr("Charts-Laden fehlgeschlagen:\n" + (e?.message || e));
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  renderCards();
+  initCardRanges();
+  initChartsPage();
+});
+
+function renderSleepQualityScatter(d){
+  const el = $("chSleepBubble");
+  if (!el) return;
+
+  const sleepH = numArr(d.sleepHours);
+  const sleepS = numArr(d.sleepScore);
+  const load   = numArr(d.load);
+  const wd     = (d.weekday || []).map(x => (x===null||x===undefined) ? null : Number(x));
+
+  // Radius deutlich eindeutiger:
+  // - nicht linear, damit “große” Loads wirklich auffallen
+  const finiteLoads = load.filter(v => Number.isFinite(v));
+  const Lmin = finiteLoads.length ? Math.min(...finiteLoads) : 0;
+  const Lmax = finiteLoads.length ? Math.max(...finiteLoads) : 1;
+
+  const rOf = (L) => {
+    if (!Number.isFinite(L)) return 7;
+    const t = (Lmax === Lmin) ? 0.5 : (L - Lmin) / (Lmax - Lmin);
+    const tt = Math.pow(clamp(t,0,1), 1.7);   // stärkerer Kontrast
+    return clamp(5 + tt * 25, 5, 30);         // 5..30 statt 4..22
+  };
+
+  const points = [];
+  for (let i=0; i<(d.dates||[]).length; i++){
+    const x = sleepH[i], y = sleepS[i], L = load[i], w = wd[i];
+    if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+    points.push({ x, y, r: rOf(L), w });
+  }
+
+  const dayLabel = ["So","Mo","Di","Mi","Do","Fr","Sa"];
+  const ds = [];
+  for (let day=0; day<=6; day++){
+    ds.push({
+      label: dayLabel[day],
+      data: points.filter(p => p.w === day).map(p => ({ x:p.x, y:p.y, r:p.r })),
+    });
+  }
+  ds.push({
+    label: "n/a",
+    data: points.filter(p => p.w === null || !Number.isFinite(p.w)).map(p => ({ x:p.x, y:p.y, r:p.r })),
+  });
+
+  charts.sleepQuality = new Chart(el, {
+    type: "bubble",
+    data: { datasets: ds },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: "top" } },
+      scales: {
+        x: { title: { display: true, text: "Schlaf (h)" }, beginAtZero: true, suggestedMax: 10 },
+        y: { title: { display: true, text: "Schlafscore" }, beginAtZero: true, suggestedMax: 100 }
+      }
+    }
+  });
+}
+
+function renderEfficiencyQuadrant(d){
+  const el = $("chEffQuad");
+  if (!el) return;
+
+  const load = numArr(d.load);
+  const ctl  = numArr(d.ctl);
+
+  // y = CTL Trend 7d (Δ7d)
+  const ctlTrend = (d.dates || []).map((_, i) => {
+    const c = ctl[i];
+    const c7 = (i >= 7) ? ctl[i-7] : ctl[0];
+    if (!Number.isFinite(c) || !Number.isFinite(c7)) return null;
+    return (c - c7);
+  });
+
+  // Robust min/max für Load
+  const finiteLoads = load.filter(v => Number.isFinite(v));
+  const Lmin = finiteLoads.length ? Math.min(...finiteLoads) : 0;
+  const Lmax = finiteLoads.length ? Math.max(...finiteLoads) : 1;
+
+  // Radius: 4..36 und deutlich nicht-linear (Kontrast hoch)
+  // Tipp: exponent 2.2 = stark; 1.7 = moderat
+  const rOf = (L) => {
+    if (!Number.isFinite(L)) return 6;
+    const t = (Lmax === Lmin) ? 0.5 : (L - Lmin) / (Lmax - Lmin);
+    const tt = Math.pow(clamp(t, 0, 1), 2.2);  // <- macht Unterschiede viel sichtbarer
+    return clamp(4 + tt * 32, 4, 36);         // <- großer Radius-Range
+  };
+
+  // Punkte
+  const points = [];
+  for (let i=0; i<(d.dates||[]).length; i++){
+    const x = load[i];
+    const y = ctlTrend[i];
+    if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+    points.push({ x, y, r: rOf(x) }); // Bubble-Größe = Load (dein Wunsch)
+  }
+
+  charts.effQuad = new Chart(el, {
+    type: "bubble",
+    data: {
+      datasets: [
+        { label: "Effizienz", data: points }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: "top" } },
+      scales: {
+        x: { title: { display: true, text: "Load" }, beginAtZero: true },
+        y: { title: { display: true, text: "CTL Trend (Δ7d)" } }
+      }
+    }
+  });
+}
+
+function renderEfficiencyMonitor(d){
+  const el = $("chEffMonitor");
+  if (!el) return;
+
+  const labels = d.dates || [];
+  const ctl = numArr(d.ctl);
+  const rhr = numArr(d.rhr);
+  const hrv = numArr(d.hrv);
+
+  // Debug-Hinweis, falls weiterhin leer:
+  const any = [...ctl, ...rhr, ...hrv].some(v => Number.isFinite(v));
+  if (!any) {
+    showErr("Effizienz-Monitor: keine Daten (ctl/rhr/hrv leer). Prüfe Timeline-Header + timelinePayloadToDash()-Mapping.");
+  }
+
+  charts.effMon = new Chart(el, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        { label: "CTL", data: ctl, yAxisID: "yCTL", tension: 0.25, pointRadius: 0, borderWidth: 2 },
+        { label: "RHR (bpm)", data: rhr, yAxisID: "yRHR", tension: 0.25, pointRadius: 0, borderWidth: 2 },
+        { label: "HRV", data: hrv, yAxisID: "yHRV", tension: 0.25, pointRadius: 0, borderWidth: 2 },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: { legend: { position: "top" } },
+      scales: {
+        yCTL: { position: "left", title: { display: true, text: "CTL" } },
+        yRHR: { position: "right", grid: { drawOnChartArea: false }, title: { display: true, text: "RHR (bpm)" }, offset: true },
+        yHRV: { position: "right", grid: { drawOnChartArea: false }, title: { display: true, text: "HRV" }, offset: true },
+        x: { ticks: { maxRotation: 0 } }
+      }
+    }
+  });
+}
+
+function renderTsbVsSgQuadrant(d, opts = {}) {
+  const el = $("chTsbPerf");
+  if (!el) return;
+
+  const tsb  = numArr(d.tsb);
+  const sg   = numArr(d.smartGains);
+  const load = numArr(d.load);
+
+  const finiteLoads = load.filter(v => Number.isFinite(v));
+  const Lmin = finiteLoads.length ? Math.min(...finiteLoads) : 0;
+  const Lmax = finiteLoads.length ? Math.max(...finiteLoads) : 1;
+
+  const rOf = (L) => {
+    if (!Number.isFinite(L)) return 6;
+    const t = (Lmax === Lmin) ? 0.5 : (L - Lmin) / (Lmax - Lmin);
+    const tt = Math.pow(clamp(t, 0, 1), 2.3);
+    return clamp(4 + tt * 34, 4, 38);
+  };
+
+  const pts = [];
+  for (let i = 0; i < (d.dates || []).length; i++) {
+    const x = tsb[i], y = sg[i], L = load[i];
+    if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+    pts.push({ x, y, r: rOf(L) });
+  }
+
+  // --- Achsenbereiche ---
+  const xs = pts.map(p => p.x);
+  const ys = pts.map(p => p.y);
+
+  const pad = (min, max, f=0.08) => {
+    const span = (max - min) || 1;
+    return { min: min - span*f, max: max + span*f };
+  };
+
+  const x0 = xs.length ? Math.min(...xs) : -50;
+  const x1 = xs.length ? Math.max(...xs) :  50;
+  const y0 = ys.length ? Math.min(...ys) :   0;
+  const y1 = ys.length ? Math.max(...ys) : 200;
+
+  const X = pad(x0, x1, 0.10);
+  const Y = pad(y0, y1, 0.10);
+
+  // --- Schwelle: "Productive" ab SG>95 ---
+  const TSB_T1 = Number(opts.tsbTiredMax ?? PERF_CFG.tsb.tiredMax);
+const TSB_T2 = Number(opts.tsbFreshMin ?? PERF_CFG.tsb.freshMin);
+
+const SG_S1  = Number(opts.sgLowMax  ?? PERF_CFG.sg.lowMax);
+const SG_S2  = Number(opts.sgHighMin ?? PERF_CFG.sg.highMin);
+
+  // Bestehenden Chart killen
+  if (charts.tsbPerf?.destroy) charts.tsbPerf.destroy();
+
+  charts.tsbPerf = new Chart(el, {
+    type: "bubble",
+    data: {
+      datasets: [
+        { label: "TSB vs SG", data: pts }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "top" },
+        title: {
+          display: true,
+          text: `TSB vs Smart Gains – ${opts.titleSuffix || ""}`.trim()
+        },
+
+        annotation: {
+  annotations: {
+    // ====== 3x3 Zonen (TSB x SG) ======
+    // X: [X.min .. TSB_T1] tired | [TSB_T1 .. TSB_T2] neutral | [TSB_T2 .. X.max] fresh
+    // Y: [Y.min .. SG_S1] low   | [SG_S1 .. SG_S2] ok       | [SG_S2 .. Y.max] high
+
+    // tired + low
+    z_tl: { type:"box", xMin:X.min,   xMax:TSB_T1, yMin:Y.min,   yMax:SG_S1, backgroundColor:"rgba(239,68,68,0.08)", borderWidth:0 },
+    // tired + ok
+    z_to: { type:"box", xMin:X.min,   xMax:TSB_T1, yMin:SG_S1,   yMax:SG_S2, backgroundColor:"rgba(250,204,21,0.10)", borderWidth:0 },
+    // tired + high
+    z_th: { type:"box", xMin:X.min,   xMax:TSB_T1, yMin:SG_S2,   yMax:Y.max, backgroundColor:"rgba(250,204,21,0.10)", borderWidth:0 },
+
+    // neutral + low
+    z_nl: { type:"box", xMin:TSB_T1,  xMax:TSB_T2, yMin:Y.min,   yMax:SG_S1, backgroundColor:"rgba(59,130,246,0.08)", borderWidth:0 },
+    // neutral + ok
+    z_no: { type:"box", xMin:TSB_T1,  xMax:TSB_T2, yMin:SG_S1,   yMax:SG_S2, backgroundColor:"rgba(34,197,94,0.10)", borderWidth:0 },
+    // neutral + high
+    z_nh: { type:"box", xMin:TSB_T1,  xMax:TSB_T2, yMin:SG_S2,   yMax:Y.max, backgroundColor:"rgba(250,204,21,0.10)", borderWidth:0 },
+
+    // fresh + low
+    z_fl: { type:"box", xMin:TSB_T2,  xMax:X.max,  yMin:Y.min,   yMax:SG_S1, backgroundColor:"rgba(59,130,246,0.08)", borderWidth:0 },
+    // fresh + ok
+    z_fo: { type:"box", xMin:TSB_T2,  xMax:X.max,  yMin:SG_S1,   yMax:SG_S2, backgroundColor:"rgba(34,197,94,0.10)", borderWidth:0 },
+    // fresh + high
+    z_fh: { type:"box", xMin:TSB_T2,  xMax:X.max,  yMin:SG_S2,   yMax:Y.max, backgroundColor:"rgba(250,204,21,0.10)", borderWidth:0 },
+
+    // ====== Schwellen-Linien ======
+    line_tsb_tired: {
+      type:"line", xMin:TSB_T1, xMax:TSB_T1, yMin:Y.min, yMax:Y.max,
+      borderColor:"rgba(148,163,184,0.9)", borderWidth:1, borderDash:[6,6],
+      label:{ display:true, content:`TSB ${TSB_T1}`, position:"start" }
+    },
+    line_tsb_fresh: {
+      type:"line", xMin:TSB_T2, xMax:TSB_T2, yMin:Y.min, yMax:Y.max,
+      borderColor:"rgba(148,163,184,0.9)", borderWidth:1, borderDash:[6,6],
+      label:{ display:true, content:`TSB ${TSB_T2}`, position:"start" }
+    },
+    line_sg_low: {
+      type:"line", xMin:X.min, xMax:X.max, yMin:SG_S1, yMax:SG_S1,
+      borderColor:"rgba(148,163,184,0.9)", borderWidth:1, borderDash:[6,6],
+      label:{ display:true, content:`SG ${SG_S1}`, position:"end" }
+    },
+    line_sg_high: {
+      type:"line", xMin:X.min, xMax:X.max, yMin:SG_S2, yMax:SG_S2,
+      borderColor:"rgba(148,163,184,0.9)", borderWidth:1, borderDash:[6,6],
+      label:{ display:true, content:`SG ${SG_S2}`, position:"end" }
+    },
+
+    // ====== kleine Labels (optional) ======
+    lbl_x_tired: { type:"label", xValue:(X.min+TSB_T1)/2, yValue:Y.max, yAdjust: -12,
+      content:[PERF_CFG.labels.xTired], backgroundColor:"rgba(255,255,255,0)", color:"rgba(15,23,42,0.6)", font:{size:11,weight:"600"} },
+    lbl_x_neutral: { type:"label", xValue:(TSB_T1+TSB_T2)/2, yValue:Y.max, yAdjust: -12,
+      content:[PERF_CFG.labels.xNeutral], backgroundColor:"rgba(255,255,255,0)", color:"rgba(15,23,42,0.6)", font:{size:11,weight:"600"} },
+    lbl_x_fresh: { type:"label", xValue:(TSB_T2+X.max)/2, yValue:Y.max, yAdjust: -12,
+      content:[PERF_CFG.labels.xFresh], backgroundColor:"rgba(255,255,255,0)", color:"rgba(15,23,42,0.6)", font:{size:11,weight:"600"} },
+
+    lbl_y_low: { type:"label", xValue:X.min, xAdjust: 14, yValue:(Y.min+SG_S1)/2,
+      content:[PERF_CFG.labels.yLow], backgroundColor:"rgba(255,255,255,0)", color:"rgba(15,23,42,0.55)", font:{size:11,weight:"600"} },
+    lbl_y_ok: { type:"label", xValue:X.min, xAdjust: 14, yValue:(SG_S1+SG_S2)/2,
+      content:[PERF_CFG.labels.yOk], backgroundColor:"rgba(255,255,255,0)", color:"rgba(15,23,42,0.55)", font:{size:11,weight:"600"} },
+    lbl_y_high: { type:"label", xValue:X.min, xAdjust: 14, yValue:(SG_S2+Y.max)/2,
+      content:[PERF_CFG.labels.yHigh], backgroundColor:"rgba(255,255,255,0)", color:"rgba(15,23,42,0.55)", font:{size:11,weight:"600"} },
+  }
+}
+      },
+      scales: {
+        x: { title: { display: true, text: "TSB (Form)" }, min: X.min, max: X.max },
+        y: { title: { display: true, text: "Smart Gains" }, min: Y.min, max: Y.max }
+      }
+    }
+  });
+}
+
+function getExecBaseUrl() {
+  // 1) Primär: Template-Variable aus .gs -> template.pubUrl
+  // In charts.html sollte oben bereits stehen: window.PUB_URL = <"+"?=" pubUrl ?>" || "").trim();
+  const tpl = String(window.PUB_URL || "").trim();
+
+  // Wenn Template-Auswertung nicht griff oder noch "< ?=" drinsteckt, ignorieren
+  const TPL_SIG = "<" + "?=";
+  const tplOk = tpl && !tpl.includes(TPL_SIG);
+
+  // userCodeAppPanel ist FALSCH (liefert HTML-Wrapper), also ebenfalls ignorieren
+  const isBadHost = (u) => /googleusercontent\.com\/userCodeAppPanel/i.test(u);
+
+  if (tplOk && !isBadHost(tpl)) {
+    // querystrip
+    return tpl.split("?")[0];
+  }
+
+  // 2) Fallback: versuche script.google.com/macros/.../exec aus dem DOM zu finden
+  // (hilft manchmal, wenn PUB_URL nicht verfügbar ist)
+  const links = Array.from(document.querySelectorAll("a,link"));
+  for (const el of links) {
+    const href = el.href || "";
+    if (/script\.google\.com\/macros\/s\//i.test(href) && /\/exec/i.test(href)) {
+      return href.split("?")[0];
+    }
+  }
+
+  // 3) Letzter Fallback: location (kann aber userCodeAppPanel sein -> dann knallt es wieder)
+  return (window.location.origin + window.location.pathname);
+}
+
+</script>
+</body>
+</html>

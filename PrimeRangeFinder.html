@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html data-theme="light">
+<head>
+  <base target="_top">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Prime Range Finder</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root{
+  /* LIGHT (default) */
+  --bg:#f3f4f6;
+  --card:#ffffff;
+  --muted:#6b7280;
+  --text:#111827;
+  --border:#e5e7eb;
+  --accent:#2563eb;
+
+  --good:#059669;
+  --warn:#d97706;
+  --bad:#dc2626;
+  --prime:#d400ff;
+
+  --chip:#f9fafb;
+}
+
+/* DARK override */
+[data-theme="dark"]{
+  --bg:#0f1115;
+  --card:#161a22;
+  --muted:#9aa4b2;
+  --text:#e6e8ee;
+  --border:#2a3242;
+  --accent:#55aaff;
+
+  --good:#3ddc97;
+  --warn:#ffd166;
+  --bad:#ff5c7a;
+  --prime:#d400ff;
+
+  --chip:#0c0f14;
+}
+
+    body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:var(--bg); color:var(--text); }
+    .wrap{ max-width:1100px; margin:0 auto; padding:14px; }
+    .card{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:12px; margin-bottom:12px; }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+    .field{ display:flex; flex-direction:column; gap:6px; min-width:150px; flex:1; }
+    label{ font-size:12px; color:var(--muted); }
+    input,select{
+      background:var(--chip); color:var(--text); border:1px solid var(--border);
+      border-radius:10px; padding:10px; outline:none;
+    }
+    input:focus, select:focus{ border-color:var(--accent); }
+    button{
+      background:var(--accent); border:none; color:#061018;
+      padding:10px 12px; border-radius:10px; font-weight:800; cursor:pointer;
+    }
+    button.secondary{ background:transparent; border:1px solid var(--border); color:var(--text); }
+    .hint{ font-size:12px; color:var(--muted); line-height:1.4; margin-top:6px; }
+
+    .kpi{ display:flex; gap:10px; flex-wrap:wrap; }
+    .pill{ border:1px solid var(--border); border-radius:999px; padding:6px 10px; font-size:12px; color:var(--muted); }
+    .pill strong{ color:var(--text); }
+    .chartBox{ border:1px solid var(--border); border-radius:12px; background:var(--chip); padding:10px; }
+    .chartWrap{ position:relative; height:420px; }
+    table{ width:100%; border-collapse:collapse; overflow:hidden; border-radius:12px; border:1px solid var(--border); }
+    th,td{ padding:8px 10px; border-bottom:1px solid var(--border); font-size:12px; text-align:right; }
+    th{ color:var(--muted); background:var(--chip); position:sticky; top:0; z-index:1; }
+    td:first-child,th:first-child{ text-align:left; }
+    tr:last-child td{ border-bottom:none; }
+    .tag{ display:inline-block; padding:2px 8px; border-radius:999px; font-weight:800; font-size:11px; border:1px solid var(--border); }
+    .t-green{ color:var(--good); border-color:rgba(61,220,151,.35); background:rgba(61,220,151,.12); }
+    .t-red{ color:var(--bad); border-color:rgba(255,92,122,.35); background:rgba(255,92,122,.12); }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .explainBox{
+    margin-top:10px;
+    padding:10px 12px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:var(--chip);
+    color:var(--text);
+  }
+  .explainBox .muted{ color: var(--muted); }
+  details.explain details { margin-top:6px; }
+  details.explain summary{
+    cursor:pointer;
+    font-weight:900;
+    color:var(--text);
+    list-style:none;
+  }
+  details.explain summary::-webkit-details-marker{ display:none; }
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+
+  <div class="card">
+    <div style="font-weight:900; font-size:15px;">Prime-Range-Finder (KK_TIMELINE)</div>
+    <div class="hint">
+      Idee: Wir filtern „Green Days“ (keine Red-Flags) und bestimmen daraus deinen realen Prime-Bereich als Quantil-Band.
+      Du kannst die Kriterien live anpassen (ACWR-Fenster, Sleep-Score etc.).
+    </div>
+    <div class="explainBox">
+  <div style="font-weight:900; margin-bottom:6px;">Wie werden die SG-Zonen hier berechnet?</div>
+  <div class="muted" style="font-size:12px; line-height:1.45;">
+    Diese Seite lernt deine Bereiche <b>aus deinen Daten</b> – nicht aus festen Lehrbuch-Grenzen.
+    Dabei gibt es zwei „Motoren“:
+  </div>
+
+  <details class="explain" style="margin-top:8px;">
+    <summary>🔎 Kurz erklärt (klick mich)</summary>
+    <div class="muted" style="font-size:12px; line-height:1.55; margin-top:8px;">
+      <b>1) Green-Days Filter</b><br>
+      Ein Tag gilt als „GREEN“, wenn deine Filter passen:
+      <span class="mono">ACWR-Fenster</span>, <span class="mono">Sleep ≥ min</span>,
+      <span class="mono">Flags-Regex NICHT getroffen</span>, und (falls vorhanden) <span class="mono">HRVDev ≥ 0</span>.
+      <br><br>
+
+      <b>2) Prime-Band (direkt aus Green-SG)</b><br>
+      Aus den SG-Werten der GREEN-Days wird dein Prime-Band als Quantil-Bereich berechnet
+      (z. B. <span class="mono">Q75…Q95</span>). Das ist die „Prime-Wahrheit“ im Tool.
+      <br><br>
+
+      <b>3) Maintenance-Band (aus CTL-Drift)</b><br>
+      Zusätzlich wird ein Maintenance-Band gesucht, in dem dein <b>CTL kaum driftet</b>
+      (kleines <span class="mono">|ΔCTL|</span> von Tag zu Tag). Das Band wird aus den „stabilsten“ Tagen geschätzt.
+      <br><br>
+
+      <b>4) Restliche Zonen (abgeleitet)</b><br>
+      Danach werden die Zonen so gebaut:<br>
+      <span class="mono">Detraining &lt; MaintenanceLow</span><br>
+      <span class="mono">Maintenance = [Low…High]</span><br>
+      <span class="mono">Productive = (MaintenanceHigh…PrimeLow)</span><br>
+      <span class="mono">Prime = (PrimeLow…PrimeHigh)</span><br>
+      <span class="mono">Overload &gt; PrimeHigh</span>
+      <br><br>
+
+      <b>Warum kann „Productive“ winzig werden?</b><br>
+      Wenn <span class="mono">MaintenanceHigh</span> sehr nah an <span class="mono">PrimeLow</span> liegt
+      (oder sogar fast identisch), bleibt dazwischen kaum Platz – dann hat „Productive“ logischerweise fast keine Breite.
+      Das ist ein Signal: Entweder ist das Maintenance-Band zu breit geschätzt (CTL-Drift-Heuristik),
+      oder PrimeLow liegt sehr tief aufgrund deiner aktuellen Green-Filter.
+    </div>
+  </details>
+</div>
+
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div class="field">
+        <label>Zeitraum</label>
+        <select id="range">
+  <option value="90">Letzte 90 Tage</option>
+  <option value="180">Letzte 180 Tage</option>
+  <option value="365">Letztes Jahr</option>
+  <option value="9999" selected>Alles</option>
+</select>
+      </div>
+
+      <div class="field">
+        <label>ACWR-Window (Green)</label>
+        <div class="row" style="gap:6px;">
+          <input id="acwrMin" type="number" step="0.01" value="0.80">
+          <input id="acwrMax" type="number" step="0.01" value="1.30">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>SleepScore min (Green)</label>
+        <input id="sleepMin" type="number" step="1" value="70">
+      </div>
+
+      <div class="field">
+        <label>Flags, die „Red“ sind (Regex)</label>
+        <input id="badFlags" type="text" value="H|R">
+        <div class="hint">Beispiel: <span class="mono">H|R|SICK</span> (Groß/Klein egal)</div>
+      </div>
+
+      <div class="field" style="max-width:240px;">
+        <label>Prime-Quantile (Green Days)</label>
+        <div class="row" style="gap:6px;">
+          <input id="qLow" type="number" step="1" value="75">
+          <input id="qHigh" type="number" step="1" value="95">
+        </div>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:10px;">
+      <button onclick="reloadAndAnalyze()">Neu berechnen</button>
+      <button class="secondary" onclick="toggleTheme()">🌗 Theme</button>
+      <div class="kpi" id="kpis" style="margin-left:auto;"></div>
+    </div>
+
+    <div class="hint" id="status"></div>
+      <div style="margin-top:10px;">
+    <div style="font-weight:900; margin-bottom:6px;">Prime-Trefferquote nach SG-Buckets</div>
+    <div class="hint" style="margin-top:0;">
+      “Trefferquote” = Anteil GREEN-Days pro SG-Bereich (mit deinen aktuellen Filtern oben).
+    </div>
+    <div id="bucketBox" class="chartBox" style="margin-top:8px;"></div>
+  </div>
+      <!-- === NEU: ZONEN-ANALYSE (Detraining/Maintenance/Productive/Prime/Overload) === -->
+  <div style="margin-top:12px;">
+    <div style="font-weight:900; margin-bottom:6px;">Trefferquote nach SG-Zonen (Detraining → Overload)</div>
+    <div class="hint" style="margin-top:0;">
+      Trefferquote = Anteil GREEN-Days pro Zone (mit den Filtern oben). „Top-Fail“ zeigt die häufigsten Gründe für RED.
+    </div>
+
+    <div class="hint" id="bestZoneHint" style="margin:8px 0 10px 0;"></div>
+
+    <div id="zoneBox" class="chartBox" style="margin-top:8px;">
+      <table>
+        <thead>
+          <tr>
+            <th style="text-align:left;">Zone</th>
+            <th>Tage</th>
+            <th>Green</th>
+            <th style="text-align:left;">Trefferquote</th>
+            <th>SG-Median</th>
+            <th>SG-Median (Green)</th>
+            <th style="text-align:left;">Top-Fail</th>
+          </tr>
+        </thead>
+        <tbody id="zoneBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+    <pre id="debugBox" class="mono" style="margin:8px 0 0; padding:10px; border:1px solid var(--border); border-radius:12px; background:var(--chip); color:var(--muted); max-height:160px; overflow:auto;"></pre>
+
+  </div>
+
+  <div class="card">
+    <div class="chartBox">
+      <div class="hint" style="margin-top:0;">
+        Chart: Balken = Load (falls vorhanden), Linien links = SG/CTL/ATL, Linie rechts = ACWR.
+        Prime-Band wird als Fläche angezeigt.
+      </div>
+      <div class="chartWrap">
+        <canvas id="chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div style="font-weight:900;">Tage-Liste</div>
+      <div class="hint" style="margin:0;">Green = erfüllt Filter | Red = verletzt Filter</div>
+    </div>
+
+    <div style="max-height:420px; overflow:auto; margin-top:10px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Datum</th>
+            <th>Tag</th>
+            <th>SG</th>
+            <th>ACWR</th>
+            <th>CTL</th>
+            <th>ATL</th>
+            <th>Load</th>
+            <th>Sleep</th>
+            <th>RHR</th>
+            <th>Flags</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let rawRows = [];
+  let chartObj = null;
+  function dbg(...args){
+  const box = document.getElementById("debugBox");
+  const msg = args.map(a => {
+    try { return (typeof a === "string") ? a : JSON.stringify(a); }
+    catch(e){ return String(a); }
+  }).join(" ");
+  console.log("[PRIME]", ...args);
+  if (box) box.textContent += msg + "\n";
+}
+
+
+  function toggleTheme(){
+  const html = document.documentElement;
+  const cur = html.getAttribute("data-theme") || "light";
+  const next = (cur === "dark") ? "light" : "dark";
+  html.setAttribute("data-theme", next);
+  localStorage.setItem("primeTheme", next);
+}
+
+function initTheme(){
+  const saved = localStorage.getItem("primeTheme");
+  if (saved === "dark" || saved === "light") {
+    document.documentElement.setAttribute("data-theme", saved);
+  } else {
+    const cur = document.documentElement.getAttribute("data-theme") || "light";
+    document.documentElement.setAttribute("data-theme", cur);
+  }
+}
+
+
+
+
+  function parseNum(v){
+    if (v === null || v === undefined || v === "") return null;
+    if (typeof v === "number") return v;
+    const n = parseFloat(String(v).replace(",", "."));
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function percentile(arr, p){
+    const a = arr.filter(x => Number.isFinite(x)).slice().sort((x,y)=>x-y);
+    if (!a.length) return null;
+    const pos = (p/100) * (a.length - 1);
+    const lo = Math.floor(pos), hi = Math.ceil(pos);
+    if (lo === hi) return a[lo];
+    const t = pos - lo;
+    return a[lo] * (1 - t) + a[hi] * t;
+  }
+
+  function daysBackFilter(rows, days){
+    if (days >= 9999) return rows.slice();
+    // rows: [{date:"yyyy-mm-dd", ...}]
+    const ms = days * 24 * 3600 * 1000;
+    const maxDate = rows.reduce((m,r)=> (r.date && r.date > m ? r.date : m), "0000-00-00");
+    const max = new Date(maxDate + "T00:00:00").getTime();
+    return rows.filter(r => {
+      if (!r.date) return false;
+      const t = new Date(r.date + "T00:00:00").getTime();
+      return (max - t) <= ms;
+    });
+  }
+
+  function classify(row, cfg){
+  const flags = String(row.sgFlags || "").toUpperCase();
+  const badRe = cfg.badFlagsRe;
+
+  const sgOk = Number.isFinite(row.sg);
+  const acwrOk  = (row.acwr == null) ? true : (row.acwr >= cfg.acwrMin && row.acwr <= cfg.acwrMax);
+  const sleepOk = (row.sleepScore == null) ? true : (row.sleepScore >= cfg.sleepMin);
+  const flagsOk = badRe ? !badRe.test(flags) : true;
+
+  // ✅ NEU: HRV (wie Backend-Logik: hrvDev >= 0 ist ok; null blockiert nicht)
+  const hrvOk = (row.hrvDev == null) ? true : (row.hrvDev >= 0);
+
+  const green = sgOk && acwrOk && sleepOk && flagsOk && hrvOk;
+  return green;
+}
+
+
+  function renderKpis(meta){
+    const el = document.getElementById("kpis");
+    el.innerHTML = "";
+
+    const pills = [
+      {k:"Tage", v: meta.nAll},
+      {k:"Green Days", v: meta.nGreen},
+      {k:"Prime", v: (meta.primeLow==null||meta.primeHigh==null) ? "—" : `${meta.primeLow.toFixed(0)} … ${meta.primeHigh.toFixed(0)}`},
+      {k:"SG Median (Green)", v: meta.sgMed==null ? "—" : meta.sgMed.toFixed(0)},
+      {k:"SG 90% (Green)", v: meta.sg90==null ? "—" : meta.sg90.toFixed(0)}
+    ];
+
+    pills.forEach(p=>{
+      const div = document.createElement("div");
+      div.className = "pill";
+      div.innerHTML = `${p.k}: <strong>${p.v}</strong>`;
+      el.appendChild(div);
+    });
+  }
+
+  function renderTable(rows, cfg){
+    const tb = document.getElementById("tbody");
+    tb.innerHTML = "";
+
+    // neueste oben
+    const sorted = rows.slice().sort((a,b)=> (a.date < b.date ? 1 : -1));
+
+    sorted.forEach(r=>{
+      const green = classify(r, cfg);
+      const fails = green ? [] : failReasons(r, cfg);
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${r.date || ""}</td>
+        <td>${green ? '<span class="tag t-green">GREEN</span>' : '<span class="tag t-red">RED</span>'}</td>
+        <td>${r.sg == null ? "" : r.sg.toFixed(0)}</td>
+        <td>${r.acwr == null ? "" : r.acwr.toFixed(2)}</td>
+        <td>${r.ctl == null ? "" : r.ctl.toFixed(0)}</td>
+        <td>${r.atl == null ? "" : r.atl.toFixed(0)}</td>
+        <td>${r.load == null ? "" : r.load.toFixed(0)}</td>
+        <td>${r.sleepScore == null ? "" : r.sleepScore.toFixed(0)}</td>
+        <td>${r.rhr == null ? "" : r.rhr.toFixed(0)}</td>
+        <td style="text-align:left;">${(r.sgFlags || "")}</td>
+        <td style="text-align:left;">${green ? "ok" : fails.join(", ")}</td>
+      `;
+      tb.appendChild(tr);
+    });
+  }
+
+  function renderChart(rows, cfg, primeLow, primeHigh){
+    const canvas = document.getElementById("chart");
+    const ctx = canvas.getContext("2d");
+
+    // älteste links -> neueste rechts
+    const sorted = rows.slice().sort((a,b)=> (a.date > b.date ? 1 : -1));
+    const labels = sorted.map(r => r.date);
+    const sg = sorted.map(r => (r.sg == null ? null : r.sg));
+    const ctl = sorted.map(r => (r.ctl == null ? null : r.ctl));
+    const atl = sorted.map(r => (r.atl == null ? null : r.atl));
+    const acwr = sorted.map(r => (r.acwr == null ? null : r.acwr));
+    const load = sorted.map(r => (r.load == null ? 0 : r.load));
+
+    // Prime band (2 datasets: base + band)
+    const bandBase = labels.map(_ => (primeLow == null ? null : primeLow));
+    const bandTop  = labels.map(_ => (primeLow == null || primeHigh == null ? null : (primeHigh - primeLow)));
+
+    const config = {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Load",
+            data: load,
+            yAxisID: "yL",
+            order: 5,
+            backgroundColor: "rgba(85,170,255,0.25)"
+          },
+
+          // Prime band
+          {
+            type: "line",
+            label: "Prime Base",
+            data: bandBase,
+            yAxisID: "yL",
+            borderWidth: 0,
+            pointRadius: 0
+          },
+          {
+            type: "line",
+            label: "Prime Band",
+            data: bandTop,
+            yAxisID: "yL",
+            borderWidth: 0,
+            pointRadius: 0,
+            fill: "-1",
+            backgroundColor: "rgba(212,0,255,0.10)"
+          },
+
+          {
+            type: "line",
+            label: "SG",
+            data: sg,
+            yAxisID: "yL",
+            tension: 0.2,
+            pointRadius: 2,
+            borderWidth: 2,
+            borderColor: "#d400ff",
+            order: 1
+          },
+          {
+            type: "line",
+            label: "CTL",
+            data: ctl,
+            yAxisID: "yL",
+            tension: 0.15,
+            pointRadius: 0,
+            borderWidth: 2,
+            borderColor: "#3ddc97",
+            order: 2
+          },
+          {
+            type: "line",
+            label: "ATL",
+            data: atl,
+            yAxisID: "yL",
+            tension: 0.15,
+            pointRadius: 0,
+            borderWidth: 2,
+            borderColor: "#ffd166",
+            order: 3
+          },
+          {
+            type: "line",
+            label: "ACWR",
+            data: acwr,
+            yAxisID: "yR",
+            tension: 0.15,
+            pointRadius: 0,
+            borderDash: [6,4],
+            borderWidth: 2,
+            borderColor: "#ff5c7a",
+            order: 0
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: { display: true }
+        },
+        scales: {
+          yL: {
+            type: "linear",
+            position: "left",
+            title: { display: true, text: "SG / CTL / ATL / Load" },
+            grid: { color: "rgba(255,255,255,0.07)" }
+          },
+          yR: {
+            type: "linear",
+            position: "right",
+            title: { display: true, text: "ACWR" },
+            suggestedMin: 0.5,
+            suggestedMax: 2.0,
+            grid: { drawOnChartArea: false }
+          },
+          x: { ticks: { maxRotation: 0, autoSkip: true } }
+        }
+      }
+    };
+
+    if (chartObj) {
+      chartObj.data = config.data;
+      chartObj.options = config.options;
+      chartObj.update("none");
+    } else {
+      chartObj = new Chart(ctx, config);
+    }
+  }
+
+  // --- SG BUCKETS (Sweet-Spot Finder) ---
+const SG_BUCKETS = [
+  { label: "0–28",     min: 0,    max: 28 },
+  { label: "28–80",    min: 28,   max: 80 },
+  { label: "80–122",   min: 80,   max: 122 },
+  { label: "122–181",  min: 122,  max: 181 + 1e-9 }, // inkl. 181
+  { label: ">181",     min: 181 + 1e-9, max: Infinity }
+];
+
+
+function bucketLabelForSG(sg) {
+  if (!Number.isFinite(sg)) return null;
+  for (const b of SG_BUCKETS) {
+    if (sg >= b.min && sg < b.max) return b.label;
+  }
+  return null;
+}
+
+function computeBucketStats(rows, cfg) {
+  const map = {}; // label -> stats
+  SG_BUCKETS.forEach(b => {
+    map[b.label] = { label: b.label, n: 0, green: 0, sgVals: [] };
+  });
+
+  for (const r of (rows || [])) {
+    const sg = (r.sg == null) ? null : Number(r.sg);
+    const label = bucketLabelForSG(sg);
+    if (!label) continue;
+
+    map[label].n += 1;
+
+    // ✅ WICHTIG: GREEN immer über aktuelle UI-Filter entscheiden
+    const greenNow = classify(r, cfg);
+    if (greenNow) map[label].green += 1;
+
+    map[label].sgVals.push(sg);
+  }
+
+  const out = Object.values(map).map(s => {
+    const rate = s.n > 0 ? (s.green / s.n) : 0;
+    const med = percentile(s.sgVals, 50);
+    return { label: s.label, n: s.n, green: s.green, rate, sgMed: med };
+  });
+
+  out.sort((a,b) => (b.rate - a.rate) || (b.n - a.n));
+  return out;
+}
+
+
+function renderBucketStats(stats) {
+  const box = document.getElementById("bucketBox");
+  if (!box) return;
+
+  if (!stats || !stats.length) {
+    box.innerHTML = `<div class="hint">Keine Bucket-Daten vorhanden.</div>`;
+    return;
+  }
+
+  // “Best Bucket” nur wenn genügend Stichprobe
+  const MIN_N = 8;
+  const best = stats.find(s => s.n >= MIN_N) || stats[0];
+
+  const rowsHtml = stats.map(s => {
+    const pct = Math.round(s.rate * 100);
+    const barW = Math.max(0, Math.min(100, pct));
+
+    // Farbe nach Trefferquote
+    let col = "var(--muted)";
+    if (pct >= 70) col = "var(--good)";
+    else if (pct >= 40) col = "var(--warn)";
+    else col = "var(--bad)";
+
+    return `
+      <tr>
+        <td style="text-align:left;">${s.label}</td>
+        <td>${s.n}</td>
+        <td>${s.green}</td>
+        <td>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <div style="flex:1; height:8px; background:rgba(255,255,255,0.06); border-radius:999px; overflow:hidden;">
+              <div style="width:${barW}%; height:100%; background:${col}; opacity:0.9;"></div>
+            </div>
+            <span style="min-width:44px; text-align:right; color:${col}; font-weight:900;">${pct}%</span>
+          </div>
+        </td>
+        <td>${s.sgMed == null ? "—" : s.sgMed.toFixed(0)}</td>
+      </tr>
+    `;
+  }).join("");
+
+  box.innerHTML = `
+    <div class="hint" style="margin-top:0;">
+      Beste Zone (min ${MIN_N} Tage): <strong>${best ? best.label : "—"}</strong>
+      — Trefferquote: <strong>${best ? Math.round(best.rate*100) : 0}%</strong>
+      <span style="color:var(--muted); font-weight:600;">(n=${best ? best.n : 0})</span>
+    </div>
+
+    <table style="margin-top:10px;">
+      <thead>
+        <tr>
+          <th style="text-align:left;">SG-Bucket</th>
+          <th>Tage</th>
+          <th>Green</th>
+          <th style="text-align:left;">Trefferquote</th>
+          <th>SG-Median</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rowsHtml}
+      </tbody>
+    </table>
+  `;
+}
+
+// ====== DYNAMISCHE SG-ZONEN (aus deinen Daten) ======
+function computeDeltaCtl(rows){
+  // rows beliebig sortiert -> wir brauchen chronologisch
+  const sorted = rows.slice().sort((a,b)=> (a.date > b.date ? 1 : -1));
+  let prevCtl = null;
+
+  for (const r of sorted) {
+    r.__dCtl = null;
+    if (Number.isFinite(r.ctl) && Number.isFinite(prevCtl)) {
+      r.__dCtl = r.ctl - prevCtl;
+    }
+    if (Number.isFinite(r.ctl)) prevCtl = r.ctl;
+  }
+  return sorted;
+}
+
+function computeMaintenanceBandFromCtl(rows, primeLow){
+  // Idee: Maintenance = SG-Bereich, wo |ΔCTL| klein ist (CTL driftet kaum)
+  const sorted = computeDeltaCtl(rows);
+
+  let pts = sorted
+    .filter(r => Number.isFinite(r.sg) && Number.isFinite(r.__dCtl))
+    .map(r => ({ sg: r.sg, absD: Math.abs(r.__dCtl) }));
+
+  // --- Clamp: Maintenance soll sinnvoll sein ---
+  pts = pts.filter(p => p.sg >= 0);                         // keine negativen SG
+  if (Number.isFinite(primeLow)) pts = pts.filter(p => p.sg < primeLow); // Maintenance < PrimeLow
+
+  // Fallback wenn zu wenig CTL/SG Daten
+  if (pts.length < 20) {
+    const sgAll = rows
+      .map(r => r.sg)
+      .filter(x => Number.isFinite(x) && x >= 0 && (!Number.isFinite(primeLow) || x < primeLow));
+
+    return {
+      low: percentile(sgAll, 20),
+      high: percentile(sgAll, 40),
+      method: "fallback-quantiles",
+      n: pts.length
+    };
+  }
+
+  const absArr = pts.map(p => p.absD);
+  const eps = percentile(absArr, 25); // "kleinste 25% Drift" als neutral
+
+  const neutral = pts.filter(p => p.absD <= eps).map(p => p.sg);
+
+  if (neutral.length < 10) {
+    const sgAll = rows
+      .map(r => r.sg)
+      .filter(x => Number.isFinite(x) && x >= 0 && (!Number.isFinite(primeLow) || x < primeLow));
+
+    return {
+      low: percentile(sgAll, 20),
+      high: percentile(sgAll, 40),
+      method: "fallback-quantiles2",
+      n: neutral.length
+    };
+  }
+
+  // --- ROBUST: Band um Median statt "weit gestreute" Quantile ---
+  const med = percentile(neutral, 50);
+  const q25 = percentile(neutral, 25);
+  const q75 = percentile(neutral, 75);
+  const halfIQR = (q75 - q25) / 2;
+
+  return {
+    low: med - halfIQR,
+    high: med + halfIQR,
+    method: "ctl-neutral-median-iqr",
+    n: neutral.length
+  };
+}
+
+
+function buildDynamicZones(primeLow, primeHigh, maintBand){
+  // Prime kommt aus deinen Green-Day-Quantilen
+  // Maintenance kommt aus CTL-Drift-Band
+  const pL = Number.isFinite(primeLow) ? primeLow : 100;
+  const pH = Number.isFinite(primeHigh) ? primeHigh : 180;
+
+  let mL = Number.isFinite(maintBand?.low) ? maintBand.low : 10;
+  let mH = Number.isFinite(maintBand?.high) ? maintBand.high : 40;
+
+  // Guardrails: Maintenance darf nicht über PrimeLow laufen
+  if (Number.isFinite(pL) && mH >= pL) mH = pL - 1;
+  if (mH <= mL) { mL = Math.min(mL, mH-1); }
+
+  const r0 = (x)=> (Number.isFinite(x) ? Math.round(x) : "—");
+
+  return [
+    { key:"Detraining",  label:`Detraining (<${r0(mL)})`,          min:-Infinity, max:mL },
+    { key:"Maintenance", label:`Maintenance (${r0(mL)}–${r0(mH)})`, min:mL,        max:mH },
+    { key:"Productive",  label:`Productive (${r0(mH)}–${r0(pL)})`,  min:mH,        max:pL },
+    { key:"Prime",       label:`Prime (${r0(pL)}–${r0(pH)})`,       min:pL,        max:pH },
+    { key:"Overload",    label:`Overload (>${r0(pH)})`,            min:pH,        max:Infinity }
+  ];
+}
+
+function zoneForSG(sg, zones){
+  if (!Number.isFinite(sg)) return null;
+  for (const z of zones) {
+    if (sg >= z.min && sg < z.max) return z;
+  }
+  return null;
+}
+
+// Gründe, warum ein Tag RED ist
+function failReasons(row, cfg){
+  const fails = [];
+
+  if (!Number.isFinite(row.sg)) fails.push("SG");
+  if (row.acwr != null && !(row.acwr >= cfg.acwrMin && row.acwr <= cfg.acwrMax)) fails.push("ACWR");
+  if (row.sleepScore != null && row.sleepScore < cfg.sleepMin) fails.push("SLEEP");
+
+  if (cfg.badFlagsRe) {
+    const flags = String(row.sgFlags || "").toUpperCase();
+    if (cfg.badFlagsRe.test(flags)) fails.push("FLAGS");
+  }
+
+  if (row.hrvDev != null && row.hrvDev < 0) fails.push("HRV");
+  return fails;
+}
+
+function computeZoneStats(rows, cfg, zones, minDaysPerZone = 8){
+  const stats = (zones || []).map(z => ({
+    zone: z, days:0, green:0, sgAll:[], sgGreen:[], failCount:{}
+  }));
+  const byKey = Object.fromEntries(stats.map(s => [s.zone.key, s]));
+
+  for (const r of (rows || [])) {
+    const sg = (r.sg == null) ? null : Number(r.sg);
+    const z = zoneForSG(sg, zones);
+    if (!z) continue;
+
+    const s = byKey[z.key];
+    s.days++;
+    s.sgAll.push(sg);
+
+    const green = classify(r, cfg);
+    if (green) {
+      s.green++;
+      s.sgGreen.push(sg);
+    } else {
+      const fails = failReasons(r, cfg);
+      for (const f of new Set(fails)) s.failCount[f] = (s.failCount[f] || 0) + 1;
+    }
+  }
+
+  for (const s of stats) {
+    s.rate = s.days > 0 ? (s.green / s.days) : 0;
+    s.sgMedAll = percentile(s.sgAll, 50);
+    s.sgMedGreen = percentile(s.sgGreen, 50);
+
+    const top = Object.entries(s.failCount).sort((a,b)=>b[1]-a[1]).slice(0,2);
+    s.topFail = top.length ? top.map(([k,v]) => `${k}(${v})`).join(", ") : "—";
+    s.eligible = s.days >= minDaysPerZone;
+  }
+
+  const best = stats
+    .filter(s => s.eligible && s.days > 0)
+    .sort((a,b) => (b.rate - a.rate) || (b.zone.min - a.zone.min))[0] || null;
+
+  return { stats, best, minDaysPerZone, zones };
+}
+
+function renderZoneStats(pack, maintBand){
+  const tb = document.getElementById("zoneBody");
+  const hint = document.getElementById("bestZoneHint");
+  if (!tb || !hint) return;
+
+  tb.innerHTML = "";
+
+  if (!pack || !pack.stats) {
+    hint.textContent = "Keine Zonen-Daten.";
+    return;
+  }
+
+  const { stats, best, minDaysPerZone } = pack;
+
+  const fmt = (x) => Number.isFinite(x) ? Math.round(x) : "—";
+
+const maintInfo = maintBand
+  ? `Maintenance-Band: ${fmt(maintBand.low)}–${fmt(maintBand.high)} (Methode: ${maintBand.method}, n=${maintBand.n})`
+  : "";
+
+
+  if (best) {
+    hint.textContent = `Beste Zone (min ${minDaysPerZone} Tage): ${best.zone.label} — Trefferquote ${Math.round(best.rate*100)}% (n=${best.days}). ${maintInfo}`;
+  } else {
+    hint.textContent = `Beste Zone: — (keine Zone erfüllt min ${minDaysPerZone} Tage). ${maintInfo}`;
+  }
+
+  stats.forEach(s => {
+    const pct = s.days ? Math.round(s.rate*100) : null;
+
+    let col = "var(--muted)";
+    if (pct != null) {
+      if (pct >= 70) col = "var(--good)";
+      else if (pct >= 40) col = "var(--warn)";
+      else col = "var(--bad)";
+    }
+
+    const tr = document.createElement("tr");
+    if (best && best.zone.key === s.zone.key) tr.style.background = "rgba(85,170,255,0.08)";
+
+    tr.innerHTML = `
+      <td style="text-align:left;">${s.zone.label}</td>
+      <td>${s.days}</td>
+      <td>${s.green}</td>
+      <td style="text-align:left; color:${col}; font-weight:900;">
+        ${pct == null ? "—" : (pct + "%")}
+      </td>
+      <td>${s.sgMedAll == null ? "—" : s.sgMedAll.toFixed(0)}</td>
+      <td>${s.sgMedGreen == null ? "—" : s.sgMedGreen.toFixed(0)}</td>
+      <td style="text-align:left;">${s.topFail}</td>
+    `;
+    tb.appendChild(tr);
+  });
+}
+
+
+
+  function analyzeAndRender(){
+    const status = document.getElementById("status");
+    status.textContent = "Analysiere…";
+
+    const days = parseInt(document.getElementById("range").value, 10);
+    const acwrMin = parseFloat(document.getElementById("acwrMin").value);
+    const acwrMax = parseFloat(document.getElementById("acwrMax").value);
+    const sleepMin = parseFloat(document.getElementById("sleepMin").value);
+    const badFlagsText = String(document.getElementById("badFlags").value || "").trim();
+    const qLow = Math.max(0, Math.min(100, parseFloat(document.getElementById("qLow").value)));
+    const qHigh = Math.max(0, Math.min(100, parseFloat(document.getElementById("qHigh").value)));
+
+    let badFlagsRe = null;
+    try {
+      if (badFlagsText) badFlagsRe = new RegExp(badFlagsText, "i");
+    } catch(e){
+      badFlagsRe = null;
+      status.textContent = "BadFlags-Regex ungültig – ich ignoriere Flags-Filter.";
+    }
+
+    const cfg = { acwrMin, acwrMax, sleepMin, badFlagsRe };
+
+    const rows = daysBackFilter(rawRows, days);
+
+        // --- BUCKET HIT RATE (Sweet-Spot Finder) ---
+    const bucketStats = computeBucketStats(rows, cfg);
+    renderBucketStats(bucketStats);
+    
+
+    const greenSg = rows.filter(r => classify(r, cfg)).map(r => r.sg).filter(x => Number.isFinite(x));
+    const primeLow = percentile(greenSg, qLow);
+    const primeHigh = percentile(greenSg, qHigh);
+
+    const meta = {
+      nAll: rows.length,
+      nGreen: greenSg.length,
+      primeLow,
+      primeHigh,
+      sgMed: percentile(greenSg, 50),
+      sg90: percentile(greenSg, 90)
+    };
+
+    // --- Dynamische Zonen aus deinen Daten ableiten ---
+const maintBand = computeMaintenanceBandFromCtl(rows, primeLow);
+const dynZones  = buildDynamicZones(primeLow, primeHigh, maintBand);
+
+
+const zonePack = computeZoneStats(rows, cfg, dynZones, 8);
+renderZoneStats(zonePack, maintBand);
+
+dbg("DYN_ZONES:", dynZones);
+dbg("MAINT_BAND:", maintBand);
+
+
+    renderKpis(meta);
+    renderTable(rows, cfg);
+    renderChart(rows, cfg, primeLow, primeHigh);
+
+    status.textContent =
+      `Fertig. Prime=${primeLow==null||primeHigh==null ? "—" : (primeLow.toFixed(0)+"…"+primeHigh.toFixed(0))}
+       | GreenDays=${meta.nGreen}/${meta.nAll}`;
+  }
+
+  function reloadAndAnalyze(){
+    if (!window.__primeThemeInit) {
+    initTheme();
+    window.__primeThemeInit = true;
+  }
+  const status = document.getElementById("status");
+  const box = document.getElementById("debugBox");
+  if (box) box.textContent = ""; // Debug-Box leeren
+
+  status.textContent = "Lade KK_TIMELINE…";
+
+  // Payload aus UI bauen (das hat bei dir gefehlt)
+  const payload = {
+    daysBack:  Number(document.getElementById("range").value || 90),
+    acwrMin:   Number(document.getElementById("acwrMin").value || 0.8),
+    acwrMax:   Number(document.getElementById("acwrMax").value || 1.3),
+    sleepMin:  Number(document.getElementById("sleepMin").value || 70),
+    redFlagsRegex: String(document.getElementById("badFlags").value || "").trim(),
+    qLow:      Number(document.getElementById("qLow").value || 75),
+    qHigh:     Number(document.getElementById("qHigh").value || 95)
+  };
+
+  dbg("REQUEST payload:", payload);
+
+  google.script.run
+    .withSuccessHandler(function(res) {
+      dbg("RESPONSE meta:", res && res.meta);
+      dbg("RESPONSE idx:", res && res.debug && res.debug.idx);
+      dbg("RESPONSE sampleRow:", res && res.debug && res.debug.sampleRow);
+
+      // WICHTIG: Rohdaten in Frontend-Shape normalisieren
+      const rows = (res && res.rows) ? res.rows : [];
+      rawRows = rows.map(r => ({
+        date: r.date || "",
+        sg: r.sg ?? null,
+        acwr: r.acwr ?? null,
+        ctl: r.ctl ?? null,
+        atl: r.atl ?? null,
+        load: r.load ?? null,
+        sleepScore: r.sleep ?? null,   // Backend: sleep -> Frontend: sleepScore
+        rhr: r.rhr ?? null,
+        sgFlags: r.flags || "",        // Backend: flags -> Frontend: sgFlags
+        hrvDev: r.hrvDev ?? null,
+        isGreen: !!r.isGreen
+      }));
+
+      dbg("ROWS loaded:", rawRows.length);
+
+      status.textContent = `KK_TIMELINE geladen: ${rawRows.length} Zeilen. Analysiere…`;
+      analyzeAndRender(); // <-- DAS ist dein “Render-All”
+    })
+    .withFailureHandler(function(err) {
+      dbg("BACKEND ERROR:", err && err.message ? err.message : err);
+      status.textContent = "❌ Backend-Fehler: " + (err && err.message ? err.message : String(err));
+    })
+    .getPrimeRangeData(payload);
+}
+
+window.addEventListener("load", () => reloadAndAnalyze());
+
+
+</script>
+
+</body>
+</html>

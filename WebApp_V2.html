@@ -1,0 +1,2333 @@
+<!DOCTYPE html>
+<html data-theme="dark">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Coach Kira">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+<link rel="apple-touch-icon" href="https://img.icons8.com/color/192/bot.png">
+
+<title>Coach Kira V122 (Commander Edition)</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+/* --- THEME VARIABLES --- */
+:root {
+  /* LIGHT THEME */
+  --bg-color: #ffffff;
+  --card-bg: #ffffff;
+  --header-bg: #ffffff;
+  --text-main: #212121;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+
+  --primary: #2563eb;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --orange: #f97316;
+  --danger: #ef4444;
+  --prime: #d400ff;
+
+  --input-bg: #fff;
+  --input-border: #cbd5e1;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+
+  --load-low-bg: #ecfdf5; --load-low-col: #065f46;
+  --load-mid-bg: #eff6ff; --load-mid-col: #1e40af;
+  --load-high-bg: #fff7ed; --load-high-col: #9a3412;
+
+  --btn-header-bg: #f1f5f9; 
+  --btn-header-border: #cbd5e1; 
+  --btn-header-text: #334155; /* Dunkles Blaugrau */
+}
+
+[data-theme="dark"] {
+  /* DARK THEME (Garmin Style) */
+  --bg-color: #121212;
+  --card-bg: #181818;
+  --header-bg: #121212;
+  --text-main: #f0f0f0;
+  --text-muted: #888888;
+  --border-color: #333333;
+
+  --primary: #55aaff;
+  --success: #00cc66;
+  --warning: #ffaa00;
+  --orange: #ff8800;
+  --danger: #ff4444;
+  --prime: #d400ff;
+
+  --input-bg: #222;
+  --input-border: #444;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+
+  --load-low-bg: #0d260d; --load-low-col: #4dff4d;
+  --load-mid-bg: #0d1a26; --load-mid-col: #4da6ff;
+  --load-high-bg: #260d0d; --load-high-col: #ff4d4d;
+
+  --btn-header-bg: rgba(255,255,255,0.05);
+  --btn-header-border: #333;
+  --btn-header-text: #ccc;
+}
+
+/* DARK MODE FILTER TRICK (für iFrames) */
+[data-theme="dark"] .dark-invert {
+  filter: invert(0.93) hue-rotate(180deg);
+  mix-blend-mode: lighten;
+}
+[data-theme="dark"] .white-frame {
+  background-color: #121212 !important;
+  border: none;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  margin: 0; padding: 0;
+  padding-top: env(safe-area-inset-top);
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Start Screen - GARMIN COMMANDER STYLE */
+#start-screen {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background-color: #000000; /* Tiefschwarz */
+  background-image: radial-gradient(circle at center, #1a1a1a 0%, #000000 70%);
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  z-index: 2000;
+}
+
+.start-card {
+  background: rgba(20, 20, 20, 0.9);
+  padding: 40px 30px; 
+  border-radius: 50%; /* Rund wie eine Garmin Watch */
+  width: 320px; height: 320px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  position: relative;
+  border: 2px solid #333;
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.05);
+}
+
+/* Der leuchtende Ring um die "Uhr" */
+.start-card::before {
+  content: ''; position: absolute;
+  top: -5px; left: -5px; right: -5px; bottom: -5px;
+  border-radius: 50%;
+  background: conic-gradient(from 180deg, 
+    var(--primary) 0%, transparent 40%, 
+    transparent 60%, var(--primary) 100%);
+  z-index: -1;
+  opacity: 0.6;
+  animation: rotateRing 4s linear infinite;
+}
+
+@keyframes rotateRing { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.start-icon { 
+  font-size: 3.5rem; 
+  margin-bottom: 10px; 
+  filter: drop-shadow(0 0 10px var(--primary)); 
+}
+
+.start-title { 
+  font-size: 1.4rem; 
+  font-weight: 800; 
+  color: #f0f0f0; 
+  font-family: 'Roboto Condensed', sans-serif; 
+  text-transform: uppercase; 
+  letter-spacing: 2px;
+  margin-bottom: 5px;
+}
+
+.start-subtitle { 
+  font-size: 0.75rem; 
+  color: var(--primary); 
+  text-transform: uppercase; 
+  letter-spacing: 3px; 
+  margin-bottom: 25px; 
+  border-bottom: 1px solid #333;
+  padding-bottom: 5px;
+}
+
+/* Der Taktische Button */
+.btn-start {
+  background: transparent !important;
+  color: var(--success);
+  border: 2px solid var(--success);
+  font-family: 'Roboto Condensed', sans-serif;
+  font-size: 1.2rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+  padding: 10px 40px;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  box-shadow: 0 0 10px rgba(0, 204, 102, 0.2);
+  width: auto !important; /* Überschreibt breite Buttons */
+}
+
+.btn-start:hover {
+  background: var(--success) !important;
+  color: #000;
+  box-shadow: 0 0 20px rgba(0, 204, 102, 0.6);
+  transform: scale(1.05);
+}
+
+.btn-start:active { transform: scale(0.95); }
+
+#cache-info {
+  position: absolute;
+  bottom: 40px;
+  font-size: 0.65rem; 
+  color: #666; 
+  font-family: monospace;
+  text-transform: uppercase;
+}
+
+/* --- MOBILE HEADER FIX (Scrollbar statt Quetschen) --- */
+@media (max-width: 900px) {
+  .header-content {
+    /* Nicht mehr versuchen, alles auf eine Seite zu zwingen */
+    justify-content: flex-start !important; 
+    
+    /* Erlaubt horizontales Wischen */
+    overflow-x: auto !important; 
+    -webkit-overflow-scrolling: touch; /* Flüssiges Scrollen auf iOS */
+    
+    /* Etwas Luft lassen */
+    gap: 15px; 
+    padding-bottom: 5px;
+  }
+
+  /* Verhindert, dass die Tools (mit dem Umschalter) zerquetscht werden */
+  .header-tools {
+    flex-shrink: 0; 
+    margin-right: 10px;
+  }
+
+  /* Scrollbar unsichtbar machen (sieht schicker aus), aber Funktion bleibt */
+  .header-content::-webkit-scrollbar { display: none; }
+}
+
+.header-tools {
+  display: flex; gap: 6px; align-items: center;
+  overflow-x: auto; padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
+  margin-left: 10px;
+}
+.header-tools::-webkit-scrollbar { display: none; }
+
+/* --- BUTTONS HARMONISIERUNG --- */
+
+/* 1. Header Buttons (Refresh, Input, Lab, Log, etc.) */
+.btn-refresh, .btn-nav {
+  height: 28px; 
+  min-width: 60px;
+  font-size: 0.7rem; 
+  padding: 0 10px;
+  display: inline-flex; 
+  align-items: center; 
+  justify-content: center;
+  background-color: var(--btn-header-bg); 
+  color: var(--btn-header-text);
+  border: 1px solid var(--btn-header-border);
+  border-radius: 4px; 
+  cursor: pointer; 
+  transition: all 0.2s;
+  /* Einheitliche Schrift für taktische Buttons */
+  font-family: 'Roboto Condensed', sans-serif; 
+  font-weight: 600; 
+  text-transform: uppercase; 
+  letter-spacing: 0.5px;
+  white-space: nowrap; 
+  text-decoration: none; 
+  flex-shrink: 0;
+}
+
+.btn-refresh:hover, .btn-nav:hover { 
+  background-color: rgba(255,255,255,0.2); 
+}
+
+.btn-refresh:active, .btn-nav:active { 
+  background-color: var(--primary); 
+  color: #000; 
+  border-color: var(--primary); 
+}
+
+/* 2. Große Aktions-Buttons (Speichern, KI-Vorschlag) */
+.btn, .btn-secondary {
+  height: 48px !important;
+  font-family: 'Roboto Condensed', sans-serif; /* Von Inter auf Roboto gewechselt für Uniformität */
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  width: 100%;
+  margin-top: 15px;
+  box-sizing: border-box;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+#data-timestamp { 
+  font-size: 0.7rem; 
+  
+  /* HIER DIE ÄNDERUNG: Variable statt rgba(255,255,255,0.5) */
+  color: var(--text-muted); 
+  
+  white-space: nowrap; 
+  font-family: 'Roboto Condensed', sans-serif; 
+}
+
+.theme-switch {
+  background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 0 5px; transition: transform 0.2s;
+}
+.theme-switch:active { transform: scale(0.9); }
+
+/* Layout */
+.container {
+  max-width: 1200px; margin: 0 auto; padding: 0 15px 20px 15px;
+  display: none; grid-template-columns: 1fr; gap: 15px;
+}
+@media (min-width: 1000px) { .container { grid-template-columns: 2fr 1fr; } }
+@media (max-width: 600px) { .container { padding: 0 8px 80px 8px; } }
+
+/* Header Bar wieder DRAUSSEN (Global gültig) */
+.header-bar {
+  background-color: var(--header-bg);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  
+  /* HIER DIE ÄNDERUNGEN: */
+  padding: 10px 15px 15px 15px; /* Unten jetzt 15px statt 10px */
+  margin-bottom: 30px;          /* SPALT zur roten Karte */
+  
+  display: none; 
+  position: sticky; top: 0; z-index: 100;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Cards */
+
+/* --- NEU: KIRA STRATEGIC BRIEFING IN WEBAPP --- */
+.kira-briefing-box {
+  background: rgba(85, 170, 255, 0.05);
+  border-left: 4px solid var(--primary);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-style: italic;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-main);
+}
+.briefing-header {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--primary);
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card {
+  background: var(--card-bg); border-radius: 12px;
+  box-shadow: var(--shadow); padding: 20px; margin-bottom: 20px;
+  width: 100%; overflow: hidden;
+  border: 1px solid var(--border-color);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+@media (max-width: 600px) { .card { padding: 15px; } }
+
+.card-header {
+  display: flex; justify-content: space-between; align-items: center;
+  cursor: pointer; padding-bottom: 8px; margin-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+.card-header h2 { margin: 0; border: none; padding: 0; }
+.toggle-icon { font-size: 0.8rem; color: var(--text-muted); transition: transform 0.3s; }
+.card.collapsed .toggle-icon { transform: rotate(-90deg); }
+.card.collapsed .card-content { display: none; }
+
+h2 {
+  font-size: 1.15rem; font-weight: 700; margin-top: 0; margin-bottom: 15px;
+  color: var(--text-main); font-family: 'Roboto Condensed', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+/* --- GARMIN STYLE GRID --- */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr); /* Mobil: 1 Spalte (damit es groß bleibt) */
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+@media (min-width: 700px) {
+  .dashboard-grid {
+    /* HIER DIE ÄNDERUNG: 3 Spalten statt 4 */
+    grid-template-columns: repeat(3, 1fr); 
+  }
+}
+
+/* --- GARMIN GAUGE CARDS --- */
+.status-box {
+  background: var(--card-bg);
+  border-radius: 12px; /* Etwas runder */
+  padding: 15px; /* Mehr Platz innen */
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center; 
+  justify-content: space-between;
+  min-height: 180px; /* Karte höher machen */
+  overflow: hidden;
+  transition: transform 0.2s;
+}
+.status-box:hover { transform: translateY(-3px); border-color: var(--text-muted); }
+
+/* Label oben */
+.status-label {
+  font-size: 0.9rem; /* Größerer Text */
+  color: var(--text-muted); 
+  text-transform: uppercase; 
+  letter-spacing: 0.8px; 
+  font-weight: 600; 
+  width: 100%; 
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+/* --- GAUGE CONTAINER --- */
+.gauge-wrapper {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  /* Kein border-radius 50% am Wrapper nötig, aber schadet nicht */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* --- HINTERGRUND (Offener Ring) --- */
+.gauge-bg {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  border-radius: 50%;
+  
+  /* LOGIK:
+     Start bei 210deg (7 Uhr).
+     Gesamtumfang des Bogens: 300 Grad.
+     Ende bei 5 Uhr.
+     
+     UPDATE: Wir nutzen jetzt HARTE HEX-CODES statt Variablen,
+     damit der Bogen exakt zur Nadel passt (#55aaff), auch im Lightmode!
+  */
+  background: conic-gradient(from 210deg,
+    #ff4444 0deg 75deg,     /* 0-25% (Rot) */
+    var(--card-bg) 75deg 77deg,   /* Lücke */
+    
+    #ff8800 77deg 150deg,   /* 25-50% (Orange - angepasst an Nadel) */
+    var(--card-bg) 150deg 152deg, /* Lücke */
+    
+    #00cc66 152deg 225deg, /* 50-75% (Grün) */
+    var(--card-bg) 225deg 227deg, /* Lücke */
+    
+    #55aaff 227deg 285deg, /* 75-92% (Blau - HIER WAR DEIN FIX NÖTIG) */
+    var(--card-bg) 285deg 287deg, /* Lücke */
+    
+    #d400ff 287deg 300deg,    /* 92-100% (Lila) */
+    
+    transparent 300deg 360deg      /* Der offene Teil unten */
+  );
+}
+
+/* --- NADEL DREH-CONTAINER --- */
+.gauge-needle {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 3;
+  transition: transform 1.5s cubic-bezier(0.2, 1, 0.3, 1);
+  transform-origin: center center;
+}
+
+/* --- DER PUNKT (Gefüllt & Mittig auf Ring) --- */
+.gauge-needle::after {
+  content: '';
+  position: absolute;
+  
+  /* Positionierung (wie eingestellt) */
+  top: 2px; 
+  left: 50%; 
+  transform: translate(-50%, -50%);
+  
+  /* Größe etwas anpassen */
+  width: 15px; 
+  height: 15px; 
+  border-radius: 50%;
+  
+  /* Farbe des Punktes */
+  background-color: var(--dot-color, var(--danger));
+  
+  /* Schatten für Tiefe */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+
+  /* --- HIER IST DAS UPDATE: DER RAND --- */
+  /* 3px Rand in der Farbe des Karten-Hintergrunds */
+  border: 3px solid var(--card-bg); 
+  
+  /* Damit der Rand nicht die Größe verfälscht, sondern nach außen wächst */
+  box-sizing: content-box; 
+}
+
+/* --- INNERE ABDECKUNG (Dünner Ring) --- */
+.gauge-cover {
+  position: absolute;
+  /* 4px Abstand = sehr dünner Ring */
+  top: 8px; left: 8px; right: 8px; bottom: 8px;
+  background-color: var(--card-bg); /* Deckt die Mitte ab */
+  border-radius: 50%;
+  display: flex; justify-content: center; align-items: center;
+  z-index: 2;
+}
+
+.gauge-val {
+  /* HIER DIE ÄNDERUNG: Variable statt festem Weiß */
+  color: var(--text-main); 
+  
+  font-size: 2.2rem;
+  font-weight: 800;
+  font-family: sans-serif;
+  padding-bottom: 10px;
+  
+  /* Optional: Der Schatten stört im Lightmode manchmal, 
+     deshalb machen wir ihn etwas dezenter oder entfernen ihn ganz, 
+     wenn du es clean magst. */
+  text-shadow: none; 
+  
+  transition: color 0.3s ease;
+}
+
+/* Kleiner Text unter der Zahl (optional, z.B. "Hoch") */
+.gauge-sub {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    display: block;
+    text-align: center;
+    font-weight: normal;
+    margin-top: -5px;
+}
+
+.span-full .gauge-val { font-size: 1.6rem; }
+
+
+/* Die "Große" Karte oben (Aktueller Status) */
+.span-full {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  align-items: center;
+  background: var(--bg-color); 
+  border: 1px solid var(--border-color);
+}
+.span-full .status-label { margin-bottom: 0; margin-right: 15px; }
+.span-full .status-value { font-size: 1.3rem; }
+
+/* --- GARMIN GAUGE BAR (Detail Scores in der Tabelle) --- */
+.score-bar-container {
+  width: 100%;
+  height: 10px; 
+  border-radius: 5px;
+  position: relative;
+  margin-top: 10px;
+  
+  /* Multi-Color Track - UPDATE: Exakte Angleichung an Gauge-Farben & Limits */
+  background: linear-gradient(to right, 
+      #ff4444 0%, #ff4444 25%,     /* Rot (0-25%) */
+      #ff8800 25%, #ff8800 50%,    /* Orange (25-50%) - Exaktes Gauge-Orange */
+      #00cc66 50%, #00cc66 75%,    /* Grün (50-75%) */
+      #55aaff 75%, #55aaff 95%,    /* Blau (75-92%) - Exaktes Gauge-Blau */
+      #d400ff 95%, #d400ff 100%    /* Lila (92-100%) */
+  );
+  
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* Der Punkt auf dem Balken */
+.score-marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: var(--card-bg); 
+  border: 4px solid white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+  transition: left 1s cubic-bezier(0.2, 1, 0.3, 1);
+  z-index: 2;
+}
+[data-theme="dark"] .score-marker { border-color: #333; }
+
+/* --- STANDARD STYLES --- */
+.color-GRÜN { color: var(--success) !important; }
+.color-GELB { color: var(--warning) !important; }
+.color-ORANGE { color: var(--orange) !important; }
+.color-ROT { color: var(--danger) !important; }
+.color-LILA { color: var(--prime) !important; }
+.color-BLAU { color: var(--primary) !important; }
+.color-GRAU { color: var(--text-muted) !important; }
+
+/* --- HISTORY BADGE OUTLINE STYLE (V124-FIX) --- */
+.hist-status {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 0.65rem;
+  border-radius: 4px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: transparent; /* Kein Hintergrund mehr */
+  border-width: 1px;
+  border-style: solid;
+  transition: all 0.3s ease;
+}
+
+/* Dynamische Farben & Glow analog zum Plan-Status */
+.hist-status.GRÜN   { border-color: var(--success); color: var(--success); box-shadow: 0 0 5px rgba(16, 185, 129, 0.1); }
+.hist-status.GELB   { border-color: var(--warning); color: var(--warning); box-shadow: 0 0 5px rgba(245, 158, 11, 0.1); }
+.hist-status.ORANGE { border-color: var(--orange);  color: var(--orange);  box-shadow: 0 0 5px rgba(249, 115, 22, 0.1); }
+.hist-status.ROT    { border-color: var(--danger);  color: var(--danger);  box-shadow: 0 0 8px rgba(239, 68, 68, 0.15); }
+.hist-status.BLAU   { border-color: var(--primary); color: var(--primary); box-shadow: 0 0 5px rgba(85, 170, 255, 0.1); }
+.hist-status.LILA   { border-color: var(--prime);   color: var(--prime);   box-shadow: 0 0 8px rgba(212, 0, 255, 0.15); }
+.hist-status.GRAU   { border-color: var(--text-muted); color: var(--text-muted); }
+
+
+.load-low { background-color: var(--load-low-bg) !important; color: var(--load-low-col) !important; border-color: var(--load-low-col) !important; font-weight:bold; }
+.load-mid { background-color: var(--load-mid-bg) !important; color: var(--load-mid-col) !important; border-color: var(--load-mid-col) !important; font-weight:bold; }
+.load-high { background-color: var(--load-high-bg) !important; color: var(--load-high-col) !important; border-color: var(--load-high-col) !important; font-weight:bold; }
+
+.veto-box { background-color: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 15px; border-radius: 8px; font-weight: bold; text-align: center; margin-bottom: 20px; display: none; }
+.coach-text { font-size: 1rem; white-space: pre-wrap; line-height: 1.6; color: var(--text-main); }
+
+/* Tables */
+.plan-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.plan-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 550px; }
+.plan-table th { text-align: left; padding: 10px; color: var(--text-muted); font-weight: 600; border-bottom: 2px solid var(--border-color); white-space: nowrap; }
+.plan-table td { padding: 8px 4px; border-bottom: 1px solid var(--border-color); vertical-align: middle; color: var(--text-main); }
+
+/* --- SPARKLINES --- */
+.sparkline { 
+  vertical-align: middle; 
+  margin-left: 8px; 
+  opacity: 0.8; 
+  fill: none;
+}
+
+/* Inputs & Buttons */
+.plan-input { width: 100%; min-width: 50px; padding: 8px 4px; border: 1px solid var(--input-border); border-radius: 6px; text-align: center; font-size: 14px; background: var(--input-bg); color: var(--text-main); transition: all 0.2s; }
+.plan-input:focus { border-color: var(--primary); outline: none; }
+.plan-input-text { width: 100%; min-width: 100px; padding: 8px 6px; border: 1px solid var(--input-border); border-radius: 6px; font-size: 14px; background: var(--input-bg); color: var(--text-main); }
+
+/* Buttons */
+.btn-row { display: flex; gap: 15px; margin-top: 15px; width: 100%; }
+.btn, .btn-secondary { height: 48px !important; display: flex; align-items: center; justify-content: center; padding: 0 20px; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; margin-top: 15px; box-sizing: border-box; white-space: nowrap; }
+.btn { background-color: var(--primary); color: #fff; border: 1px solid transparent; }
+.btn-secondary { background-color: transparent; border: 1px solid var(--text-muted); color: var(--text-muted); }
+[data-theme="dark"] .btn { color: #000; }
+[data-theme="dark"] .btn-secondary { color: #cccccc; border-color: #666; }
+.btn:active, .btn-secondary:active { transform: scale(0.98); opacity: 0.9; }
+.btn:disabled { background-color: var(--border-color); color: var(--text-muted); }
+
+/* Chat & Chips */
+.chat-chips { display: flex; gap: 8px; overflow-x: auto; padding: 10px 2px; margin-bottom: 5px; flex-shrink: 0; }
+.chip { background: var(--bg-color); border: 1px solid var(--border-color); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; white-space: nowrap; cursor: pointer; color: var(--text-main); transition: all 0.2s; }
+.chip:active { background: var(--primary); color: white; border-color: var(--primary); }
+
+.chat-container { display: flex; flex-direction: column; height: 750px; }
+@media (max-width: 600px) { .chat-container { height: 600px; } }
+.chat-history { flex-grow: 1; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 5px; background: var(--bg-color); min-height: 200px; }
+.msg { margin-bottom: 10px; padding: 10px 14px; border-radius: 12px; max-width: 85%; word-wrap: break-word; line-height: 1.4; font-size: 0.95rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+/* Deine Nachrichten */
+.msg-user { 
+  background: linear-gradient(135deg, var(--primary), #2563eb); 
+  margin-left: auto; 
+  text-align: right; 
+  color: #f0f0f0; /* Hellgrau statt white */
+  border-bottom-right-radius: 2px; 
+}
+
+/* Meine (Kiras) Nachrichten */
+.msg-kira { 
+  background-color: var(--card-bg); 
+  border: 1px solid var(--border-color); 
+  color: var(--text-main); /* Nutzt automatisch deine Variablen! */
+  margin-right: auto; 
+  border-bottom-left-radius: 2px; 
+}
+.chat-input-area { display: flex; gap: 10px; flex-shrink: 0; padding-top: 5px; }
+.chat-input { flex-grow: 1; padding: 12px; border: 1px solid var(--input-border); border-radius: 8px; font-size: 16px; outline: none; background: var(--input-bg); color: var(--text-main); }
+.chat-input:focus { border-color: var(--primary); }
+
+/* Misc */
+.white-frame { background: white; border-radius: 8px; height: 100%; overflow: hidden; }
+#loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; flex-direction: column; backdrop-filter: blur(5px); }
+.spinner { width: 40px; height: 40px; border: 4px solid var(--border-color); border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+.looker-thumbnail-card { 
+  height: 200px; 
+  padding: 0; 
+  overflow: hidden; 
+  position: relative; 
+  cursor: pointer; 
+  transition: transform 0.2s, border-color 0.2s; 
+  
+  /* HIER WAR DER FEHLER (#222): */
+  background-color: var(--card-bg); 
+  border: 1px solid var(--border-color);
+}
+.looker-thumbnail-card:hover { transform: scale(1.02); border-color: var(--primary); }
+.looker-overlay { 
+  position: absolute; 
+  top: 0; left: 0; width: 100%; height: 100%; 
+  /* HIER WAR DER FEHLER (rgba 0,0,0,0.5): */
+  background: transparent; 
+  display: flex; 
+  flex-direction: column; 
+  justify-content: center; 
+  align-items: center; 
+  transition: background 0.3s; 
+}
+.looker-thumbnail-card:hover .looker-overlay { 
+  background: rgba(125,125,125,0.1); 
+}
+
+.modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 5000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); padding: 20px; }
+.modal-content { background: var(--card-bg); width: 95%; max-width: 1600px; height: 90%; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; border: 1px solid var(--border-color); box-shadow: 0 0 40px rgba(0,0,0,0.5); }
+
+/* --- COMMANDER STATUS (Exklusiv für die große Box) --- */
+
+/* FREIGABE (Grün) */
+#box-status.bg-GRÜN { 
+  border: 2px solid var(--success) !important; 
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); /* Schöner Glow */
+}
+
+/* BEOBACHTUNG (Orange) - Code sendet "GELB", wir färben es Orange/Warning */
+#box-status.bg-GELB { 
+  border: 2px solid var(--warning) !important; 
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.2); 
+}
+
+/* INTERVENTION (Rot) */
+#box-status.bg-ROT { 
+  border: 2px solid var(--danger) !important; 
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.25); /* Alarm-Glow */
+}
+
+/* --- PERFORMANCE KIRA 3.0 BADGES --- */
+.impact-badge {
+  font-size: 0.62rem;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-weight: 800;
+  display: block;
+  margin-top: 4px;
+  text-align: center;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+/* Aufbau-Modus (Grün-Glow) */
+.impact-build { 
+  background: rgba(0, 204, 102, 0.15); 
+  color: var(--success); 
+  border: 1px solid var(--success); 
+}
+/* Entlastungs-Modus (Blau-Glow) */
+.impact-recover { 
+  background: rgba(85, 170, 255, 0.15); 
+  color: var(--primary); 
+  border: 1px solid var(--primary); 
+}
+
+/* --- NEW NAV BAR STYLE (Tactical HUD - HIGH CONTRAST) --- */
+
+/* Der Container für die Leiste */
+.header-bar {
+  background: #0f0f0f; /* Fast Schwarz, solide */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Stärkerer Rand */
+  padding: 12px 0;
+  position: sticky; 
+  top: 0; 
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+}
+
+.header-content {
+  max-width: 100%;
+  padding: 0 15px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Scrollbereich */
+.header-tools {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 5px 5px 10px 5px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.header-tools::-webkit-scrollbar { display: none; }
+
+/* Die Buttons ("Pills") - JETZT MIT KONTRAST */
+.nav-pill {
+  background: rgba(255, 255, 255, 0.15); /* Hellerer Hintergrund */
+  border: 1px solid rgba(255, 255, 255, 0.3); /* Deutlicherer Rand */
+  color: #e0e0e0; /* Fast Weiß statt Grau */
+  padding: 8px 18px;
+  border-radius: 4px; /* Eckiger = Taktischer */
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem; /* Etwas größer */
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Hover: Richtig hell */
+.nav-pill:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  border-color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+
+/* Active: Sattes Blau */
+.nav-pill:active {
+  transform: scale(0.95);
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+  box-shadow: 0 0 15px var(--primary);
+}
+
+/* Der Planer Button (Hervorgehoben) */
+.nav-pill.primary {
+  background: rgba(37, 99, 235, 0.3); /* Deutliches Blau */
+  border: 1px solid var(--primary);
+  color: #fff; /* Weißer Text */
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.2);
+}
+.nav-pill.primary:hover {
+  background: var(--primary);
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.6);
+}
+
+/* Icons deutlicher */
+.nav-pill i {
+  font-size: 0.9rem;
+  opacity: 1.0; /* Volle Deckkraft */
+}
+
+/* Timestamp besser lesbar */
+#data-timestamp {
+  font-size: 0.7rem; 
+  color: #aaa; /* Helleres Grau */
+  font-family: monospace; 
+  margin-right: 10px;
+  font-weight: bold;
+}.8;
+}
+
+</style>
+</head>
+<body>
+
+<div id="start-screen">
+  <div class="start-card">
+    <span class="start-icon">🤖</span>
+    <div class="start-title">COACH KIRA</div>
+    <div class="start-subtitle">V122 Commander</div>
+    
+    <button id="btn-init-load" class="btn-start" onclick="initApp()">
+      START
+    </button>
+    
+    <div id="cache-info" style="display:none;">● SYSTEM READY</div>
+  </div>
+</div>
+
+<div id="loader"><div class="spinner"></div><div id="loading-text" style="color:white; font-size:0.8rem; text-transform:uppercase;">Daten werden geladen...</div></div>
+
+<div id="main-header" class="header-bar">
+  <div class="header-content">
+    
+    <span id="data-timestamp" style="font-size:0.65rem; color:var(--text-muted); font-family:monospace; margin-right:10px;">--:--</span>
+
+    <div class="header-tools">
+      
+      <button class="nav-pill primary" onclick="openPlanApp()" title="Strategische Planung">
+        <i class="fas fa-chess-board"></i> Planer
+      </button>
+
+      <button class="nav-pill" onclick="openPrimeApp()" title="Prime Range Finder">
+      <i class="fas fa-crown"></i> Prime
+      </button>
+
+      <button class="nav-pill" onclick="openCalculator()" title="Load Rechner">
+        <i class="fas fa-flask"></i> Lab
+      </button>
+
+      <button class="nav-pill" onclick="openCharts()" title="Charts / Dashboard">
+      <i class="fas fa-chart-line"></i> Charts
+      </button>
+      
+      <button class="nav-pill" onclick="openLog()" title="Tactical Log">
+        <i class="fas fa-scroll"></i> Log
+      </button>
+
+      <button class="nav-pill" onclick="startHistoryAnalysis()" title="History Scan">
+        <i class="fas fa-history"></i> History
+      </button>
+
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLScu3qqrwvhE2auCd8XAcE_KeME7KvYBUbradJzCl8shikuxlg/viewform" target="_blank" class="nav-pill">
+        <i class="fas fa-pen"></i> Input
+      </a>
+      
+      <a href="https://lookerstudio.google.com/reporting/e31c09a1-9a55-4077-8700-dde05d251273/page/page_12345?s=l-38k9Mina4" target="_blank" class="nav-pill">
+        <i class="fas fa-chart-pie"></i> Report
+      </a>
+      
+      <a href="https://docs.google.com/spreadsheets/d/1ydTDKQ1VmYL-H0U3E_xe1tdYJlEXfydYMYpKZWW5xsQ/edit?gid=1300126542#gid=1300126542" target="_blank" class="nav-pill">
+        <i class="fas fa-database"></i> Data
+      </a>
+
+      <div style="width:1px; height:20px; background:rgba(255,255,255,0.1); margin:0 5px;"></div> <button class="nav-pill" onclick="triggerAnalysis()">
+        <i class="fas fa-magic"></i> AI
+      </button>
+      
+      <button class="nav-pill" onclick="refreshValuesOnly()">
+        <i class="fas fa-calculator"></i> Calc
+      </button>
+
+      <button class="nav-pill" onclick="forceRefresh()">
+        <i class="fas fa-download"></i> Lade
+      </button>
+      
+      <button class="nav-pill" onclick="hardReload()">
+        <i class="fas fa-sync-alt"></i> Sync
+      </button>
+
+      <button class="nav-pill" onclick="toggleTheme()" title="Dark/Light" aria-label="Theme umschalten">
+  <i id="themeIcon" class="fas fa-moon"></i>
+</button>
+
+      <button class="nav-pill" onclick="toggleAllCards(false)">▼</button>
+      <button class="nav-pill" onclick="toggleAllCards(true)">▲</button>
+
+    </div>
+  </div>
+</div>
+
+<div class="container" id="dashboard-container">
+<div class="dashboard-col">
+<div id="veto-alert" class="veto-box">🛑 PHYSIOLOGISCHES VETO AKTIV!</div>
+
+<div class="dashboard-grid">
+  
+  <div class="status-box span-full" id="box-status" style="flex-direction: row; align-items: center; justify-content: flex-start; padding-left: 20px; gap: 15px;">
+    <div style="display:flex; flex-direction:column; align-items:flex-start;">
+       <span class="status-label" style="text-align:left; margin-bottom:2px;">PLAN STATUS</span>
+       <span id="val-status" class="status-value" style="font-size:2rem; line-height:1;">--</span>
+       <span id="text-status" style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;"> </span>
+    </div>
+  </div>
+
+  <div class="status-box" id="box-gesamt">
+    <span class="status-label">Gesamt</span>
+    <div class="gauge-wrapper">
+       <div class="gauge-bg"></div>
+       <div class="gauge-needle" id="needle-gesamt"></div> <div class="gauge-cover"><span class="gauge-val" id="val-gesamt">--</span></div>
+    </div>
+  </div>
+
+  <div class="status-box" id="box-training">
+    <span class="status-label">Training</span>
+    <div class="gauge-wrapper">
+       <div class="gauge-bg"></div>
+       <div class="gauge-needle" id="needle-training"></div>
+       <div class="gauge-cover"><span class="gauge-val" id="val-training">--</span></div>
+    </div>
+  </div>
+  
+  <div class="status-box" id="box-recovery">
+    <span class="status-label">Recovery</span>
+    <div class="gauge-wrapper">
+       <div class="gauge-bg"></div>
+       <div class="gauge-needle" id="needle-recovery"></div>
+       <div class="gauge-cover"><span class="gauge-val" id="val-recovery">--</span></div>
+    </div>
+  </div>
+
+  <div class="status-box" id="box-readiness">
+    <span class="status-label">Readiness</span>
+    <div class="gauge-wrapper">
+       <div class="gauge-bg"></div>
+       <div class="gauge-needle" id="needle-readiness"></div>
+       <div class="gauge-cover"><span class="gauge-val" id="val-readiness">--</span></div>
+    </div>
+  </div>
+
+  <div class="status-box" id="box-smart">
+    <span class="status-label">Smart Gains</span>
+    <div class="gauge-wrapper">
+       <div class="gauge-bg"></div>
+       <div class="gauge-needle" id="needle-smart"></div>
+       <div class="gauge-cover"><span class="gauge-val" id="val-smart">--</span></div>
+    </div>
+  </div>
+
+  <div class="status-box" id="box-ernaehrung">
+    <span class="status-label">Ernährung</span>
+    <div class="gauge-wrapper">
+       <div class="gauge-bg"></div>
+       <div class="gauge-needle" id="needle-ernaehrung"></div>
+       <div class="gauge-cover"><span class="gauge-val" id="val-ernaehrung">--</span></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="card" id="card-analyse">
+<div class="card-header" onclick="toggleCard('card-analyse')">
+<h2>Coach Kira's Analyse</h2>
+<span class="toggle-icon"> ▼ </span>
+</div>
+<div class="card-content">
+<div id="coach-text" class="coach-text">Warte auf Daten...</div>
+</div>
+</div>
+
+<div class="card" id="card-scores">
+<div class="card-header" onclick="toggleCard('card-scores')">
+<h2>Detail-Scores</h2>
+<span class="toggle-icon"> ▼ </span>
+</div>
+<div class="card-content">
+<table class="plan-table" id="score-table"></table>
+</div>
+</div>
+
+<div class="card collapsed" id="card-charts">
+<div class="card-header" onclick="toggleCard('card-charts')">
+<h2>Live-Diagramme</h2>
+<span class="toggle-icon"> ▼ </span>
+</div>
+<div class="card-content">
+<div class="white-frame" style="margin-bottom:15px; height:528px;">
+<iframe class="dark-invert" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQvNyku6AhLdYakkAJz8rR3W-JI2CQAseY1Ez1bDeX2w-jxB__EkkIr4_B3P6b7lenIF50nJoWgNXvY/pubchart?oid=928908252&format=image" width="100%" height="100%" frameborder="0"></iframe>
+</div>
+<div class="white-frame" style="margin-bottom:15px; height:528px;">
+<iframe class="dark-invert" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQvNyku6AhLdYakkAJz8rR3W-JI2CQAseY1Ez1bDeX2w-jxB__EkkIr4_B3P6b7lenIF50nJoWgNXvY/pubchart?oid=212700832&format=image" width="100%" height="100%" frameborder="0"></iframe>
+</div>
+<div class="white-frame" style="height:528px;">
+<iframe class="dark-invert" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQvNyku6AhLdYakkAJz8rR3W-JI2CQAseY1Ez1bDeX2w-jxB__EkkIr4_B3P6b7lenIF50nJoWgNXvY/pubchart?oid=196004278&format=image" width="100%" height="100%" frameborder="0"></iframe>
+</div>
+</div>
+</div>
+
+<div class="card" id="card-plan" style="margin-bottom:20px; display:none;">
+  <div class="card-header" onclick="toggleCard('card-plan')">
+    <div style="display:flex; align-items:center; gap: 15px;">
+      <h2>Strategischer Trainingsplan (14 Tage)</h2>
+      <button type="button" class="btn-refresh" 
+              style="height: 24px; padding: 0 10px; background-color: var(--primary); border:none; color:white;" 
+              onclick="openDetailPlan(event)">
+        PLANER ÖFFNEN ↗
+      </button>
+    </div>
+    <span class="toggle-icon"> ▼ </span>
+  </div>
+  <div class="card-content">
+      <div id="kira-strategic-briefing" class="kira-briefing-box">
+          <div class="briefing-header"><i class="fas fa-brain"></i> KIRA STRATEGY BRIEFING</div>
+          <div id="briefing-content-text">Lade Analyse aus AI_FUTURE_STATUS...</div>
+      </div>
+
+      <div class="plan-table-wrapper">
+        <table class="plan-table">
+          <thead>
+            <tr>
+              <th style="width: 80px;">Datum</th>
+              <th style="width: 120px;">Sport / Zone</th>
+              <th style="width: 60px; text-align:center;">Load</th>
+              <th style="width: 80px; text-align:center;">TE (Ae/An)</th>
+              <th style="text-align:center;">Prognose (SG/ACWR)</th>
+            </tr>
+          </thead>
+          <tbody id="plan-body"></tbody>
+        </table>
+      </div>
+  </div>
+</div>
+
+
+<div id="suggestion-card" class="card" style="display:none; border: 1px solid var(--primary);">
+<div class="card-header" style="border:none; margin:0;">
+<h2 style="color: var(--primary);">🧠 KI-Vorschläge</h2>
+</div>
+<div id="suggestion-list"></div>
+<div style="display:none; gap:10px; margin-top:15px;">
+<button type="button" class="btn" onclick="approveAllSuggestions()" style="background-color: var(--success); color:black; margin-top:0;">Alle 3 Tage übernehmen</button>
+<button type="button" class="btn btn-secondary" onclick="document.getElementById('suggestion-card').style.display='none'" style="margin-top:0;">Schließen</button>
+</div>
+</div>
+
+<div class="card collapsed" id="card-activity-review" style="display:none;">
+    <div class="card-header" onclick="toggleCard('card-activity-review')">
+        <h2>Aktivitäten-Review</h2>
+        <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-content">
+        <div class="plan-table-wrapper">
+            <table class="plan-table">
+                <thead>
+                    <tr>
+                        <th style="width:50px;">Datum</th>
+                        <th style="width:40px;">Ist</th>
+                        <th style="width:40px;">Soll</th>
+                        <th style="width:35px;">ATL</th>
+                        <th style="width:35px;">CTL</th>
+                        <th style="width:35px;">ACWR</th>
+                        <th>KI Review</th>
+                    </tr>
+                </thead>
+                <tbody id="activity-review-body"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="card collapsed" id="card-history">
+        <div class="card-header" onclick="toggleCard('card-history')">
+          <div style="display:flex; flex-direction:column;">
+            <h2>Historien-Analyse</h2>
+            <span style="font-size:0.7rem; color:var(--text-muted); font-weight:normal;" id="history-timestamp">--</span>
+          </div>
+          <span class="toggle-icon">  ▼  </span>
+        </div>
+        <div class="card-content">
+          <table class="plan-table">
+            <tbody id="history-body">
+              </tbody>
+          </table>
+          <button type="button" class="btn btn-secondary" onclick="startHistoryAnalysis()" style="margin-top:15px;">
+            Neue Analyse anfordern (ca. 20s)
+          </button>
+        </div>
+      </div>
+</div>
+
+<div class="chat-col">
+<div class="card chat-container">
+<div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); margin-bottom:10px; padding-bottom:10px;">
+<h2 style="border:none; margin:0; padding:0;">Ask Kira</h2>
+<button type="button" class="btn btn-secondary" style="margin:0; padding:0 10px; width:auto; height:28px;" onclick="openChatWindow()"> ↗️ POP-OUT </button>
+</div>
+
+<div class="chat-history" id="chat-history">
+<div class="msg msg-kira">Hallo Commander! Bereit für die nächste Einheit?</div>
+</div>
+
+<div class="chat-chips">
+<button type="button" class="chip" onclick="quickChat('Wie ist mein aktueller Status?')">📊 Status</button>
+<button type="button" class="chip" onclick="quickChat('Analysiere meine HRV.')">❤️ HRV</button>
+<button type="button" class="chip" onclick="quickChat('Was steht nächste Woche an?')">📅 Vorschau</button>
+<button type="button" class="chip" onclick="quickChat('Gib mir eine Motivationsrede!')">🔥 Motivation</button>
+</div>
+
+<div class="chat-input-area">
+<input type="text" id="chat-input" class="chat-input" placeholder="Nachricht..." onkeypress="handleChatKey(event)">
+<button class="btn" style="width: auto; margin-top: 0; padding: 0 15px;" onclick="sendChat()">SENDEN</button>
+</div>
+</div>
+
+<div class="card looker-thumbnail-card" onclick="openLookerModal()" style="margin-top: 20px;">
+  <div style="width:100%; height:100%; display:flex; justify-content:center; align-items:center; opacity:0.1; font-size:6rem;">
+    📊
+  </div>
+  <div class="looker-overlay">
+    <span style="font-size: 3rem; margin-bottom: 10px;">🔍</span>
+    <span style="font-weight: 700; color: var(--text-main); text-transform: uppercase; letter-spacing: 1px; border: 2px solid var(--text-main); padding: 5px 15px; border-radius: 20px; font-size: 0.8rem;">
+      Report öffnen
+    </span>
+  </div>
+</div>
+
+<div class="card" style="padding: 0; overflow: hidden; height: 600px; margin-top: 20px;">
+<div class="white-frame">
+<iframe
+class="dark-invert"
+src="https://calendar.google.com/calendar/embed?height=600&wkst=2&bgcolor=%23ffffff&ctz=Europe%2FBerlin&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0&showTz=0&mode=WEEK&src=b7e4865d0da09f1554897bbc11aea8017aa773625d9d62b2ae01b3cad14ed581%40group.calendar.google.com&color=%23333399&src=2179add1e027365da46d4cd4b2b9454ee9a6a1e59118fea5d006532046a0ab9f%40group.calendar.google.com&color=%234285F4&src=38170cb8289cee975f42823fcd2df10603019d7188df6c79cb2948b059f87e78%40group.calendar.google.com&color=%23FF8800&src=c87b055779dee9da80f11f35d7bc51a1efb39381cf93ddaf4b72b7f42827b3ca@group.calendar.google.com&color=%23F6BF26&src=15de69bf8ab3a5d29748c4b42244fc93fbd57ddce6ab410c17b797ba37f70b12@group.calendar.google.com&color=%23D50000"
+style="border-width:0"
+width="100%"
+height="100%"
+frameborder="0"
+scrolling="no">
+</iframe>
+</div>
+</div>
+
+<div class="card" id="card-pinnwand" style="margin-top: 20px;">
+  <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+    <h2 style="margin:0; border:none;">📌 Pinnwand</h2>
+    <div style="display:flex; gap:5px; align-items:center;">
+       <button class="btn-refresh" onclick="prevNote()" style="font-size:1.2rem;">◀</button>
+       <span id="note-counter" style="font-size:0.8rem; color:var(--text-muted); width:40px; text-align:center;">--/--</span>
+       <button class="btn-refresh" onclick="nextNote()" style="font-size:1.2rem;">▶</button>
+       <button class="btn-refresh" onclick="toggleNoteInput()" style="color:var(--primary); font-weight:bold; font-size:1.2rem;">+</button>
+    </div>
+  </div>
+  
+  <div class="card-content">
+    <div id="note-view">
+       <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+          <h3 id="note-display-title" style="margin:0; color:var(--primary); font-family:'Roboto Condensed';">Lade...</h3>
+          <span id="note-display-date" style="font-size:0.7rem; color:var(--text-muted);"></span>
+       </div>
+       <div id="note-display-content" style="white-space: pre-wrap; line-height:1.5; color:var(--text-main); min-height:60px; max-height: 600px; overflow-y: auto; padding-right: 5px;">
+        Keine Notizen vorhanden.
+      </div>
+    </div>
+
+    <div id="note-input-area" style="display:none; flex-direction:column; gap:10px;">
+       <input type="text" id="inp-note-title" class="plan-input-text" placeholder="Titel (z.B. Zielsetzung)" style="width:100%; text-align:left;">
+       <textarea id="inp-note-content" class="plan-input-text" rows="4" placeholder="Deine Notiz..." style="width:100%; text-align:left; resize:vertical;"></textarea>
+       <div class="btn-row" style="margin-top:5px;">
+          <button class="btn" onclick="submitNote()" style="height:36px !important; margin-top:0;">Speichern</button>
+          <button class="btn btn-secondary" onclick="toggleNoteInput()" style="height:36px !important; margin-top:0;">Abbr.</button>
+       </div>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
+
+<script>
+
+// Oben bei den Variablen einfügen:
+let unsavedChanges = false; 
+
+// IN DIE window.onload = function() { ... } EINFÜGEN:
+setInterval(() => {
+    if (!unsavedChanges) {
+        console.log("Auto-Refresh ausgelöst...");
+        hardReload();
+    } else {
+        console.log("🛑 Autopilot: Pausiert (Ungespeicherte Eingaben!)");
+    }
+}, 300000); // Alle 300 Sekunden
+
+// --- V122: Neuer Cache-Key für frische Daten ---
+const CACHE_KEY = 'coachKiraData_v122_final';
+const CACHE_TIME_KEY = 'coachKiraTime_v122_final';
+let currentSuggestions = [];
+
+window.onload = function() {
+    // 1. Standard-Initialisierung
+    checkCacheStatus();
+    loadNotes();
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    setThemeIcon(savedTheme);
+
+    // 2. --- AUTO-START SEQUENZ (Commander Style) ---
+    const btn = document.getElementById('btn-init-load');
+    let seconds = 3;
+    
+    // Start-Text setzen
+    btn.innerText = `AUTO SEQ. ${seconds}`;
+
+    const timer = setInterval(() => {
+        seconds--;
+        if (seconds > 0) {
+            // Countdown läuft
+            btn.innerText = `AUTO SEQ. ${seconds}`;
+        } else {
+            // Zeit abgelaufen -> Starten!
+            clearInterval(timer);
+            btn.innerText = "INIT...";
+            
+            // Sicherheitscheck: Nur starten, wenn der Screen noch sichtbar ist 
+            // (falls du schon manuell geklickt hast)
+            if(document.getElementById('start-screen').style.display !== 'none') {
+                initApp();
+            }
+        }
+    }, 1000); // Jede Sekunde
+};
+
+function setThemeIcon(theme) {
+  const icon = document.getElementById('themeIcon');
+  if (!icon) return;
+
+  // dark => Mond, light => Sonne
+  icon.className = (theme === 'dark') ? 'fas fa-moon' : 'fas fa-sun';
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme') || 'dark';
+  const next = (current === 'dark') ? 'light' : 'dark';
+
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  setThemeIcon(next);
+}
+
+function checkCacheStatus() {
+const cachedData = localStorage.getItem(CACHE_KEY);
+if (cachedData) {
+document.getElementById('cache-info').style.display = 'block';
+document.getElementById('btn-init-load').textContent = "START";
+}
+}
+
+function initApp() {
+const cachedData = localStorage.getItem(CACHE_KEY);
+const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
+if (cachedData) {
+try { renderDashboard(cachedData, cachedTime); } catch(e) { forceRefresh(); }
+} else { forceRefresh(); }
+}
+
+function forceRefresh() {
+document.getElementById('loader').style.display = 'flex';
+document.getElementById('start-screen').style.display = 'none';
+// Backend-Funktion V76 (mit Logging/Fixes)
+google.script.run
+.withSuccessHandler(handleSuccess)
+.withFailureHandler(showError)
+.getDashboardDataAsStringV76();
+}
+
+function handleSuccess(jsonString) {
+const now = new Date().toLocaleString();
+localStorage.setItem(CACHE_KEY, jsonString);
+localStorage.setItem(CACHE_TIME_KEY, now);
+renderDashboard(jsonString, now);
+}
+
+function startHistoryAnalysis() {
+const btn = document.querySelector('button[onclick="startHistoryAnalysis()"]');
+const originalText = btn.innerText;
+btn.textContent = "..."; btn.disabled = true;
+google.script.run.withSuccessHandler((msg) => { alert(msg); btn.textContent = originalText; btn.disabled = false; })
+.withFailureHandler((err) => { alert("Fehler: " + err); btn.textContent = originalText; btn.disabled = false; })
+.triggerHistoryAnalysis_WebApp();
+}
+
+function getLoadClass(valStr) {
+const val = parseInt(valStr) || 0;
+if (val === 0) return "";
+if (val < 60) return "load-low";
+if (val <= 120) return "load-mid";
+return "load-high";
+}
+
+function colorizeLoadInput(input) { input.className = "plan-input " + getLoadClass(input.value); }
+
+function toggleCard(cardId) {
+const card = document.getElementById(cardId);
+card.classList.toggle('collapsed');
+}
+
+// --- FARB LOGIK (Gibt jetzt HEX-Codes zurück!) ---
+// UPDATE: Schwellenwerte exakt an CSS-Gradient angepasst für Orange und Blau/Lila Übergang
+function getBarColor(valInput, isReadiness) {
+  const val = parseInt(valInput) || 0;
+
+  // Wir nutzen die harten Hex-Werte des Dark Mode Themes,
+  // damit der Punkt auf dem dunklen Tacho gut aussieht.
+
+  // CSS Gradient Logik:
+  // >= 92%: Lila
+  // >= 75%: Blau
+  // >= 50%: Grün
+  // >= 25%: Orange
+  // < 25%: Rot
+
+  if(val >= 95) return '#d400ff';   // Lila (--prime) -> War vorher 95
+  if(val >= 75) return '#55aaff';   // Blau (--primary Dark)
+  if(val >= 50) return '#00cc66';   // Grün (--success Dark)
+  if(val >= 25) return '#ff8800';   // Orange (--warning Dark)
+  return '#ff4444';                 // Rot (--danger Dark)
+}
+
+/* --- NEU: SPARKLINE GENERATOR --- */
+function renderSparkline(dataArray) {
+    // Sicherheitscheck: Wenn keine Daten da sind, leeren String zurückgeben
+    if (!dataArray || !Array.isArray(dataArray) || dataArray.length < 2) return "";
+    
+    const width = 50;  // Breite in Pixel
+    const height = 18; // Höhe in Pixel
+    const padding = 2; // Abstand zum Rand
+    
+    // Min/Max für Skalierung finden
+    let min = Math.min(...dataArray);
+    let max = Math.max(...dataArray);
+    
+    // Falls Linie flach ist (alle Werte gleich), künstlichen Bereich schaffen
+    if (max === min) { min -= 1; max += 1; }
+    
+    const range = max - min;
+    
+    // SVG Punkte berechnen
+    const points = dataArray.map((val, i) => {
+        const x = (i / (dataArray.length - 1)) * width;
+        // Y invertieren (0 ist oben im SVG), Padding beachten
+        const y = (height - padding) - ((val - min) / range) * (height - (padding*2)); 
+        return `${x},${y}`;
+    }).join(" ");
+
+    // Trend-Farbe: Ist der letzte Wert besser/gleich dem ersten?
+    // (Achtung: Bei RHR ist niedriger = besser, aber wir nutzen hier einfache Logik: hoch=grün)
+    // Wenn du es perfekt willst: Wir nehmen einfach Neutral-Grau oder die Ampelfarbe der Metrik.
+    // Hier nehmen wir dynamisch: Steigend = Grün, Fallend = Rot.
+    const isRising = dataArray[dataArray.length-1] >= dataArray[0];
+    const strokeColor = isRising ? "var(--success)" : "var(--danger)";
+    
+    return `<svg width="${width}" height="${height}" class="sparkline">
+              <polyline points="${points}" stroke="${strokeColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="fill:none;" />
+              <circle cx="${width}" cy="${(height - padding) - ((dataArray[dataArray.length-1] - min) / range) * (height - (padding*2))}" r="2" fill="${strokeColor}" />
+            </svg>`;
+}
+
+function renderDashboard(jsonString, timestamp) {
+    setUnsaved(false);
+    
+    let data;
+    try {
+        data = JSON.parse(jsonString);
+    } catch (e) {
+        console.error("JSON Parsing Fehler:", e);
+        alert("Fehler beim Laden der Daten (JSON). Bitte neu laden.");
+        document.getElementById('loader').style.display = 'none';
+        return;
+    }
+
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('main-header').style.display = 'block';
+    document.getElementById('dashboard-container').style.display = 'grid';
+    
+    if(timestamp) document.getElementById('data-timestamp').innerText = "Stand: " + timestamp;
+
+    const isVeto = data.planStatus && data.planStatus.includes("STOP");
+    const vetoBox = document.getElementById('veto-alert');
+    if (isVeto) {
+        vetoBox.style.display = 'block';
+        vetoBox.innerText = (data.empfehlungText && data.empfehlungText.includes("Physiologisches Veto")) ? "🛑 VETO AKTIV" : "⚠️ WARNUNG";
+    } else { 
+        vetoBox.style.display = 'none'; 
+    }
+
+    // UPDATE STATUS BOXEN (Jetzt mit Gauge Animation)
+    updateStatusBox('box-gesamt', 'val-gesamt', data.gesamtScoreNum, data.gesamtScoreAmpel);
+    updateStatusBox('box-status', 'val-status', data.planStatus, mapAmpelColor(data.planStatus));
+    updateStatusBox('box-ernaehrung', 'val-ernaehrung', data.ernaehrungWert, data.ernaehrungStatus);
+    updateStatusBox('box-recovery', 'val-recovery', data.recoveryScore, data.recoveryAmpel);
+    updateStatusBox('box-training', 'val-training', data.trainingScore, data.trainingAmpel);
+    
+    const smartObj = data.scores ? data.scores.find(s => s.metrik === "Smart Gains") : null;
+    const smartVal = smartObj ? smartObj.num_score : "--"; // Score für Gauge nutzen
+    updateStatusBox('box-smart', 'val-smart', smartVal, smartObj ? smartObj.ampel : "GRAU");
+    
+    updateStatusBox('box-readiness', 'val-readiness', data.readinessScore, data.readinessAmpel);
+
+    document.getElementById('coach-text').innerText = data.empfehlungText || "Keine Analyse verfügbar.";
+
+    // --- INNERHALB VON renderDashboard(jsonString, timestamp) ---
+
+// 1. Briefing anzeigen
+  if (data.strategy_text) {
+    const box = document.getElementById('strategy-box');
+    const txt = document.getElementById('strategy-text');
+    if(box && txt) {
+      txt.innerText = data.strategy_text;
+      box.style.display = 'block'; // Sichtbar machen
+    }
+  }
+
+// 2. Plan Tabelle befüllen
+const planBody = document.getElementById('plan-body');
+planBody.innerHTML = '';
+
+if (data.planData && data.planData.length > 0) {
+    data.planData.forEach((day, index) => {
+        const isToday = (index === 0);
+        const loadClass = getLoadClass(day.load);
+        
+        // Prognose-Farben
+        const acwr = parseFloat(day.projectedACWR) || 0;
+        const acwrCol = acwr > 1.3 ? 'var(--danger)' : (acwr > 1.15 ? 'var(--warning)' : 'var(--success)');
+        const sg = parseFloat(day.projectedSG) || 0;
+        const sgCol = sg > 5 ? 'var(--primary)' : (sg < -10 ? 'var(--danger)' : 'var(--text-main)');
+
+        const row = document.createElement('tr');
+        if(isToday) row.style.backgroundColor = "rgba(85, 170, 255, 0.05)";
+        
+        row.innerHTML = `
+            <td style="vertical-align: middle;">
+              <span class="text-date">${day.tag}</span><br>
+              <small style="color:var(--text-muted)">${formatDateShort(day.datum)}</small>
+            </td>
+            <td style="vertical-align: middle;">
+              <div style="font-weight:bold; color:var(--text-main);">${day.sport || '---'}</div>
+              <div style="font-size:0.75rem; color:var(--primary); font-weight:800;">ZONE: ${day.zone || 'N/A'}</div>
+            </td>
+            <td style="text-align:center; vertical-align: middle;">
+              <span class="badge ${loadClass}" style="padding:4px 8px; border-radius:4px; font-family:monospace; border:1px solid;">
+                ${day.load}
+              </span>
+            </td>
+            <td style="text-align:center; vertical-align: middle; font-family:monospace; font-size:0.8rem;">
+              <span style="color:var(--success)">${parseFloat(day.te_ae).toFixed(1)}</span> / 
+              <span style="color:var(--danger)">${parseFloat(day.te_an).toFixed(1)}</span>
+            </td>
+            <td style="text-align:center; vertical-align: middle;">
+              <div style="font-size:0.85rem; font-weight:bold; color:${sgCol}">SG: ${sg > 0 ? '+' : ''}${sg.toFixed(1)}</div>
+              <div style="font-size:0.7rem; color:var(--text-muted)">ACWR: <span style="color:${acwrCol}">${acwr.toFixed(2)}</span></div>
+            </td>
+        `;
+        planBody.appendChild(row);
+    });
+}
+
+    // ACTIVITY REVIEWS
+    const reviewBody = document.getElementById('activity-review-body');
+    if (reviewBody) {
+        reviewBody.innerHTML = '';
+        if (data.activityReviews && data.activityReviews.length > 0) {
+            data.activityReviews.forEach(rev => {
+                let istStyle = "";
+                if (rev.loadSoll > 0 && rev.loadIst > rev.loadSoll * 1.2) istStyle = "color:var(--orange); font-weight:bold;";
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="color:var(--text-main); font-size:0.75rem;">${rev.datum}</td>
+                    <td style="font-weight:bold; ${istStyle}">${rev.loadIst}</td>
+                    <td style="color:var(--text-main);">${rev.loadSoll}</td>
+                    <td style="font-size:0.75rem;">${rev.atl}</td>
+                    <td style="font-size:0.75rem;">${rev.ctl}</td>
+                    <td style="font-size:0.75rem;">${rev.acwr}</td>
+                    <td style="font-size:0.8rem; line-height:1.3; color:var(--text-main); white-space:pre-wrap;">${rev.text}</td>
+                `;
+                reviewBody.appendChild(row);
+            });
+        } else {
+            reviewBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:15px; color:var(--text-muted);">Keine Reviews gefunden.</td></tr>';
+        }
+    }
+
+    // SCORE TABLE (Mit Gauge Balken)
+    const scoreGroups = {
+        "Training": ["ACWR (Forecast)", "TE Balance (% Intensiv)", "Training Status", "Smart Gains"],
+        "Recovery": ["RHR", "Schlafdauer", "Schlafscore", "HRV Status", "Training Readiness"],
+        "Ernährung": ["7-Tage-Bilanz", "Protein-Invest"]
+    };
+
+    const scoreTable = document.getElementById('score-table');
+    scoreTable.innerHTML = '';
+
+    if (data.scores) {
+        for (const [groupName, metrics] of Object.entries(scoreGroups)) {
+            const headerRow = document.createElement('tr');
+            headerRow.innerHTML = `
+                <td colspan="3" style="
+                    padding: 15px 10px 5px 15px; 
+                    font-size: 1.15rem; 
+                    font-weight: 700; 
+                    color: var(--text-main); 
+                    font-family: 'Roboto Condensed', sans-serif; 
+                    text-transform: uppercase; 
+                    letter-spacing: 0.5px; 
+                    border-bottom: 2px solid var(--border-color);
+                ">
+                    ${groupName}
+                </td>
+            `;
+            
+            scoreTable.appendChild(headerRow);
+
+            metrics.forEach(metricName => {
+                const score = data.scores.find(s => s.metrik === metricName);
+                if (score) {
+                    let comment = score.text || ""; 
+                    let valForColor = score.num_score; 
+                    let barValue = score.num_score;
+                    let displayRaw = score.raw_wert; 
+
+                    if (metricName === "7-Tage-Bilanz" && data.ernaehrungWert !== undefined) valForColor = score.num_score; 
+
+                    if (metricName.includes("TE Balance")) {
+                        let cleanStr = String(displayRaw).replace(',', '.');
+                        let val = parseFloat(cleanStr);
+                        if (!isNaN(val)) {
+                             if (val > 100) displayRaw = "Format?"; 
+                             else if (val < 1 && val > 0) displayRaw = (val * 100).toFixed(1) + "%";
+                             else displayRaw = val.toFixed(1) + "%";
+                        }
+                    }
+                    
+                    const farbCode = mapScoreToAmpel(valForColor);
+                    const ampelClass = `color-${farbCode}`;
+                    const isReadiness = (metricName === "Training Readiness");
+                    const markerColor = getBarColor(barValue, isReadiness); 
+                    const posPct = Math.min(100, Math.max(0, barValue));
+
+                    const barHtml = `
+                      <div class="score-bar-container">
+                        <div class="score-marker" style="left: ${posPct}%; background-color: ${markerColor};"></div>
+                      </div>
+                    `;
+
+                    // --- NEU: SPARKLINE INTEGRATION ---
+                    // Wir holen die Daten aus 'data.sparklines', falls vorhanden
+                    let sparklineSVG = "";
+                    // Prüfen ob sparklines Objekt existiert UND Daten für diese Metrik da sind
+                    if (data.sparklines && data.sparklines[metricName]) {
+                        sparklineSVG = renderSparkline(data.sparklines[metricName]);
+                    }
+                    // ---------------------------------
+
+                    const row = document.createElement('tr');
+                    
+                    // HTML Zusammenbauen: Sparkline hinter den Namen packen
+                    row.innerHTML = `
+                      <td style="width: 40%; padding-left:15px; color:var(--text-main); vertical-align:middle;">
+                        <div style="display:flex; align-items:center; gap: 5px;">
+                            <span style="font-weight:600; font-size:0.9rem;">${score.metrik}</span>
+                            ${sparklineSVG} 
+                        </div>
+                        ${barHtml}
+                      </td>
+                      <td style="width: 20%; vertical-align:middle; text-align:right; padding-right:15px;">
+                        <div style="display:flex; flex-direction:column; align-items:flex-end;">
+                           <span class="${ampelClass}" style="font-weight:bold; font-size:1.1rem; font-family:'Roboto Condensed'; white-space:nowrap;">
+                             ${displayRaw}
+                           </span>
+                           <span style="font-weight:bold; font-size:1.1rem; font-family:'Roboto Condensed'; color:var(--text-muted); margin-top:2px; white-space:nowrap;">
+                             SCORE: ${score.num_score}
+                           </span>
+                        </div>
+                      </td>
+                      <td style="color: var(--text-muted); font-size: 0.8rem; vertical-align:middle; line-height:1.3; padding: 8px;">${comment}</td>
+                    `;
+                    scoreTable.appendChild(row);
+                }
+            });
+        }
+    }
+
+    // HISTORIE TABELLE (V124-OUTLINE-FIX)
+    const histTable = document.getElementById('history-body');
+    const histMeta = document.getElementById('history-timestamp');
+    if (histTable) {
+        histTable.innerHTML = '';
+        const report = data.historyReport || (data.history ? data.history.entries : []);
+        const meta = data.historyMeta || (data.history ? data.history.timestamp : "");
+        if (report && report.length > 0) {
+            if(histMeta) histMeta.innerText = "Stand: " + (meta || "Unbekannt");
+            report.forEach(h => {
+                 const cat = h.cat || h.category || "Kategorie";
+                 const ampelText = h.ampel || "";
+                 const text = h.text || "";
+                 let colorClass = mapAmpelColor(ampelText); // Liefert "GRÜN", "ROT" etc.
+                 if (!colorClass) colorClass = "GRAU";
+
+                 const row = document.createElement('tr');
+                 row.innerHTML = `
+                   <td style="width:30%; font-weight:bold; color:var(--text-main); vertical-align:top; padding-top:12px;">
+                      <span style="display:block; margin-bottom:6px; font-family:'Roboto Condensed';">${cat}</span>
+                      <span class="hist-status ${colorClass}">
+                        ${ampelText}
+                      </span>
+                   </td>
+                   <td style="font-size:0.85rem; line-height:1.4; color:var(--text-main); vertical-align:top; padding-top:12px;">${text}</td>
+                 `;
+                 histTable.appendChild(row);
+            });
+        } else {
+            if(histMeta) histMeta.innerText = "--";
+            histTable.innerHTML = '<tr><td colspan="2" style="text-align:center; padding:20px; color:var(--text-muted);">Keine Historien-Daten verfügbar.</td></tr>';
+        }
+    }
+}
+
+
+function updateStatusBox(boxId, valId, value, ampel) {
+  const box = document.getElementById(boxId);
+  const valEl = document.getElementById(valId);
+  
+  // Nadel Element suchen (nur vorhanden, wenn es KEINE reine Text-Box ist)
+  let needleEl = null;
+  if (boxId !== "box-status") {
+      const needleId = valId.replace('val-', 'needle-');
+      needleEl = document.getElementById(needleId);
+  }
+
+  if (!box || !valEl) return;
+
+  // 1. Text setzen
+  valEl.innerText = value;
+  
+  // 2. Score bereinigen (für die Berechnung)
+  let cleanValue = String(value).replace(/[^0-9\-]/g, ''); 
+  let score = parseInt(cleanValue);
+  if (isNaN(score) || value === "--" || value === "Lade...") score = 0;
+
+  // 3. Alte Farb-Klassen entfernen (Reset)
+  const colors = ['GRÜN', 'GELB', 'ROT', 'LILA', 'BLAU', 'ORANGE', 'OFFEN', 'GRAU'];
+  colors.forEach(c => { 
+      box.classList.remove('bg-' + c); 
+      valEl.classList.remove('color-' + c); // Entfernt Farbe vom Text
+  });
+
+  // 4. Neue Farbe bestimmen (Für Rahmen/Hintergrund)
+  let colorClass = "GRAU";
+
+  // A) Server schickt explizite Farbe (z.B. "LILA")
+  if (ampel && colors.includes(ampel)) {
+      colorClass = ampel;
+  }
+  // B) Server schickt Text (Plan Status "STOP" etc.)
+  else if (isNaN(score) && typeof value === 'string') {
+      colorClass = mapAmpelColor(value); 
+  }
+  // C) Gauges: Berechnung anhand des Scores
+  else {
+      colorClass = mapScoreToAmpel(score);
+  }
+
+  // 5. Rahmen einfärben
+  box.classList.add('bg-' + colorClass);
+
+  // 6. Text einfärben? 
+  // -> NUR beim "Plan Status" oben links! 
+  // -> Bei Gauges (Kreisen) bleibt der Text WEISS (durch das CSS !important).
+  if (boxId === "box-status") {
+      valEl.classList.add('color-' + colorClass);
+  }
+
+  // 7. GAUGE LOGIC (Nadel drehen)
+  if (needleEl) {
+      score = Math.min(100, Math.max(0, score));
+
+      // HEX-Farbe für den PUNKT holen
+      const isReadiness = (boxId === "box-readiness");
+      const dotColor = getBarColor(score, isReadiness); 
+
+      // Garmin Rotation: Start 210° (7 Uhr) + (Wert * 3.0)
+      const startAngle = 210;
+      const rotation = startAngle + (score * 3.0);
+
+      // Anwenden
+      needleEl.style.transform = `rotate(${rotation}deg)`;
+      needleEl.style.setProperty('--dot-color', dotColor);
+  }
+}
+
+function calc3Days() {
+const btn = document.getElementById('btn-calc-3days');
+btn.textContent = "KI denkt..."; btn.disabled = true;
+google.script.run.withSuccessHandler((suggestions) => {
+btn.textContent = "KI-Vorschlag (3 Tage)"; btn.disabled = false;
+if(suggestions.error) { alert(suggestions.error); } else { currentSuggestions = suggestions; renderSuggestions(suggestions); }
+}).withFailureHandler((err) => { alert("Fehler: " + err); btn.disabled = false; }).getNext3DaySuggestions();
+}
+
+function renderSuggestions(suggestions) {
+const container = document.getElementById('suggestion-list');
+container.innerHTML = ''; document.getElementById('suggestion-card').style.display = 'block';
+suggestions.forEach((s, i) => {
+const div = document.createElement('div');
+div.style.cssText = "display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);";
+const infoDiv = document.createElement('div');
+infoDiv.style.cssText = "width: 80px; font-weight: bold; font-size: 0.9rem; color: var(--text-main);";
+infoDiv.innerHTML = `${s.weekday}<br><span style="font-weight:normal; font-size:0.8rem; color:var(--text-muted)">${formatDateShort(s.date)}</span>`;
+
+const loadClass = getLoadClass(s.load);
+
+const inputSport = `<input type="text" id="s_sport_${i}" value="${s.sport}" class="plan-input-text" style="width: 90px;" placeholder="Sport">`;
+const inputZone = `<input type="text" id="s_zone_${i}" value="${s.zone || ''}" class="plan-input" style="width: 70px;" placeholder="Zone">`;
+const inputLoad = `<input type="number" id="s_load_${i}" value="${s.load}" class="plan-input ${loadClass}" style="width: 60px;" placeholder="Load" oninput="colorizeLoadInput(this)">`;
+const teAe = s.te_aerobic_target || 0.0; const teAn = s.te_anaerobic_target || 0.0;
+const inputTE = `<div style="display: flex; flex-direction: column; gap: 2px;"><input type="number" step="0.1" id="s_te_ae_${i}" value="${teAe}" class="plan-input" style="width: 50px; font-size: 0.8rem;"
+title="Aerob"><input type="number" step="0.1" id="s_te_an_${i}" value="${teAn}" class="plan-input" style="width: 50px; font-size: 0.8rem;" title="Anaerob"></div>`;
+
+div.innerHTML = infoDiv.outerHTML + inputSport + inputZone + inputLoad + inputTE;
+container.appendChild(div);
+});
+}
+
+function approveAllSuggestions() {
+const btn = document.querySelector('button[onclick="approveAllSuggestions()"]');
+btn.textContent = "Speichere..."; btn.disabled = true;
+
+const payload = [];
+currentSuggestions.forEach((s, i) => {
+payload.push({
+datum: s.date,
+load: document.getElementById(`s_load_${i}`).value,
+sport: document.getElementById(`s_sport_${i}`).value,
+zone: document.getElementById(`s_zone_${i}`).value,
+te_ae: document.getElementById(`s_te_ae_${i}`).value,
+te_an: document.getElementById(`s_te_an_${i}`).value
+});
+});
+
+google.script.run.withSuccessHandler((msg) => {
+    alert("Erfolg: " + msg);
+    setUnsaved(false); // <--- EINFÜGEN!
+document.getElementById('suggestion-card').style.display = 'none';
+btn.textContent = "Alle 3 Tage übernehmen"; btn.disabled = false;
+forceRefresh();
+})
+.withFailureHandler((err) => {
+alert("Fehler: " + err);
+btn.disabled = false;
+})
+.updatePlannedLoad(payload);
+}
+
+function savePlan() {
+  const btn = document.getElementById('btn-save-plan');
+  const originalText = "Speichern"; // Oder was auf deinem Button steht
+  btn.textContent = "Sichere..."; 
+  btn.disabled = true;
+
+  // 1. Daten einsammeln
+  const rows = document.querySelectorAll('#plan-body tr'); 
+  const planData = [];
+  rows.forEach(row => {
+    planData.push({
+      datum: row.querySelector('input[name="datum"]').value, 
+      load: row.querySelector('input[name="load"]').value,
+      sport: row.querySelector('input[name="sport"]').value, 
+      zone: row.querySelector('input[name="zone"]').value,
+      te_ae: row.querySelector('input[name="te_ae"]').value, 
+      te_an: row.querySelector('input[name="te_an"]').value
+    });
+  });
+
+  // 2. An Backend senden (Speichern)
+  google.script.run
+    .withSuccessHandler((saveMsg) => { 
+        // A) Speichern war erfolgreich
+        console.log("Speichern OK. Starte Analyse-Trigger...");
+        btn.textContent = "Starte KI...";
+
+        // B) Jetzt die Analyse anstoßen (Chaining)
+        google.script.run
+            .withSuccessHandler((anaMsg) => {
+                // C) Alles erledigt
+                alert("✅ Plan gespeichert & KI-Analyse gestartet!\n\nKira rechnet im Hintergrund. Die neuen Bewertungen erscheinen beim nächsten Refresh (in ca. 30-60s).");
+                
+                setUnsaved(false);
+                btn.textContent = originalText; 
+                btn.disabled = false; 
+                
+                // Optional: Sofort neu laden, um die manuellen Werte sicher anzuzeigen
+                // (Die KI-Ergebnisse sind hier aber noch NICHT fertig, da asynchron)
+                forceRefresh(); 
+            })
+            .withFailureHandler((err) => {
+                alert("Plan wurde gespeichert, aber Analyse konnte nicht gestartet werden: " + err);
+                setUnsaved(false);
+                btn.textContent = originalText;
+                btn.disabled = false;
+            })
+            .triggerFullAnalysis_WebApp(); // Ruft die existierende Backend-Funktion auf
+    })
+    .withFailureHandler((err) => { 
+        alert("Fehler beim Speichern: " + err); 
+        btn.textContent = originalText;
+        btn.disabled = false; 
+    })
+    .updatePlannedLoad(planData);
+}
+
+function quickChat(text) { document.getElementById('chat-input').value = text; sendChat(); }
+function handleChatKey(e) { if (e.key === 'Enter') sendChat(); }
+function sendChat() {
+const input = document.getElementById('chat-input'); const msg = input.value.trim(); if (!msg) return;
+addMessage(msg, 'user'); input.value = '';
+const loadingId = addMessage('Kira schreibt...', 'kira', true);
+google.script.run.withSuccessHandler((response) => { removeMessage(loadingId); addMessage(response, 'kira'); })
+.withFailureHandler((err) => { removeMessage(loadingId); addMessage("Fehler: " + err, 'kira'); }).askKira(msg);
+}
+function addMessage(text, sender, isLoading = false) {
+const history = document.getElementById('chat-history'); const div = document.createElement('div');
+div.classList.add('msg', sender === 'user' ? 'msg-user' : 'msg-kira'); div.innerText = text;
+if(isLoading) { div.id = 'msg-loading'; div.style.fontStyle = 'italic'; div.style.color = '#888'; }
+history.appendChild(div); history.scrollTop = history.scrollHeight; return div.id;
+}
+function removeMessage(id) { const el = document.getElementById(id || 'msg-loading'); if(el) el.remove(); }
+
+function openChatWindow() {
+var serverUrl = "<?= pubUrl ?>";
+if (!serverUrl || serverUrl.includes("?=")) { alert("Konnte Server-URL nicht laden. Bitte 'Neue Version' deployen!"); return; }
+window.open(serverUrl + "?page=chat", '_blank');
+}
+
+function mapAmpelColor(text) {
+if (!text) return "";
+const t = text.toUpperCase();
+if (t.includes("GO") || t === "OK" || t.includes("GRÜN")) return "GRÜN";
+if (t.includes("VORSICHT") || t.includes("WARNUNG") || t.includes("GELB")) return "GELB";
+if (t.includes("STOP") || t.includes("VETO") || t.includes("ROT")) return "ROT";
+if (t.includes("GRAU")) return "GRAU";
+return "";
+}
+
+function mapScoreToAmpel(score) { 
+  const val = parseInt(score) || 0;
+  if (val >= 95) return "LILA";
+  if (val >= 75) return "BLAU";
+  if (val >= 50) return "GRÜN";
+  if (val >= 25) return "ORANGE";
+  return "ROT"; 
+}
+function formatDateShort(dateString) { if(!dateString) return ""; const parts = dateString.split('-'); if(parts.length === 3) return `${parts[2]}.${parts[1]}.`; return dateString; }
+function showError(error) { document.getElementById('loader').style.display = 'none'; alert("Fehler: " + error); }
+
+function triggerAnalysis() {
+  const btn = document.querySelector('button[onclick="triggerAnalysis()"]');
+  const originalText = btn.innerText;
+  btn.textContent = "Startet..."; btn.disabled = true;
+  
+  google.script.run
+    .withSuccessHandler((msg) => { 
+        alert(msg); // "KI-Analyse in 10s gestartet..."
+        btn.textContent = originalText; 
+        btn.disabled = false; 
+    })
+    .withFailureHandler((err) => { 
+        alert("Fehler: " + err); 
+        btn.textContent = originalText; 
+        btn.disabled = false; 
+    })
+    .triggerFullAnalysis_WebApp();
+}
+/* --- NEU: LOOKER MODAL LOGIC --- */
+function openLookerModal() {
+  const modal = document.getElementById('looker-modal');
+  const frame = document.getElementById('looker-frame');
+  // URL erst beim Klick laden (Performance!)
+  if (!frame.src || frame.src === window.location.href) {
+    frame.src = "https://lookerstudio.google.com/embed/reporting/e31c09a1-9a55-4077-8700-dde05d251273/page/p_j7r68t8yyd";
+  }
+  modal.style.display = 'flex';
+}
+
+function closeLookerModal() {
+  document.getElementById('looker-modal').style.display = 'none';
+}
+
+function openDetailPlan(event) {
+  // Verhindert, dass der Klick die Karte einklappt
+  event.stopPropagation();
+  
+  // FIX: Wir holen die "echte" URL, die der Server beim Laden in die Seite stempelt
+  var serverUrl = "<?= pubUrl ?>";
+  
+  // Sicherheits-Check, falls das Template nicht richtig geladen wurde
+  if (!serverUrl || serverUrl.includes("?=")) { 
+      alert("Fehler: Server-URL nicht gefunden. Bitte 'Neue Version' deployen!"); 
+      return; 
+  }
+  
+  // Die korrekte URL öffnen
+  window.open(serverUrl + "?page=plan", '_blank');
+}
+
+function setUnsaved(status) {
+    unsavedChanges = status;
+    const badge = document.getElementById('unsaved-badge');
+    if(badge) badge.style.display = status ? 'inline' : 'none';
+}
+
+// --- In WebApp_V2.html <script> Bereich ---
+
+function openCalculator() {
+  // Holt die echte WebApp-URL, die Google beim Laden injiziert hat
+  var serverUrl = "<?= pubUrl ?>";
+  
+  if (!serverUrl || serverUrl.includes("?=")) { 
+      alert("Fehler: Server-URL nicht gefunden. Bitte 'Neue Version' deployen!"); 
+      return; 
+  }
+  
+  // Öffnet das Load Lab in einem neuen Tab
+  window.open(serverUrl + "?page=calc", '_blank');
+}
+
+/**
+ * Klappt alle Karten auf oder zu.
+ * @param {boolean} shouldCollapse - true = zuklappen, false = aufklappen
+ */
+function toggleAllCards(shouldCollapse) {
+  console.log("toggleAllCards aufgerufen:", shouldCollapse); // Debugging im Browser-Log
+  const cards = document.querySelectorAll('.card');
+  
+  cards.forEach(card => {
+    // Sicherheitscheck: Wir fassen nur Karten an, die auch ein Klapp-Icon haben
+    // (Damit ignorieren wir z.B. die Looker-Thumbnail-Karte)
+    if (card.querySelector('.toggle-icon')) {
+      if (shouldCollapse) {
+        card.classList.add('collapsed');
+      } else {
+        card.classList.remove('collapsed');
+      }
+    }
+  });
+}
+
+// --- HARD RELOAD FUNKTION (Angepasst für WebApp / Dashboard) ---
+function hardReload() {
+  const btn = document.querySelector('button[onclick="hardReload()"]');
+  if(btn) {
+      btn.innerText = "⏳ ...";
+      btn.disabled = true;
+  }
+
+  console.log("Hard Reload ausgelöst...");
+
+  // 1. Visueller Reset: Loader zeigen
+  document.getElementById('loader').style.display = 'flex'; // In WebApp ist es flex, nicht block
+
+  // 2. Looker/Diagramme neu laden (Cache Buster für Iframes)
+  const iframes = document.querySelectorAll('iframe');
+  iframes.forEach(iframe => {
+      let src = iframe.src;
+      // Alte Zeitstempel entfernen, um URL sauber zu halten
+      if (src.includes('&t=')) { src = src.split('&t=')[0]; } 
+      if (src.includes('?t=')) { src = src.split('?t=')[0]; }
+      
+      // Neuen Zeitstempel anhängen -> Zwingt Browser zum Neuladen der Grafik
+      const separator = src.includes('?') ? '&' : '?';
+      iframe.src = src + separator + "t=" + new Date().getTime();
+  });
+
+  // 3. Daten neu laden (WICHTIG: Hier forceRefresh statt loadData nutzen!)
+  forceRefresh();
+  
+  // Button Reset (nach 2 sek, damit man sieht dass was passiert ist)
+  setTimeout(() => {
+      if(btn) {
+          btn.innerText = "🔄 SYNC";
+          btn.disabled = false;
+      }
+  }, 2000);
+}
+
+// --- PINNWAND LOGIK ---
+let myNotes = [];
+let currentNoteIdx = 0;
+
+// Startet das Laden der Notizen (in window.onload einfügen oder direkt hier aufrufen)
+function loadNotes() {
+  document.getElementById('note-display-content').innerText = "Lade Notizen...";
+  google.script.run
+    .withSuccessHandler(notes => {
+       myNotes = notes;
+       currentNoteIdx = 0;
+       renderNote();
+    })
+    .withFailureHandler(err => {
+       document.getElementById('note-display-content').innerText = "Fehler: " + err;
+    })
+    .getNotes();
+}
+
+function renderNote() {
+  const titleEl = document.getElementById('note-display-title');
+  const contentEl = document.getElementById('note-display-content');
+  const dateEl = document.getElementById('note-display-date');
+  const counterEl = document.getElementById('note-counter');
+
+  if (myNotes.length === 0) {
+     titleEl.innerText = "Leer";
+     contentEl.innerText = "Klicke auf +, um eine Notiz zu erstellen.";
+     dateEl.innerText = "";
+     counterEl.innerText = "0/0";
+     return;
+  }
+
+  // Sicherstellen, dass Index gültig ist
+  if (currentNoteIdx < 0) currentNoteIdx = 0;
+  if (currentNoteIdx >= myNotes.length) currentNoteIdx = myNotes.length - 1;
+
+  const note = myNotes[currentNoteIdx];
+  
+  titleEl.innerText = note.title;
+  contentEl.innerText = note.content;
+  
+  // Datum formatieren
+  let dateStr = "";
+  if (note.date) {
+     const d = new Date(note.date);
+     dateStr = d.toLocaleDateString() + " " + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  }
+  dateEl.innerText = dateStr;
+  
+  counterEl.innerText = `${currentNoteIdx + 1}/${myNotes.length}`;
+}
+
+function nextNote() {
+  if (currentNoteIdx < myNotes.length - 1) {
+    currentNoteIdx++;
+    renderNote();
+  }
+}
+
+function prevNote() {
+  if (currentNoteIdx > 0) {
+    currentNoteIdx--;
+    renderNote();
+  }
+}
+
+function toggleNoteInput() {
+  const view = document.getElementById('note-view');
+  const input = document.getElementById('note-input-area');
+  
+  if (input.style.display === 'none') {
+     input.style.display = 'flex';
+     view.style.display = 'none';
+  } else {
+     input.style.display = 'none';
+     view.style.display = 'block';
+  }
+}
+
+function submitNote() {
+  const title = document.getElementById('inp-note-title').value;
+  const content = document.getElementById('inp-note-content').value;
+  
+  if (!title || !content) { alert("Bitte Titel und Inhalt eingeben."); return; }
+  
+  const btn = document.querySelector('button[onclick="submitNote()"]');
+  const orgText = btn.innerText;
+  btn.innerText = "⏳"; btn.disabled = true;
+
+  google.script.run
+    .withSuccessHandler(() => {
+       // Reset
+       document.getElementById('inp-note-title').value = "";
+       document.getElementById('inp-note-content').value = "";
+       btn.innerText = orgText; btn.disabled = false;
+       toggleNoteInput(); // Zurück zur Ansicht
+       loadNotes(); // Neu laden
+    })
+    .withFailureHandler(err => {
+       alert("Fehler: " + err);
+       btn.innerText = orgText; btn.disabled = false;
+    })
+    .saveNote(title, content);
+}
+
+function refreshValuesOnly() {
+  const btn = document.querySelector('button[onclick="refreshValuesOnly()"]');
+  const originalText = btn.innerText;
+  
+  // Visuelles Feedback
+  btn.innerText = "⏳ ..."; 
+  btn.disabled = true;
+  
+  // Server aufrufen
+  google.script.run
+    .withSuccessHandler((msg) => { 
+        console.log(msg);
+        // Wir warten 3 Sekunden (da die Berechnung serverseitig ca. 1-2s dauert), dann laden wir neu
+        setTimeout(() => {
+            forceRefresh(); // Lädt das Dashboard mit den neuen Werten neu
+            
+            // Button Reset
+            btn.textContent = originalText; 
+            btn.disabled = false; 
+        }, 3000); 
+    })
+    .withFailureHandler((err) => { 
+        alert("Fehler: " + err); 
+        btn.textContent = originalText; 
+        btn.disabled = false; 
+    })
+    .triggerDataRefresh_WebApp();
+}
+
+// Hilfsfunktion: Setzt Wert, Drehung und Farbe
+function setGauge(idSuffix, value) {
+  // Elemente holen
+  const needle = document.getElementById('needle-' + idSuffix);
+  const text = document.getElementById('val-' + idSuffix);
+  
+  if (!needle || !text) return;
+
+  // Text setzen
+  text.innerText = value;
+
+  // 1. Winkel berechnen (0 bis 100 Wert => 0 bis 360 Grad)
+  const deg = value * 3.6;
+
+  // 2. Farbe bestimmen (Passend zu deinem CSS Gradient)
+  let color = '#888'; // Fallback Grau
+  
+  if (deg < 90) {
+      color = 'var(--danger)';   // Rot (0-25%)
+  } else if (deg < 180) {
+      color = 'var(--orange)';   // Orange (25-50%)
+  } else if (deg < 270) {
+      color = 'var(--success)';  // Grün (50-75%)
+  } else if (deg < 330) {
+      color = 'var(--primary)';  // Blau (75-91%)
+  } else {
+      color = 'var(--prime)';    // Lila (>91%)
+  }
+
+  // 3. Styles anwenden
+  // Wir setzen die CSS Variable --dot-color direkt auf dem Element
+  needle.style.setProperty('--dot-color', color);
+  needle.style.transform = `rotate(${deg}deg)`;
+}
+
+// --- BEISPIEL AUFRUF (Das ersetzt du mit deinen echten Daten) ---
+// Hier simulieren wir Werte, damit du siehst, dass es klappt:
+setGauge('gesamt', 88);      // Sollte Grün/Blau sein
+setGauge('training', 45);    // Sollte Orange sein
+setGauge('recovery', 15);    // Sollte Rot sein
+setGauge('readiness', 95);   // Sollte Lila sein!
+setGauge('smart', 70);       // Sollte Grün sein
+setGauge('ernaehrung', 60);  // Sollte Grün sein
+
+document.addEventListener("DOMContentLoaded", function() {
+
+    // Globale Funktion (damit du sie von überall aufrufen kannst)
+    window.updateGauge = function(idSuffix, value) {
+        const needle = document.getElementById('needle-' + idSuffix);
+        const textVal = document.getElementById('val-' + idSuffix);
+
+        if (!needle || !textVal) {
+            console.error("Gauge Element nicht gefunden:", idSuffix);
+            return;
+        }
+
+        // 1. Text setzen (Bleibt weiß durch CSS)
+        textVal.innerText = value;
+
+        // 2. Winkel berechnen (Synchron zum CSS Gradient)
+        // Start bei 210 Grad (7 Uhr). 
+        // 100% Wert entspricht 300 Grad Drehung.
+        const startAngle = 210; 
+        const deg = startAngle + (value * 3.0);
+
+        // 3. Farbe bestimmen (für den Punkt)
+        let color = '#888';
+        
+        // Zonen-Logik analog zum CSS Gradient
+        if (value < 25) { 
+            color = 'var(--danger)';   // Rot (0-24)
+        } else if (value < 50) { 
+            color = 'var(--orange)';   // Orange (25-49)
+        } else if (value < 75) { 
+            color = 'var(--success)';  // Grün (50-74)
+        } else if (value < 92) { 
+            color = 'var(--primary)';  // Blau (75-91)
+        } else { 
+            color = 'var(--prime)';    // Lila (92-100)
+        }
+
+        // Styles anwenden
+        needle.style.setProperty('--dot-color', color);
+        needle.style.transform = `rotate(${deg}deg)`;
+    }
+
+
+});
+
+function openLog() {
+  const url = 'https://script.google.com/macros/s/AKfycbxCEN11KRlFaLL7uVJyeBLCrRJVmfBWagSmqvyJ8Ci7nwxi8HbolzTy23Z-G2mivC2h/exec?page=log';
+  window.open(url, '_blank'); // Öffnet neuen Tab
+}
+
+// 1. PlanApp öffnen (Wie Lab/Log - Hardcoded Link)
+function openPlanApp() {
+    // Exakt die gleiche URL-Basis wie bei openLog, nur mit page=plan
+    const url = "https://script.google.com/macros/s/AKfycbxCEN11KRlFaLL7uVJyeBLCrRJVmfBWagSmqvyJ8Ci7nwxi8HbolzTy23Z-G2mivC2h/exec?page=plan";
+    window.open(url, '_blank');
+}
+
+// RTP Smoothstep Simulator öffnen (Hardcoded Link wie Plan/Lab/Log)
+function openRtp() {
+  const url = "https://script.google.com/macros/s/AKfycbxCEN11KRlFaLL7uVJyeBLCrRJVmfBWagSmqvyJ8Ci7nwxi8HbolzTy23Z-G2mivC2h/exec?page=rtp";
+  window.open(url, '_blank');
+}
+
+function openPrimeApp() {
+  const url = "https://script.google.com/macros/s/AKfycbxCEN11KRlFaLL7uVJyeBLCrRJVmfBWagSmqvyJ8Ci7nwxi8HbolzTy23Z-G2mivC2h/exec?page=prime";
+  window.open(url, '_blank');
+}
+
+function openCharts() {
+  window.open('<?= pubUrl ?>?page=charts', '_blank', 'noopener');
+}
+
+
+</script>
+<div id="looker-modal" class="modal-backdrop">
+  <div class="modal-content">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <h2 style="margin:0; border:none;">📊 Deep Dive Report</h2>
+      <button class="btn btn-secondary" onclick="closeLookerModal()" style="width: auto; height: 40px !important; margin:0;">
+        SCHLIESSEN ✕
+      </button>
+    </div>
+    <div class="white-frame" style="flex-grow: 1;">
+      <iframe id="looker-frame" width="100%" height="100%" src="" frameborder="0" style="border:0" allowfullscreen></iframe>
+    </div>
+  </div>
+</div>
+</body>
+</html>

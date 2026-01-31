@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html data-theme="dark" id="main-html">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Coach Kira - Load Lab Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    /* THEME DEFINITIONEN */
+    [data-theme="dark"] {
+      --bg-color: #121212;
+      --card-bg: #1e1e1e;
+      --card-highlight: #252525;
+      --text-main: #e0e0e0;
+      --text-muted: #888888;
+      --border-color: #333333;
+      --input-bg: #2d2d2d;
+      --shadow: rgba(0,0,0,0.6);
+    }
+
+    [data-theme="light"] {
+      --bg-color: #f4f7f9;
+      --card-bg: #ffffff;
+      --card-highlight: #fcfcfc;
+      --text-main: #1a1a1a;
+      --text-muted: #666666;
+      --border-color: #dddddd;
+      --input-bg: #f0f0f0;
+      --shadow: rgba(0,0,0,0.1);
+    }
+
+    :root {
+      --primary: #55aaff;
+      --prime: #d400ff;
+      --success: #00cc66;
+      --warning: #ffaa00;
+      --danger: #ff4444;
+      --fat-color: #ffaa00;
+      --carb-color: #00cc66;
+      --z1: #888888; --z2: #55aaff; --z3: #00cc66; --z4: #ffaa00; --z5: #ff4444;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      margin: 0; padding: 15px;
+      display: flex; flex-direction: column; align-items: center;
+      min-height: 100vh;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .lab-container {
+      width: 100%; 
+      max-width: 800px; 
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 10px 30px var(--shadow);
+      overflow: hidden; position: relative;
+    }
+
+    .lab-header {
+      background: var(--card-highlight); padding: 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .lab-title { font-family: 'Roboto Condensed'; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; margin: 0; }
+    #status { font-size: 0.75rem; color: var(--text-muted); font-family: monospace; }
+    
+    .theme-switch {
+      background: var(--input-bg); border: 1px solid var(--border-color);
+      color: var(--text-main); padding: 5px 12px; border-radius: 20px;
+      cursor: pointer; font-size: 0.8rem; font-weight: bold;
+    }
+
+    .tabs { display: flex; border-bottom: 1px solid var(--border-color); }
+    .tab {
+      flex: 1; padding: 15px; text-align: center; background: var(--card-bg);
+      color: var(--text-muted); cursor: pointer; font-weight: bold; font-size: 0.9rem;
+      transition: all 0.2s; border: none; outline: none; text-transform: uppercase; font-family: 'Roboto Condensed';
+    }
+    .tab.active { background: var(--card-highlight); color: var(--primary); border-bottom: 2px solid var(--primary); }
+
+    .lab-content { padding: 20px; }
+    .hidden { display: none !important; }
+
+    .control-group { margin-bottom: 20px; }
+    .label-row { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: flex-end; }
+    .label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+    .value-disp { font-family: 'Roboto Condensed'; font-weight: bold; color: var(--primary); font-size: 1rem; }
+
+    input[type=range] { width: 100%; -webkit-appearance: none; background: transparent; cursor: pointer; }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%;
+      background: var(--text-main); cursor: pointer; margin-top: -7px;
+      border: 2px solid var(--primary); box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    }
+    input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: var(--border-color); border-radius: 2px; }
+    
+    select {
+      width: 100%; padding: 10px; background: var(--input-bg); color: var(--text-main);
+      border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.95rem; outline: none;
+    }
+
+    .zone-selector { display: flex; gap: 4px; margin-top: 5px; }
+    .z-btn {
+      flex: 1; padding: 8px 0; border: 1px solid var(--border-color);
+      background: var(--input-bg); color: var(--text-muted); border-radius: 6px;
+      cursor: pointer; font-weight: bold; font-size: 0.75rem; text-align: center;
+    }
+    .z-btn.active { color: #fff; border: none; transform: scale(1.02); }
+
+    .module-card {
+      background: var(--card-highlight); border-radius: 10px; padding: 15px; margin-top: 15px;
+      border: 1px solid var(--border-color);
+    }
+    .card-head { display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid var(--border-color); }
+    .card-title { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 1px; }
+
+    .result-value { font-size: 3.5rem; font-weight: 700; font-family: 'Roboto Condensed'; color: var(--text-main); line-height: 1; margin: 10px 0; text-align: center; }
+    .result-sub { font-size: 0.9rem; color: var(--text-muted); text-align: center; }
+
+    .rec-bar-bg { width: 100%; height: 8px; background: var(--border-color); border-radius: 4px; overflow: hidden; margin-top: 5px; }
+    .rec-bar-fill { height: 100%; transition: width 0.5s ease, background 0.5s ease; width: 0%; }
+
+    .mixer-toggle { display: flex; background: var(--input-bg); border-radius: 8px; padding: 4px; margin-bottom: 20px; }
+    .mix-opt { flex: 1; text-align: center; padding: 8px; font-size: 0.8rem; text-transform: uppercase; font-weight: bold; color: var(--text-muted); cursor: pointer; border-radius: 6px; }
+    .mix-opt.active { background: var(--card-bg); color: var(--primary); box-shadow: 0 2px 5px var(--shadow); }
+
+    .mixer-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed var(--border-color); }
+    .mixer-label { width: 60px; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: bold; }
+    
+    .meta-bar-container { display: flex; height: 10px; border-radius: 5px; overflow: hidden; margin: 10px 0; background: var(--border-color); }
+    .meta-fat { background: var(--fat-color); height: 100%; transition: width 0.5s; }
+    .meta-carb { background: var(--carb-color); height: 100%; transition: width 0.5s; }
+    .reality-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+    .legend-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .legend-item { font-size: 0.7rem; display: flex; align-items: center; gap: 8px; color: var(--text-muted); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+  <div class="lab-container">
+    <div class="lab-header">
+      <h1 class="lab-title">🧪 Load Lab <span style="color:var(--prime)">PRO</span></h1>
+      <div id="status">Syncing...</div>
+      <button class="theme-switch" onclick="toggleTheme()" id="theme-btn">🌙 Dark</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="setMode('forward')">🎯 Ziel-Planung</button>
+      <button class="tab" onclick="setMode('backward')">🔍 Wirkungs-Check</button>
+    </div>
+
+    <div id="mode-forward" class="lab-content">
+      <div class="control-group">
+        <div class="label-row"><span class="label">Ziel Load (EPOC)</span><span class="value-disp" id="disp-target">120</span></div>
+        <input type="range" min="0" max="400" value="120" id="in-target" oninput="calcForward()">
+      </div>
+      <div class="control-group">
+        <span class="label">Sportart</span>
+        <select id="sel-sport-fwd" onchange="calcForward()"><option value="Other">Standard / Other</option></select>
+      </div>
+      <div class="control-group">
+        <span class="label">Intensität (Zone)</span>
+        <div class="zone-selector" id="zones-fwd"></div>
+      </div>
+      <div class="control-group">
+        <div class="label-row"><span class="label">Höhenmeter</span><span class="value-disp" id="disp-elev-fwd">0 hm</span></div>
+        <input type="range" min="0" max="3000" step="50" value="0" id="in-elev-fwd" oninput="calcForward()">
+      </div>
+      <div class="module-card" style="border-color: var(--primary);">
+        <div class="card-head"><span class="card-title" style="color:var(--primary);">Benötigte Zeit</span></div>
+        <div class="result-value" id="res-time" style="color:var(--primary);">--:--</div>
+        <div class="result-sub" id="res-info-fwd">bei gewählter Intensität</div>
+      </div>
+    </div>
+
+    <div id="mode-backward" class="lab-content hidden">
+      <div class="mixer-toggle">
+        <div class="mix-opt active" id="btn-simple" onclick="toggleMixer(false)">Simpel</div>
+        <div class="mix-opt" id="btn-mixer" onclick="toggleMixer(true)">🎛️ Session Mixer</div>
+      </div>
+
+      <div class="control-group">
+        <span class="label">Sportart</span>
+        <select id="sel-sport-bwd" onchange="calcBackward()"><option value="Other">Standard / Other</option></select>
+      </div>
+
+      <div id="ui-simple">
+        <div id="vam-module" class="module-card hidden" style="margin-bottom:20px; border-left:3px solid var(--prime);">
+          <div class="label-row"><span class="label" style="color:var(--prime);">🏔️ Aufstiegs-Speed (VAM)</span><span class="value-disp" id="disp-vam" style="color:var(--prime);">400 hm/h</span></div>
+          <input type="range" min="300" max="1000" step="50" value="400" id="in-vam" oninput="updateVam()">
+        </div>
+        <div class="control-group">
+          <div class="label-row"><span class="label">Dauer</span><span class="value-disp" id="disp-dur">60 min</span></div>
+          <input type="range" min="0" max="480" step="5" value="60" id="in-dur" oninput="calcBackward()">
+        </div>
+        <div class="control-group">
+          <span class="label">Zone</span>
+          <div class="zone-selector" id="zones-bwd"></div>
+        </div>
+      </div>
+
+      <div id="ui-mixer" class="hidden">
+        <div class="mixer-row">
+          <div class="mixer-label">Warmup</div>
+          <div class="mixer-input"><input type="range" min="0" max="60" step="5" value="10" id="mix-t1" oninput="calcBackward()"></div>
+          <div class="mixer-zone"><div class="zone-selector" id="z-mix-1"></div></div>
+        </div>
+        <div class="mixer-row">
+          <div class="mixer-label" style="color:var(--primary)">Main</div>
+          <div class="mixer-input"><input type="range" min="0" max="180" step="5" value="40" id="mix-t2" oninput="calcBackward()"></div>
+          <div class="mixer-zone"><div class="zone-selector" id="z-mix-2"></div></div>
+        </div>
+        <div class="mixer-row" style="border:none;">
+          <div class="mixer-label">Cooldown</div>
+          <div class="mixer-input"><input type="range" min="0" max="60" step="5" value="10" id="mix-t3" oninput="calcBackward()"></div>
+          <div class="mixer-zone"><div class="zone-selector" id="z-mix-3"></div></div>
+        </div>
+      </div>
+
+      <div class="module-card">
+        <div class="card-head"><span class="card-title">🌡️ Reality Check</span></div>
+        <div class="reality-grid">
+           <div>
+             <span class="label">Temp: <span id="disp-temp" style="color:var(--text-main)">20°C</span></span>
+             <input type="range" min="-5" max="35" value="20" id="in-temp" oninput="calcBackward()">
+           </div>
+           <div>
+             <span class="label">Untergrund</span>
+             <select id="sel-terrain" onchange="calcBackward()" style="padding:5px; font-size:0.8rem; margin-top:5px;">
+               <option value="1.0">Straße / Bahn</option>
+               <option value="1.1">Trail / Gelände</option>
+               <option value="1.2">Matsch / Schnee</option>
+             </select>
+           </div>
+        </div>
+      </div>
+
+      <div class="control-group" style="margin-top:20px;">
+        <div class="label-row"><span class="label">Höhenmeter</span><span class="value-disp" id="disp-elev-bwd">0 hm</span></div>
+        <input type="range" min="0" max="3000" step="50" value="0" id="in-elev-bwd" oninput="calcBackward();">
+      </div>
+
+      <div class="module-card">
+        <div class="card-head"><span class="card-title">Erwarteter Load</span></div>
+        <div class="result-value" id="res-load">0</div>
+        <div class="rec-bar-bg"><div id="rec-bar-bwd" class="rec-bar-fill"></div></div>
+        <div id="rec-text-bwd" style="text-align:center; font-size:0.7rem; margin-top:5px; font-weight:bold;">12h</div>
+      </div>
+
+      <div class="module-card">
+        <div class="card-head"><span class="card-title">🔥 Stoffwechsel</span></div>
+        <div class="meta-legend"><span style="color:var(--fat-color)">FETT</span><span style="color:var(--carb-color)">CARBS</span></div>
+        <div class="meta-bar-container"><div id="bar-fat" class="meta-fat"></div><div id="bar-carb" class="meta-carb"></div></div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-top:1px solid var(--border-color); padding-top:10px;">
+          <div style="text-align:center"><span id="fuel-carbs" style="font-size:1.1rem; font-weight:bold; display:block">0g</span><span class="label">Carbs</span></div>
+          <div style="text-align:center"><span id="fuel-water" style="font-size:1.1rem; font-weight:bold; display:block">0L</span><span class="label">Wasser</span></div>
+        </div>
+      </div>
+
+      <div class="module-card" style="border: 1px solid var(--prime); box-shadow: 0 0 15px rgba(212,0,255,0.1);">
+  <div class="card-head">
+    <span class="card-title" style="color:var(--prime)">🔮 TACTICAL SIMULATOR 2.0</span>
+    <span id="sim-status" style="font-size:0.65rem; color:var(--text-muted)">Syncing...</span>
+  </div>
+  
+  <div style="display:flex; justify-content:space-around; margin-bottom:10px; border-bottom:1px solid var(--border-color); padding-bottom:10px;">
+    <div style="text-align:center;"><div class="label" style="font-size:0.6rem;">Sim-ATL</div><div id="sim-atl-val" style="font-weight:bold; color:var(--text-main);">--</div></div>
+    <div style="text-align:center;"><div class="label" style="font-size:0.6rem;">Sim-CTL</div><div id="sim-ctl-val" style="font-weight:bold; color:var(--text-main);">--</div></div>
+  </div>
+
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+    <div style="text-align:center;"><div class="label">ACWR</div><div id="sim-acwr-new" style="font-weight:bold; font-size:1.4rem;">--</div></div>
+    <div style="flex:1; padding: 0 15px;"><div class="rec-bar-bg"><div id="sim-bar-acwr" class="rec-bar-fill" style="background:var(--prime)"></div></div></div>
+  </div>
+  </div>
+
+      <div class="module-card" style="background: rgba(0,0,0,0.05);">
+        <div class="card-head"><span class="card-title">📖 Smart Gain Legende</span></div>
+        <div class="legend-grid">
+          <div class="legend-item"><div class="dot" style="background:var(--success)"></div> <b>> 0:</b> Hoher ROI / Effizient</div>
+          <div class="legend-item"><div class="dot" style="background:var(--primary)"></div> <b>0 bis -20:</b> Sweetspot</div>
+          <div class="legend-item"><div class="dot" style="background:var(--warning)"></div> <b>-20 bis -50:</b> Belastung / Junk</div>
+          <div class="legend-item"><div class="dot" style="background:var(--danger)"></div> <b>< -50:</b> Detraining / Alarm</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // --- GLOBALE VARIABLEN ---
+    let factors = { zoneFactors: {}, elevFactors: {} };
+    let currentZoneFwd = "Z2", currentZoneBwd = "Z2", mixZones = ["Z1", "Z3", "Z1"];
+    let isMixerMode = false, isVamActive = false;
+    const metaProfile = {"Z1":{fat:90,carb:10},"Z2":{fat:70,carb:30},"Z3":{fat:40,carb:60},"Z4":{fat:10,carb:90},"Z5":{fat:0,carb:100}};
+
+    // Simulator Anker (werden vom Server geladen)
+    let baselineATL = 0; // Das ist AG123 (Yesterday)
+    let baselineCTL = 0; // Das ist AH123 (Yesterday)
+    let baselineCTL6DaysAgo = 0;
+    let yesterdaySG = 0;
+    let coachConfig = {}; 
+
+    window.onload = function() {
+      initUI();
+      google.script.run.withSuccessHandler(d => {
+        factors = d;
+        populateSportSelectors(d.zoneFactors);
+        initSimulator(); 
+        document.getElementById('status').innerText = "Live 🟢";
+      }).getFactorsForClient();
+    };
+
+    function initSimulator() {
+      google.script.run.withSuccessHandler(d => {
+        if (!d) return;
+        baselineATL = d.atl; 
+        baselineCTL = d.ctl; 
+        baselineCTL6DaysAgo = d.ctl6DaysAgo;
+        yesterdaySG = d.yesterdaySmartGain;
+        coachConfig = d.config;
+        
+        document.getElementById('sim-status').innerText = 
+          `Basis Heute: ACWR ${d.officialAcwr.toFixed(2)} | SG Gestern: ${yesterdaySG.toFixed(2)}`;
+        
+        updateSimulator(0);
+      }).getLabBaselines();
+    }
+
+    function updateSimulator(added) {
+  // Prüfen, ob Config geladen wurde
+  if (!coachConfig || !coachConfig.alpha_ATL_up) return;
+
+  // 1. Schlaf-Modifikatoren (wie in deiner GSheet-Formel)
+  const sH = coachConfig.currentSleepHours || coachConfig.sleep_hours_default || 7.5;
+  const sS = coachConfig.currentSleepScore || coachConfig.sleep_score_default || 85;
+
+  // 2. Adjusted Load berechnen (Die Basis AF124 korrigiert durch S, B und Schlaf)
+  const loadAdjustedATL = (coachConfig.S_ATL * added) + 
+                          (coachConfig.B_ATL || 0) + 
+                          (coachConfig.wH_ATL * sH) + 
+                          (coachConfig.wS_ATL * sS);
+
+  const loadAdjustedCTL = (coachConfig.S_CTL * added) + 
+                          (coachConfig.B_CTL || 0) + 
+                          (coachConfig.wH_CTL * sH) + 
+                          (coachConfig.wS_CTL * sS);
+
+  // 3. ATL Forecast: Asymmetrisches Alpha wählen
+  // Wenn Load > Aktuelle ATL -> Up-Alpha, sonst Down-Alpha
+  const alphaATL = (loadAdjustedATL > baselineATL) ? coachConfig.alpha_ATL_up : coachConfig.alpha_ATL_down;
+  
+  // Berechnung: (1 - Alpha) * Gestern_ATL + Alpha * Adjusted_Load
+  let simATL = (1 - alphaATL) * baselineATL + alphaATL * loadAdjustedATL;
+  
+  // Capping (Leitplanken aus dem Config-Tab)
+  simATL = Math.max(baselineATL - coachConfig.cap_down_ATL, Math.min(baselineATL + coachConfig.cap_up_ATL, simATL));
+
+  // 4. CTL Forecast: Klassisches EWMA
+  const simCTL = (1 - coachConfig.alpha_CTL) * baselineCTL + coachConfig.alpha_CTL * loadAdjustedCTL;
+
+  // 5. ACWR Berechnung
+  const acwr = simATL / (simCTL || 1);
+
+  // --- UI UPDATE ---
+  document.getElementById('sim-atl-val').innerText = Math.round(simATL);
+  document.getElementById('sim-ctl-val').innerText = Math.round(simCTL);
+  document.getElementById('sim-acwr-new').innerText = acwr.toFixed(2);
+  
+  const bar = document.getElementById('sim-bar-acwr');
+  bar.style.width = Math.min(100, (acwr/2)*100) + '%';
+  bar.style.background = acwr > 1.3 ? 'var(--danger)' : acwr < 0.8 ? 'var(--warning)' : 'var(--success)';
+
+  // 6. Smart Gain (Trend CTL - Belastung ATL)
+  const trend = simCTL - baselineCTL6DaysAgo;
+  const smart = trend - ((simATL * 7) / 400); 
+  document.getElementById('sim-smart-val').innerText = smart.toFixed(2);
+}
+
+    // --- SHARED CORE LOGIC (UNVERÄNDERT) ---
+    function calcForward() {
+      const target = parseInt(document.getElementById('in-target').value);
+      const elev = parseInt(document.getElementById('in-elev-fwd').value);
+      const sport = document.getElementById('sel-sport-fwd').value;
+      const {zF, eF} = getFactor(sport, currentZoneFwd);
+      const rem = target - (elev/100*eF);
+      document.getElementById('res-time').innerText = rem <= 0 ? "0 min" : fmtTime(rem/zF*60);
+      document.getElementById('disp-target').innerText = target;
+      document.getElementById('disp-elev-fwd').innerText = elev + " hm";
+    }
+
+    function calcBackward() {
+      const sport = document.getElementById('sel-sport-bwd').value;
+      const elev = parseInt(document.getElementById('in-elev-bwd').value);
+      const temp = parseInt(document.getElementById('in-temp').value);
+      const terrain = parseFloat(document.getElementById('sel-terrain').value);
+      document.getElementById('disp-temp').innerText = temp + "°C";
+      let raw = 0, mins = 0, zone = currentZoneBwd;
+      if(!isMixerMode) { mins = parseInt(document.getElementById('in-dur').value); raw = (mins/60) * getFactor(sport, zone).zF; document.getElementById('disp-dur').innerText = fmtTime(mins); }
+      else { const t1 = parseInt(document.getElementById('mix-t1').value), t2 = parseInt(document.getElementById('mix-t2').value), t3 = parseInt(document.getElementById('mix-t3').value); mins = t1 + t2 + t3; raw = (t1/60*getFactor(sport,mixZones[0]).zF) + (t2/60*getFactor(sport,mixZones[1]).zF) + (t3/60*getFactor(sport,mixZones[2]).zF); zone = t2 > 10 ? mixZones[1] : mixZones[0]; }
+      let stress = (temp > 22 ? 1 + (temp-22)*0.01 : 1) * terrain;
+      const final = Math.round((raw + (elev/100*getFactor(sport,"Default").eF)) * stress);
+      document.getElementById('res-load').innerText = final;
+      document.getElementById('disp-elev-bwd').innerText = elev + " hm";
+      updateRecoveryUI(final);
+      updateMetabolic(zone, mins, final);
+      updateSimulator(final);
+    }
+
+    function toggleTheme() { const html = document.getElementById('main-html'); const btn = document.getElementById('theme-btn'); const isDark = html.getAttribute('data-theme') === 'dark'; html.setAttribute('data-theme', isDark ? 'light' : 'dark'); btn.innerText = isDark ? "☀️ Light" : "🌙 Dark"; }
+    function initUI() { renderZoneButtons('zones-fwd', currentZoneFwd, z => {currentZoneFwd=z; calcForward();}); renderZoneButtons('zones-bwd', currentZoneBwd, z => {currentZoneBwd=z; calcBackward();}); renderZoneButtons('z-mix-1', mixZones[0], z => {mixZones[0]=z; calcBackward();}, true); renderZoneButtons('z-mix-2', mixZones[1], z => {mixZones[1]=z; calcBackward();}, true); renderZoneButtons('z-mix-3', mixZones[2], z => {mixZones[2]=z; calcBackward();}, true); }
+    function renderZoneButtons(pid, cur, cb, mini=false) { const c = document.getElementById(pid); c.innerHTML=''; ["Z1","Z2","Z3","Z4","Z5"].forEach(z => { const b = document.createElement('div'); b.className = 'z-btn' + (z===cur?' active':''); b.innerText = z; if(z===cur) b.style.background = `var(--${z.toLowerCase()})`; b.onclick = () => { Array.from(c.children).forEach(k=> {k.classList.remove('active'); k.style.background='';}); b.classList.add('active'); b.style.background=`var(--${z.toLowerCase()})`; cb(z); }; c.appendChild(b); }); }
+    function setMode(m) { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.lab-content').forEach(c => c.classList.add('hidden')); document.getElementById('mode-'+m).classList.remove('hidden'); document.querySelectorAll('.tab')[m==='forward'?0:1].classList.add('active'); }
+    function toggleMixer(e) { isMixerMode = e; document.getElementById('ui-simple').classList.toggle('hidden', e); document.getElementById('ui-mixer').classList.toggle('hidden', !e); document.getElementById('btn-simple').classList.toggle('active', !e); document.getElementById('btn-mixer').classList.toggle('active', e); calcBackward(); }
+    function getFactor(s, z) { const sObj = factors.zoneFactors[s] || factors.zoneFactors["Other"] || {}; return { zF: sObj[z] || sObj["Default"] || 50, eF: factors.elevFactors[s] || 6 }; }
+    function populateSportSelectors(d) { const sf = document.getElementById('sel-sport-fwd'), sb = document.getElementById('sel-sport-bwd'); Object.keys(d).sort().forEach(s => { sf.add(new Option(s,s)); sb.add(new Option(s,s)); }); sf.value = "Run"; sb.value = "Run"; checkVamVisibility(); }
+    function checkVamVisibility() { const sport = document.getElementById('sel-sport-bwd').value.toLowerCase(); isVamActive = (sport.includes("ski") || sport.includes("hike") || sport.includes("other")); document.getElementById('vam-module').classList.toggle('hidden', !isVamActive); }
+    function updateRecoveryUI(l) { const b = document.getElementById('rec-bar-bwd'), t = document.getElementById('rec-text-bwd'); // Smart Gains Bereiche: <28 Detraining | 28–80 Maintenance | 80–122 Productive | 122–181 Prime | >181 Danger
+const col =
+  l > 181 ? 'var(--danger)' :
+  l >= 122 ? 'var(--prime)' :
+  l >= 80  ? 'var(--success)' :
+  l >= 28  ? 'var(--warning)' :
+            'var(--text-muted)';
+
+t.innerText = l > 250 ? "48h+" : l > 181 ? "36h" : l >= 122 ? "24h" : "12h";
+ t.style.color = col; }
+    function updateMetabolic(z, m, l) { const p = metaProfile[z] || {fat:50, carb:50}; document.getElementById('bar-fat').style.width = p.fat + "%"; document.getElementById('bar-carb').style.width = p.carb + "%"; let gc = z==="Z5"?3.5:z==="Z4"?2.5:z==="Z3"?1.5:z==="Z2"?0.8:0.5; const tc = Math.round(gc * m); document.getElementById('fuel-carbs').innerText = tc + "g"; document.getElementById('fuel-water').innerText = (m/60 * 0.6).toFixed(1) + "L"; }
+    function fmtTime(m) { const h=Math.floor(m/60), mm=Math.round(m%60); return h>0 ? h+'h '+mm+'m' : mm+'m'; }
+    function updateVam() { if(!isVamActive) return; const v = parseInt(document.getElementById('in-vam').value), e = parseInt(document.getElementById('in-elev-bwd').value); document.getElementById('disp-vam').innerText = v + " hm/h"; if (e > 0) { document.getElementById('in-dur').value = Math.min(480, Math.round((e/v)*1.2*60)); calcBackward(); } }
+  </script>
+</body>
+</html>

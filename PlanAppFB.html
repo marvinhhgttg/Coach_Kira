@@ -1,0 +1,1534 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Coach Kira – Plan (Garmin/Firstbeat)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  :root {
+  --bg-color: #f8fafc;
+  --card-bg: #ffffff;
+  --header-bg: #ffffff;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --input-bg: #ffffff;
+  --primary: #2563eb;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --purple: #d400ff;
+  --blue-btn: #0ea5e9;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] {
+  --bg-color: #121212;
+  --card-bg: #181818;
+  --header-bg: #121212;
+  --text-main: #f0f0f0;
+  --text-muted: #888888;
+  --border-color: #333333;
+  --input-bg: #222222;
+  --primary: #55aaff;
+  --success: #00cc66;
+  --warning: #ffaa00;
+  --danger: #ff4444;
+  --purple: #e066ff;
+  --shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text-main);
+    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  }
+
+  .container{
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+
+  /* Loader */
+  #loader{
+    position: fixed;
+    inset: 0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    gap:12px;
+    background: rgba(0,0,0,0.25);
+    backdrop-filter: blur(6px);
+    z-index: 9999;
+  }
+  .spinner{
+    width:36px;height:36px;
+    border-radius:50%;
+    border:3px solid rgba(255,255,255,0.35);
+    border-top-color: rgba(255,255,255,0.95);
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+
+  /* ===== NAVIGATION (WebApp_V2-Style, light-kompatibel) ===== */
+.header-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--border-color);
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.header-tools {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.nav-pill {
+  background: rgba(30, 41, 59, 0.06);
+  border: 1px solid rgba(30, 41, 59, 0.18);
+  color: var(--text-main);
+  padding: 8px 14px;
+  border-radius: 4px;
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.nav-pill:hover {
+  background: rgba(30, 41, 59, 0.10);
+  border-color: rgba(30, 41, 59, 0.35);
+  transform: translateY(-1px);
+}
+
+.nav-pill.primary {
+  background: rgba(37, 99, 235, 0.12);
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.08);
+}
+
+.nav-pill.primary:hover { background: rgba(37, 99, 235, 0.18); }
+
+.nav-pill i { font-size: 0.9rem; opacity: 0.95; }
+/* ===== /NAVIGATION ===== */
+
+  .nav-pill.primary{
+    background: var(--primary);
+    color: var(--bg);
+    border-color: var(--primary);
+  }
+  /* ===== /NAV BAR ===== */
+
+  /* Deine bisherigen Utility-Klassen (falls du sie brauchst) */
+  .row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  .card{
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 12px;
+    margin: 12px 0;
+  }
+  table{ border-collapse: collapse; width:100%; }
+  th, td{ border-bottom:1px solid var(--border); padding:8px; font-size: 13px; }
+  th{ text-align:left; background:rgba(0,0,0,0.03); position: sticky; top:0; z-index:1; }
+  [data-theme="dark"] th{ background:rgba(255,255,255,0.05); }
+
+  button{ padding:10px 12px; border:1px solid var(--border); border-radius:10px; background:transparent; cursor:pointer; color:var(--text); }
+  button.primary{ background: var(--primary); color: var(--bg); border-color: var(--primary); }
+  button:disabled{ opacity:0.6; cursor:not-allowed; }
+  small{ color:var(--text-muted); }
+  code{ background: rgba(0,0,0,0.06); padding:0 4px; border-radius:6px; }
+  [data-theme="dark"] code{ background: rgba(255,255,255,0.08); }
+
+  .pill{ display:inline-block; padding:4px 10px; border-radius:999px; border:1px solid var(--border); background:transparent; font-size:12px; }
+  .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+  @media (max-width: 900px){ .grid2 { grid-template-columns: 1fr; } }
+
+  .warn{ color:#b45309; font-weight:600; }
+  .bad{ color:#b91c1c; font-weight:700; }
+  .ok{ color:#15803d; font-weight:700; }
+</style>
+
+</head>
+<body>
+
+  <div id="loader">
+  <div class="spinner"></div>
+  <div style="color:var(--primary); font-size:0.7rem; font-weight:bold; letter-spacing:2px; text-transform:uppercase;"
+       id="loader-text">Syncing System...</div>
+</div>
+
+<div class="container">
+  <div class="header-bar">
+    <div class="header-content">
+      <div class="start-title">
+        PlanApp <span style="color:var(--text-muted); font-weight:300;">| Garmin/Firstbeat</span>
+      </div>
+
+      <div class="header-tools">
+        <button class="nav-pill" onclick="navGoto('plan')" title="Strategische Planung">
+  <i class="fas fa-chess-board"></i> Planer
+</button>
+
+<button class="nav-pill primary" onclick="navGoto('planfb')" title="Garmin/Firstbeat PlanApp (neu)">
+  <i class="fas fa-bullseye"></i> PlanFB
+</button>
+
+<button class="nav-pill" onclick="navGoto('prime')" title="Prime Range Finder">
+  <i class="fas fa-crown"></i> Prime
+</button>
+
+<button class="nav-pill" onclick="navGoto('lab')" title="LoadLab">
+  <i class="fas fa-flask"></i> Lab
+</button>
+
+<button class="nav-pill" onclick="navGoto('rtp')" title="RTP Smoothstep Simulator">
+  <i class="fas fa-wave-square"></i> RTP
+</button>
+
+<button class="nav-pill" onclick="navGoto('log')" title="Tactical Log">
+  <i class="fas fa-scroll"></i> Log
+</button>
+
+<button class="nav-pill" onclick="navGoto(null)" title="Dashboard (WebApp_V2)">
+  <i class="fas fa-th-large"></i> Dash
+</button>
+
+<span id="sim-status" class="nav-pill" style="cursor:default; opacity:0.85;">Status: ...</span>
+
+<button id="themeBtn" class="nav-pill" onclick="toggleTheme()" title="Theme umschalten">
+  🌙 Dark
+</button>
+
+      </div>
+    </div>
+  </div>
+
+
+  <div id="fb-error" style="display:none; padding:12px; border:1px solid #ef4444; color:#b91c1c; border-radius:10px; margin:12px 0; white-space:pre-wrap;"></div>
+
+
+  <div class="card">
+    <div class="row">
+      <div class="pill mono" title="Modus">Mode: FB</div>
+      <div id="gateBox"></div>
+      <div class="pill mono" id="seedBox" title="Seed für Simulation (ATL/CTL von gestern)">Seed: –</div>
+      <div class="pill mono" id="simBox" title="Simulations-Check nach Auto-Plan">Sim: –</div>
+      <div class="pill mono" id="phaseBox" title="Phase Targets für Tag 0">Phase: –</div>
+    </div>
+    <small>
+      Gates basieren auf <code>fb_TR_obs</code> und <code>hrv_status</code> vs. unterer <code>hrv_threshholds</code>-Schwelle (Delta).
+      ATL/CTL werden über deine <code>config</code>-Parameter und <code>atlYesterday</code>/<code>ctlYesterday</code> simuliert.
+    </small>
+  </div>
+
+  <div class="card grid2">
+    <div>
+      <div class="row" style="margin-bottom:8px;">
+        <button class="primary" id="btnAutoPlan" onclick="autoPlan()">Auto-Plan (FB + ATL/CTL)</button>
+        <button id="btnSave" onclick="saveToTimeline()">In Timeline + Kalender schreiben</button>
+        <span id="status"></span>
+      </div>
+
+      <div class="row">
+        <label class="pill" title="Globaler Ziel-Modus für die nächsten 14 Tage">
+          Ziel:
+          <select id="goalMode" onchange="onGoalModeChange()">
+            <option value="maintain">Maintain</option>
+            <option value="build" selected>Build</option>
+            <option value="taper">Taper</option>
+          </select>
+        </label>
+
+        <label class="pill" title="ACWR Obergrenze (wird zusätzlich durch Gate begrenzt)">
+          ACWR Max:
+          <input id="acwrMaxInput" type="number" step="0.01" value="1.25" style="width:70px;" />
+        </label>
+
+        <label class="pill" title="ACWR Untergrenze (Verhindert 'zu wenig Reiz')">
+          ACWR Min:
+          <input id="acwrMinInput" type="number" step="0.01" value="0.90" style="width:70px;" />
+        </label>
+      </div>
+      <small>
+        Hinweis: Der Solver skaliert die Loads so, dass der simulierte ACWR-Korridor eingehalten wird – ausgehend von Intent/Focus/TE und deinem ATL/CTL-Seed.
+      </small>
+    </div>
+
+    <div>
+      <small class="mono" style="display:block; margin-bottom:6px;">Backend-Felder, die PlanAppFB erwartet:</small>
+      <div class="mono" style="font-size:12px; line-height:1.5;">
+        • <b>atlYesterday</b>, <b>ctlYesterday</b><br/>
+        • <b>config</b> mit: S_ATL, B_ATL, alpha_ATL_up, alpha_ATL_down, S_CTL, B_CTL, alpha_CTL<br/>
+        • optional: <b>todayLoad</b>, <b>trObsToday</b>, <b>hrvDeltaLowToday</b>
+      </div>
+      <!-- optional: zeigt k-Info, wenn vorhanden -->
+      <div class="pill mono" id="dbgK" style="margin-top:8px;" title="ESS→Internal Kalibrierfaktor">k=–</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <table id="planTable">
+      <thead>
+        <tr>
+          <th>Tag</th>
+          <th>Phase</th>
+          <th>Load</th>
+          <th>Intent</th>
+          <th>Focus LA/HA/AN (%)</th>
+          <th>TE Ae</th>
+          <th>TE An</th>
+          <th>CTL</th>
+          <th>ACWR</th>
+          <th>SmartGains</th>
+          <th>Lock</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div style="position:relative; height:420px; width:100%;">
+      <canvas id="simChart"></canvas>
+    </div>
+  </div>
+
+  <script>
+
+    function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  try { localStorage.setItem('planAppTheme', theme); } catch(e) {}
+  const btn = document.getElementById('themeBtn');
+  if (btn) btn.innerHTML = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  setTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+function showError(msg) {
+  console.error(msg);
+  const box = document.getElementById("fb-error");
+  if (!box) return;
+  box.style.display = "block";
+  box.textContent = String(msg || "unknown error");
+}
+
+
+/* =========================
+   SAFE HELPERS
+   ========================= */
+function $(id) { return document.getElementById(id); }
+function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
+function p(x) {
+  if (typeof x === "number") return x;
+  if (x === null || x === undefined || x === "") return 0;
+  const n = Number(String(x).replace(",", "."));
+  return Number.isFinite(n) ? n : 0;
+}
+function dateStrLocal(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+function setStatus(msg, cls="") {
+  const el = $("status");
+  if (!el) return;
+  el.className = cls || "";
+  el.textContent = msg || "";
+}
+function hasGas() {
+  return (typeof google !== "undefined" &&
+          google.script &&
+          google.script.run &&
+          typeof google.script.run.withSuccessHandler === "function");
+}
+
+/* =========================
+   MODEL / STATE
+   ========================= */
+let simBase = null;
+let days = []; // {dateStr, load, intent, focusLow, focusHigh, focusAna, teAe, teAn, lock, sport, zone}
+
+const INTENTS = [
+  { key:"recovery",   label:"Recovery",                         focus:[95, 5, 0],  te:[1.5, 0.0] },
+  { key:"endurance",  label:"Endurance (Low Aerobic)",          focus:[90,10,0],   te:[2.5, 0.3] },
+  { key:"tempo",      label:"Tempo / Threshold (High Aerobic)", focus:[55,40,5],   te:[3.8, 0.8] },
+  { key:"vo2",        label:"VO₂ / Intervals",                  focus:[35,55,10],  te:[4.5, 1.5] },
+  { key:"anaerobic",  label:"Anaerobic",                        focus:[20,35,45],  te:[3.5, 3.0] },
+];
+
+/* =========================
+   PHASE-DRIVEN TARGETS (E/A1/A2/A3)
+   ========================= */
+const PHASE_CTL_REL_PER_WEEK = {
+  E:  -0.003,
+  A1:  0.006,
+  A2:  0.010,
+  A3:  0.014
+};
+const PHASE_ACWR_BANDS = {
+  E:  { min: 0.75, max: 0.98 },
+  A1: { min: 0.88, max: 1.08 },
+  A2: { min: 0.92, max: 1.14 },
+  A3: { min: 0.96, max: 1.18 }
+};
+
+function normPhase(phRaw) {
+  const s = String(phRaw || "A1").trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
+  if (s === "E") return "E";
+  if (s === "A1") return "A1";
+  if (s === "A2") return "A2";
+  if (s === "A3") return "A3";
+  if (s.startsWith("A")) return "A1";
+  return "A1";
+}
+
+function getPhaseTargets(i, gate, uiMin, uiMax) {
+  const ph = normPhase(simBase?.phases?.[i] || "A1");
+  const band = PHASE_ACWR_BANDS[ph] || PHASE_ACWR_BANDS.A1;
+
+  let acwrMin = Math.max(uiMin, band.min);
+  let acwrMax = Math.min(uiMax, band.max);
+
+  if (gate === "hard") acwrMax = Math.min(acwrMax, 1.05);
+  if (gate === "soft") acwrMax = Math.min(acwrMax, 1.15);
+
+  const ctlRelPerDay = (PHASE_CTL_REL_PER_WEEK[ph] ?? 0.006) / 7.0;
+  return { ph, ctlRelPerDay, acwrMin, acwrMax };
+}
+
+/* =========================
+   GATES
+   ========================= */
+function renderGateInfo() {
+  const tr = simBase?.trObsToday;
+  const hrvD = simBase?.hrvDeltaLowToday;
+
+  let txt = "";
+  let cls = "ok";
+
+  const hard = (typeof tr === "number" && tr < 45) || (typeof hrvD === "number" && hrvD < 0);
+  const soft = !hard && (
+    (typeof tr === "number" && tr >= 45 && tr < 60) ||
+    (typeof hrvD === "number" && hrvD >= 0 && hrvD < 2)
+  );
+
+  if (hard) { txt = `Harte Bremse aktiv (TR=${tr ?? "?"}, HRVΔlow=${hrvD ?? "?"})`; cls="bad"; }
+  else if (soft) { txt = `Weiche Bremse aktiv (TR=${tr ?? "?"}, HRVΔlow=${hrvD ?? "?"})`; cls="warn"; }
+  else { txt = `Gate ok (TR=${tr ?? "?"}, HRVΔlow=${hrvD ?? "?"})`; cls="ok"; }
+
+  const box = $("gateBox");
+  if (!box) return;
+  box.innerHTML = `<span class="${cls}">${txt}</span>`;
+}
+
+function gateLevel() {
+  const tr = simBase?.trObsToday;
+  const hrvD = simBase?.hrvDeltaLowToday;
+
+  const hard = (typeof tr === "number" && tr < 45) || (typeof hrvD === "number" && hrvD < 0);
+  if (hard) return "hard";
+
+  const soft = (typeof tr === "number" && tr >= 45 && tr < 60) || (typeof hrvD === "number" && hrvD >= 0 && hrvD < 2);
+  if (soft) return "soft";
+
+  return "ok";
+}
+
+function getSeed() {
+  // gleiche Robustheit wie PlanApp:getSeedState()
+  const atl0 = p(simBase?.atlYesterday ?? simBase?.atl_yesterday ?? simBase?.atlPrev ?? simBase?.atl_prev ?? simBase?.atl);
+  const ctl0 = p(simBase?.ctlYesterday ?? simBase?.ctl_yesterday ?? simBase?.ctlPrev ?? simBase?.ctl_prev ?? simBase?.ctl);
+
+  let atl = (Number.isFinite(atl0) && atl0 > 0) ? atl0 : 50;
+  let ctl = (Number.isFinite(ctl0) && ctl0 > 0) ? ctl0 : 50;
+
+  const seedBox = $("seedBox");
+  if (seedBox) seedBox.textContent = `Seed: ATL=${Math.round(atl)} CTL=${Math.round(ctl)}`;
+
+  return { atl, ctl };
+}
+
+
+function simulateAtlCtl(loads) {
+  const cfg = simBase?.config || {};
+
+  const S_ATL = p(cfg.S_ATL);
+  const B_ATL = p(cfg.B_ATL);
+  const wH_ATL = p(cfg.wH_ATL) || 0;
+  const wS_ATL = p(cfg.wS_ATL) || 0;
+
+  const alpha_ATL_up   = p(cfg.alpha_ATL_up)   || 0.25;
+  const alpha_ATL_down = p(cfg.alpha_ATL_down) || 0.10;
+
+  const cap_up_ATL   = p(cfg.cap_up_ATL)   || 1000;
+  const cap_down_ATL = p(cfg.cap_down_ATL) || 1000;
+
+  const S_CTL = p(cfg.S_CTL);
+  const B_CTL = p(cfg.B_CTL);
+  const wH_CTL = p(cfg.wH_CTL) || 0;
+  const wS_CTL = p(cfg.wS_CTL) || 0;
+
+  const alpha_CTL = p(cfg.alpha_CTL) || 0.10;
+
+  if (!S_ATL || !S_CTL) {
+    const n = loads.length;
+    return { atlArr: new Array(n).fill(NaN), ctlArr: new Array(n).fill(NaN), acwrArr: new Array(n).fill(NaN), acwr: new Array(n).fill(NaN), ctlEnd: NaN };
+  }
+
+  // Seed
+  const seed0 = getSeed();
+  let tATL = Number(seed0.atl) || 0;
+  let tCTL = Number(seed0.ctl) || 0;
+
+  // todayIsClosed shift wie PlanApp
+  const startI = simBase?.todayIsClosed ? 1 : 0;
+
+  // Sleep defaults (wie PlanApp)
+  const sleepHoursDefault = p(simBase?.sleepHoursDefault) || p(cfg.sleep_hours_default) || 0;
+  const sleepScoreDefault = p(simBase?.sleepScoreDefault) || p(cfg.sleep_score_default) || 0;
+
+  // k aus dbgK (wie bisher in FB), aber neutral wenn nicht gesetzt
+  let k = 1.0;
+  const kEl = $("dbgK");
+  if (kEl && kEl.textContent) {
+    const m = kEl.textContent.match(/k\s*=\s*([0-9.]+)/i);
+    if (m) k = Number(m[1]) || 1.0;
+  }
+
+  const atlArr = [];
+  const ctlArr = [];
+  const acwrArr = [];
+
+  for (let i = 0; i < loads.length; i++) {
+
+    // Tag0 nur anzeigen wenn closed (wie PlanApp)
+    if (i < startI) {
+      const acwr0 = tATL / (tCTL || 1);
+      atlArr.push(tATL);
+      ctlArr.push(tCTL);
+      acwrArr.push(acwr0);
+      continue;
+    }
+
+    const L_ess = Number(loads[i]) || 0;
+    const L_internal = (k || 1) * L_ess;
+
+    const sleepH = (i === 0) ? p(simBase?.sleepHoursToday) : sleepHoursDefault;
+    const sleepS = (i === 0) ? p(simBase?.sleepScoreToday) : sleepScoreDefault;
+
+    // ATL (PlanApp-like)
+    const stimATL = (S_ATL * L_internal) + B_ATL + (wH_ATL * sleepH) + (wS_ATL * sleepS);
+    const aATL = (stimATL > tATL) ? alpha_ATL_up : alpha_ATL_down;
+    const rawATL = (1 - aATL) * tATL + aATL * stimATL;
+    tATL = Math.min(Math.max(rawATL, tATL - cap_down_ATL), tATL + cap_up_ATL);
+
+    // CTL (PlanApp-like)
+    const stimCTL = (S_CTL * L_internal) + B_CTL + (wH_CTL * sleepH) + (wS_CTL * sleepS);
+    tCTL = (1 - alpha_CTL) * tCTL + alpha_CTL * stimCTL;
+
+    const acwr = tATL / (tCTL || 1);
+
+    atlArr.push(tATL);
+    ctlArr.push(tCTL);
+    acwrArr.push(acwr);
+  }
+
+  return { atlArr, ctlArr, acwrArr, acwr: acwrArr, ctlEnd: ctlArr.length ? ctlArr[ctlArr.length - 1] : tCTL };
+}
+
+
+
+/* =========================
+   DAYS + TABLE
+   ========================= */
+function buildInitialDays() {
+  days = [];
+
+  let startDate;
+  if (simBase?.todayDateMs) startDate = new Date(simBase.todayDateMs);
+  else {
+    startDate = new Date();
+    startDate.setHours(0,0,0,0);
+  }
+
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(startDate);
+    d.setDate(d.getDate() + i);
+    const dateStr = dateStrLocal(d);
+
+    const intent = "endurance";
+    const meta = INTENTS.find(x => x.key === intent) || INTENTS[1];
+
+    let load = 60;
+
+// 1) vorhandene geplante Loads (coachE_ESS_day) verwenden
+// 1) vorhandene geplante Loads (coachE_ESS_day) verwenden (robust gegen "45" als String)
+if (Array.isArray(simBase?.plannedLoads)) {
+  const vPlan = Number(simBase.plannedLoads[i]);
+  if (Number.isFinite(vPlan)) load = vPlan;
+}
+
+
+// 2) Tag 0: NUR FALLBACK auf FB, wenn coachE_ESS_day fehlt oder 0 ist
+if (i === 0) {
+  const vPlan0 = Array.isArray(simBase?.plannedLoads) ? Number(simBase.plannedLoads[0]) : NaN;
+  if (!(Number.isFinite(vPlan0) && vPlan0 > 0)) {
+    const vFb = Number(simBase?.loadFbToday);
+    if (Number.isFinite(vFb) && vFb > 0) load = vFb;
+  }
+}
+
+    days.push({
+      dateStr,
+      load,
+      intent,
+      focusLow: meta.focus[0],
+      focusHigh: meta.focus[1],
+      focusAna: meta.focus[2],
+      teAe: (Array.isArray(simBase?.plannedTeAe) && Number.isFinite(simBase.plannedTeAe[i])) ? Number(simBase.plannedTeAe[i]) : meta.te[0],
+teAn: (Array.isArray(simBase?.plannedTeAn) && Number.isFinite(simBase.plannedTeAn[i])) ? Number(simBase.plannedTeAn[i]) : meta.te[1],
+lock: (Array.isArray(simBase?.lockedDays) && !!simBase.lockedDays[i]) ? true : false,
+sport: (Array.isArray(simBase?.plannedSports) && simBase.plannedSports[i]) ? String(simBase.plannedSports[i]) : "Bike",
+zone:  (Array.isArray(simBase?.plannedZones)  && simBase.plannedZones[i])  ? String(simBase.plannedZones[i])  : "Z2"
+
+    });
+  }
+}
+
+function renderTable() {
+  const tbody = document.querySelector("#planTable tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  days.forEach((day, i) => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML += `<td><b>${day.dateStr}</b></td>`;
+    const ph = normPhase(simBase?.phases?.[i] || "A1");
+    tr.innerHTML += `<td class="mono">${ph}</td>`;
+
+    tr.innerHTML += `
+  <td>
+    <div class="row" style="gap:10px;">
+      <input id="loadR_${i}" type="range" min="0" max="300" value="${day.load}"
+             oninput="onLoadLive(${i}, this.value)" />
+      <span class="pill mono" id="loadLbl_${i}" title="aktuelle Load">${day.load}</span>
+      <input id="loadN_${i}" type="number" min="0" max="300" value="${day.load}" style="width:70px"
+             oninput="onLoadLive(${i}, this.value)" />
+    </div>
+  </td>`;
+
+
+    tr.innerHTML += `
+      <td>
+        <select onchange="onIntent(${i}, this.value)">
+          ${INTENTS.map(x=>`<option value="${x.key}" ${x.key===day.intent?"selected":""}>${x.label}</option>`).join("")}
+        </select>
+      </td>`;
+
+    tr.innerHTML += `<td>${day.focusLow}/${day.focusHigh}/${day.focusAna}</td>`;
+
+    tr.innerHTML += `
+      <td><input type="number" step="0.1" value="${day.teAe}" style="width:60px" onchange="onTe(${i}, 'ae', this.value)" /></td>
+      <td><input type="number" step="0.1" value="${day.teAn}" style="width:60px" onchange="onTe(${i}, 'an', this.value)" /></td>`;
+
+    tr.innerHTML += `
+      <td id="ctl_${i}" style="font-weight:700;">-</td>
+      <td id="acwr_${i}" style="font-weight:700;">-</td>
+      <td id="sg_${i}" style="font-weight:800;">-</td>`;
+
+    tr.innerHTML += `<td><input type="checkbox" ${day.lock?"checked":""} onchange="onLock(${i}, this.checked)" /></td>`;
+
+    tbody.appendChild(tr);
+  });
+}
+
+function onLoad(i, v) {
+  const n = clamp(Number(v), 0, 300);
+  if (Number.isFinite(n)) days[i].load = n;
+
+  updateDerivedColumnsFromCurrentLoads();
+  updateChartFromCurrent();
+}
+
+function onLoadLive(i, v) {
+  const n = clamp(Number(v), 0, 300);
+  if (!Number.isFinite(n)) return;
+
+  days[i].load = n;
+
+  // UI sync
+  const r = document.getElementById(`loadR_${i}`);
+  const num = document.getElementById(`loadN_${i}`);
+  const lbl = document.getElementById(`loadLbl_${i}`);
+
+  if (r && Number(r.value) !== n) r.value = String(n);
+  if (num && Number(num.value) !== n) num.value = String(n);
+  if (lbl) lbl.textContent = String(n);
+
+  // derived + chart live
+  updateDerivedColumnsFromCurrentLoads();
+  updateChartFromCurrent();
+}
+
+
+function onIntent(i, key) {
+  const meta = INTENTS.find(x=>x.key===key) || INTENTS[1];
+  days[i].intent = key;
+  days[i].focusLow  = meta.focus[0];
+  days[i].focusHigh = meta.focus[1];
+  days[i].focusAna  = meta.focus[2];
+  days[i].teAe = meta.te[0];
+  days[i].teAn = meta.te[1];
+
+  renderTable();
+  updateDerivedColumnsFromCurrentLoads();
+  updateChartFromCurrent();
+}
+
+function onTe(i, which, v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return;
+  if (which === "ae") days[i].teAe = n;
+  if (which === "an") days[i].teAn = n;
+
+  // optional live
+  updateDerivedColumnsFromCurrentLoads();
+  updateChartFromCurrent();
+}
+
+function onLock(i, b) {
+  days[i].lock = !!b;
+
+  // Locks beeinflussen Simulation sofort sichtbar machen
+  updateDerivedColumnsFromCurrentLoads();
+  updateChartFromCurrent();
+}
+
+function onGoalModeChange() {
+  // no-op; wird in autoPlan gelesen
+}
+
+/* =========================
+   DERIVED COLUMNS + SMARTGAINS
+   ========================= */
+function updateDerivedColumnsFromCurrentLoads() {
+  const loads = days.map(d => Number(d.load) || 0);
+  const sim = simulateAtlCtl(loads);
+
+  const atlArr  = sim.atlArr  || [];
+  const ctlArr  = sim.ctlArr  || [];
+  const acwrArr = sim.acwrArr || sim.acwr || [];
+  const sgArr   = computeSmartGains({ loads, atlArr, ctlArr });
+
+  for (let i = 0; i < loads.length; i++) {
+    const ctlEl  = document.getElementById(`ctl_${i}`);
+    const acwrEl = document.getElementById(`acwr_${i}`);
+    const sgEl   = document.getElementById(`sg_${i}`);
+
+    const ctlVal  = ctlArr[i];
+    const acwrVal = acwrArr[i];
+    const sgVal   = sgArr[i];
+
+    if (ctlEl) ctlEl.textContent = Number.isFinite(ctlVal) ? Math.round(ctlVal) : "-";
+
+    if (acwrEl) {
+      if (Number.isFinite(acwrVal)) {
+        acwrEl.textContent = acwrVal.toFixed(2);
+        acwrEl.className = (acwrVal > 1.25) ? "bad" : (acwrVal >= 0.80 ? "ok" : "warn");
+      } else {
+        acwrEl.textContent = "-";
+        acwrEl.className = "";
+      }
+    }
+
+    if (sgEl) {
+      if (Number.isFinite(sgVal)) {
+        sgEl.textContent = (sgVal > 0 ? "+" : "") + sgVal.toFixed(1);
+        sgEl.className =
+          (sgVal > 181) ? "bad" :
+          (sgVal >= 122) ? "ok" :
+          (sgVal >= 80) ? "ok" :
+          (sgVal >= 28) ? "warn" : "bad";
+      } else {
+        sgEl.textContent = "-";
+        sgEl.className = "";
+      }
+    }
+  }
+}
+
+function computeSmartGains({ loads, atlArr, ctlArr }) {
+  const out = new Array(loads.length).fill(null);
+
+  // ---- Recovery / Monotony robust lesen ----
+  const hrv   = Number(simBase?.hrvToday);
+  const sleep = Number(simBase?.sleepToday);
+  const mono  = Number(simBase?.monoToday);
+
+  // Nur wenn Werte finite sind, bewerten – sonst neutral bleiben
+  const recoveryMod =
+    ((Number.isFinite(hrv) && hrv < 40) || (Number.isFinite(sleep) && sleep < 70))
+      ? 1.5
+      : 1.0;
+
+  const monotonyPenalty =
+    (Number.isFinite(mono) && mono > 2.0) ? 15 : 0;
+
+  // ---- CTL-History bis gestern (t-7..t-1) ----
+  let hist = Array.isArray(simBase?.ctlHistoryYesterday) ? [...simBase.ctlHistoryYesterday] : [];
+
+  // Wir erwarten hist als [t-7 .. t-1] (alt -> neu).
+  // Manche Backends liefern aber neu->alt. Dann drehen wir um, indem wir prüfen,
+  // ob hist[letztes] näher an ctlYesterday liegt als hist[erstes].
+  const ctlY = Number(simBase?.ctlYesterday);
+  if (hist.length >= 2 && Number.isFinite(ctlY)) {
+    const dFirst = Math.abs(Number(hist[0]) - ctlY);
+    const dLast  = Math.abs(Number(hist[hist.length - 1]) - ctlY);
+    if (dFirst < dLast) hist.reverse(); // falls erstes näher an "gestern" ist -> neu->alt -> drehen
+  }
+
+  // jetzt die letzten 7 Tage als [t-7..t-1] behalten
+  hist = hist.slice(-7);
+
+  // Fallback: wie bei dir – mit erstem CTL auffüllen
+  const ctl0 = Number(ctlArr?.[0]) || 0;
+  while (hist.length < 7) hist.unshift(ctl0);
+
+  // combined: [t-7..t-1] + [t..t+13]
+  const ctlCombined = hist.concat((ctlArr || []).map(x => Number(x)));
+
+  for (let i = 0; i < loads.length; i++) {
+    const ctl = Number(ctlArr?.[i]);
+    const atl = Number(atlArr?.[i]);
+    if (!Number.isFinite(ctl) || !Number.isFinite(atl)) continue;
+
+    // PlanApp: ctl7DaysAgo = history[0] (rollierend).
+    // In combined entspricht das: ctl(t-7+i) => ctlCombined[i]
+    const ctl7DaysAgo = Number(ctlCombined?.[i]);
+
+    // Guard: wenn ctl7DaysAgo nicht finite ist, Trend neutral
+    const ctl7DaysAgoSafe = Number.isFinite(ctl7DaysAgo) ? ctl7DaysAgo : ctl;
+
+    const trendComp  = (ctl - ctl7DaysAgoSafe) * 2.0;
+    const statusComp = ctl / 10.0;
+    const strainEst  = atl * 7;
+    const costComp   = (strainEst / 500.0) * recoveryMod;
+
+    out[i] = trendComp + statusComp - costComp - monotonyPenalty;
+  }
+
+  return out;
+}
+
+
+/* =========================
+   AUTOPLAN (wie bei dir; nur minimal stabilisiert)
+   ========================= */
+function applyGateToLoad(load, gate) {
+  if (gate === "hard") return load * 0.70;
+  if (gate === "soft") return load * 0.88;
+  return load;
+}
+
+function isHardRestLock(i) {
+  if (i < 0 || i >= days.length) return false;
+  if (!days[i].lock) return false;
+  const L = Number(days[i].load) || 0;
+  return L <= 10; // genau dein Problemfall
+}
+
+
+
+function normalizeLocks() {
+  for (let i = 0; i < days.length; i++) {
+    if (!days[i].lock) continue;
+
+    const L = Number(days[i].load);
+    if (!Number.isFinite(L)) continue;
+
+    // Wenn User einen lockt und <=10 setzt: als Recovery behandeln,
+    // aber Load NICHT überschreiben (sonst wird 10 -> 0 und du hasst es zurecht).
+    if (L <= 10) {
+      days[i].intent = "recovery";
+    }
+  }
+}
+
+// ===============================
+// ACWR-Constraint Helper (zentral, konsistent)
+// Verortung: oberhalb von autoPlan()
+// ===============================
+
+const MIN_TRAIN_LOAD = 20; // definiert "echter Trainingstag" für Constraints
+
+function isHardRestLoad(load) {
+  const L = Number(load) || 0;
+  return L < MIN_TRAIN_LOAD; // 0..19 gilt als "Hard Rest/zu wenig Reiz" für ACWR-Min
+}
+
+// optional: Tag nach einem Hard-Rest-Lock aus ACWR-Min rausnehmen
+function isPostHardRestDay(idx, loads) {
+  if (idx <= 0) return false;
+  // Wenn Vortag LOCKED und Hard Rest war, dann Folgetag ist "post hard rest"
+  return !!days[idx - 1]?.lock && isHardRestLoad(loads[idx - 1]);
+}
+
+function isTrainingDayForConstraints(idx, loads) {
+  const L = Number(loads[idx]) || 0;
+
+  // Recovery-Tage gehören nicht in ACWR-Min/Max Bewertung
+  if (days[idx]?.intent === "recovery") return false;
+
+  // "Hard Rest" (egal ob locked oder nicht) nicht in ACWR-Min/Max Bewertung
+  if (L < MIN_TRAIN_LOAD) return false;
+
+  // Optional (sehr empfehlenswert bei deinen Beobachtungen):
+  // Tag NACH einem locked Hard-Rest rausnehmen, weil ATL dort künstlich low ist
+  if (isPostHardRestDay(idx, loads)) return false;
+
+  return true;
+}
+
+
+function autoPlan() {
+  const btn = $("btnAutoPlan");
+  if (btn) btn.disabled = true;
+
+  try {
+    if (!simBase) simBase = {};
+    if (!simBase.config) throw new Error("simBase.config fehlt – getSimStartValues liefert kein config.");
+
+    const cfg = simBase.config;
+
+    // Falls du das hast: sorgt z.B. dafür, dass Locks/Loads konsistent sind
+    if (typeof normalizeLocks === "function") normalizeLocks();
+
+    const gate = gateLevel();
+
+    const uiMax = clamp(p($("acwrMaxInput")?.value), 0.90, 2.00) || 1.25;
+    const uiMin = clamp(p($("acwrMinInput")?.value), 0.50, 1.20) || 0.80;
+
+    // Phase-Info (Tag 0)
+    const t0 = getPhaseTargets(0, gate, uiMin, uiMax);
+    const phaseBox = $("phaseBox");
+    if (phaseBox) {
+      phaseBox.textContent =
+        `Phase0=${t0.ph} | dCTL=${(t0.ctlRelPerDay * 100).toFixed(3)}% | ACWR ${t0.acwrMin.toFixed(2)}..${t0.acwrMax.toFixed(2)}`;
+    }
+
+    const ACWR_MAX =
+      (gate === "hard") ? Math.min(uiMax, 1.05) :
+      (gate === "soft") ? Math.min(uiMax, 1.15) :
+      uiMax;
+
+    const ACWR_MIN = uiMin;
+
+    const goalMode = ($("goalMode") && $("goalMode").value) ? $("goalMode").value : "build";
+
+    // ---------------------------
+    // Intent Pattern (Quality Days)
+    // ---------------------------
+    const qualityIntents = ["tempo", "vo2", "anaerobic"];
+
+    for (let i = 0; i < days.length; i++) {
+      if (days[i].lock) continue;
+
+      if (gate === "hard") {
+        if (qualityIntents.includes(days[i].intent)) onIntent(i, "endurance");
+      } else if (gate === "soft") {
+        if (qualityIntents.includes(days[i].intent) && (i % 3 !== 1)) onIntent(i, "endurance");
+      } else {
+        if (i % 7 === 2) onIntent(i, "tempo");
+        if (i % 7 === 5) onIntent(i, "vo2");
+      }
+    }
+
+    // ---------------------------
+    // CTL params
+    // ---------------------------
+    const alphaCTL = p(cfg.alpha_CTL) || 0.10;
+    const S_CTL = p(cfg.S_CTL);
+    const B_CTL = p(cfg.B_CTL);
+    if (!S_CTL) throw new Error("config.S_CTL ist 0/leer – kann nicht simulieren.");
+
+    const todayCTL_obs = p(simBase.todayCTL_obs);
+    const todayLoadESS = p(simBase.todayLoad);
+    let ctlYesterday = p(simBase.ctlYesterday);
+
+    // Fallback: ctlYesterday aus todayCTL_obs rückwärts, falls ctlYesterday fehlt
+    if ((!Number.isFinite(ctlYesterday) || ctlYesterday <= 0) && Number.isFinite(todayCTL_obs) && todayCTL_obs > 0) {
+      const stimCTL_guess = (S_CTL * (1.0 * todayLoadESS)) + B_CTL; // k=1 guess
+      const denom = (1 - alphaCTL);
+      if (Math.abs(denom) > 1e-6) {
+        ctlYesterday = (todayCTL_obs - alphaCTL * stimCTL_guess) / denom;
+        if (!Number.isFinite(ctlYesterday) || ctlYesterday <= 0) ctlYesterday = todayCTL_obs;
+      } else {
+        ctlYesterday = todayCTL_obs;
+      }
+    }
+
+    // ===============================
+    // k-Kalibrierung (konservativ, guardrails)
+    // ===============================
+    const MIN_TRAIN_LOAD = 20;       // „echter“ Trainingstag (ESS)
+    const MIN_LOAD_FOR_K = 20;       // nicht bei Mini-Loads kalibrieren
+    const K_MIN = 0.85;
+    const K_MAX = 1.15;
+
+    let k = 1.0;
+    let kNote = "k=1 (fallback)";
+
+    const miss = [];
+    if (!(Number.isFinite(todayCTL_obs) && todayCTL_obs > 0)) miss.push("todayCTL_obs");
+    if (!(Number.isFinite(ctlYesterday) && ctlYesterday > 0)) miss.push("ctlYesterday");
+    if (!(Number.isFinite(todayLoadESS) && todayLoadESS >= MIN_LOAD_FOR_K)) miss.push(`todayLoad(>=${MIN_LOAD_FOR_K})`);
+
+    const canCalibrate = (miss.length === 0);
+
+    if (canCalibrate) {
+      // todayCTL_obs = (1-a)*ctlYesterday + a*(S_CTL*(k*todayLoadESS) + B_CTL)
+      const targetStimCTL = (todayCTL_obs - (1 - alphaCTL) * ctlYesterday) / alphaCTL;
+      const kRaw = (targetStimCTL - B_CTL) / (S_CTL * todayLoadESS);
+
+      if (Number.isFinite(kRaw) && kRaw >= K_MIN && kRaw <= K_MAX) {
+        k = kRaw;
+        kNote = `k=${k.toFixed(3)} (kalibriert, guardrail ok)`;
+      } else {
+        k = 1.0;
+        kNote = `k=1 (kalibrierung verworfen: kRaw=${Number.isFinite(kRaw) ? kRaw.toFixed(3) : "NaN"})`;
+      }
+    } else {
+      k = 1.0;
+      kNote = `k=1 (keine Kalibrierung; fehlt: ${miss.join(", ")})`;
+    }
+
+    const dbg = $("dbgK");
+    if (dbg) dbg.textContent = kNote;
+
+    // ---------------------------
+    // Helpers: ESS aus Target-CTL rückrechnen
+    // ---------------------------
+    function loadEssForTargetCTL(currentCTL, targetCTL) {
+      const targetStimCTL = ((targetCTL - (1 - alphaCTL) * currentCTL) / alphaCTL);
+      const loadInternal = (targetStimCTL - B_CTL) / S_CTL;
+      return loadInternal / (k || 1);
+    }
+
+    function intentMultiplier(intentKey) {
+      if (intentKey === "tempo") return 1.10;
+      if (intentKey === "vo2") return 1.18;
+      if (intentKey === "anaerobic") return 1.22;
+      if (intentKey === "recovery") return 0.70;
+      return 1.00;
+    }
+
+    // ===============================
+    // Post-Rest Ramp (Lock=0 darf Solver nicht zerstören)
+    // ===============================
+    function isHardRestLockDay(i) {
+      return !!days[i]?.lock && (Number(days[i]?.load) || 0) < MIN_TRAIN_LOAD; // LOCK + 0..19
+    }
+    function isPostHardRestDay(i) {
+      return i > 0 && isHardRestLockDay(i - 1);
+    }
+    function lastTrainLoadBefore(i, loads) {
+      for (let j = i - 1; j >= 0; j--) {
+        const Lj = Number(loads[j]) || 0;
+        if (days[j]?.intent === "recovery") continue;
+        if (Lj >= MIN_TRAIN_LOAD) return Lj;
+      }
+      return MIN_TRAIN_LOAD;
+    }
+    function applyPostRestRamp(loads) {
+      const out = [...loads];
+
+      for (let i = 0; i < out.length; i++) {
+        if (days[i]?.lock) {
+          out[i] = clamp(Math.round(Number(days[i].load) || 0), 0, 300);
+          continue;
+        }
+
+        // Tag +1 nach HardRest-Lock: cap
+        if (isPostHardRestDay(i)) {
+          const prevTrain = lastTrainLoadBefore(i, out);
+          const cap = Math.max(MIN_TRAIN_LOAD, Math.round(Math.max(prevTrain * 1.25, prevTrain + 30)));
+          out[i] = clamp(Math.min(out[i], cap), 0, 300);
+          if (out[i] < MIN_TRAIN_LOAD && days[i].intent !== "recovery") out[i] = MIN_TRAIN_LOAD;
+        }
+
+        // Tag +2 nach HardRest-Lock: cap lockerer
+        if (i > 1 && isHardRestLockDay(i - 2)) {
+          const prevTrain = lastTrainLoadBefore(i, out);
+          const cap = Math.max(MIN_TRAIN_LOAD, Math.round(Math.max(prevTrain * 1.35, prevTrain + 45)));
+          out[i] = clamp(Math.min(out[i], cap), 0, 300);
+          if (out[i] < MIN_TRAIN_LOAD && days[i].intent !== "recovery") out[i] = MIN_TRAIN_LOAD;
+        }
+      }
+
+      return out;
+    }
+
+    // ---------------------------
+    // Basisplan aus CTL-Ziel (rawLoads)
+    // WICHTIG: Locks -> runningCTL trotzdem fortschreiben!
+    // ---------------------------
+    const seed0 = getSeed();
+    let runningCTL = (Number.isFinite(ctlYesterday) && ctlYesterday > 0) ? ctlYesterday : seed0.ctl;
+
+    const rawLoads = [];
+    for (let i = 0; i < days.length; i++) {
+      // LOCK: übernehmen, aber CTL weiterrechnen (sonst „verzerrt“ es die ganze Woche)
+      if (days[i].lock) {
+        const Llock = clamp(Math.round(Number(days[i].load) || 0), 0, 300);
+        rawLoads.push(Llock);
+
+        const loadInternal = (k || 1) * Llock;
+        const stimCTL = (S_CTL * loadInternal) + B_CTL;
+        runningCTL = (1 - alphaCTL) * runningCTL + alphaCTL * stimCTL;
+        continue;
+      }
+
+      const pt = getPhaseTargets(i, gate, uiMin, uiMax);
+      const targetCTL = runningCTL * (1 + pt.ctlRelPerDay);
+
+      let L = loadEssForTargetCTL(runningCTL, targetCTL);
+      L *= intentMultiplier(days[i].intent);
+      L = applyGateToLoad(L, gate);
+      L = clamp(Math.round(L), 0, 300);
+
+      if (days[i].intent !== "recovery" && L < 10) L = MIN_TRAIN_LOAD;
+      if (days[i].intent === "recovery" && L < 10) L = 0;
+
+      rawLoads.push(L);
+
+      const loadInternal = (k || 1) * L;
+      const stimCTL = (S_CTL * loadInternal) + B_CTL;
+      runningCTL = (1 - alphaCTL) * runningCTL + alphaCTL * stimCTL;
+    }
+
+    // ---------------------------
+    // Monotonie / Variance Shape
+    // ---------------------------
+    const monoTarget = (goalMode === "build") ? 1.8 : 2.0;
+
+    function monotony(arr7) {
+      const x = (arr7 || []).filter(v => Number.isFinite(v));
+      const n = x.length;
+      if (!n) return 0;
+      const mean = x.reduce((a, b) => a + b, 0) / n;
+      const var_ = x.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / n;
+      const std = Math.sqrt(var_);
+      if (std < 1e-6) return 999;
+      return mean / std;
+    }
+
+    function applyVarianceShape(loadsIn) {
+      const loads = [...loadsIn];
+
+      // 1) Wellenform auf Endurance-Tage (unlocked)
+      for (let i = 0; i < loads.length; i++) {
+        if (days[i].lock) continue;
+        if (days[i].intent !== "endurance") continue;
+
+        const wave = [1.10, 0.92, 1.06, 0.94, 1.08, 0.90, 1.00][i % 7];
+        loads[i] = clamp(Math.round(loads[i] * wave), 0, 300);
+        if (loads[i] < 10) loads[i] = MIN_TRAIN_LOAD;
+      }
+
+      // 2) Low-Day je Woche suchen (nicht Recovery, nicht Quality, nicht locked)
+      for (let w = 0; w < 2; w++) {
+        const start = w * 7;
+        const end = Math.min(start + 7, loads.length);
+
+        let bestIdx = -1;
+        let bestLoad = Infinity;
+
+        for (let i = start; i < end; i++) {
+          if (days[i].lock) continue;
+          if (days[i].intent === "recovery") continue;
+          if (qualityIntents.includes(days[i].intent)) continue;
+
+          if (loads[i] < bestLoad) {
+            bestLoad = loads[i];
+            bestIdx = i;
+          }
+        }
+
+        if (bestIdx >= 0) {
+          loads[bestIdx] = clamp(Math.round(loads[bestIdx] * 0.65), 0, 300);
+
+          // niemals 0 als Low-Day außer echte Recovery
+          if (days[bestIdx].intent === "recovery") {
+            if (loads[bestIdx] < 10) loads[bestIdx] = 0;
+          } else {
+            if (loads[bestIdx] < 10) loads[bestIdx] = MIN_TRAIN_LOAD;
+          }
+        }
+      }
+
+      return loads;
+    }
+
+    // ---------------------------
+    // Global Scale + PostRestRamp
+    // ---------------------------
+    function applyGlobalScale(loadsBase, scale) {
+      const scaled = loadsBase.map((L, i) =>
+        days[i].lock ? clamp(Math.round(Number(days[i].load) || 0), 0, 300)
+                     : clamp(Math.round(L * scale), 0, 300)
+      );
+      return applyPostRestRamp(scaled); // ✅ entscheidend
+    }
+
+    let baseLoads = applyVarianceShape(rawLoads);
+    let bestLoads = baseLoads;
+    let bestScore = Infinity;
+
+    // ---------------------------
+    // Bisection / Optimierung
+    // ---------------------------
+for (let round = 0; round < 4; round++) {
+  let lo = 0.55, hi = 1.90, best = 1.00;
+
+  for (let it = 0; it < 14; it++) {
+    const mid = (lo + hi) / 2;
+
+    const testLoads = applyGlobalScale(baseLoads, mid);
+    const sim = simulateAtlCtl(testLoads);
+    const acwr = sim.acwr || [];
+
+    // Nur valide ACWR-Werte für Constraints (Trainingstage gemäß Helper!)
+    const acwrForConstraints = acwr
+      .map((v, idx) => ({ v, idx }))
+      .filter(o => Number.isFinite(o.v))
+      .filter(o => isTrainingDayForConstraints(o.idx, testLoads))
+      .map(o => o.v);
+
+    // Feasibility: wenn KEINE Trainingstage übrig sind, nicht weiter optimieren
+    if (!acwrForConstraints.length) {
+      best = 1.00;
+      break;
+    }
+
+    const maxA = Math.max(...acwrForConstraints);
+    const minA = Math.min(...acwrForConstraints);
+
+    if (maxA > ACWR_MAX) hi = mid;
+    else if (minA < ACWR_MIN) lo = mid;
+    else {
+      best = mid;
+      if (goalMode === "build") lo = mid;
+      else hi = mid;
+    }
+  }
+
+  const scaled = applyGlobalScale(baseLoads, best);
+  const simFinal = simulateAtlCtl(scaled);
+
+  const m1 = monotony(scaled.slice(0, 7));
+  const m2 = monotony(scaled.slice(7, 14));
+  const mWorst = Math.max(m1, m2);
+
+  // Score: (optional gefiltert; hier bewusst robust)
+  const acwrFinal = simFinal.acwr || [];
+  const acwrForScore = acwrFinal
+    .map((v, idx) => ({ v, idx }))
+    .filter(o => Number.isFinite(o.v))
+    .filter(o => days[o.idx].intent !== "recovery")
+    .filter(o => (Number(scaled[o.idx]) || 0) >= MIN_TRAIN_LOAD)
+    .map(o => o.v);
+
+  const maxA = acwrForScore.length ? Math.max(...acwrForScore) : NaN;
+  const minA = acwrForScore.length ? Math.min(...acwrForScore) : NaN;
+
+  let score = 0;
+  score += Math.max(0, mWorst - monoTarget) * 10;
+  if (Number.isFinite(maxA)) score += Math.max(0, maxA - ACWR_MAX) * 100;
+  if (Number.isFinite(minA)) score += Math.max(0, ACWR_MIN - minA) * 100;
+
+  if (score < bestScore) {
+    bestScore = score;
+    bestLoads = scaled;
+  }
+
+  if (mWorst > monoTarget) {
+    baseLoads = baseLoads.map((L, i) => {
+      if (days[i].lock) return L;
+      if (days[i].intent !== "endurance") return L;
+      const wave = [1.14, 0.88, 1.08, 0.92, 1.10, 0.86, 1.00][i % 7];
+      return clamp(Math.round(L * wave), 0, 300);
+    });
+  } else {
+    break;
+  }
+}
+
+
+    // ---------------------------
+    // Apply final loads to days (unlocked)
+    // ---------------------------
+    for (let i = 0; i < days.length; i++) {
+      if (days[i].lock) continue;
+
+      days[i].load = clamp(Math.round(Number(bestLoads[i]) || 0), 0, 300);
+
+      if (days[i].intent !== "recovery" && days[i].load < 10) days[i].load = MIN_TRAIN_LOAD;
+      if (days[i].intent === "recovery" && days[i].load < 10) days[i].load = 0;
+    }
+
+    renderTable();
+    updateDerivedColumnsFromCurrentLoads();
+    updateChartFromCurrent();
+
+    // ===============================
+// Summary oben ("Sim: ACWR ...") – konsistent zu den Constraints
+// Verortung: am Ende von autoPlan(), nach renderTable()/updateChart...
+// ===============================
+
+const simSum = simulateAtlCtl(days.map(d => d.load));
+const acwrAll = simSum.acwr || [];
+const loadsAll = days.map(d => Number(d.load) || 0);
+
+const acwrForSummary = acwrAll
+  .map((v, idx) => ({ v, idx }))
+  .filter(o => Number.isFinite(o.v))
+  .filter(o => isTrainingDayForConstraints(o.idx, loadsAll))
+  .map(o => o.v);
+
+let minA2 = NaN, maxA2 = NaN;
+if (acwrForSummary.length) {
+  minA2 = Math.min(...acwrForSummary);
+  maxA2 = Math.max(...acwrForSummary);
+}
+
+const simBox = $("simBox");
+if (simBox) {
+  simBox.textContent =
+    Number.isFinite(minA2) && Number.isFinite(maxA2)
+      ? `Sim: ACWR ${minA2.toFixed(2)}..${maxA2.toFixed(2)} | CTL→${Math.round(simSum.ctlEnd)} | ${kNote}`
+      : `Sim: ACWR – | CTL→${Math.round(simSum.ctlEnd)} | ${kNote}`;
+}
+
+
+    setStatus("Auto-Plan angewendet (PostRestRamp aktiv, ACWR konsistent).", "ok");
+
+  } catch (e) {
+    showError("AutoPlan Crash: " + (e?.message || e));
+    setStatus("❌ Auto-Plan Crash: " + (e?.message || e), "bad");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+
+/* =========================
+   SAVE
+   ========================= */
+function saveToTimeline() {
+  setStatus("Speichere…", "");
+
+  if (!hasGas()) {
+    setStatus("❌ google.script.run nicht verfügbar (WebApp-Kontext fehlt).", "bad");
+    return;
+  }
+
+  const btn = $("btnSave");
+  if (btn) btn.disabled = true;
+
+  try {
+    const loads     = days.map(d=>d.load);
+    const teAeList  = days.map(d=>d.teAe);
+    const teAnList  = days.map(d=>d.teAn);
+    const sports    = days.map(d=>d.sport);
+    const zones     = days.map(d=>d.zone);
+    const locks     = days.map(d=>d.lock ? 1 : 0);
+
+    const focusLow  = days.map(d=>d.focusLow);
+    const focusHigh = days.map(d=>d.focusHigh);
+    const focusAna  = days.map(d=>d.focusAna);
+    const mode      = "fb";
+    const intentList= days.map(d=>d.intent);
+
+    google.script.run
+      .withSuccessHandler(() => setStatus("✅ In Timeline + Kalender geschrieben.", "ok"))
+      .withFailureHandler(err => setStatus("❌ Fehler: " + (err?.message || err), "bad"))
+      .saveSimulatedPlan(loads, teAeList, teAnList, sports, zones, locks, focusLow, focusHigh, focusAna, mode, intentList);
+
+  } catch (e) {
+    setStatus("❌ Save Crash: " + (e.message || e), "bad");
+    showError("Save Crash: " + (e.message || e));
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+/* =========================
+   CHART
+   ========================= */
+let myChart = null;
+
+function initChart() {
+  if (myChart) return; // einmalig
+  const canvas = document.getElementById("simChart");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+  myChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: [],
+      datasets: [
+        { label: "Load (ESS)", data: [], yAxisID: "y1", order: 3 },
+        { type: "line", label: "SmartGains", data: [], borderWidth: 2, tension: 0.25, pointRadius: 2, yAxisID: "y1", order: 2 },
+        { type: "line", label: "ACWR", data: [], borderWidth: 2, borderDash: [5,5], tension: 0.15, pointRadius: 0, yAxisID: "y2", order: 1 },
+        { type: "line", label: "CTL", data: [], borderWidth: 1, pointRadius: 0, yAxisID: "y1", order: 4 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      interaction: { mode: "index", intersect: false },
+      scales: {
+        y2: { type: "linear", display: true, position: "left", min: 0.5, max: 2.0, title: { display: true, text: "ACWR" }, grid: { drawOnChartArea: false } },
+        y1: { type: "linear", display: true, position: "right", title: { display: true, text: "Load / Score / CTL" } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+function updateChartFromCurrent() {
+  if (!myChart) initChart();
+  if (!myChart) return;
+
+  const loads = days.map(d => Number(d.load) || 0);
+  const sim = simulateAtlCtl(loads);
+
+  const atlArr  = sim.atlArr  || [];
+  const ctlArr  = sim.ctlArr  || [];
+  const acwrArr = sim.acwrArr || sim.acwr || [];
+  const sgArr   = computeSmartGains({ loads, atlArr, ctlArr });
+
+  const labels = days.map(d => d.dateStr.slice(5));
+
+  myChart.data.labels = labels;
+  myChart.data.datasets[0].data = loads;
+  myChart.data.datasets[1].data = sgArr.map(v => Number.isFinite(v) ? Math.round(v) : null);
+  myChart.data.datasets[2].data = acwrArr.map(v => Number.isFinite(v) ? Number(v.toFixed(2)) : null);
+  myChart.data.datasets[3].data = ctlArr.map(v => Number.isFinite(v) ? Math.round(v) : null);
+
+  myChart.update("none");
+}
+
+/* =========================
+   INIT
+   ========================= */
+function init() {
+  try {
+  const saved = localStorage.getItem('planAppTheme') || 'light';
+  setTheme(saved);
+} catch(e) {}
+
+  const isDebug = new URLSearchParams(window.location.search).get("debug") === "1";
+  const banner = $("fb-debug-banner");
+  if (banner) banner.style.display = isDebug ? "block" : "none";
+
+  // 1) Sofort UI mit Fallback (auch ohne Backend) befüllen
+  simBase = simBase || {};
+  buildInitialDays();
+  renderTable();
+  updateDerivedColumnsFromCurrentLoads();
+  initChart();
+  updateChartFromCurrent();
+
+  setStatus("Lade Daten…", "");
+
+  // 2) Backend-Daten nachladen (wenn WebApp-Kontext da)
+  if (!hasGas()) {
+    renderGateInfo();
+    setStatus("⚠️ Backend nicht erreichbar (Preview/Embed?) – Gate ohne Live-Daten.", "warn");
+    return;
+  }
+
+  google.script.run
+    .withSuccessHandler((base) => {
+      simBase = base || {};
+
+      buildInitialDays();
+      renderGateInfo();
+      getSeed();
+
+      renderTable();
+      updateDerivedColumnsFromCurrentLoads();
+      updateChartFromCurrent();
+
+      setStatus("Daten geladen.", "ok");
+    })
+    .withFailureHandler((err) => {
+      simBase = {};
+      renderGateInfo();
+      getSeed();
+
+      renderTable();
+      updateDerivedColumnsFromCurrentLoads();
+      updateChartFromCurrent();
+
+      setStatus("Warnung: getSimStartValues() fehlgeschlagen: " + (err?.message || err), "warn");
+    })
+    .getSimStartValues();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  try { init(); } catch (e) { showError("Init-Crash: " + (e?.message || e)); }
+});
+
+function navGoto(which) {
+  // Minimal: Wenn du noch keine Navigation hast, einfach ignorieren.
+  // Später kannst du hier window.location oder google.script.run nutzen.
+  console.log("navGoto:", which);
+}
+
+  </script>
+</body>
+</html>
