@@ -6,6 +6,106 @@ const TIMELINE_SHEET_NAME = 'KK_TIMELINE'; // Zielblatt für Werte
 const PLANAPP_SNAPSHOT_KEY = 'PLANAPP_SNAPSHOT_V1';
 const KK_BUILD_ID = '2026-01-26__charts_fix_01';
 
+/**
+ * DEBUG/DIAG: Dump representative spreadsheet data into Apps Script logs.
+ *
+ * IMPORTANT:
+ * - Logger.log writes to the Apps Script execution log (View → Logs / Executions).
+ * - It does NOT automatically go into the GitHub repo.
+ *   Workflow: run debugDump() in Apps Script → copy/paste log output into chat (or a file).
+ *
+ * Privacy: by default we only dump headers + a few rows. Increase limits consciously.
+ */
+function debugDump(options) {
+  const opt = Object.assign({
+    maxRowsPerSheet: 20,
+    includeSheets: [
+      SOURCE_TIMELINE_SHEET,
+      TIMELINE_SHEET_NAME,
+      WEEK_CONFIG_SHEET_NAME,
+      LOAD_FACTOR_SHEET_NAME,
+      ELEV_FACTOR_SHEET_NAME,
+      BASELINE_SHEET_NAME,
+      OUTPUT_HISTORY_SHEET,
+      OUTPUT_FORECAST_SHEET,
+      OUTPUT_STATUS_SHEET,
+      OUTPUT_PLAN_SHEET
+    ],
+    // dump only first N columns to keep logs readable
+    maxCols: 30,
+    // if true, includes full values (still capped by maxRows/maxCols)
+    includeValues: true
+  }, options || {});
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const tz = Session.getScriptTimeZone();
+
+  Logger.log('=== Coach_Kira debugDump ===');
+  Logger.log(`Spreadsheet: ${ss.getName()} (${ss.getId()})`);
+  Logger.log(`Time: ${Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd HH:mm:ss')} (${tz})`);
+  Logger.log(`Build: ${KK_BUILD_ID}`);
+
+  const sheetNames = ss.getSheets().map(s => s.getName());
+  Logger.log(`Sheets (${sheetNames.length}): ${sheetNames.join(', ')}`);
+
+  const seen = new Set();
+  opt.includeSheets
+    .filter(Boolean)
+    .map(String)
+    .forEach(name => {
+      if (seen.has(name)) return;
+      seen.add(name);
+
+      const sh = ss.getSheetByName(name);
+      if (!sh) {
+        Logger.log(`--- Sheet '${name}': NOT FOUND`);
+        return;
+      }
+
+      const lastRow = sh.getLastRow();
+      const lastCol = sh.getLastColumn();
+      Logger.log(`--- Sheet '${name}': rows=${lastRow}, cols=${lastCol}`);
+
+      if (lastRow === 0 || lastCol === 0) {
+        Logger.log('(empty)');
+        return;
+      }
+
+      const numRows = Math.min(lastRow, Math.max(1, opt.maxRowsPerSheet));
+      const numCols = Math.min(lastCol, Math.max(1, opt.maxCols));
+
+      // Read values in one go (fast). Note: will include headers + first data rows.
+      const rng = sh.getRange(1, 1, numRows, numCols);
+      const values = rng.getDisplayValues();
+
+      // Header row always
+      const header = values[0] || [];
+      Logger.log(`Header[1]: ${JSON.stringify(header)}`);
+
+      if (!opt.includeValues) return;
+
+      // Remaining rows (up to maxRowsPerSheet)
+      for (let r = 1; r < values.length; r++) {
+        const row = values[r];
+        // Skip completely empty rows to reduce noise
+        const isEmpty = row.every(c => String(c).trim() === '');
+        if (isEmpty) continue;
+        Logger.log(`Row[${r + 1}]: ${JSON.stringify(row)}`);
+      }
+    });
+
+  // Optional: show relevant document properties keys (not values)
+  try {
+    const props = PropertiesService.getDocumentProperties().getProperties();
+    const keys = Object.keys(props).sort();
+    Logger.log(`DocProperties keys (${keys.length}): ${keys.join(', ')}`);
+  } catch (e) {
+    Logger.log(`DocProperties read failed: ${e.message}`);
+  }
+
+  Logger.log('=== /debugDump ===');
+}
+
 
 function _readPlanAppSnapshot_() {
   const props = PropertiesService.getDocumentProperties();
