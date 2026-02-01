@@ -13,6 +13,39 @@ The GitHub repo is primarily a **versioned backup** of the Apps Script source (s
 
 **Core loop:** collect today’s data → compute metrics/scores → call LLM(s) → write reports + update sheets → (optional) push notifications.
 
+### System overview (Mermaid)
+
+```mermaid
+flowchart TD
+  A[Trigger / Menu / Manual Run] --> B[runKiraGeminiSupervisor]
+
+  B --> C[Read timeline + KK_TIMELINE]
+  C --> C1[Find today row via is_today]
+  C --> C2[Compute scores / RTP / readiness]
+  C --> C3[Load factors + week_config]
+
+  C3 --> D[Build prompt/context]
+  D --> E[LLM calls]
+  E -->|OpenAI| E1[callOpenAI]
+  E -->|Gemini| E2[callGeminiAPI]
+
+  E --> F[Write outputs]
+  F --> F1[AI_REPORT_STATUS]
+  F --> F2[AI_REPORT_PLAN]
+  F --> F3[AI_DATA_HISTORY / AI_DATA_FORECAST]
+  F --> F4[LOOKER_DATA]
+  F --> F5[AI_LOG / AI_HEARTBEAT]
+
+  F --> G[schedulePostWork_]
+  G --> H[time trigger ~15s]
+  H --> I[runPostWork_]
+  I --> J[Heavy exports]
+  J --> F4
+  I --> K[Cleanup trigger]
+```
+
+### Components (text map)
+
 ```
 Google Sheets (Coach Kira)
   ├─ timeline        (formula/source)
