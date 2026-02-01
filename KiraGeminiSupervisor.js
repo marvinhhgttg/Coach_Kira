@@ -204,6 +204,125 @@ const CONST_TE_GUIDELINES = `
 `;
 // ------------------------------------
 
+/**
+ * Runtime contract check for the core timeline sheets.
+ *
+ * Purpose:
+ * - Fail fast with clear errors when sheet headers change or required columns are missing.
+ * - Centralize header/column validation to reduce “undefined index” bugs.
+ *
+ * This function is intentionally **read-only** (no writes), and is safe to call
+ * at the top of critical entry points (Supervisor, WebApp JSON endpoints).
+ *
+ * Usage examples:
+ *   const ctx = validateTimelineContract_({ requireTodayRow: true });
+ *   // ctx.timelineSheetName, ctx.timelineHeaders, ctx.idx.date, ...
+ */
+function validateTimelineContract_(options) {
+  const opt = Object.assign({
+    // If true, require that exactly one row has is_today == 1 (or at least one, depending on strictness)
+    requireTodayRow: false,
+    // If true, accept multiple is_today markers but use the last one
+    allowMultipleToday: true,
+    // Prefer KK_TIMELINE for reads if present; fallback to timeline
+    preferKKTimeline: true,
+    // Validate these columns exist (aliases supported per entry)
+    required: {
+      date: ['date', 'datum', 'day'],
+      is_today: ['is_today'],
+      sport: ['Sport_x', 'sport_x'],
+      zone: ['Zone', 'zone', 'coach_zone'],
+      ess: ['coachE_ESS_day', 'coache_ess_day'],
+      teAe: ['Target_Aerobic_TE', 'target_aerobic_te'],
+      teAn: ['Target_Anaerobic_TE', 'target_anaerobic_te'],
+      fix: ['fix']
+    }
+  }, options || {});
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  const kk = ss.getSheetByName(TIMELINE_SHEET_NAME);
+  const src = ss.getSheetByName(SOURCE_TIMELINE_SHEET);
+
+  const chosen = (opt.preferKKTimeline && kk) ? kk : src;
+  if (!chosen) {
+    const msg = `[Contract] Missing core sheet(s): '${TIMELINE_SHEET_NAME}' and '${SOURCE_TIMELINE_SHEET}' not found.`;
+    if (typeof logToSheet === 'function') logToSheet('ERROR', msg);
+    throw new Error(msg);
+  }
+
+  const lastCol = chosen.getLastColumn();
+  if (!lastCol || lastCol < 1) {
+    const msg = `[Contract] Sheet '${chosen.getName()}' has no columns (empty or missing header row).`;
+    if (typeof logToSheet === 'function') logToSheet('ERROR', msg);
+    throw new Error(msg);
+  }
+
+  const headers = chosen.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h).trim());
+
+  const findCol = (aliases) => {
+    for (const name of aliases) {
+      const idx = headers.indexOf(name);
+      if (idx !== -1) return idx;
+    }
+    return -1;
+  };
+
+  const idx = {};
+  const missing = [];
+  Object.keys(opt.required).forEach(key => {
+    const aliases = opt.required[key];
+    const colIdx = findCol(aliases);
+    idx[key] = colIdx;
+    if (colIdx === -1) missing.push(`${key} (any of: ${aliases.join(', ')})`);
+  });
+
+  if (missing.length) {
+    const msg = `[Contract] Missing required columns on '${chosen.getName()}': ${missing.join(' | ')}`;
+    if (typeof logToSheet === 'function') logToSheet('ERROR', msg);
+    throw new Error(msg);
+  }
+
+  // Optional sanity check for is_today
+  let todayRow = null; // 1-based row number
+  if (opt.requireTodayRow) {
+    const lastRow = chosen.getLastRow();
+    if (!lastRow || lastRow < 2) {
+      const msg = `[Contract] Sheet '${chosen.getName()}' has no data rows (needs at least 2 rows).`;
+      if (typeof logToSheet === 'function') logToSheet('ERROR', msg);
+      throw new Error(msg);
+    }
+
+    const isTodayCol = chosen.getRange(2, idx.is_today + 1, lastRow - 1, 1).getValues();
+    const hits = [];
+    for (let i = 0; i < isTodayCol.length; i++) {
+      const v = Number(String(isTodayCol[i][0]).replace(',', '.'));
+      if (v === 1) hits.push(i + 2); // sheet row
+    }
+
+    if (!hits.length) {
+      const msg = `[Contract] No is_today==1 row found in '${chosen.getName()}'.`;
+      if (typeof logToSheet === 'function') logToSheet('ERROR', msg);
+      throw new Error(msg);
+    }
+
+    if (hits.length > 1 && !opt.allowMultipleToday) {
+      const msg = `[Contract] Multiple is_today==1 rows found in '${chosen.getName()}': ${hits.join(', ')}`;
+      if (typeof logToSheet === 'function') logToSheet('ERROR', msg);
+      throw new Error(msg);
+    }
+
+    todayRow = hits[hits.length - 1]; // last wins by default
+  }
+
+  return {
+    timelineSheetName: chosen.getName(),
+    timelineHeaders: headers,
+    idx,
+    todayRow
+  };
+}
+
 
 /**
  * Fügt das Menü "Coach Kira" hinzu.
