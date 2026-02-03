@@ -421,22 +421,40 @@ function copyTimelineData() {
 
   const srcHeader = srcValues[0].map(h => String(h || "").trim());
   const trgHeader = trgValues[0].map(h => String(h || "").trim());
-    // ---- is_today Spalte in Target finden (case-insensitive) ----
-  const trgIsTodayCol = trgHeader.findIndex(h => String(h || "").trim().toLowerCase() === "is_today"); // 0-based
+  const srcHeaderLC = srcHeader.map(h => String(h || '').toLowerCase().trim());
+  const trgHeaderLC = trgHeader.map(h => String(h || '').toLowerCase().trim());
 
-  // ---- Find date column in source & target ----
-  const dateCandidates = ["date", "Date", "Datum", "DATUM", "DATE"];
-  const findDateCol = (headerArr) => {
-    for (const key of dateCandidates) {
-      const idx = headerArr.findIndex(h => h === key);
+  // ---- is_today Spalte in Source/Target finden (case-insensitive) ----
+  const srcIsTodayCol = srcHeaderLC.indexOf('is_today');
+  const trgIsTodayCol = trgHeaderLC.indexOf('is_today');
+
+  // ---- Find date column in source & target (alias, case-insensitive) ----
+  const findDateCol = (headerLC) => {
+    const aliases = ['date','datum','day'];
+    for (let i = 0; i < aliases.length; i++) {
+      const idx = headerLC.indexOf(aliases[i]);
       if (idx >= 0) return idx;
     }
-    // fallback: first column
-    return 0;
+    return -1;
   };
 
-  const srcDateCol = findDateCol(srcHeader);
-  const trgDateCol = findDateCol(trgHeader);
+  const srcDateCol = findDateCol(srcHeaderLC);
+  const trgDateCol = findDateCol(trgHeaderLC);
+
+  // ---- Contract: KK_TIMELINE should be a 1:1 mirror of timeline (values only) ----
+  // If headers/columns differ, abort (better than silently wrong sync).
+  const sameShape = (srcLastCol === trgLastCol) && (srcHeaderLC.length === trgHeaderLC.length);
+  const sameHeaders = sameShape && srcHeaderLC.every((h, i) => h === trgHeaderLC[i]);
+  if (!sameHeaders) {
+    const msg = `[copyTimelineData][Contract] Header mismatch timeline vs KK_TIMELINE (need 1:1). srcCols=${srcLastCol} trgCols=${trgLastCol}`;
+    try { logToSheet('ERROR', msg); } catch(_) {}
+    throw new Error(msg);
+  }
+  if (srcDateCol < 0 || trgDateCol < 0) {
+    const msg = `[copyTimelineData][Contract] date/datum/day column not found in one of the sheets.`;
+    try { logToSheet('ERROR', msg); } catch(_) {}
+    throw new Error(msg);
+  }
 
   // ---- Build target index by date (yyyy-MM-dd) for fast row mapping ----
   const toDateKey = (v) => {
@@ -476,18 +494,7 @@ function copyTimelineData() {
     if (key) trgIndexByKey.set(key, r + 1); // sheet row number (1-based)
   }
 
-  // ---- Map columns by header name (only common columns will be copied) ----
-  const trgColByName = new Map();
-  for (let c = 0; c < trgHeader.length; c++) {
-    const name = trgHeader[c];
-    if (name) trgColByName.set(name, c);
-  }
-
-  const srcToTrgColMap = []; // srcColIndex -> trgColIndex (or -1)
-  for (let c = 0; c < srcHeader.length; c++) {
-    const name = srcHeader[c];
-    srcToTrgColMap[c] = trgColByName.has(name) ? trgColByName.get(name) : -1;
-  }
+  // Columns are 1:1 (validated above) – no name-based mapping needed.
 
   // ---- Collect rows >= today from source ----
   const rowsToWrite = []; // { targetRow, rowArrayForTarget }
@@ -507,17 +514,8 @@ function copyTimelineData() {
     const targetRow = trgIndexByKey.get(key);
     if (!targetRow) { skippedNoTarget++; continue; } // Zukunft/Heute muss in KK_TIMELINE existieren
 
-    // Build target row array (keep existing values, overwrite common cols)
-    const existing = targetSheet.getRange(targetRow, 1, 1, trgLastCol).getValues()[0];
-    const out = existing.slice(); // clone
-
-    for (let sc = 0; sc < srcLastCol; sc++) {
-      const tc = srcToTrgColMap[sc];
-      if (tc >= 0 && tc < out.length) {
-        out[tc] = srcValues[r][sc];
-      }
-    }
-
+    // 1:1 mirror copy (values only)
+    const out = srcValues[r].slice(0, trgLastCol);
     rowsToWrite.push({ targetRow, out });
     matched++;
   }
