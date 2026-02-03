@@ -3040,8 +3040,16 @@ return out;
 
 
 
-const TELEGRAM_TOKEN = "8548837136:AAFpT6KZBIwg5xWhR5cF-Fos41TeCwaDME4";
-const MY_CHAT_ID = "8031795830"; 
+// --- Telegram config (Secrets live in ScriptProperties; never hardcode) ---
+// Required ScriptProperties:
+// - TELEGRAM_BOT_TOKEN
+// - TELEGRAM_CHAT_ID
+function getTelegramConfig_() {
+  const props = PropertiesService.getScriptProperties();
+  const token = String(props.getProperty('TELEGRAM_BOT_TOKEN') || '').trim();
+  const chatId = String(props.getProperty('TELEGRAM_CHAT_ID') || '').trim();
+  return { token, chatId };
+}
 
 function doPost(e) {
   try {
@@ -3171,22 +3179,29 @@ function deleteTriggersForFunction(functionName) {
 }
 
 function sendTelegramMessage(chatId, text) {
-  const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+  const cfg = getTelegramConfig_();
+  if (!cfg.token) {
+    // Fail-fast: better no message than silent success.
+    logToSheet('ERROR', '[Telegram] TELEGRAM_BOT_TOKEN fehlt in ScriptProperties');
+    return;
+  }
+
+  const url = `https://api.telegram.org/bot${cfg.token}/sendMessage`;
   const payload = {
-    "chat_id": chatId,
-    "text": text,
-    "parse_mode": "Markdown"
+    chat_id: chatId,
+    text: text,
+    parse_mode: 'Markdown'
   };
   const options = {
-    "method": "post",
-    "contentType": "application/json",
-    "payload": JSON.stringify(payload),
-    "muteHttpExceptions": true // <--- DAS HINZUFÜGEN!
+    method: 'post',
+    contentType: 'application/json',
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
   };
-  
+
   const response = UrlFetchApp.fetch(url, options);
   if (response.getResponseCode() !== 200) {
-    console.error("Telegram Fehler: " + response.getContentText());
+    console.error('Telegram Fehler: ' + response.getContentText());
   }
 }
 
@@ -6117,22 +6132,16 @@ function readDataFallback(data) {
  * Benötigt Bot-Token (von BotFather) und Chat-ID (von userinfobot).
  */
 function sendTelegram(message) {
-  // --- HIER DEINE DATEN EINTRAGEN ---
-  const BOT_TOKEN = "8548837136:AAFpT6KZBIwg5xWhR5cF-Fos41TeCwaDME4"; // Dein Token von BotFather
-  const CHAT_ID = "8031795830";                       // Deine ID von userinfobot
-  // ----------------------------------
+  const cfg = getTelegramConfig_();
+  if (!cfg.token || !cfg.chatId) {
+    logToSheet('ERROR', '[Telegram] TELEGRAM_BOT_TOKEN oder TELEGRAM_CHAT_ID fehlt in ScriptProperties');
+    return;
+  }
 
-  const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(message)}`;
-
+  // Reuse the unified sender
   try {
-    const response = UrlFetchApp.fetch(url, { "muteHttpExceptions": true });
-    
-    // Prüfen, ob es geklappt hat
-    if (response.getResponseCode() === 200) {
-      logToSheet('INFO', '✅ Telegram-Nachricht erfolgreich gesendet.');
-    } else {
-      logToSheet('ERROR', `❌ Telegram-Fehler (${response.getResponseCode()}): ${response.getContentText()}`);
-    }
+    sendTelegramMessage(cfg.chatId, String(message || ''));
+    logToSheet('INFO', '✅ Telegram-Nachricht erfolgreich gesendet.');
   } catch (e) {
     logToSheet('ERROR', `❌ Telegram Sende-Crash: ${e.message}`);
   }
