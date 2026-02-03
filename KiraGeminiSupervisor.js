@@ -3099,7 +3099,6 @@ function doPost(e) {
     }
 
     const contents = JSON.parse(e.postData.contents);
-    const props = PropertiesService.getScriptProperties();
     const updateId = contents.update_id;
     const lastId = props.getProperty('LAST_UPDATE_ID');
     
