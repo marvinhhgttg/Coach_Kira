@@ -5024,6 +5024,28 @@ function getDashboardDataAsStringV76() {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const statusData = getDashboardDataV76();
 
+    // --- Header alias helper (minimal, local to this hot path) ---
+    const norm_ = (s) => String(s || '').toLowerCase().trim();
+    const getCol_ = (headersLC, aliases) => {
+      for (let i = 0; i < aliases.length; i++) {
+        const idx = headersLC.indexOf(norm_(aliases[i]));
+        if (idx !== -1) return idx;
+      }
+      return -1;
+    };
+    const requireCols_ = (headersRaw, headersLC, reqMap) => {
+      const missing = [];
+      Object.keys(reqMap).forEach(k => {
+        const aliases = reqMap[k];
+        if (getCol_(headersLC, aliases) === -1) missing.push(`${k} (${aliases.join('|')})`);
+      });
+      if (missing.length) {
+        const msg = '[Contract] Timeline headers fehlen: ' + missing.join(', ');
+        logToSheet('ERROR', msg);
+        throw new Error(msg);
+      }
+    };
+
     // 1. Timeline Daten laden
     const timelineSheet = ss.getSheetByName('KK_TIMELINE') || ss.getSheetByName('timeline');
     if (!timelineSheet) throw new Error("Timeline Sheet fehlt.");
@@ -5035,29 +5057,37 @@ function getDashboardDataAsStringV76() {
 
     const tHeaders = timelineSheet.getRange(1, 1, 1, tLastCol).getValues()[0];
     const tHeadersLC = tHeaders.map(h => String(h || '').toLowerCase().trim());
-    const col = (name) => tHeadersLC.indexOf(String(name || '').toLowerCase().trim());
+
+    // Minimal contract check for the dashboard path
+    requireCols_(tHeaders, tHeadersLC, {
+      date: ['date','datum','day'],
+      isToday: ['is_today'],
+      loadSoll: ['coachE_ESS_day','coache_ess_day'],
+      sport: ['sport_x','Sport_x'],
+      zone: ['zone','Zone','coach_zone']
+    });
 
     const idx = {
-      date: col('date'),
-      isToday: col('is_today'),
-      loadIst: col('load_fb_day'),
-      loadSoll: col('coache_ess_day'),
-      atl: col('fbatl_obs'),
-      ctl: col('fbctl_obs'),
-      acwr: col('fbacwr_obs'),
-      atlFc: col('coache_atl_forecast') !== -1 ? col('coache_atl_forecast') : col('coachE_ATL_forecast'),
-      ctlFc: col('coache_ctl_forecast') !== -1 ? col('coache_ctl_forecast') : col('coachE_CTL_forecast'),
-      acwrFc: col('coache_acwr_forecast') !== -1 ? col('coache_acwr_forecast') : col('coachE_ACWR_forecast'),
-      smartGainFc: col('coache_smart_gains') !== -1 ? col('coache_smart_gains') : col('coachE_Smart_Gains'),
-      sport: col('sport_x') !== -1 ? col('sport_x') : col('Sport_x'),
-      zone: col('zone') !== -1 ? col('zone') : col('Zone'),
-      done: col('activity_done'),
-      fix: col('fix'),
-      mono7: col('monotony7'),
-      strain7: col('strain7'),
-      teAe: col('target_aerobic_te') !== -1 ? col('target_aerobic_te') : col('Target_Aerobic_TE'),
-      teAn: col('target_anaerobic_te') !== -1 ? col('target_anaerobic_te') : col('Target_Anaerobic_TE'),
-      weekPhase: col('week_phase') !== -1 ? col('week_phase') : col('Week_Phase')
+      date: getCol_(tHeadersLC, ['date','datum','day']),
+      isToday: getCol_(tHeadersLC, ['is_today']),
+      loadIst: getCol_(tHeadersLC, ['load_fb_day']),
+      loadSoll: getCol_(tHeadersLC, ['coachE_ESS_day','coache_ess_day']),
+      atl: getCol_(tHeadersLC, ['fbATL_obs','fbatl_obs']),
+      ctl: getCol_(tHeadersLC, ['fbCTL_obs','fbctl_obs']),
+      acwr: getCol_(tHeadersLC, ['fbACWR_obs','fbacwr_obs']),
+      atlFc: getCol_(tHeadersLC, ['coachE_ATL_forecast','coache_atl_forecast']),
+      ctlFc: getCol_(tHeadersLC, ['coachE_CTL_forecast','coache_ctl_forecast']),
+      acwrFc: getCol_(tHeadersLC, ['coachE_ACWR_forecast','coache_acwr_forecast']),
+      smartGainFc: getCol_(tHeadersLC, ['coachE_Smart_Gains','coache_smart_gains']),
+      sport: getCol_(tHeadersLC, ['sport_x','Sport_x']),
+      zone: getCol_(tHeadersLC, ['zone','Zone','coach_zone']),
+      done: getCol_(tHeadersLC, ['activity_done']),
+      fix: getCol_(tHeadersLC, ['fix']),
+      mono7: getCol_(tHeadersLC, ['Monotony7','monotony7']),
+      strain7: getCol_(tHeadersLC, ['Strain7','strain7']),
+      teAe: getCol_(tHeadersLC, ['Target_Aerobic_TE','target_aerobic_te']),
+      teAn: getCol_(tHeadersLC, ['Target_Anaerobic_TE','target_anaerobic_te']),
+      weekPhase: getCol_(tHeadersLC, ['Week_Phase','week_phase'])
     };
 
     // Today-Row effizient finden (nur is_today Spalte laden)
@@ -8871,11 +8901,17 @@ function getTimelinePayload(days, futureDays) {
   const headersRaw = data[0].map(h => String(h || "").trim());
   const headersLC  = headersRaw.map(h => h.toLowerCase());
 
-  // date Spalte finden (date/datum/day)
-  const idxDate =
-    headersLC.indexOf('date')  !== -1 ? headersLC.indexOf('date')  :
-    headersLC.indexOf('datum') !== -1 ? headersLC.indexOf('datum') :
-    headersLC.indexOf('day')   !== -1 ? headersLC.indexOf('day')   : -1;
+  // date Spalte finden (date/datum/day) – via alias helper
+  const idxDate = (function(){
+    const pick = (aliases) => {
+      for (let i = 0; i < aliases.length; i++) {
+        const j = headersLC.indexOf(String(aliases[i]).toLowerCase());
+        if (j !== -1) return j;
+      }
+      return -1;
+    };
+    return pick(['date','datum','day']);
+  })();
 
   // ---- REQUIRED HEADERS CHECK für neue Charts (B–I) ----
   const REQUIRED_GROUPS = [
