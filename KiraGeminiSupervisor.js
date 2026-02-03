@@ -2857,6 +2857,31 @@ function doGet(e) {
   const cache = CacheService.getUserCache();
   const lock  = LockService.getScriptLock();
 
+  // --- WebApp Guardrails ---
+  // Protect JSON endpoints (mode=json, mode=timeline, format=json) with a shared key.
+  // ScriptProperties:
+  // - WEBAPP_API_KEY (required)
+  function requireWebappKey_(purpose) {
+    const props = PropertiesService.getScriptProperties();
+    const expected = String(props.getProperty('WEBAPP_API_KEY') || '').trim();
+    const got = String((e && e.parameter && e.parameter.key) || '').trim();
+
+    if (!expected) {
+      // Fail closed: better explicit error than public data leak.
+      return ContentService
+        .createTextOutput(JSON.stringify({ error: true, message: 'WEBAPP_API_KEY fehlt in ScriptProperties' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (got !== expected) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ error: true, statusCode: 401, message: 'unauthorized' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    return null;
+  }
+
     // --- BUILD-ID (Debug) ---
   // Aufruf: .../exec?mode=build
   if (e && e.parameter && e.parameter.mode === 'build') {
@@ -2866,14 +2891,19 @@ function doGet(e) {
   }
 
   // --- NEU: SCRIPTABLE PLAN WIDGET API (7-Tage Vorschau) ---
-  // Aufruf: .../exec?format=json
+  // Aufruf: .../exec?format=json&key=...
   if (e && e.parameter && e.parameter.format === 'json') {
+    const auth = requireWebappKey_('format=json');
+    if (auth) return auth;
     return getPlanForWidget();
   }
 
   // --- 1. DASHBOARD API-MODUS (Optimiert für Scriptable & Co.) ---
-  // Aufruf: .../exec?mode=json
+  // Aufruf: .../exec?mode=json&key=...
   if (e && e.parameter && e.parameter.mode === 'json') {
+
+    const auth = requireWebappKey_('mode=json');
+    if (auth) return auth;
 
     // Zuerst im Cache nachsehen
     const cachedData = cache.get("WEBAPP_FULL_PAYLOAD");
@@ -2912,6 +2942,9 @@ function doGet(e) {
 //   .../exec?mode=timeline&days=90&future=14   (Historie + Forecast)
 //   .../exec?mode=timeline&days=&future=14     (ALL Historie + Forecast)
 if (e && e.parameter && e.parameter.mode === 'timeline') {
+
+  const auth = requireWebappKey_('mode=timeline');
+  if (auth) return auth;
 
   // days: null => "ALL" (keine History-Slice)
   const daysRaw = (e.parameter.days !== undefined && e.parameter.days !== null)
@@ -3053,6 +3086,18 @@ function getTelegramConfig_() {
 
 function doPost(e) {
   try {
+    // Optional webhook key guard (only enforced if TELEGRAM_WEBHOOK_KEY is set)
+    const props = PropertiesService.getScriptProperties();
+    const expectedKey = String(props.getProperty('TELEGRAM_WEBHOOK_KEY') || '').trim();
+    if (expectedKey) {
+      const gotKey = String((e && e.parameter && e.parameter.tg_key) || '').trim();
+      if (gotKey !== expectedKey) {
+        return ContentService
+          .createTextOutput(JSON.stringify({ status: 'unauthorized' }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
     const contents = JSON.parse(e.postData.contents);
     const props = PropertiesService.getScriptProperties();
     const updateId = contents.update_id;
