@@ -5028,31 +5028,62 @@ function getDashboardDataAsStringV76() {
     const timelineSheet = ss.getSheetByName('KK_TIMELINE') || ss.getSheetByName('timeline');
     if (!timelineSheet) throw new Error("Timeline Sheet fehlt.");
 
-    const tData = timelineSheet.getDataRange().getValues();
-    const tHeaders = tData[0];
-    
+    // Performance-Fix: keine Full-Sheet Reads (timeline hat ~50k Zeilen)
+    const tLastRow = timelineSheet.getLastRow();
+    const tLastCol = timelineSheet.getLastColumn();
+    if (tLastRow < 2 || tLastCol < 1) throw new Error('Timeline Sheet ist leer.');
+
+    const tHeaders = timelineSheet.getRange(1, 1, 1, tLastCol).getValues()[0];
+    const tHeadersLC = tHeaders.map(h => String(h || '').toLowerCase().trim());
+    const col = (name) => tHeadersLC.indexOf(String(name || '').toLowerCase().trim());
+
     const idx = {
-        date: tHeaders.indexOf('date'),
-        isToday: tHeaders.indexOf('is_today'),
-        loadIst: tHeaders.indexOf('load_fb_day'),
-        loadSoll: tHeaders.indexOf('coachE_ESS_day'),
-        atl: tHeaders.indexOf('fbATL_obs'),
-        ctl: tHeaders.indexOf('fbCTL_obs'),
-        acwr: tHeaders.indexOf('fbACWR_obs'),
-        atlFc: tHeaders.indexOf('coachE_ATL_forecast'),
-        ctlFc: tHeaders.indexOf('coachE_CTL_forecast'),
-        acwrFc: tHeaders.indexOf('coachE_ACWR_forecast'),
-        smartGainFc: tHeaders.indexOf('coachE_Smart_Gains'),
-        sport: tHeaders.indexOf('Sport_x'),
-        zone: tHeaders.indexOf('Zone'),
-        done: tHeaders.indexOf('activity_done'),
-        fix: tHeaders.indexOf('fix'),
-        mono7: tHeaders.indexOf('Monotony7'),
-        strain7: tHeaders.indexOf('Strain7'),
-        teAe: tHeaders.indexOf('Target_Aerobic_TE'),
-        teAn: tHeaders.indexOf('Target_Anaerobic_TE'),
-        weekPhase: tHeaders.indexOf('Week_Phase')
+      date: col('date'),
+      isToday: col('is_today'),
+      loadIst: col('load_fb_day'),
+      loadSoll: col('coache_ess_day'),
+      atl: col('fbatl_obs'),
+      ctl: col('fbctl_obs'),
+      acwr: col('fbacwr_obs'),
+      atlFc: col('coache_atl_forecast') !== -1 ? col('coache_atl_forecast') : col('coachE_ATL_forecast'),
+      ctlFc: col('coache_ctl_forecast') !== -1 ? col('coache_ctl_forecast') : col('coachE_CTL_forecast'),
+      acwrFc: col('coache_acwr_forecast') !== -1 ? col('coache_acwr_forecast') : col('coachE_ACWR_forecast'),
+      smartGainFc: col('coache_smart_gains') !== -1 ? col('coache_smart_gains') : col('coachE_Smart_Gains'),
+      sport: col('sport_x') !== -1 ? col('sport_x') : col('Sport_x'),
+      zone: col('zone') !== -1 ? col('zone') : col('Zone'),
+      done: col('activity_done'),
+      fix: col('fix'),
+      mono7: col('monotony7'),
+      strain7: col('strain7'),
+      teAe: col('target_aerobic_te') !== -1 ? col('target_aerobic_te') : col('Target_Aerobic_TE'),
+      teAn: col('target_anaerobic_te') !== -1 ? col('target_anaerobic_te') : col('Target_Anaerobic_TE'),
+      weekPhase: col('week_phase') !== -1 ? col('week_phase') : col('Week_Phase')
     };
+
+    // Today-Row effizient finden (nur is_today Spalte laden)
+    let todayRow = -1; // 1-based Sheet row
+    if (idx.isToday !== -1) {
+      const isTodayCol = timelineSheet.getRange(2, idx.isToday + 1, tLastRow - 1, 1).getValues();
+      for (let i = 0; i < isTodayCol.length; i++) {
+        if (parseFloat(String(isTodayCol[i][0]).replace(',', '.')) == 1) { todayRow = i + 2; break; }
+      }
+    }
+
+    // Fallback: wenn is_today nicht gefunden wird, nimm letzte Datenzeile
+    if (todayRow < 2) todayRow = tLastRow;
+
+    // Slice laden: Lookback + Forecast + Puffer
+    const LOOKBACK_DAYS = 60;
+    const FORWARD_DAYS = 21;
+    const startRow = Math.max(2, todayRow - LOOKBACK_DAYS);
+    const endRow = Math.min(tLastRow, todayRow + FORWARD_DAYS);
+    const sliceRows = Math.max(1, endRow - startRow + 1);
+    const slice = timelineSheet.getRange(startRow, 1, sliceRows, tLastCol).getValues();
+
+    // Rebuild tData im alten Format: [headers, ...rows]
+    const tData = [tHeaders].concat(slice);
+    const todayRowIndex = (todayRow - startRow) + 1; // Index in tData (0=headers)
+
 
     // 3. Activity Reviews (Fix für ATL/CTL/ACWR + Java-Object-Fix)
     let activityReviews = [];
@@ -5111,14 +5142,7 @@ function getDashboardDataAsStringV76() {
     } catch(e) {}
 
     // 4. Heute finden & Nerd-Stats (Commander-Update V122)
-    let todayRowIndex = -1;
-    for(let i=1; i<tData.length; i++) {
-        // Sicherer Check auf 1 (behandelt Zahl und Text)
-        if(parseFloat(String(tData[i][idx.isToday]).replace(',','.')) == 1) { 
-            todayRowIndex = i; 
-            break; 
-        }
-    }
+    // Performance-Fix: todayRowIndex wurde bereits beim Slice-Read ermittelt.
 
     // --- ACWR FIREWALL ---
     // Wir holen den ACWR-Wert direkt aus den bereits geladenen Status-Daten (AI_REPORT_STATUS)
