@@ -684,14 +684,11 @@ function timelinePayloadToDash(payload, mode){
     return d.getDay();
   });
 
-  // --- MODE SWITCH: Plan vs FB ---
-  const isFB = (mode === "fb");
-
-  const load = (isFB ? colAny(["load_fb_day","fb_load_day"]) : colAny(["coachE_ESS_day","coache_ess_day","ess_day"]));
-
-  const atl  = (isFB ? colAny(["fbATL_obs"]) : colAny(["coachE_ATL_forecast","coache_atl_forecast"]));
-  const ctl  = (isFB ? colAny(["fbCTL_obs"]) : colAny(["coachE_CTL_forecast","coache_ctl_forecast"]));
-  const acwr = (isFB ? colAny(["fbACWR_obs"]) : colAny(["coachE_ACWR_forecast","coache_acwr_forecast"]));
+  // --- MODE SWITCH: Ausschließlich Plan (coachE) ---
+  const load = colAny(["coachE_ESS_day","coache_ess_day","ess_day"]);
+  const atl  = colAny(["coachE_ATL_forecast","coache_atl_forecast"]);
+  const ctl  = colAny(["coachE_CTL_forecast","coache_ctl_forecast"]);
+  const acwr = colAny(["coachE_ACWR_forecast","coache_acwr_forecast"]);
   const smartGains = col(headers, rows, "coachE_Smart_Gains") || col(headers, rows, "SG_V3") || [];
 
   // Recovery
