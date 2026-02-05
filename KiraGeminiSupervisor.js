@@ -4912,11 +4912,9 @@ function updatePlannedLoad(planData) {
     const teAeIndex = headers.indexOf('Target_Aerobic_TE');
     const teAnIndex = headers.indexOf('Target_Anaerobic_TE');
 
-    // Indizes für FORMELN
+    // Indizes für FORMELN (Werden NICHT überschrieben)
     const formulaCols = [
-      headers.indexOf('coachE_ATL_forecast'),
-      headers.indexOf('coachE_CTL_forecast'),
-      headers.indexOf('coachE_ACWR_forecast'),
+      // coachE_ATL_forecast, coachE_CTL_forecast, coachE_ACWR_forecast wurden hier entfernt
       headers.indexOf('Monotony7'),
       headers.indexOf('Strain7'),
       headers.indexOf('coachE_ATL_morning'),
@@ -7969,6 +7967,9 @@ function saveSimulatedPlan(loads, teAeList, teAnList, sports, zones, locks) {
 
       if (idx.sport > -1 && Array.isArray(sports)) writeValues[i][idx.sport] = sports[i] !== undefined ? sports[i] : "";
       if (idx.zone > -1 && Array.isArray(zones)) writeValues[i][idx.zone] = zones[i] !== undefined ? zones[i] : "";
+
+      // coachE_ATL_forecast, coachE_CTL_forecast, coachE_ACWR_forecast, coachE_Smart_Gains
+      // werden NICHT geschrieben, da das Sheet sie berechnet.
 
       // Locks in 'fix'
       if (idx.fix > -1 && Array.isArray(locks)) {

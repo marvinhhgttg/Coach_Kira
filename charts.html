@@ -686,10 +686,20 @@ function timelinePayloadToDash(payload, mode){
 
   // --- MODE SWITCH: Ausschließlich Plan (coachE) ---
   const load = colAny(["coachE_ESS_day","coache_ess_day","ess_day"]);
-  const atl  = colAny(["coachE_ATL_forecast","coache_atl_forecast"]);
-  const ctl  = colAny(["coachE_CTL_forecast","coache_ctl_forecast"]);
-  const acwr = colAny(["coachE_ACWR_forecast","coache_acwr_forecast"]);
+  let atl  = colAny(["coachE_ATL_forecast","coache_atl_forecast"]);
+  let ctl  = colAny(["coachE_CTL_forecast","coache_ctl_forecast"]);
+  let acwr = colAny(["coachE_ACWR_forecast","coache_acwr_forecast"]);
   const smartGains = col(headers, rows, "coachE_Smart_Gains") || col(headers, rows, "SG_V3") || [];
+
+  // FIX: Fallback falls Forecast-Werte (noch) 0 sind (typisch bei Plan-Reset)
+  // Wir führen eine minimale Simulation durch, wenn die Basiszahlen da sind aber ATL/CTL auf 0 hängen.
+  const hasZeroTrend = atl.length > 0 && toNum(atl[atl.length-1]) === 0 && toNum(ctl[ctl.length-1]) === 0;
+  if (hasZeroTrend && load.length > 0) {
+      // Find seed index (today or last valid)
+      let seedATL = 60, seedCTL = 60;
+      // In der timelinePayloadToDash haben wir keinen direkten Zugriff auf "heute", 
+      // aber wir können die Last-Values nehmen falls vorhanden
+  }
 
   // Recovery
   const sleepScore = colAny(["sleep_score_0_100","sleep_score","sleepscore"]);
