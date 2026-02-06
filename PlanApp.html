@@ -1096,72 +1096,55 @@ if (simBase.todayIsClosed) {
         acwrEl0.style.color = (acwr0 > 1.30) ? 'var(--danger)' : (acwr0 >= 0.80) ? 'var(--success)' : 'var(--text-muted)';
     }
 
+    // Trend für HEUTE: CTL_heute (604) vs CTL_7d_ago (538)
+    const ctl7DaysAgo0 = (history && history.length >= 7) ? history[history.length - 7] : (history && history.length > 0 ? history[0] : ctl0);
+
+    const trendComp0  = (ctl0 - ctl7DaysAgo0) * 5.0;
+    const statusComp0 = ctl0 / 5.0;
+    const strainEst0  = atl0 * 7;
+    const costComp0   = (strainEst0 / 800.0);
+
+    const sg0 = trendComp0 + statusComp0 - costComp0;
+
     // Chart-Daten für Tag 0
     chartLoads.push(currentLoads[0]);
     chartCTL.push(Math.round(ctl0));
     chartACWR.push(acwr0.toFixed(2));
     const tsb0 = ctl0 - atl0;
     chartTSB.push(Math.round(tsb0));
-    chartSG.push(null);
+    chartSG.push(Math.round(sg0));
 
     const d0 = new Date(startDate);
     chartLabels.push(d0.toLocaleDateString('de-DE', {weekday:'short', day:'2-digit'}));
 
-    let sg0;
+    // UI für SG0 setzen
+    const sgEl0 = document.getElementById('sg_0');
+    const sgCell0 = document.getElementById('sg_cell_0');
 
-// Prio 1: observed SG aus Timeline/Backend
-if (Number.isFinite(simBase?.smartGainsToday_obs)) {
-  sg0 = Number(simBase.smartGainsToday_obs);
-} else {
-  // Fallback: bisherige lokale Berechnung
-  const ctl7DaysAgo0 = (history && history.length) ? history[0] : ctl0;
+    if (sgEl0) sgEl0.innerText = (sg0 > 0 ? "+" : "") + sg0.toFixed(1);
 
-  const trendComp0  = (ctl0 - ctl7DaysAgo0) * 2.0;
-  const statusComp0 = ctl0 / 10.0;
-  const strainEst0  = atl0 * 7;
-  const costComp0   = (strainEst0 / 500.0) * recoveryMod;
+    if (sgCell0) {
+        if (sg0 > SG_ZONES.PRIME_MAX) {
+            sgCell0.style.color = 'var(--danger)';
+            sgCell0.style.background = 'rgba(239, 68, 68, 0.2)';
+        } else if (sg0 >= SG_ZONES.PROD_MAX) {
+            sgCell0.style.color = 'var(--purple)';
+            sgCell0.style.background = 'rgba(212, 0, 255, 0.15)';
+        } else if (sg0 >= SG_ZONES.MAINT_MAX) {
+            sgCell0.style.color = 'var(--success)';
+            sgCell0.style.background = 'rgba(16, 185, 129, 0.15)';
+        } else if (sg0 >= SG_ZONES.DETRAIN_MAX) {
+            sgCell0.style.color = 'var(--warning)';
+            sgCell0.style.background = 'rgba(245, 158, 11, 0.15)';
+        } else {
+            sgCell0.style.color = 'var(--danger)';
+            sgCell0.style.background = 'rgba(239, 68, 68, 0.1)';
+        }
+    }
 
-  sg0 = trendComp0 + statusComp0 - costComp0 - monotonyPenalty;
-}
-
-
-// UI für SG0 setzen
-const sgEl0 = document.getElementById('sg_0');
-const sgCell0 = document.getElementById('sg_cell_0');
-
-if (sgEl0) sgEl0.innerText = (sg0 > 0 ? "+" : "") + sg0.toFixed(1);
-
-if (sgCell0) {
-  if (sg0 > SG_ZONES.PRIME_MAX) {
-  // OVERLOAD
-  sgCell0.style.color = 'var(--danger)';
-  sgCell0.style.background = 'rgba(239, 68, 68, 0.2)';
-} else if (sg0 >= SG_ZONES.PROD_MAX) {
-  // PRIME
-  sgCell0.style.color = 'var(--purple)';
-  sgCell0.style.background = 'rgba(212, 0, 255, 0.15)';
-} else if (sg0 >= SG_ZONES.MAINT_MAX) {
-  // PRODUCTIVE
-  sgCell0.style.color = 'var(--success)';
-  sgCell0.style.background = 'rgba(16, 185, 129, 0.15)';
-} else if (sg0 >= SG_ZONES.DETRAIN_MAX) {
-  // MAINTENANCE
-  sgCell0.style.color = 'var(--warning)';
-  sgCell0.style.background = 'rgba(245, 158, 11, 0.15)';
-} else {
-  // DETRAINING
-  sgCell0.style.color = 'var(--danger)';
-  sgCell0.style.background = 'rgba(239, 68, 68, 0.1)';
-}
-}
-
-// Chart: statt null jetzt SG0 rein
-chartSG[0] = Math.round(sg0);
-
-// Wichtig: History "bis heute" fortschreiben, sonst stimmt Trend ab morgen nicht
-if (history.length >= 7) history.shift();
-history.push(ctl0);
-
+    // Wichtig: History "bis heute" fortschreiben, sonst stimmt Trend ab morgen nicht
+    if (history.length >= 7) history.shift();
+    history.push(ctl0);
 }
 
 const startI = simBase.todayIsClosed ? 1 : 0;
