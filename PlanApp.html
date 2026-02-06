@@ -1204,12 +1204,13 @@ if (i === 0) {
 
 
         // --- 3. SMART GAINS V3 (Pure Engine - Rebalanced for high Alphas) ---
+        // GSheet logic: ( (CTL_today - CTL_7d_ago) * 5.0 ) + ( CTL_today / 5.0 ) - ( (ATL_today * 7) / 800 )
         let ctl7DaysAgo = (history.length >= 7) ? history[history.length - 7] : history[0]; 
         
         const trendComp = (tCTL - ctl7DaysAgo) * 5.0; 
         const statusComp = tCTL / 5.0;               
         const strainEst = (tATL * 7); 
-        const costComp = (strainEst / 800.0); 
+        const costComp = strainEst / 800.0; 
         
         let sg = trendComp + statusComp - costComp;
 
