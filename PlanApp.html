@@ -416,7 +416,7 @@
         <span>) − (</span>
         <div style="display: inline-flex; flex-direction: column; align-items: center; line-height: 1; font-size: 0.9rem;">
             <span style="border-bottom: 2px solid var(--text-main); padding: 0 6px;">Strain</span>
-            <span style="padding-top: 3px;">400</span>
+            <span style="padding-top: 3px;">800</span>
         </div>
         <span>)</span>
     </div>
@@ -1203,15 +1203,15 @@ if (i === 0) {
 
 
 
-        // --- 3. SMART GAINS V3 (Pure Engine) ---
+        // --- 3. SMART GAINS V3 (Pure Engine - Rebalanced for high Alphas) ---
         let ctl7DaysAgo = (history.length > 0) ? history[0] : tCTL; 
         
         const trendComp = (tCTL - ctl7DaysAgo) * 5.0; 
         const statusComp = tCTL / 5.0;               
         const strainEst = (tATL * 7); 
-        const costComp = (strainEst / 400.0); // BioMod entfernt
+        const costComp = (strainEst / 800.0); // Teiler auf 800 erhöht, um hohe Alphas zu dämpfen
         
-        let sg = trendComp + statusComp - costComp; // Monotony Penalty entfernt
+        let sg = trendComp + statusComp - costComp;
 
         // --- UI UPDATES ---
         const atlEl = document.getElementById('atl_'+i);
