@@ -1214,6 +1214,10 @@ if (i === 0) {
         
         let sg = trendComp + statusComp - costComp;
 
+        // --- HISTORIE FORTSCHREIBEN (WICHTIG FÜR NÄCHSTEN TAG) ---
+        if (history.length >= 7) history.shift();
+        history.push(tCTL);
+
         // --- UI UPDATES ---
         const atlEl = document.getElementById('atl_'+i);
 const ctlEl = document.getElementById('ctl_'+i);
@@ -1281,10 +1285,6 @@ if (ctlEl) ctlEl.innerText = Math.round(tCTL);
         
         const d = new Date(startDate); d.setDate(d.getDate() + i);
         chartLabels.push(d.toLocaleDateString('de-DE', {weekday:'short', day:'2-digit'}));
-
-        // Historie rotieren (Gedächtnis)
-        if (history.length >= 7) history.shift(); 
-        history.push(tCTL);
     }
     
     // ✅ Labels fürs Bubble-Chart global verfügbar machen
