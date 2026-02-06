@@ -1006,26 +1006,16 @@ function changeLoad(idx, val) {
 }
 
 function getSeedState(simBase) {
-  // Erwartete Felder vom Backend (empfohlen):
-  // simBase.atlYesterday, simBase.ctlYesterday, simBase.ctlHistoryYesterday (7 Werte bis inkl. gestern)
-  const atl0 =
-    (simBase.atlYesterday ?? simBase.atl_yesterday ?? simBase.atlPrev ?? simBase.atl_prev ?? simBase.atl);
+  const atl0 = Number(simBase.atlYesterday || simBase.atlPrev || 0);
+  const ctl0 = Number(simBase.ctlYesterday || simBase.ctlPrev || 0);
 
-  const ctl0 =
-    (simBase.ctlYesterday ?? simBase.ctl_yesterday ?? simBase.ctlPrev ?? simBase.ctl_prev ?? simBase.ctl);
-
-  // History muss CTL(t-7..t-1) enthalten, also "bis gestern"
   let hist = [];
-  if (Array.isArray(simBase.ctlHistoryYesterday) && simBase.ctlHistoryYesterday.length) {
+  if (Array.isArray(simBase.ctlHistoryYesterday)) {
     hist = [...simBase.ctlHistoryYesterday];
-  } else if (Array.isArray(simBase.ctlHistory) && simBase.ctlHistory.length) {
-    hist = [...simBase.ctlHistory];
   }
 
-  // Robustheit: auf genau 7 Werte bringen
-  // (Wenn zu lang: die letzten 7 nehmen; wenn zu kurz: mit ctl0 vorne auffüllen)
-  hist = hist.slice(-7);
-  while (hist.length < 7) hist.unshift(ctl0);
+  // Debugging für dich im Browser-Konsolen-Log
+  console.log("[PLANAPP] Seed State:", { atl0, ctl0, hist });
 
   return { atl0, ctl0, hist };
 }
@@ -1078,25 +1068,13 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
 
     // --- HEUTE-FIX (nur wenn geschlossen): Row 0 nicht berechnen, sondern als Seed anzeigen ---
 if (simBase.todayIsClosed) {
-    const atl0 = tATL; // Seed ist HEUTE final
-    const ctl0 = tCTL;
+    // Heute ist bereits berechnet (Ist-Werte vom Server)
+    const atl0 = Number(simBase.atlToday || simBase.atl); 
+    const ctl0 = Number(simBase.ctlToday || simBase.ctl);
     const acwr0 = atl0 / (ctl0 || 1);
-    const tsb = tCTL - tATL;
 
-    // UI für Zeile 0 setzen
-    const atlEl0 = document.getElementById('atl_0');
-    const ctlEl0 = document.getElementById('ctl_0');
-    const acwrEl0 = document.getElementById('acwr_0');
-
-    if (atlEl0) atlEl0.innerText = Math.round(atl0);
-    if (ctlEl0) ctlEl0.innerText = Math.round(ctl0);
-
-    if (acwrEl0) {
-        acwrEl0.innerText = acwr0.toFixed(2);
-        acwrEl0.style.color = (acwr0 > 1.30) ? 'var(--danger)' : (acwr0 >= 0.80) ? 'var(--success)' : 'var(--text-muted)';
-    }
-
-    // Trend für HEUTE: CTL_heute (604) vs CTL_7d_ago (538)
+    // Trend für HEUTE: CTL_heute vs CTL_7d_ago
+    // History muss hier CTL_t-7 bis CTL_t-1 enthalten
     const ctl7DaysAgo0 = (history && history.length >= 7) ? history[history.length - 7] : (history && history.length > 0 ? history[0] : ctl0);
 
     const trendComp0  = (ctl0 - ctl7DaysAgo0) * 5.0;
@@ -1106,45 +1084,42 @@ if (simBase.todayIsClosed) {
 
     const sg0 = trendComp0 + statusComp0 - costComp0;
 
-    // Chart-Daten für Tag 0
+    // UI & Charts
+    if (document.getElementById('atl_0')) document.getElementById('atl_0').innerText = Math.round(atl0);
+    if (document.getElementById('ctl_0')) document.getElementById('ctl_0').innerText = Math.round(ctl0);
+    if (document.getElementById('acwr_0')) {
+        document.getElementById('acwr_0').innerText = acwr0.toFixed(2);
+        document.getElementById('acwr_0').style.color = (acwr0 > 1.30) ? 'var(--danger)' : (acwr0 >= 0.80) ? 'var(--success)' : 'var(--text-muted)';
+    }
+    
     chartLoads.push(currentLoads[0]);
     chartCTL.push(Math.round(ctl0));
     chartACWR.push(acwr0.toFixed(2));
-    const tsb0 = ctl0 - atl0;
-    chartTSB.push(Math.round(tsb0));
+    chartTSB.push(Math.round(ctl0 - atl0));
     chartSG.push(Math.round(sg0));
 
     const d0 = new Date(startDate);
     chartLabels.push(d0.toLocaleDateString('de-DE', {weekday:'short', day:'2-digit'}));
 
-    // UI für SG0 setzen
     const sgEl0 = document.getElementById('sg_0');
-    const sgCell0 = document.getElementById('sg_cell_0');
-
-    if (sgEl0) sgEl0.innerText = (sg0 > 0 ? "+" : "") + sg0.toFixed(1);
-
-    if (sgCell0) {
-        if (sg0 > SG_ZONES.PRIME_MAX) {
-            sgCell0.style.color = 'var(--danger)';
-            sgCell0.style.background = 'rgba(239, 68, 68, 0.2)';
-        } else if (sg0 >= SG_ZONES.PROD_MAX) {
-            sgCell0.style.color = 'var(--purple)';
-            sgCell0.style.background = 'rgba(212, 0, 255, 0.15)';
-        } else if (sg0 >= SG_ZONES.MAINT_MAX) {
-            sgCell0.style.color = 'var(--success)';
-            sgCell0.style.background = 'rgba(16, 185, 129, 0.15)';
-        } else if (sg0 >= SG_ZONES.DETRAIN_MAX) {
-            sgCell0.style.color = 'var(--warning)';
-            sgCell0.style.background = 'rgba(245, 158, 11, 0.15)';
-        } else {
-            sgCell0.style.color = 'var(--danger)';
-            sgCell0.style.background = 'rgba(239, 68, 68, 0.1)';
+    if (sgEl0) {
+        sgEl0.innerText = (sg0 > 0 ? "+" : "") + sg0.toFixed(1);
+        const sgCell0 = document.getElementById('sg_cell_0');
+        if (sgCell0) {
+            if (sg0 > SG_ZONES.PRIME_MAX) { sgCell0.style.color = 'var(--danger)'; sgCell0.style.background = 'rgba(239, 68, 68, 0.2)'; }
+            else if (sg0 >= SG_ZONES.PROD_MAX) { sgCell0.style.color = 'var(--purple)'; sgCell0.style.background = 'rgba(212, 0, 255, 0.15)'; }
+            else if (sg0 >= SG_ZONES.MAINT_MAX) { sgCell0.style.color = 'var(--success)'; sgCell0.style.background = 'rgba(16, 185, 129, 0.15)'; }
+            else if (sg0 >= SG_ZONES.DETRAIN_MAX) { sgCell0.style.color = 'var(--warning)'; sgCell0.style.background = 'rgba(245, 158, 11, 0.15)'; }
+            else { sgCell0.style.color = 'var(--danger)'; sgCell0.style.background = 'rgba(239, 68, 68, 0.1)'; }
         }
     }
 
-    // Wichtig: History "bis heute" fortschreiben, sonst stimmt Trend ab morgen nicht
-    if (history.length >= 7) history.shift();
+    // WICHTIG: History für morgen vorbereiten. history enthält jetzt t-7 bis t-1.
+    // Wir hängen heute (t) an und schieben t-7 raus -> history ist jetzt t-6 bis t.
     history.push(ctl0);
+    if (history.length > 7) history.shift();
+
+    // In der Schleife für morgen wird dann history[history.length - 7] wieder CTL_t-6 (relativ zu morgen t+1) sein.
 }
 
 const startI = simBase.todayIsClosed ? 1 : 0;
