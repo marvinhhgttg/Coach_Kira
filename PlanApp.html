@@ -1204,12 +1204,12 @@ if (i === 0) {
 
 
         // --- 3. SMART GAINS V3 (Pure Engine - Rebalanced for high Alphas) ---
-        let ctl7DaysAgo = (history.length > 0) ? history[0] : tCTL; 
+        let ctl7DaysAgo = (history.length >= 7) ? history[history.length - 7] : history[0]; 
         
         const trendComp = (tCTL - ctl7DaysAgo) * 5.0; 
         const statusComp = tCTL / 5.0;               
         const strainEst = (tATL * 7); 
-        const costComp = (strainEst / 800.0); // Teiler auf 800 erhöht, um hohe Alphas zu dämpfen
+        const costComp = (strainEst / 800.0); 
         
         let sg = trendComp + statusComp - costComp;
 
