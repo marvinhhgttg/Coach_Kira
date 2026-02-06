@@ -418,7 +418,7 @@
             <span style="border-bottom: 2px solid var(--text-main); padding: 0 6px;">Strain</span>
             <span style="padding-top: 3px;">400</span>
         </div>
-        <span>× BioMod) − Mono</span>
+        <span>)</span>
     </div>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
@@ -1203,15 +1203,15 @@ if (i === 0) {
 
 
 
-        // --- 3. SMART GAINS V3 ---
+        // --- 3. SMART GAINS V3 (Pure Engine) ---
         let ctl7DaysAgo = (history.length > 0) ? history[0] : tCTL; 
         
         const trendComp = (tCTL - ctl7DaysAgo) * 5.0; 
         const statusComp = tCTL / 5.0;               
         const strainEst = (tATL * 7); 
-        const costComp = (strainEst / 400.0) * recoveryMod; 
+        const costComp = (strainEst / 400.0); // BioMod entfernt
         
-        let sg = trendComp + statusComp - costComp - monotonyPenalty;
+        let sg = trendComp + statusComp - costComp; // Monotony Penalty entfernt
 
         // --- UI UPDATES ---
         const atlEl = document.getElementById('atl_'+i);
