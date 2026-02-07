@@ -1141,8 +1141,6 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         // KEI Berechnung V7.2 (Gedämpftes Scaling für GSheet Sync)
         const keiRaw = (trend7d * 10);
         let kei = keiRaw / (acwrPenalty * monoPenalty);
-        if (kei < -50) kei = -50;
-        if (kei > 100) kei = 100;
         const keiEffective = kei;
 
         // --- HISTORIE FORTSCHREIBEN ---
