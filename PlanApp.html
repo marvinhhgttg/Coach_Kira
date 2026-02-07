@@ -137,6 +137,13 @@
     }
 
     .val-box { font-family: 'Courier New', monospace; font-weight: bold; }
+    .kei-damps { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; justify-content: center; }
+    .kei-badge {
+      font-size: 0.62rem; padding: 2px 6px; border-radius: 999px;
+      border: 1px solid currentColor; font-weight: 700; text-transform: uppercase;
+    }
+    .kei-badge-muted { color: var(--text-muted); background: rgba(107, 114, 128, 0.15); }
+    .kei-badge-warning { color: var(--warning); background: rgba(245, 158, 11, 0.15); }
     .text-date { color: var(--primary); font-family: 'Roboto Condensed', sans-serif; font-weight: 700; }
     
     .btn-save {
@@ -1116,6 +1123,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         
         const ctl7DaysAgo = (history.length >= 7) ? history[0] : history[0]; 
         const trend7d = (tCTL - ctl7DaysAgo);
+        const acwrPenalty = acwr;
 
         // Monotonie-Check (letzte 4 Tage)
         let monoVal = 0;
@@ -1127,11 +1135,15 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
               monoVal = (stdDev < 15) ? 0.5 : 0; // Strafe auf den Divisor
             }
         }
+        const monoPenalty = (1 + monoVal);
+        const monoActive = monoVal > 0;
         
         // KEI Berechnung V7.2 (Gedämpftes Scaling für GSheet Sync)
-        let kei = (trend7d * 10) / (acwr * (1 + monoVal));
+        const keiRaw = (trend7d * 10);
+        let kei = keiRaw / (acwrPenalty * monoPenalty);
         if (kei < -50) kei = -50;
         if (kei > 100) kei = 100;
+        const keiEffective = kei;
 
         // --- HISTORIE FORTSCHREIBEN ---
         // Der gerade berechnete tCTL wird der neue Anker für in 7 Tagen.
@@ -1166,9 +1178,24 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         const sgEl = document.getElementById('sg_'+i);
         const sgCell = document.getElementById('sg_cell_'+i);
         if(sgEl && sgCell) {
-            sgEl.innerText = (kei > 0 ? "+" : "") + kei.toFixed(1);
+            sgEl.innerText = (keiEffective > 0 ? "+" : "") + keiEffective.toFixed(1);
             sgEl.style.fontSize = "1.1rem";
             sgEl.style.fontWeight = "bold";
+
+            const dampTooltip = "KEI = trend7d*10 / (ACWR × (1+Monotonie))";
+            let dampEl = sgCell.querySelector('.kei-damps');
+            if (!dampEl) {
+                dampEl = document.createElement('div');
+                dampEl.className = 'kei-damps';
+                sgCell.appendChild(dampEl);
+            }
+            const dampBadges = [
+                `<span class="kei-badge kei-badge-muted" title="${dampTooltip}">ACWR x${acwrPenalty.toFixed(2)}</span>`
+            ];
+            if (monoActive) {
+                dampBadges.push(`<span class="kei-badge kei-badge-warning" title="${dampTooltip}">Monotonie x${monoPenalty.toFixed(2)}</span>`);
+            }
+            dampEl.innerHTML = dampBadges.join('');
             
             if (kei >= SG_ZONES.PRIME_MAX) {
               // ELITE EFFICIENCY
