@@ -102,10 +102,10 @@
       border-bottom: 1px solid var(--border-color);
     }
     
-    .sim-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .sim-table { width: 100%; border-collapse: collapse; font-size: 1.05rem; }
     .sim-table th { 
       background: var(--bg-color); color: var(--text-muted); 
-      text-transform: uppercase; font-size: 0.65rem; padding: 10px;
+      text-transform: uppercase; font-size: 0.75rem; padding: 10px;
       text-align: center; border-bottom: 2px solid var(--border-color);
     }
     .sim-table td { 
@@ -339,10 +339,21 @@
     
     <div style="display:flex; gap:20px; align-items:center;">
         <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase;">Gain:</span>
-            <input type="number" id="targetGainInput" value="180" style="width:50px; padding:4px; border-radius:4px; border:1px solid var(--border-color); text-align:center; font-weight:bold; font-family:'Roboto Condensed'; color:var(--primary);">
-            <button class="btn-ai" style="background:#d400ff; color:white; font-size:0.7rem; border:none;" onclick="autoLevelLoads()">
-                <i class="fas fa-chart-line mr-1"></i> SET
+            <span style="font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase;">Phase:</span>
+            <select id="trainingPhase" style="padding:4px; border-radius:4px; border:1px solid var(--border-color); font-weight:bold; font-family:'Roboto Condensed'; color:var(--primary); background:transparent; font-size:0.75rem;">
+                <option value="E">Phase E</option>
+                <option value="A1">Phase A1</option>
+                <option value="A2" selected>Phase A2</option>
+                <option value="A3">Phase A3</option>
+            </select>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase;">Max:</span>
+            <input type="number" id="maxEssInput" value="180" step="10" title="Maximaler ESS pro Tag" style="width:45px; padding:4px; border-radius:4px; border:1px solid var(--border-color); text-align:center; font-weight:bold; font-family:'Roboto Condensed'; color:var(--primary); background:transparent;">
+            <span style="font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-left:5px;">ACWR:</span>
+            <input type="number" id="maxAcwrInput" value="1.30" step="0.05" title="Maximaler ACWR Deckel" style="width:50px; padding:4px; border-radius:4px; border:1px solid var(--border-color); text-align:center; font-weight:bold; font-family:'Roboto Condensed'; color:#0ea5e9; background:transparent;">
+            <button class="btn-ai" style="background:#d400ff; color:white; font-size:0.7rem; border:none;" onclick="autoLevelV7()">
+                <i class="fas fa-magic mr-1"></i> SET V7
             </button>
         </div>
 
@@ -380,95 +391,46 @@
             <th>ATL</th>
             <th>CTL</th>
             <th>ACWR</th>
-            <th>Smart Gain</th>
-            <th width="40px">V4</th> </tr>
+            <th>KEI</th>
+          </tr>
         </thead>
         <tbody id="simBody"></tbody>
       </table>
     </div>
     
     <div class="legend-box">
-        <div style="font-weight:bold; color:var(--text-muted);">Smart Gains Legende:</div>
-        <div class="legend-item"><div class="dot" style="background:var(--danger)"></div> < 39 Detraining</div>
-<div class="legend-item"><div class="dot" style="background:var(--warning)"></div> 39-95 Maintenance</div>
-<div class="legend-item"><div class="dot" style="background:var(--success)"></div> 95–142 Productive</div>
-<div class="legend-item"><div class="dot" style="background:var(--purple)"></div> 142–189 Prime</div>
-<div class="legend-item"><div class="dot" style="background:var(--danger)"></div> > 189 Danger</div>
-
+        <div style="font-weight:bold; color:var(--text-muted);">Efficiency Index (KEI) Legende:</div>
+        <div class="legend-item"><div class="dot" style="background:var(--danger)"></div> < 0 Detraining</div>
+        <div class="legend-item"><div class="dot" style="background:var(--warning)"></div> 0 bis 5 Maintenance</div>
+        <div class="legend-item"><div class="dot" style="background:var(--success)"></div> 5 bis 15 Productive</div>
+        <div class="legend-item"><div class="dot" style="background:var(--purple)"></div> > 15 Elite Efficiency</div>
     </div>
 
     <div style="margin-top: 20px; padding: 20px; background: rgba(37, 99, 235, 0.03); border-radius: 12px; border: 1px solid var(--border-color); font-size: 0.85rem; line-height: 1.6; color: var(--text-main);">
     
     <h4 style="margin-top: 0; color: var(--primary); font-family: 'Roboto Condensed', sans-serif; text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-        <i class="fas fa-project-diagram"></i> Smart Gains V4 – Die adaptive Engine
+        <i class="fas fa-dna"></i> KEI V7.1 – Efficiency Index
     </h4>
     
-    <p style="margin: 15px 0; color: var(--text-muted);">
-        Smart Gains V4 ist dein <strong>biologisches Gewissen</strong>, optimiert auf Garmin-Skalen. Ohne Live-Biomarker bewertet V4 die <strong>Adaptations-Effizienz</strong> durch das Verhältnis von Fundament (CTL) zu aktuellem Reiz (ACWR) und struktureller Varianz.
-    </p>
-
-    <div style="background: var(--card-bg); padding: 20px; border-radius: 10px; border: 1.5px solid var(--primary); margin-bottom: 20px; display: flex; justify-content: center; align-items: center; font-family: 'Roboto Condensed', sans-serif; font-weight: 700; color: var(--text-main); font-size: 1.1rem; gap: 6px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);">
-        <span>SG <sub style="font-size: 0.65rem;">V4</sub> = (Trend × 5.0 + </span>
-        <div style="display: inline-flex; flex-direction: column; align-items: center; line-height: 1; font-size: 0.9rem;">
-            <span style="border-bottom: 2px solid var(--text-main); padding: 0 6px;">CTL</span>
-            <span style="padding-top: 3px;">6</span>
-        </div>
-        <span>) × (1 + </span>
-        <div style="display: inline-flex; flex-direction: column; align-items: center; line-height: 1; font-size: 0.9rem;">
-            <span style="border-bottom: 2px solid var(--text-main); padding: 0 6px;">CTL</span>
-            <span style="padding-top: 3px;">1000</span>
-        </div>
-        <span>) − (</span>
-        <div style="display: inline-flex; flex-direction: column; align-items: center; line-height: 1; font-size: 0.9rem;">
-            <span style="border-bottom: 2px solid var(--text-main); padding: 0 6px;">Strain</span>
-            <span style="padding-top: 3px;">800</span>
-        </div>
-        <span> × ACWR²)</span>
+    <div style="margin: 15px 0; color: var(--text-main);">
+        Der <strong>Kira Efficiency Index (KEI)</strong> bewertet die Qualität deiner Trainingssteuerung durch das Verhältnis von Fitness-Gewinn zu physiologischem Stress. Er reagiert <strong>live</strong> auf jede Änderung deiner Planung.
+        <br><br>
+        <strong>Interpretation der Schwellenwerte:</strong>
+        <ul style="padding-left: 1.2rem; color: var(--text-muted); font-size: 0.9rem;">
+          <li><strong style="color:var(--purple);">Elite (> 15):</strong> Maximaler Fitness-Ertrag bei minimalem biologischem Preis. Ideal für Tapering oder gezielte Peaks.</li>
+          <li><strong style="color:var(--success);">Productive (5 bis 15):</strong> Optimaler Trainingsreiz. Der Aufbau ist nachhaltig und kontrolliert.</li>
+          <li><strong style="color:var(--warning);">Maintenance (0 bis 5):</strong> Stabilisierungsphase. Kein signifikanter Aufbau, aber Erhalt des Niveaus.</li>
+          <li><strong style="color:var(--danger);">Low Efficiency (< 0):</strong> Unwirtschaftlicher Bereich (Detraining oder massiver Stress-Überhang).</li>
+        </ul>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-        
-        <div style="background: var(--card-bg); padding: 12px; border-radius: 8px; border-left: 4px solid var(--success);">
-            <strong style="color: var(--success); font-family: 'Roboto Condensed'; text-transform: uppercase; font-size: 0.75rem;">
-                <i class="fas fa-chart-line mr-1"></i> Der Wachstums-Motor (Trend)
-            </strong><br>
-            <span style="font-size: 0.8rem;">
-                V3 vergleicht deine Fitness (CTL) von heute mit dem Wert von vor 7 Tagen. Dieser <strong>Wachstums-Trend</strong> wird doppelt gewichtet. Steigt die Kurve, signalisiert das System einen positiven "Return on Investment". Fällt die Kurve im harten Training, verpufft deine Energie wirkungslos.
-            </span>
+    <div style="background: var(--card-bg); padding: 20px; border-radius: 10px; border: 1.5px solid var(--primary); margin-bottom: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-family: 'Roboto Condensed', sans-serif; color: var(--text-main); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);">
+        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 5px;">
+            KEI = (ΔCTL<sub>7d</sub> × 100) / (ACWR × (1 + Monotony))
         </div>
-
-        <div style="background: var(--card-bg); padding: 12px; border-radius: 8px; border-left: 4px solid var(--primary);">
-            <strong style="color: var(--primary); font-family: 'Roboto Condensed'; text-transform: uppercase; font-size: 0.75rem;">
-                <i class="fas fa-heartbeat mr-1"></i> Das Regenerations-Veto (BioMod)
-            </strong><br>
-            <span style="font-size: 0.8rem;">
-                Dein biologisches Kapital: Sinken <strong>HRV (< 40ms)</strong> oder <strong>Schlaf (< 70)</strong>, steigen die physiologischen Kosten (Strain) jeder Einheit sofort um <strong>50%</strong>. Harte Reize in diesem Zustand führen zu "Junk Miles" – du verbrennst Ressourcen, ohne stärker zu werden.
-            </span>
+        <div style="font-size: 0.8rem; text-align: center; color: var(--text-muted);">
+            Ziel: Maximale Fitness-Steigerung bei minimalem biologischem Preis.
         </div>
-
-        <div style="background: var(--card-bg); padding: 12px; border-radius: 8px; border-left: 4px solid var(--warning);">
-            <strong style="color: var(--warning); font-family: 'Roboto Condensed'; text-transform: uppercase; font-size: 0.75rem;">
-                <i class="fas fa-balance-scale mr-1"></i> Struktur & Varianz (Mono)
-            </strong><br>
-            <span style="font-size: 0.8rem;">
-                Stagnation durch Gleichförmigkeit: Wenn das Training der letzten 7 Tage zu monoton war <strong>(Monotony > 2.0)</strong>, zieht V3 pauschal <strong>15 Punkte</strong> ab. Der Körper benötigt den Wechsel zwischen harten Reizen und echter Ruhe, um Adaptationsprozesse zu triggern.
-            </span>
-        </div>
-
-        <div style="background: var(--card-bg); padding: 12px; border-radius: 8px; border-left: 4px solid var(--text-muted);">
-            <strong style="color: var(--text-muted); font-family: 'Roboto Condensed'; text-transform: uppercase; font-size: 0.75rem;">
-                <i class="fas fa-shield-alt mr-1"></i> Der Status-Bonus (Robustheit)
-            </strong><br>
-            <span style="font-size: 0.8rem;">
-                Ein hohes Fitness-Level <strong>(CTL/10)</strong> wirkt als Puffer. Je fitter du bist, desto robuster reagiert dein System auf kurzfristige Belastungsspitzen. Dieser Bonus belohnt dich für dein bereits erarbeitetes Fundament und stabilisiert den Score in harten Phasen.
-            </span>
-        </div>
-
-    </div>
-
-    <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 10px; font-style: italic; color: var(--text-muted); text-align: center; font-size: 0.8rem;">
-        <i class="fas fa-info-circle mr-1"></i> 
-        Ein Score im <strong>Prime-Bereich (> 100)</strong> ist eine Freigabe für maximale Belastung. Rutscht der Wert in den <strong>Verschleiß</strong>, ist Erholung die einzige produktive Antwort.
     </div>
 </div>
 
@@ -551,13 +513,12 @@ const SAFETY = {
   minLoadCutoff: 10     // <10 -> 0 (wie du wolltest)
 };
 
-// ===== SG ZONEN (zentral, aus PrimeRangeFinder) =====
+// ===== KEI ZONEN (V7.1 - Efficiency Index) =====
 const SG_ZONES = {
-  DETRAIN_MAX: 39,   // <39
-  MAINT_MAX:   95,   // 39–95
-  PROD_MAX:   142,   // 95–142
-  PRIME_MAX:  189    // 142–189
-  // >189 = Overload
+  DETRAIN_MAX: 0,     // < 0
+  MAINT_MAX:   5,     // 0 bis 5
+  PROD_MAX:    15,    // 5 bis 15
+  PRIME_MAX:   25     // > 15 (Elite)
 };
 
 
@@ -626,14 +587,14 @@ function getDayTargets(i) {
   let sg = base.sg;
   let acwr = base.acwr;
 
-  // Wenn BioMod aktiv: Ziele runter, v.a. A3
+  // Wenn BioMod aktiv: Ziele runter
   if (bioModOn) {
-    sg = Math.min(sg, 110);
+    sg = Math.min(sg, 5);
     acwr = Math.min(acwr, 1.00);
   }
   // Wenn Monotonie hoch: auch etwas konservativer
   if (monoOn) {
-    sg = Math.max(60, sg - 10);
+    sg = Math.max(-10, sg - 10);
     acwr = Math.min(acwr, 1.02);
   }
 
@@ -644,15 +605,15 @@ function getDayTargets(i) {
 function phaseTargetGain(phaseRaw) {
   const p = (phaseRaw ? String(phaseRaw) : "A").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
 
-  // Defaults (meine Empfehlung)
-  if (p === "E")  return 80;
-  if (p === "A1") return 120;
-  if (p === "A2") return 150;
-  if (p === "A3") return 180;
+  // Defaults (V5 Clean Engine)
+  if (p === "E")  return 15;
+  if (p === "A1") return 5;
+  if (p === "A2") return 15;
+  if (p === "A3") return 25;
 
-  // Fallback: „A“ oder unbekannt
-  if (p.startsWith("A")) return 100;
-  return 80;
+  // Fallback
+  if (p.startsWith("A")) return 10;
+  return 15;
 }
 
 function applyAutoTargetGain() {
@@ -809,6 +770,11 @@ window.onload = function () {
       try {
         console.log("=== KIRA DEBUG: SERVER DATA START ===");
         console.log("Data:", JSON.stringify(base, null, 2));
+        console.log("DEBUG SG:", { 
+            sgToday: base.sgToday, 
+            smartGainsToday_obs: base.smartGainsToday_obs,
+            todayIsClosed: base.todayIsClosed 
+        });
         console.log("=== KIRA DEBUG: SERVER DATA END ===");
 
         simBase = base;
@@ -975,7 +941,7 @@ const targetLine = `🎯 SG ${targets.targetSG} | ACWR ${targets.targetACWR.toFi
         <i class="fas ${lockIconClass} lock-btn" id="lock_icon_${i}" onclick="toggleLock(${i})"></i>
     </td>
     <td>
-        <input type="range" class="sim-slider" min="0" max="300" step="1" value="${startVal}" oninput="changeLoad(${i}, this.value)">
+        <input type="range" class="sim-slider" min="0" max="300" step="1" id="slider_${i}" value="${startVal}" oninput="changeLoad(${i}, this.value)">
         <div class="text-center mt-1 small"><span id="val_${i}" style="color:var(--warning); font-weight:bold;">${startVal}</span> ESS</div>
     </td>
     <td><input type="text" class="plan-text-input" id="sport_${i}" value="${simBase.plannedSports[i] || ''}"></td>
@@ -986,11 +952,11 @@ const targetLine = `🎯 SG ${targets.targetSG} | ACWR ${targets.targetACWR.toFi
           <input type="number" step="0.1" class="te-input anaerob" id="teAn_${i}" value="${(simBase.plannedTeAn[i] || 0).toFixed(1)}">
         </div>
     </td>
-    <td class="text-center val-box" id="atl_${i}" style="color:var(--text-muted); font-size:0.75rem;">-</td>
-    <td class="text-center val-box" id="ctl_${i}" style="color:var(--text-muted); font-size:0.75rem;">-</td>
-    <td class="text-center val-box font-weight-bold" id="acwr_${i}" style="font-size:0.8rem;">-</td>
-    <td class="text-center" id="sg_cell_${i}"><span class="val-box" id="sg_${i}" style="font-size:0.8rem;">-</span></td>
-    <td class="text-center" id="v3_status_${i}" style="font-size: 1.1rem;"></td> `;
+    <td class="text-center val-box" id="atl_${i}" style="color:var(--text-muted); font-size:1.1rem; font-weight:bold;">-</td>
+    <td class="text-center val-box" id="ctl_${i}" style="color:var(--text-muted); font-size:1.1rem; font-weight:bold;">-</td>
+    <td class="text-center val-box font-weight-bold" id="acwr_${i}" style="font-size:1.1rem; font-weight:bold;">-</td>
+    <td class="text-center" id="sg_cell_${i}"><span class="val-box" id="sg_${i}" style="font-size:1.1rem; font-weight:bold;">-</span></td>
+    `;
         tbody.appendChild(tr);
     }
 }
@@ -1035,6 +1001,11 @@ function getSeedState(simBase) {
 function updateSimulation() {
     if(!simBase) return;
     
+    console.log("=== KIRA SIM START ===");
+    console.log("todayIsClosed:", simBase.todayIsClosed);
+    console.log("sgToday (from server):", simBase.sgToday);
+    console.log("smartGainsToday_obs (from server):", simBase.smartGainsToday_obs);
+
     const seed = getSeedState(simBase);
 let tATL = seed.atl0;
 let tCTL = seed.ctl0;
@@ -1075,25 +1046,15 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
     let chartLoads = [], chartCTL = [], chartACWR = [], chartTSB = [], chartSG = [], chartLabels = [];
     const startDate = new Date(simBase.startDate);
 
-    // --- HEUTE-FIX (nur wenn geschlossen): Row 0 nicht berechnen, sondern als Seed anzeigen ---
-if (simBase.todayIsClosed) {
-    // Heute ist bereits berechnet (Ist-Werte vom Server)
+    // --- HEUTE-FIX: Row 0 nicht berechnen, sondern als Seed anzeigen ---
+    // Wir erzwingen hier den Wert aus dem GSheet (smartGainsToday_obs oder sgToday)
+    const sg0 = Number(simBase.sgToday) || Number(simBase.smartGainsToday_obs) || 0;
+    
+    // UI & Charts für Tag 0
     const atl0 = Number(simBase.atlToday || simBase.atl); 
     const ctl0 = Number(simBase.ctlToday || simBase.ctl);
     const acwr0 = atl0 / (ctl0 || 1);
 
-    // Trend für HEUTE: CTL_heute vs CTL_7d_ago
-    // History muss hier CTL_t-7 bis CTL_t-1 enthalten
-    const ctl7DaysAgo0 = (history && history.length >= 7) ? history[history.length - 7] : (history && history.length > 0 ? history[0] : ctl0);
-
-    const trendComp0  = (ctl0 - ctl7DaysAgo0) * 5.0;
-    const statusComp0 = ctl0 / 5.0;
-    const strainEst0  = atl0 * 7;
-    const costComp0   = (strainEst0 / 800.0);
-
-    const sg0 = trendComp0 + statusComp0 - costComp0;
-
-    // UI & Charts
     if (document.getElementById('atl_0')) document.getElementById('atl_0').innerText = Math.round(atl0);
     if (document.getElementById('ctl_0')) document.getElementById('ctl_0').innerText = Math.round(ctl0);
     if (document.getElementById('acwr_0')) {
@@ -1123,17 +1084,14 @@ if (simBase.todayIsClosed) {
         }
     }
 
-    // WICHTIG: History für morgen vorbereiten. history enthält jetzt t-7 bis t-1.
-    // Wir hängen heute (t) an und schieben t-7 raus -> history ist jetzt t-6 bis t.
+    // WICHTIG: Seed-Werte für die weitere Simulation anpassen
+    tATL = atl0;
+    tCTL = ctl0;
     history.push(ctl0);
     if (history.length > 7) history.shift();
 
-    // In der Schleife für morgen wird dann history[history.length - 7] wieder CTL_t-6 (relativ zu morgen t+1) sein.
-}
-
-const startI = simBase.todayIsClosed ? 1 : 0;
-
-    for(let i=startI; i<14; i++) {
+    // Simulation startet ab Tag 1
+    for (let i = 1; i < 14; i++) {
         const load = currentLoads[i];
 
         // NEU: Sleep Inputs (Tag 0 = HEUTE echt; Zukunft = Default)
@@ -1153,28 +1111,27 @@ const startI = simBase.todayIsClosed ? 1 : 0;
         tCTL = ((1 - alpha_CTL) * tCTL) + (alpha_CTL * dailyImpactCTL);
         const acwr = tATL / (tCTL || 1);
 
-        // --- 3. SMART GAINS V4 (Adaptive Engine - Garmin Optimized) ---
-        // FIX: Der Bezugspunkt für den Trend muss der Wert von vor exakt 7 Schritten sein.
-        let ctl7DaysAgo = (history.length >= 7) ? history[0] : history[0]; 
-
-        // A) Trend (5-fache Gewichtung des Wachstums)
-        const trendComp = (tCTL - ctl7DaysAgo) * 5.0; 
-
-        // B) Status Bonus (Progressive Robustheit für Garmin-Skalen)
-        const statusComp = (tCTL / 6.0) * (1.0 + (tCTL / 1000.0));
-
-        // C) Kosten (Quadratischer Strain-Abzug bei hohem ACWR)
-        const costComp = (tATL * 7.0 / 800.0) * (acwr * acwr);
+        // --- 3. Coach Kira Efficiency Index (KEI) V7.1 ---
+        // KEI = (DeltaCTL_7d * 100) / (ACWR * (1 + Monotony))
         
-        let sg = trendComp + statusComp - costComp;
+        const ctl7DaysAgo = (history.length >= 7) ? history[0] : history[0]; 
+        const trend7d = (tCTL - ctl7DaysAgo);
 
-        // D) Monotonie-Malus (Struktur-Check letzte 4 Tage)
+        // Monotonie-Check (letzte 4 Tage)
+        let monoVal = 0;
         if (i >= 3) {
             let last4 = [currentLoads[i], currentLoads[i-1], currentLoads[i-2], currentLoads[i-3]];
             let avg = last4.reduce((a,b) => a+b) / 4;
             let stdDev = Math.sqrt(last4.map(x => Math.pow(x - avg, 2)).reduce((a,b) => a+b) / 4);
-            if (stdDev < 15 && avg > 50) sg -= 20;
+            if (avg > 20) {
+              monoVal = (stdDev < 15) ? 0.5 : 0; // Strafe auf den Divisor
+            }
         }
+        
+        // KEI Berechnung V7.2 (Gedämpftes Scaling für GSheet Sync)
+        let kei = (trend7d * 10) / (acwr * (1 + monoVal));
+        if (kei < -50) kei = -50;
+        if (kei > 100) kei = 100;
 
         // --- HISTORIE FORTSCHREIBEN ---
         // Der gerade berechnete tCTL wird der neue Anker für in 7 Tagen.
@@ -1182,44 +1139,54 @@ const startI = simBase.todayIsClosed ? 1 : 0;
         if (history.length > 7) history.shift();
 
         // --- UI UPDATES ---
+        // --- PHYSIO SPALTEN (Größer & Fettdruck) ---
         const atlEl = document.getElementById('atl_'+i);
-const ctlEl = document.getElementById('ctl_'+i);
-const acwrEl = document.getElementById('acwr_'+i);
+        const ctlEl = document.getElementById('ctl_'+i);
+        const acwrEl = document.getElementById('acwr_'+i);
 
-if (atlEl) atlEl.innerText = Math.round(tATL);
-if (ctlEl) ctlEl.innerText = Math.round(tCTL);
+        if (atlEl) {
+            atlEl.innerText = Math.round(tATL);
+            atlEl.style.fontSize = "1.1rem";
+            atlEl.style.fontWeight = "bold";
+        }
+        if (ctlEl) {
+            ctlEl.innerText = Math.round(tCTL);
+            ctlEl.style.fontSize = "1.1rem";
+            ctlEl.style.fontWeight = "bold";
+            ctlEl.style.color = "var(--primary)";
+        }
         if(acwrEl) {
             acwrEl.innerText = acwr.toFixed(2);
+            acwrEl.style.fontSize = "1.1rem";
+            acwrEl.style.fontWeight = "bold";
             acwrEl.style.color = (acwr > 1.30) ? 'var(--danger)' : (acwr >= 0.80) ? 'var(--success)' : 'var(--text-muted)';
         }
         
-        // --- SMART GAINS V3 FARBLOGIK ---
+        // --- KEI EFFICIENCY ---
         const sgEl = document.getElementById('sg_'+i);
         const sgCell = document.getElementById('sg_cell_'+i);
         if(sgEl && sgCell) {
-            sgEl.innerText = (sg > 0 ? "+" : "") + sg.toFixed(1);
+            sgEl.innerText = (kei > 0 ? "+" : "") + kei.toFixed(1);
+            sgEl.style.fontSize = "1.1rem";
+            sgEl.style.fontWeight = "bold";
             
-            if (sg > SG_ZONES.PRIME_MAX) {
-  // OVERLOAD
-  sgCell.style.color = 'var(--danger)';
-  sgCell.style.background = 'rgba(239, 68, 68, 0.2)';
-} else if (sg >= SG_ZONES.PROD_MAX) {
-  // PRIME
-  sgCell.style.color = 'var(--purple)';
-  sgCell.style.background = 'rgba(212, 0, 255, 0.15)';
-} else if (sg >= SG_ZONES.MAINT_MAX) {
-  // PRODUCTIVE
-  sgCell.style.color = 'var(--success)';
-  sgCell.style.background = 'rgba(16, 185, 129, 0.15)';
-} else if (sg >= SG_ZONES.DETRAIN_MAX) {
-  // MAINTENANCE
-  sgCell.style.color = 'var(--warning)';
-  sgCell.style.background = 'rgba(245, 158, 11, 0.15)';
-} else {
-  // DETRAINING
-  sgCell.style.color = 'var(--danger)';
-  sgCell.style.background = 'rgba(239, 68, 68, 0.1)';
-}
+            if (kei >= SG_ZONES.PRIME_MAX) {
+              // ELITE EFFICIENCY
+              sgCell.style.color = 'var(--purple)';
+              sgCell.style.background = 'rgba(212, 0, 255, 0.15)';
+            } else if (kei >= SG_ZONES.PROD_MAX) {
+              // HIGH EFFICIENCY
+              sgCell.style.color = 'var(--success)';
+              sgCell.style.background = 'rgba(16, 185, 129, 0.15)';
+            } else if (kei >= SG_ZONES.MAINT_MAX) {
+              // PRODUCTIVE
+              sgCell.style.color = 'var(--warning)';
+              sgCell.style.background = 'rgba(245, 158, 11, 0.15)';
+            } else {
+              // LOW EFFICIENCY / DETRAINING
+              sgCell.style.color = 'var(--danger)';
+              sgCell.style.background = 'rgba(239, 68, 68, 0.1)';
+            }
         }
 
         // --- START V3 STATUS-ICONS (LIVE) ---
@@ -1244,7 +1211,7 @@ if (ctlEl) ctlEl.innerText = Math.round(tCTL);
         chartACWR.push(acwr.toFixed(2));
         const tsb = tCTL - tATL;
         chartTSB.push(Math.round(tsb));
-        chartSG.push(Math.round(sg));
+        chartSG.push(kei.toFixed(1));
         
         const d = new Date(startDate); d.setDate(d.getDate() + i);
         chartLabels.push(d.toLocaleDateString('de-DE', {weekday:'short', day:'2-digit'}));
@@ -1592,18 +1559,137 @@ function saveSimPlan() {
 
 // --- AUTO LEVELERS (V155 - Dual Core) ---
 
-function autoLevelLoads() {
+function autoLevelV7() {
+  console.log("Coach Kira V7 (Bio-Dynamic) gestartet");
   if(!simBase) return;
+  
+  const phase = document.getElementById('trainingPhase').value;
+  const maxESS = parseFloat(document.getElementById('maxEssInput').value) || 180;
+  const maxACWR = parseFloat(document.getElementById('maxAcwrInput').value) || 1.30;
+  
+  // Phasen-Koeffizienten für die Reiz-Amplitude
+  const coeffs = { "E": 0.15, "A1": 0.22, "A2": 0.28, "A3": 0.35 };
+  const phaseFactor = coeffs[phase] || 0.22;
+  
+  const seed = getSeedState(simBase);
+  let tATL = seed.atl0;
+  let tCTL = seed.ctl0;
+  let history = [...seed.hist];
+  let strainBuffer = 0; // Kumulierter Stress-Speicher
 
-  // Phase-basierter Solver (tagesabhängig)
-  runAutoLevel((sg, acwr, i) => {
-    const t = getDayTargets(i);
+  const cfg = simBase.config;
+  const p = (val) => (typeof val === 'number') ? val : parseFloat(String(val).replace(',', '.')) || 0;
+  const startI = simBase.todayIsClosed ? 1 : 0;
 
-    const needMore = (sg < t.targetSG) || (acwr < t.targetACWR);
-    const unsafe = (acwr > SAFETY.acwrMax) || (sg > SAFETY.sgDanger);
+  for(let i=startI; i<14; i++) {
+    if(lockedDays[i]) {
+      // Behalte manuelle Last bei
+    } else {
+      // V7 Logik: Bio-Dynamic Tension
+      const baseStim = (tCTL * phaseFactor);
+      
+      // 1. Stochastische Welle
+      const wave = 1.0 + 0.15 * Math.sin(i * 1.3 + Math.random() * 0.2);
+      let targetLoad = baseStim * wave;
+      
+      // 2. Strain-Buffer Check (Safety)
+      let currentACWR = tATL / (tCTL || 1);
+      strainBuffer += (currentACWR - 1.05);
+      
+      // 3. ACWR Cap Safety Check: Reduziere Last wenn wir an den Deckel kommen
+      // Wir simulieren kurz den ACWR für die Ziellast
+      const testStimATL = (p(cfg.S_ATL) * targetLoad) + p(cfg.B_ATL);
+      const testAlpha = (testStimATL > tATL) ? p(cfg.alpha_ATL_up) : p(cfg.alpha_ATL_down);
+      const testATL = (1 - testAlpha) * tATL + testAlpha * testStimATL;
+      const testACWR = testATL / (tCTL || 1);
+      
+      if (testACWR > maxACWR || strainBuffer > 0.15) {
+        targetLoad = targetLoad * 0.3; // Harte Reduktion auf Recovery-Niveau
+        if (testACWR > maxACWR + 0.1 || strainBuffer > 0.25) targetLoad = 0; // Notbremse
+        strainBuffer = 0; // Reset
+      }
+      
+      // 4. Cap anwenden
+      targetLoad = Math.min(Math.round(targetLoad), maxESS);
+      if (targetLoad < 15) targetLoad = 0;
+      
+      currentLoads[i] = targetLoad;
+      
+      // UI Update
+      const slider = document.getElementById('slider_'+i);
+      if(slider) slider.value = targetLoad;
+      const label = document.getElementById('val_'+i);
+      if(label) label.innerText = targetLoad;
+    }
+    
+    // Physio-Update für den nächsten Iterationsschritt (identisch zu updateSimulation)
+    const { sleepH, sleepS } = (i === 0) ? 
+      { sleepH: p(simBase.sleepHoursToday), sleepS: p(simBase.sleepScoreToday) } : 
+      { sleepH: p(cfg.sleep_hours_default), sleepS: p(cfg.sleep_score_default) };
 
-    return needMore && !unsafe;
+    const stimATL = (p(cfg.S_ATL) * currentLoads[i]) + p(cfg.B_ATL) + (p(cfg.wH_ATL) * sleepH) + (p(cfg.wS_ATL) * sleepS);
+    const stimCTL = (p(cfg.S_CTL) * currentLoads[i]) + p(cfg.B_CTL) + (p(cfg.wH_CTL) * sleepH) + (p(cfg.wS_CTL) * sleepS);
+
+    const alphaATL = (stimATL > tATL) ? p(cfg.alpha_ATL_up) : p(cfg.alpha_ATL_down);
+    tATL = (1 - alphaATL) * tATL + alphaATL * stimATL;
+    tCTL = (1 - p(cfg.alpha_CTL)) * tCTL + p(cfg.alpha_CTL) * stimCTL;
+    
+    history.push(tCTL);
+    if(history.length > 7) history.shift();
+  }
+  
+  updateSimulation();
+}
+
+function autoLevelV6() {
+  console.log("Button SET PHASE (V6) geklickt");
+  if(!simBase) return;
+  
+  const targetPctWeekly = parseFloat(document.getElementById('trainingPhase').value);
+  console.log("Ziel CTL-Wachstum (Woche):", (targetPctWeekly * 100).toFixed(1) + "%");
+
+  runAutoLevel((unused, unused2, i, testState) => {
+    const seed = getSeedState(simBase);
+    const startCTL = seed.ctl0;
+    const currentCTL = testState.calcCTL;
+    const daysOut = i + 1; 
+    
+    const currentGrowth = (currentCTL / startCTL) - 1.0;
+
+    // Recovery-Check: Jeder 4. Tag im Zyklus ist Entlastung
+    const isRecoveryDay = (daysOut % 4 === 0);
+    
+    if (isRecoveryDay) {
+      // Am Entlastungstag wollen wir, dass der Solver Lasten nahe 0 sucht.
+      // Bedingung für "min = testLoad" (wir brauchen mehr): 
+      // Wenn der Zuwachs > -0.01 ist, ist er "zu hoch" für einen Pausentag -> max = testLoad (senken).
+      // Also conditionFn = false, wenn currentGrowth > -0.01.
+      return (currentGrowth < -0.01); 
+    }
+    
+    // Zielkurve mit degressiver Dämpfung
+    const damping = 1.0 - (daysOut * 0.02); 
+    let dailyTargetPct = (targetPctWeekly / 7) * daysOut * damping;
+    
+    return (currentGrowth < dailyTargetPct);
   });
+  
+  updateSimulation();
+}
+
+function autoLevelLoads() {
+  console.log("Button SET geklickt");
+  if(!simBase) return;
+  const targetSG = parseFloat(document.getElementById('targetGainInput').value);
+  console.log("Ziel SG:", targetSG);
+
+  // V5.5: Bedingung für MEHR LAST (um SG zu senken)
+  // Wenn der simulierte SG noch zu hoch ist (> Ziel), liefert conditionFn TRUE -> max = testLoad
+  runAutoLevel((sg, acwr, i) => {
+    return (sg > targetSG); 
+  });
+  
+  updateSimulation();
 }
 
 
@@ -1618,6 +1704,7 @@ function autoLevelACWR() {
 
 /** GENERISCHE SOLVER FUNKTION (Das Gehirn) */
 function runAutoLevel(conditionFn, opts = {}) {
+    const targetSG = opts.targetSG ?? 0;
     const seed = getSeedState(simBase);
 let tATL = seed.atl0;
 let tCTL = seed.ctl0;
@@ -1697,23 +1784,23 @@ const acwr = calcATL / (calcCTL || 1);
 const recoveryMod = (simBase.hrvToday < 40 || simBase.sleepToday < 70) ? 1.5 : 1.0;
 const monotonyPenalty = (simBase.monoToday > 2.0) ? 15 : 0;
 
-// Smart Gain V3 (exakt)
-const ctl7DaysAgo = (history.length > 0) ? history[0] : calcCTL;
+// Smart Gain V5.1 (Balanced Clean) - Solver Logic (GSYNC)
+const ctl7DaysAgo = (history.length >= 7) ? history[0] : (history.length > 0 ? history[0] : calcCTL);
+const trend7d = (calcCTL - ctl7DaysAgo);
+const stress = (acwr - 1.0);
+const sg = (trend7d * 5.0) - (stress * 100);
 
-const trendComp = (calcCTL - ctl7DaysAgo) * 2.0;
-const statusComp = calcCTL / 10.0;
-const strainEst = (calcATL * 7);
-const costComp = (strainEst / 500.0) * recoveryMod;
-
-const sg = trendComp + statusComp - costComp - monotonyPenalty;
-
-
-                // 3. Check Condition (Gain oder ACWR)
-                if (conditionFn(sg, acwr, i)) { 
-                    min = testLoad; // Wir brauchen mehr!
-                } else { 
-                    max = testLoad; // Zu viel!
-                }
+// V5.9: Die PHYSIK ist entscheidend: 
+// Wenn wir mehr Last hinzufügen, steigt der Trend (positiv für SG) UND der Stress (negativ für SG).
+// Wenn SG bei 300 Last durch die Decke geht, dominiert der Trend.
+// In diesem Fall: Wenn SG < Ziel, brauchen wir MEHR Last.
+if (conditionFn && conditionFn(sg, acwr, i, { history: history, calcCTL: calcCTL })) { 
+    min = testLoad; 
+} else if (!conditionFn && sg < targetSG) {
+    min = testLoad;
+} else { 
+    max = testLoad;
+}
                 bestLoad = testLoad;
             }
         }
@@ -1727,28 +1814,44 @@ currentLoads[i] = bestLoad;
 
         // UI Updaten (wenn nicht gelockt)
         if (!lockedDays[i]) {
-            const slider = document.querySelector(`input[oninput="changeLoad(${i}, this.value)"]`);
+            currentLoads[i] = bestLoad; // Array explizit updaten
+            const slider = document.getElementById('slider_'+i);
             if(slider) slider.value = bestLoad;
             const label = document.getElementById('val_'+i);
             if(label) label.innerText = bestLoad;
         }
 
         // Physiologie fortschreiben (IDENTISCH zu updateSimulation, inkl. Sleep + Caps)
-const { sleepH: sleepH_f, sleepS: sleepS_f } = getSleepForDay(i);
+        const { sleepH: sleepH_f, sleepS: sleepS_f } = getSleepForDay(i);
 
-// Stimuli (mit Sleep)
-const stimATL_f = (S_ATL * bestLoad) + B_ATL + (wH_ATL * sleepH_f) + (wS_ATL * sleepS_f);
-const stimCTL_f = (S_CTL * bestLoad) + B_CTL + (wH_CTL * sleepH_f) + (wS_CTL * sleepS_f);
+        // Variablen für den Scope sicherstellen (p ist bereits definiert)
+        const S_ATL_final = p(cfg.S_ATL);
+        const B_ATL_final = p(cfg.B_ATL);
+        const wH_ATL_final = p(cfg.wH_ATL) || 0;
+        const wS_ATL_final = p(cfg.wS_ATL) || 0;
+        const S_CTL_final = p(cfg.S_CTL);
+        const B_CTL_final = p(cfg.B_CTL);
+        const wH_CTL_final = p(cfg.wH_CTL) || 0;
+        const wS_CTL_final = p(cfg.wS_CTL) || 0;
+        const alpha_ATL_up_final = p(cfg.alpha_ATL_up);
+        const alpha_ATL_down_final = p(cfg.alpha_ATL_down);
+        const alpha_CTL_final = p(cfg.alpha_CTL);
+        const cap_up_ATL_final = p(cfg.cap_up_ATL) || 1000;
+        const cap_down_ATL_final = p(cfg.cap_down_ATL) || 1000;
 
-// ATL smoothing + Caps (wie updateSimulation)
-const goingUp_f = stimATL_f > tATL;
-const alphaATL_f = goingUp_f ? alpha_ATL_up : alpha_ATL_down;
+        // Stimuli (mit Sleep)
+        const stimATL_f = (S_ATL_final * currentLoads[i]) + B_ATL_final + (wH_ATL_final * sleepH_f) + (wS_ATL_final * sleepS_f);
+        const stimCTL_f = (S_CTL_final * currentLoads[i]) + B_CTL_final + (wH_CTL_final * sleepH_f) + (wS_CTL_final * sleepS_f);
 
-let rawATL_f = ((1 - alphaATL_f) * tATL) + (alphaATL_f * stimATL_f);
-tATL = Math.min(Math.max(rawATL_f, tATL - cap_down_ATL), tATL + cap_up_ATL);
+        // ATL smoothing + Caps (wie updateSimulation)
+        const goingUp_f = stimATL_f > tATL;
+        const alphaATL_f = goingUp_f ? alpha_ATL_up_final : alpha_ATL_down_final;
 
-// CTL smoothing (wie updateSimulation)
-tCTL = ((1 - alpha_CTL) * tCTL) + (alpha_CTL * stimCTL_f);
+        let rawATL_f = ((1 - alphaATL_f) * tATL) + (alphaATL_f * stimATL_f);
+        tATL = Math.min(Math.max(rawATL_f, tATL - cap_down_ATL_final), tATL + cap_up_ATL_final);
+
+        // CTL smoothing (wie updateSimulation)
+        tCTL = ((1 - alpha_CTL_final) * tCTL) + (alpha_CTL_final * stimCTL_f);
 
 // Historie rotieren
 if (history.length >= 7) history.shift();
