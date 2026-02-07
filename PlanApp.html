@@ -433,7 +433,7 @@
 
     <div style="background: var(--card-bg); padding: 20px; border-radius: 10px; border: 1.5px solid var(--primary); margin-bottom: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-family: 'Roboto Condensed', sans-serif; color: var(--text-main); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);">
         <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 5px;">
-            KEI = (ΔCTL<sub>7d</sub> × 100) / (ACWR × (1 + Monotony))
+            KEI = (ΔCTL<sub>7d</sub> × 10) / (ACWR × (1 + Monotonie))
         </div>
         <div style="font-size: 0.8rem; text-align: center; color: var(--text-muted);">
             Ziel: Maximale Fitness-Steigerung bei minimalem biologischem Preis.
@@ -1119,7 +1119,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         const acwr = tATL / (tCTL || 1);
 
         // --- 3. Coach Kira Efficiency Index (KEI) V7.1 ---
-        // KEI = (DeltaCTL_7d * 100) / (ACWR * (1 + Monotony))
+        // KEI = (DeltaCTL_7d * 10) / (ACWR * (1 + Monotony))
         
         const ctl7DaysAgo = (history.length >= 7) ? history[0] : history[0]; 
         const trend7d = (tCTL - ctl7DaysAgo);
@@ -1182,7 +1182,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
             sgEl.style.fontSize = "1.1rem";
             sgEl.style.fontWeight = "bold";
 
-            const dampTooltip = "KEI = trend7d*10 / (ACWR × (1+Monotonie))";
+            const dampTooltip = "KEI = ΔCTL_7d×10 / (ACWR × (1+Monotonie))";
             let dampEl = sgCell.querySelector('.kei-damps');
             if (!dampEl) {
                 dampEl = document.createElement('div');
