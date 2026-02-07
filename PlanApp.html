@@ -433,10 +433,10 @@
 
     <div style="background: var(--card-bg); padding: 20px; border-radius: 10px; border: 1.5px solid var(--primary); margin-bottom: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-family: 'Roboto Condensed', sans-serif; color: var(--text-main); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);">
         <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 5px;">
-            KEI = (ΔCTL<sub>7d</sub> × 10) / (ACWR × (1 + Monotonie))
+            KEI<sub>roh</sub> = (ΔCTL<sub>7d</sub> × 10) / (ACWR × (1 + Monotonie))
         </div>
         <div style="font-size: 0.8rem; text-align: center; color: var(--text-muted);">
-            Ziel: Maximale Fitness-Steigerung bei minimalem biologischem Preis.
+            Anzeige: KEI = tanh(KEI<sub>roh</sub>/50) × 50 (Ausreißer-Kompression).
         </div>
     </div>
 </div>
@@ -1138,10 +1138,11 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         const monoPenalty = (1 + monoVal);
         const monoActive = monoVal > 0;
         
-        // KEI Berechnung V7.2 (Gedämpftes Scaling für GSheet Sync)
+        // KEI Berechnung V7.2 (Nichtlineare Kompression für stabile Anzeige)
         const keiRaw = (trend7d * 10);
         let kei = keiRaw / (acwrPenalty * monoPenalty);
-        const keiEffective = kei;
+        const keiCompressed = Math.tanh(kei / 50) * 50;
+        const keiEffective = keiCompressed;
 
         // --- HISTORIE FORTSCHREIBEN ---
         // Der gerade berechnete tCTL wird der neue Anker für in 7 Tagen.
@@ -1180,21 +1181,21 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
             sgEl.style.fontSize = "1.1rem";
             sgEl.style.fontWeight = "bold";
 
-            const dampTooltip = "KEI = ΔCTL_7d×10 / (ACWR × (1+Monotonie))";
+            const dampTooltip = "KEI_roh = ΔCTL_7d×10 / (ACWR × (1+Monotonie)); Anzeige: tanh(KEI_roh/50)×50";
             let dampEl = sgCell.querySelector('.kei-damps');
             if (!dampEl) {
                 dampEl = document.createElement('div');
                 dampEl.className = 'kei-damps';
                 sgCell.appendChild(dampEl);
             }
-            const keiBefore = keiRaw / 1;
             const acwrPenaltyDelta = Math.round((keiRaw / acwrPenalty) - keiRaw);
             const formatPenalty = (value) => {
                 if (value === 0) return "0";
                 return `-${Math.abs(value)}`;
             };
             const dampBadges = [
-                `<span class="kei-badge kei-badge-muted" title="${dampTooltip}">ACWR x${acwrPenalty.toFixed(2)} (${formatPenalty(acwrPenaltyDelta)})</span>`
+                `<span class="kei-badge kei-badge-muted" title="${dampTooltip}">ACWR x${acwrPenalty.toFixed(2)} (${formatPenalty(acwrPenaltyDelta)})</span>`,
+                `<span class="kei-badge kei-badge-muted" title="${dampTooltip}">tanh/50 (${keiCompressed.toFixed(1)})</span>`
             ];
             if (monoActive) {
                 const monoPenaltyDelta = Math.round((keiRaw / (acwrPenalty * monoPenalty)) - (keiRaw / acwrPenalty));
@@ -1202,15 +1203,15 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
             }
             dampEl.innerHTML = dampBadges.join('');
             
-            if (kei >= SG_ZONES.PRIME_MAX) {
+            if (keiEffective >= SG_ZONES.PRIME_MAX) {
               // ELITE EFFICIENCY
               sgCell.style.color = 'var(--purple)';
               sgCell.style.background = 'rgba(212, 0, 255, 0.15)';
-            } else if (kei >= SG_ZONES.PROD_MAX) {
+            } else if (keiEffective >= SG_ZONES.PROD_MAX) {
               // HIGH EFFICIENCY
               sgCell.style.color = 'var(--success)';
               sgCell.style.background = 'rgba(16, 185, 129, 0.15)';
-            } else if (kei >= SG_ZONES.MAINT_MAX) {
+            } else if (keiEffective >= SG_ZONES.MAINT_MAX) {
               // PRODUCTIVE
               sgCell.style.color = 'var(--warning)';
               sgCell.style.background = 'rgba(245, 158, 11, 0.15)';
@@ -1243,7 +1244,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         chartACWR.push(acwr.toFixed(2));
         const tsb = tCTL - tATL;
         chartTSB.push(Math.round(tsb));
-        chartSG.push(kei.toFixed(1));
+        chartSG.push(keiEffective.toFixed(1));
         
         const d = new Date(startDate); d.setDate(d.getDate() + i);
         chartLabels.push(d.toLocaleDateString('de-DE', {weekday:'short', day:'2-digit'}));
