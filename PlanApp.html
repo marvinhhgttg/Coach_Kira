@@ -1130,8 +1130,6 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         
         // KEI Berechnung V7.2 (Gedämpftes Scaling für GSheet Sync)
         let kei = (trend7d * 10) / (acwr * (1 + monoVal));
-        if (kei < -50) kei = -50;
-        if (kei > 100) kei = 100;
 
         // --- HISTORIE FORTSCHREIBEN ---
         // Der gerade berechnete tCTL wird der neue Anker für in 7 Tagen.
