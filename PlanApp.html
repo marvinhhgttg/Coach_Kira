@@ -547,8 +547,8 @@ function tsbThresholdsByCTL(ctl, bioModOn=false, monoOn=false) {
   const overBase  = -40;
 
   // Caps (nicht tiefer als...)
-  const tiredMin = -50;
-  const overMin  = -90;
+  // const tiredMin = -50;
+  // const overMin  = -90;
 
   return {
     TSB_TIRED:     Math.max(tiredBase - shift, tiredMin),
