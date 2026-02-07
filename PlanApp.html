@@ -381,7 +381,7 @@
             <th>CTL</th>
             <th>ACWR</th>
             <th>Smart Gain</th>
-            <th width="40px">V3</th> </tr>
+            <th width="40px">V4</th> </tr>
         </thead>
         <tbody id="simBody"></tbody>
       </table>
@@ -400,25 +400,30 @@
     <div style="margin-top: 20px; padding: 20px; background: rgba(37, 99, 235, 0.03); border-radius: 12px; border: 1px solid var(--border-color); font-size: 0.85rem; line-height: 1.6; color: var(--text-main);">
     
     <h4 style="margin-top: 0; color: var(--primary); font-family: 'Roboto Condensed', sans-serif; text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-        <i class="fas fa-project-diagram"></i> Smart Gains V3 – Die analytische Instanz
+        <i class="fas fa-project-diagram"></i> Smart Gains V4 – Die adaptive Engine
     </h4>
     
     <p style="margin: 15px 0; color: var(--text-muted);">
-        Smart Gains V3 ist kein simpler Belastungsrechner, sondern dein <strong>biologisches Gewissen</strong>. Während V2 rein mathematisch vorging, bewertet V3 nun die <strong>Adaptations-Effizienz</strong>: Kann dein Körper den Trainingsreiz aktuell überhaupt in Fitness ummünzen?
+        Smart Gains V4 ist dein <strong>biologisches Gewissen</strong>, optimiert auf Garmin-Skalen. Ohne Live-Biomarker bewertet V4 die <strong>Adaptations-Effizienz</strong> durch das Verhältnis von Fundament (CTL) zu aktuellem Reiz (ACWR) und struktureller Varianz.
     </p>
 
     <div style="background: var(--card-bg); padding: 20px; border-radius: 10px; border: 1.5px solid var(--primary); margin-bottom: 20px; display: flex; justify-content: center; align-items: center; font-family: 'Roboto Condensed', sans-serif; font-weight: 700; color: var(--text-main); font-size: 1.1rem; gap: 6px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);">
-        <span>SG <sub style="font-size: 0.65rem;">V3</sub> = (Trend × 5.0 + </span>
+        <span>SG <sub style="font-size: 0.65rem;">V4</sub> = (Trend × 5.0 + </span>
         <div style="display: inline-flex; flex-direction: column; align-items: center; line-height: 1; font-size: 0.9rem;">
             <span style="border-bottom: 2px solid var(--text-main); padding: 0 6px;">CTL</span>
-            <span style="padding-top: 3px;">5</span>
+            <span style="padding-top: 3px;">6</span>
+        </div>
+        <span>) × (1 + </span>
+        <div style="display: inline-flex; flex-direction: column; align-items: center; line-height: 1; font-size: 0.9rem;">
+            <span style="border-bottom: 2px solid var(--text-main); padding: 0 6px;">CTL</span>
+            <span style="padding-top: 3px;">1000</span>
         </div>
         <span>) − (</span>
         <div style="display: inline-flex; flex-direction: column; align-items: center; line-height: 1; font-size: 0.9rem;">
             <span style="border-bottom: 2px solid var(--text-main); padding: 0 6px;">Strain</span>
             <span style="padding-top: 3px;">800</span>
         </div>
-        <span>)</span>
+        <span> × ACWR²)</span>
     </div>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
@@ -802,6 +807,10 @@ window.onload = function () {
   google.script.run
     .withSuccessHandler(function (base) {
       try {
+        console.log("=== KIRA DEBUG: SERVER DATA START ===");
+        console.log("Data:", JSON.stringify(base, null, 2));
+        console.log("=== KIRA DEBUG: SERVER DATA END ===");
+
         simBase = base;
 
         // Phase-Autotarget initial setzen (nur wenn kein Override)
@@ -1128,53 +1137,49 @@ const startI = simBase.todayIsClosed ? 1 : 0;
         const load = currentLoads[i];
 
         // NEU: Sleep Inputs (Tag 0 = HEUTE echt; Zukunft = Default)
-const sleepH = (i === 0) ? p(simBase.sleepHoursToday) : sleepHoursDefault;
-const sleepS = (i === 0) ? p(simBase.sleepScoreToday) : sleepScoreDefault;
+        const sleepH = (i === 0) ? p(simBase.sleepHoursToday) : sleepHoursDefault;
+        const sleepS = (i === 0) ? p(simBase.sleepScoreToday) : sleepScoreDefault;
 
-        
         // --- 1. ATL (Glättung & Caps) ---
         const dailyImpactATL = (S_ATL * load) + B_ATL + (wH_ATL * sleepH) + (wS_ATL * sleepS);
         const isGoingUp = dailyImpactATL > tATL;
         const alphaToUse = isGoingUp ? alpha_ATL_up : alpha_ATL_down;
         let rawNewATL = ((1 - alphaToUse) * tATL) + (alphaToUse * dailyImpactATL);
 
-        // ✅ DEBUG GENAU HIER (nur Tag 0)
-if (i === 0) {
-  console.log("[PLANAPP] Seed ATL/CTL (gestern):", tATL, tCTL);
-  console.log("[PLANAPP] Load/Sleep:", load, sleepH, sleepS);
-  console.log("[PLANAPP] StimATL:", dailyImpactATL, "alpha:", alphaToUse, "rawATL:", rawNewATL);
-  console.log("[PLANAPP] Caps:", (tATL - cap_down_ATL), (tATL + cap_up_ATL));
-}
-        
         tATL = Math.min(Math.max(rawNewATL, tATL - cap_down_ATL), tATL + cap_up_ATL);
-        
+
         // --- 2. CTL ---
         const dailyImpactCTL = (S_CTL * load) + B_CTL + (wH_CTL * sleepH) + (wS_CTL * sleepS);
-        // ✅ DEBUG GENAU HIER (nur Tag 0)
-  if (i === 0) {
-    console.log("[PLANAPP] Seed (gestern) ATL/CTL:", tATL, tCTL);
-    console.log("[PLANAPP] Heute Load:", load, "SleepH:", sleepH, "SleepS:", sleepS);
-    console.log("[PLANAPP] Stimuli ATL/CTL:", dailyImpactATL, dailyImpactCTL);
-  }
         tCTL = ((1 - alpha_CTL) * tCTL) + (alpha_CTL * dailyImpactCTL);
         const acwr = tATL / (tCTL || 1);
 
+        // --- 3. SMART GAINS V4 (Adaptive Engine - Garmin Optimized) ---
+        // FIX: Der Bezugspunkt für den Trend muss der Wert von vor exakt 7 Schritten sein.
+        let ctl7DaysAgo = (history.length >= 7) ? history[0] : history[0]; 
 
-
-        // --- 3. SMART GAINS V3 (Pure Engine - Rebalanced for high Alphas) ---
-        // GSheet logic: ( (CTL_today - CTL_7d_ago) * 5.0 ) + ( CTL_today / 5.0 ) - ( (ATL_today * 7) / 800 )
-        let ctl7DaysAgo = (history.length >= 7) ? history[history.length - 7] : history[0]; 
-        
+        // A) Trend (5-fache Gewichtung des Wachstums)
         const trendComp = (tCTL - ctl7DaysAgo) * 5.0; 
-        const statusComp = tCTL / 5.0;               
-        const strainEst = (tATL * 7); 
-        const costComp = strainEst / 800.0; 
+
+        // B) Status Bonus (Progressive Robustheit für Garmin-Skalen)
+        const statusComp = (tCTL / 6.0) * (1.0 + (tCTL / 1000.0));
+
+        // C) Kosten (Quadratischer Strain-Abzug bei hohem ACWR)
+        const costComp = (tATL * 7.0 / 800.0) * (acwr * acwr);
         
         let sg = trendComp + statusComp - costComp;
 
-        // --- HISTORIE FORTSCHREIBEN (WICHTIG FÜR NÄCHSTEN TAG) ---
-        if (history.length >= 7) history.shift();
+        // D) Monotonie-Malus (Struktur-Check letzte 4 Tage)
+        if (i >= 3) {
+            let last4 = [currentLoads[i], currentLoads[i-1], currentLoads[i-2], currentLoads[i-3]];
+            let avg = last4.reduce((a,b) => a+b) / 4;
+            let stdDev = Math.sqrt(last4.map(x => Math.pow(x - avg, 2)).reduce((a,b) => a+b) / 4);
+            if (stdDev < 15 && avg > 50) sg -= 20;
+        }
+
+        // --- HISTORIE FORTSCHREIBEN ---
+        // Der gerade berechnete tCTL wird der neue Anker für in 7 Tagen.
         history.push(tCTL);
+        if (history.length > 7) history.shift();
 
         // --- UI UPDATES ---
         const atlEl = document.getElementById('atl_'+i);
