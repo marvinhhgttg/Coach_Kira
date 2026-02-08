@@ -144,6 +144,15 @@
     }
     .kei-badge-muted { color: var(--text-muted); background: rgba(107, 114, 128, 0.15); }
     .kei-badge-warning { color: var(--warning); background: rgba(245, 158, 11, 0.15); }
+    .kei-zone {
+      border-radius: 6px;
+      padding: 6px 4px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    .kei-zone-green { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .kei-zone-blue { background: rgba(14, 165, 233, 0.15); color: var(--primary); }
+    .kei-zone-yellow { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .kei-zone-red { background: rgba(239, 68, 68, 0.18); color: var(--danger); }
     .text-date { color: var(--primary); font-family: 'Roboto Condensed', sans-serif; font-weight: 700; }
     
     .btn-save {
@@ -1232,6 +1241,17 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
             sgEl.innerText = (keiDisplay > 0 ? "+" : "") + keiDisplay.toFixed(1);
             sgEl.style.fontSize = "1.1rem";
             sgEl.style.fontWeight = "bold";
+            sgCell.classList.remove('kei-zone', 'kei-zone-green', 'kei-zone-blue', 'kei-zone-yellow', 'kei-zone-red');
+            const isStressHigh = acwr > 1.30 || monoActive;
+            let keiZoneClass = 'kei-zone-yellow';
+            if (keiEffective >= 8) {
+                keiZoneClass = 'kei-zone-green';
+            } else if (keiEffective >= 3) {
+                keiZoneClass = 'kei-zone-blue';
+            } else if (keiEffective < 0 || (keiEffective === 0 && isStressHigh)) {
+                keiZoneClass = 'kei-zone-red';
+            }
+            sgCell.classList.add('kei-zone', keiZoneClass);
 
             const dampTooltip = "KEI = 10 × ΔCTL_7d / (1 + ACWR-P + Monotonie-P)";
             let dampEl = sgCell.querySelector('.kei-damps');
