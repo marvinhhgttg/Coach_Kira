@@ -1195,11 +1195,11 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
             };
             const dampBadges = [
                 `<span class="kei-badge kei-badge-muted" title="${dampTooltip}">ACWR x${acwrPenalty.toFixed(2)} (${formatPenalty(acwrPenaltyDelta)})</span>`,
-                `<span class="kei-badge kei-badge-muted" title="${dampTooltip}">tanh/50 (${keiCompressed.toFixed(1)})</span>`
+                `<span class="kei-badge kei-badge-muted" title="${dampTooltip}">tanh x${keiCompressed.toFixed(1)}</span>`
             ];
             if (monoActive) {
                 const monoPenaltyDelta = Math.round((keiRaw / (acwrPenalty * monoPenalty)) - (keiRaw / acwrPenalty));
-                dampBadges.push(`<span class="kei-badge kei-badge-warning" title="${dampTooltip}">Monotonie x${monoPenalty.toFixed(2)} (${formatPenalty(monoPenaltyDelta)})</span>`);
+                dampBadges.push(`<span class="kei-badge kei-badge-warning" title="${dampTooltip}">Mono x${monoPenalty.toFixed(2)} (${formatPenalty(monoPenaltyDelta)})</span>`);
             }
             dampEl.innerHTML = dampBadges.join('');
             
