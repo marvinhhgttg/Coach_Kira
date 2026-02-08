@@ -416,10 +416,10 @@
     
     <div class="legend-box">
         <div style="font-weight:bold; color:var(--text-muted);">Efficiency Index (KEI) Legende:</div>
-        <div class="legend-item"><div class="dot" style="background:var(--danger)"></div> KEI = 0 trotz hoher Last / &lt; 0 Inefficient / Risk</div>
-        <div class="legend-item"><div class="dot" style="background:var(--warning)"></div> 0 bis &lt; 3 Maintenance / Transition</div>
-        <div class="legend-item"><div class="dot" style="background:var(--primary)"></div> 3 bis &lt; 8 Productive</div>
-        <div class="legend-item"><div class="dot" style="background:var(--success)"></div> ≥ 8 High Efficiency</div>
+        <div class="legend-item"><div class="dot" style="background:var(--success)"></div> High Efficiency (≥ 8)</div>
+        <div class="legend-item"><div class="dot" style="background:var(--primary)"></div> Productive (3 bis &lt; 8)</div>
+        <div class="legend-item"><div class="dot" style="background:var(--warning)"></div> Maintenance / Transition (0 bis &lt; 3)</div>
+        <div class="legend-item"><div class="dot" style="background:var(--danger)"></div> Inefficient / Risk (&lt; 0 Stress ohne Gewinn)</div>
     </div>
 
     <div style="margin-top: 20px; padding: 20px; background: rgba(37, 99, 235, 0.03); border-radius: 12px; border: 1px solid var(--border-color); font-size: 0.85rem; line-height: 1.6; color: var(--text-main);">
@@ -436,7 +436,7 @@
           <li><strong style="color:var(--success);">High Efficiency (≥ 8):</strong> Maximaler Fitness-Ertrag bei minimalem biologischem Preis.</li>
           <li><strong style="color:var(--primary);">Productive (3 bis &lt; 8):</strong> Optimaler Trainingsreiz. Der Aufbau ist nachhaltig und kontrolliert.</li>
           <li><strong style="color:var(--warning);">Maintenance / Transition (0 bis &lt; 3):</strong> Stabilisierungsphase. Kein signifikanter Aufbau, aber Erhalt des Niveaus.</li>
-          <li><strong style="color:var(--danger);">Inefficient / Risk (KEI = 0 trotz hoher Last oder &lt; 0):</strong> Unwirtschaftlicher Bereich (Detraining oder massiver Stress-Überhang).</li>
+          <li><strong style="color:var(--danger);">Inefficient / Risk (&lt; 0 Stress ohne Gewinn):</strong> Unwirtschaftlicher Bereich (Detraining oder massiver Stress-Überhang).</li>
         </ul>
     </div>
 
@@ -1963,8 +1963,43 @@ history.push(tCTL);
 // --- CHART LOGIK ---
 function initChart() {
     const ctx = document.getElementById('simChart').getContext('2d');
+    const keiZonePlugin = {
+        id: 'keiZoneBackground',
+        beforeDatasetsDraw(chart) {
+            const { chartArea, scales } = chart;
+            if (!chartArea || !scales?.y3) return;
+
+            const yScale = scales.y3;
+            const left = chartArea.left;
+            const right = chartArea.right;
+
+            const zones = [
+                { min: Number.NEGATIVE_INFINITY, max: SG_ZONES.DETRAIN_MAX, color: 'rgba(239, 68, 68, 0.08)' },
+                { min: SG_ZONES.DETRAIN_MAX, max: SG_ZONES.MAINT_MAX, color: 'rgba(245, 158, 11, 0.08)' },
+                { min: SG_ZONES.MAINT_MAX, max: SG_ZONES.PROD_MAX, color: 'rgba(59, 130, 246, 0.08)' },
+                { min: SG_ZONES.PROD_MAX, max: Number.POSITIVE_INFINITY, color: 'rgba(16, 185, 129, 0.08)' }
+            ];
+
+            zones.forEach((zone) => {
+                const topValue = Math.min(zone.max, yScale.max);
+                const bottomValue = Math.max(zone.min, yScale.min);
+                if (topValue <= bottomValue) return;
+
+                const yTop = yScale.getPixelForValue(topValue);
+                const yBottom = yScale.getPixelForValue(bottomValue);
+                const height = yBottom - yTop;
+
+                chart.ctx.save();
+                chart.ctx.fillStyle = zone.color;
+                chart.ctx.fillRect(left, yTop, right - left, height);
+                chart.ctx.restore();
+            });
+        }
+    };
+
     myChart = new Chart(ctx, {
         type: 'bar',
+        plugins: [keiZonePlugin],
         data: {
             labels: [],
             datasets: [
@@ -1977,13 +2012,13 @@ function initChart() {
                 },
                 {
                     type: 'line',
-                    label: 'Smart Gain',
+                    label: 'KEI',
                     data: [],
                     borderColor: '#d400ff', // Lila
                     borderWidth: 2,
                     tension: 0.3,
                     pointRadius: 2,
-                    yAxisID: 'y1',
+                    yAxisID: 'y3',
                     order: 2
                 },
                 {
@@ -2029,8 +2064,18 @@ function initChart() {
                     type: 'linear',
                     display: true,
                     position: 'right',
-                    title: { display: true, text: 'Load / Score' },
+                    title: { display: true, text: 'Load / CTL' },
                     grid: { color: 'rgba(200, 200, 200, 0.1)' }
+                },
+                y3: { // Rechts (KEI)
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    offset: true,
+                    min: -1,
+                    max: 10,
+                    title: { display: true, text: 'KEI' },
+                    grid: { drawOnChartArea: false }
                 },
                 x: { grid: { display: false } }
             }
@@ -2392,6 +2437,38 @@ function updateChart(labels, loads, ctls, acwrs, sgs) {
     myChart.data.datasets[1].data = sgs;
     myChart.data.datasets[2].data = acwrs;
     myChart.data.datasets[3].data = ctls;
+
+    const finiteVals = (arr) => (Array.isArray(arr) ? arr.filter((v) => Number.isFinite(v)) : []);
+    const setAxisRange = (axis, values, { minBound = null, maxBound = null, minFloor = null, maxCeil = null } = {}) => {
+        if (!axis || values.length === 0) return;
+        let minVal = Math.min(...values);
+        let maxVal = Math.max(...values);
+        if (minFloor !== null) minVal = Math.min(minVal, minFloor);
+        if (maxCeil !== null) maxVal = Math.max(maxVal, maxCeil);
+        const span = Math.max(1, maxVal - minVal);
+        const pad = Math.max(0.5, span * 0.1);
+        let nextMin = minVal - pad;
+        let nextMax = maxVal + pad;
+        if (minBound !== null) nextMin = Math.max(nextMin, minBound);
+        if (maxBound !== null) nextMax = Math.min(nextMax, maxBound);
+        if (nextMin === nextMax) {
+            nextMin -= 1;
+            nextMax += 1;
+        }
+        axis.min = nextMin;
+        axis.max = nextMax;
+    };
+
+    const loadVals = finiteVals(loads);
+    const ctlVals = finiteVals(ctls);
+    const keiVals = finiteVals(sgs);
+
+    setAxisRange(myChart.options.scales?.y1, [...loadVals, ...ctlVals], { minBound: 0 });
+    setAxisRange(myChart.options.scales?.y3, keiVals, {
+        minFloor: SG_ZONES.DETRAIN_MAX,
+        maxCeil: SG_ZONES.PROD_MAX
+    });
+
     myChart.update('none'); // 'none' verhindert Animationen
 }
 
