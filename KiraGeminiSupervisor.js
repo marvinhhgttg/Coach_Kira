@@ -7598,17 +7598,17 @@ if (startRowIndex < 1) startRowIndex = todayRow;
 
     const startRowData = data[startRowIndex];
 
-    // Logik: Erst CoachE Forecast, dann Observation, dann Baseline
-    let finalATL = parseVal(startRowData[idx.atlFc]); 
+    // Logik: Erst Observation, dann CoachE Forecast, dann Baseline
+    let finalATL = parseVal(startRowData[idx.atlObs]);
     if (finalATL === 0) {
-        finalATL = parseVal(startRowData[idx.atlObs]); 
-        if (finalATL === 0) finalATL = base.atl; 
+        finalATL = parseVal(startRowData[idx.atlFc]);
+        if (finalATL === 0) finalATL = base.atl;
     }
 
-    let finalCTL = parseVal(startRowData[idx.ctlFc]); 
+    let finalCTL = parseVal(startRowData[idx.ctlObs]);
     if (finalCTL === 0) {
-        finalCTL = parseVal(startRowData[idx.ctlObs]); 
-        if (finalCTL === 0) finalCTL = base.ctl; 
+        finalCTL = parseVal(startRowData[idx.ctlFc]);
+        if (finalCTL === 0) finalCTL = base.ctl;
     }
 
     // --- B) HISTORIE (Letzte 7 Tage BIS GESTERN) ---
@@ -7617,8 +7617,8 @@ let ctlHistory = [];
 for (let k = 6; k >= 0; k--) {
   const r = startRowIndex - k;   // endet bei startRowIndex (= gestern)
   if (r >= 1) {
-    let histVal = parseVal(data[r][idx.ctlFc]); // Prio Forecast
-    if (histVal === 0) histVal = parseVal(data[r][idx.ctlObs]);
+    let histVal = parseVal(data[r][idx.ctlObs]); // Prio Observation
+    if (histVal === 0) histVal = parseVal(data[r][idx.ctlFc]);
     if (histVal === 0) histVal = base.ctl;
     ctlHistory.push(histVal);
   } else {
