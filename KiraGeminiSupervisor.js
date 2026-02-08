@@ -7453,8 +7453,10 @@ function getSimStartValues() {
   sport: headers.indexOf('sport_x'),
   zone: headers.indexOf('coach_zone'),
   zoneBackup: headers.indexOf('zone'),
-  fix: headers.indexOf('fix')
+  fix: headers.indexOf('fix'),
+  kei: headers.indexOf('coache_smart_gains')
 };
+if (idx.kei === -1) idx.kei = headers.indexOf('smart gain forecast');
 
 
     // Helper: Zahlen sicher parsen (1,2 -> 1.2)
@@ -7654,7 +7656,7 @@ const startDateMs = (snapshotActive && snap && typeof snap.startDate === 'number
   : new Date(data[todayRow][idx.date]).getTime();
 
     // --- C) ZUKUNFT (14 Tage ab Heute) ---
-    let phases=[], plannedLoads=[], plannedTeAe=[], plannedTeAn=[], plannedSports=[], plannedZones=[], lockedDays=[];
+    let phases=[], plannedLoads=[], plannedTeAe=[], plannedTeAn=[], plannedSports=[], plannedZones=[], lockedDays=[], keiBaseline=[];
     
     for(let i=0; i<14; i++) {
       let r = todayRow + i;
@@ -7680,6 +7682,16 @@ plannedLoads.push(essVal);
         let z = data[r][idx.zone];
         if (!z && idx.zoneBackup > -1) z = data[r][idx.zoneBackup];
         plannedZones.push(z || "");
+
+        let keiVal = null;
+        if (idx.kei > -1) {
+          const rawKei = data[r][idx.kei];
+          if (rawKei !== "" && rawKei != null) {
+            const parsedKei = parseFloat(String(rawKei).replace(',', '.'));
+            if (Number.isFinite(parsedKei)) keiVal = parsedKei;
+          }
+        }
+        keiBaseline.push(keiVal);
         
         // LOCK STATUS LESEN
 let isLocked = false;
@@ -7699,6 +7711,7 @@ lockedDays.push(isLocked);
         plannedLoads.push(0);
         phases.push("E");
         lockedDays.push(false);
+        keiBaseline.push(null);
       }
     }
 
@@ -7854,6 +7867,7 @@ todayCTL_obs: todayCTL_obs,
   plannedTeAn,
   plannedSports,
   plannedZones,
+  keiBaseline,
   lockedDays,
   ctlHistory, // kannst du lassen für Backward-Compatibility
   kiraBriefing
