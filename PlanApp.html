@@ -1248,7 +1248,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         const sgEl = document.getElementById('sg_'+i);
         const sgCell = document.getElementById('sg_cell_'+i);
         const keiBaselineVal = readKeiBaseline(i);
-        const keiDisplay = (keiBaselineVal !== null) ? keiBaselineVal : keiEffective;
+        const keiDisplay = (i === 0 && keiBaselineVal !== null) ? keiBaselineVal : keiEffective;
         if(sgEl && sgCell) {
             sgEl.innerText = (keiDisplay > 0 ? "+" : "") + keiDisplay.toFixed(1);
             sgEl.style.fontSize = "1.1rem";
