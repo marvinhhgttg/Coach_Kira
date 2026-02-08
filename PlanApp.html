@@ -1065,7 +1065,7 @@ let tATL = seed.atl0;
 let tCTL = seed.ctl0;
 // let chartTSB = [];
 let history = [...seed.hist];
-if (history.length > 7) history = history.slice(-7);
+history = history.slice(-7);
     
     const cfg = simBase.config;
     const p = (val) => {
@@ -1134,7 +1134,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
     tATL = atl0;
     tCTL = ctl0;
     history.push(ctl0);
-    if (history.length > 7) history = history.slice(-7);
+    history = history.slice(-7);
 
     // Simulation startet ab Tag 1
     for (let i = 1; i < 14; i++) {
@@ -1189,7 +1189,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         // --- HISTORIE FORTSCHREIBEN ---
         // Der gerade berechnete tCTL wird der neue Anker für in 7 Tagen.
         history.push(tCTL);
-        if (history.length > 7) history = history.slice(-7);
+        history = history.slice(-7);
 
         // --- UI UPDATES ---
         // --- PHYSIO SPALTEN (Größer & Fettdruck) ---
