@@ -1136,7 +1136,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         const monoActive = monoC > 1.5;
         
         // KEI Berechnung V7.2 (Lineare Skalierung für stabile Anzeige)
-        const keiEffective = 10 * (deltaCtl7dPos / (1 + acwrPenalty + monoPenalty));
+        const keiEffective = 10 * (deltaCtl7d / (1 + acwrPenalty + monoPenalty));
 
         // --- HISTORIE FORTSCHREIBEN ---
         // Der gerade berechnete tCTL wird der neue Anker für in 7 Tagen.
