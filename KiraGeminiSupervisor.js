@@ -7465,6 +7465,15 @@ if (idx.kei === -1) idx.kei = headers.indexOf('smart gain forecast');
        if (typeof v === 'number') return v;
        return parseFloat(String(v).replace(',', '.')) || 0;
     };
+
+    // Logik: Erst Observation, dann CoachE Forecast, dann Baseline
+    const pickObservedOrForecast = (rowData, obsIdx, fcIdx, fallback) => {
+      const obsVal = parseVal(rowData[obsIdx]);
+      if (obsVal > 0) return obsVal;
+      const fcVal = parseVal(rowData[fcIdx]);
+      if (fcVal > 0) return fcVal;
+      return fallback;
+    };
     // --- PlanApp Snapshot (Stabilität) ---
 let snap = _readPlanAppSnapshot_();
 let snapshotActive = !!snap; // wird später noch validiert
@@ -7525,6 +7534,18 @@ try {
   }
 } catch (e) {
   Logger.log("FB Startwerte Warnung: " + e.message);
+}
+
+// --- NEU: CTL Timeline (letzte 7 Tage bis GESTERN) direkt aus KK_TIMELINE ---
+// Reihenfolge: ältester -> neuester (t-7 ... t-1), damit deltaCtl7d korrekt bleibt.
+let timelineCtl7d = [];
+for (let offset = 7; offset >= 1; offset--) {
+  const r = todayRow - offset;
+  if (r >= 1 && data[r]) {
+    timelineCtl7d.push(pickObservedOrForecast(data[r], idx.ctlObs, idx.ctlFc, base.ctl));
+  } else {
+    timelineCtl7d.push(base.ctl);
+  }
 }
 
 
@@ -7599,15 +7620,6 @@ if (startRowIndex < 1) startRowIndex = todayRow;
 
 
     const startRowData = data[startRowIndex];
-
-    // Logik: Erst Observation, dann CoachE Forecast, dann Baseline
-    const pickObservedOrForecast = (rowData, obsIdx, fcIdx, fallback) => {
-      const obsVal = parseVal(rowData[obsIdx]);
-      if (obsVal > 0) return obsVal;
-      const fcVal = parseVal(rowData[fcIdx]);
-      if (fcVal > 0) return fcVal;
-      return fallback;
-    };
 
     let finalATL = pickObservedOrForecast(startRowData, idx.atlObs, idx.atlFc, base.atl);
     let finalCTL = pickObservedOrForecast(startRowData, idx.ctlObs, idx.ctlFc, base.ctl);
@@ -7850,6 +7862,7 @@ hrvDeltaLowToday: hrvDeltaLowToday,
   atlYesterday: finalATL,
   ctlYesterday: finalCTL,
   ctlHistoryYesterday: ctlHistory,
+  timelineCtl7d: timelineCtl7d,
   smartGainsToday_obs: smartGainsToday_obs,
   config: base.config,
   startDate: startDateMs,
