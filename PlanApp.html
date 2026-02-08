@@ -1114,27 +1114,29 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         // KEI = (DeltaCTL_7d * 10) / (ACWR * (1 + Monotony))
         
         const ctl7DaysAgo = (history.length >= 7) ? history[0] : history[0]; 
-        const trend7d = (tCTL - ctl7DaysAgo);
-        const acwrPenalty = acwr;
+        const deltaCtl7d = (tCTL - ctl7DaysAgo);
+        const deltaCtl7dPos = Math.max(0, deltaCtl7d);
+
+        const acwrC = Math.min(1.6, Math.max(0.8, acwr));
 
         // Monotonie-Check (letzte 4 Tage)
-        let monoVal = 0;
+        let monoValue = 0;
         if (i >= 3) {
             let last4 = [currentLoads[i], currentLoads[i-1], currentLoads[i-2], currentLoads[i-3]];
             let avg = last4.reduce((a,b) => a+b) / 4;
             let stdDev = Math.sqrt(last4.map(x => Math.pow(x - avg, 2)).reduce((a,b) => a+b) / 4);
-            if (avg > 20) {
-              monoVal = (stdDev < 15) ? 0.5 : 0; // Strafe auf den Divisor
+            if (avg > 0 && stdDev > 0) {
+              monoValue = avg / stdDev;
             }
         }
-        const monoPenalty = (1 + monoVal);
-        const monoActive = monoVal > 0;
+        const monoC = Math.min(3.0, Math.max(0, monoValue));
+
+        const acwrPenalty = 0.7 * Math.max(0, acwrC - 1);
+        const monoPenalty = 0.3 * Math.max(0, monoC - 1.5);
+        const monoActive = monoC > 1.5;
         
         // KEI Berechnung V7.2 (Lineare Skalierung für stabile Anzeige)
-        const keiRaw = (trend7d * 10);
-        let kei = keiRaw / (acwrPenalty * monoPenalty);
-        const keiScaled = kei * 0.1;
-        const keiEffective = keiScaled;
+        const keiEffective = 10 * (deltaCtl7dPos / (1 + acwrPenalty + monoPenalty));
 
         // --- HISTORIE FORTSCHREIBEN ---
         // Der gerade berechnete tCTL wird der neue Anker für in 7 Tagen.
@@ -1173,25 +1175,26 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
             sgEl.style.fontSize = "1.1rem";
             sgEl.style.fontWeight = "bold";
 
-            const dampTooltip = "KEI_roh = ΔCTL_7d×10 / (ACWR × (1+Monotonie)); Anzeige: KEI_roh × 0,1 (linear)";
+            const dampTooltip = "KEI = 10 × ΔCTL_7d / (1 + ACWR-P + Monotonie-P)";
             let dampEl = sgCell.querySelector('.kei-damps');
             if (!dampEl) {
                 dampEl = document.createElement('div');
                 dampEl.className = 'kei-damps';
                 sgCell.appendChild(dampEl);
             }
-            const acwrPenaltyDelta = Math.round((keiRaw / acwrPenalty) - keiRaw);
+            const keiRaw = 10 * deltaCtl7dPos;
+            const keiAfterAcwr = 10 * (deltaCtl7dPos / (1 + acwrPenalty));
+            const acwrPenaltyDelta = Math.round(keiAfterAcwr - keiRaw);
             const formatPenalty = (value) => {
                 if (value === 0) return "0";
                 return `-${Math.abs(value)}`;
             };
             const dampBadges = [
-                `<span class="kei-badge kei-badge-muted" title="${dampTooltip}">ACWR x${acwrPenalty.toFixed(2)} (${formatPenalty(acwrPenaltyDelta)})</span>`,
-                `<span class="kei-badge kei-badge-muted" title="${dampTooltip}">Linear x0.1</span>`
+                `<span class="kei-badge kei-badge-muted" title="${dampTooltip}">ACWR +${acwrPenalty.toFixed(2)} (${formatPenalty(acwrPenaltyDelta)})</span>`
             ];
             if (monoActive) {
-                const monoPenaltyDelta = Math.round((keiRaw / (acwrPenalty * monoPenalty)) - (keiRaw / acwrPenalty));
-                dampBadges.push(`<span class="kei-badge kei-badge-warning" title="${dampTooltip}">Mono x${monoPenalty.toFixed(2)} (${formatPenalty(monoPenaltyDelta)})</span>`);
+                const monoPenaltyDelta = Math.round(keiEffective - keiAfterAcwr);
+                dampBadges.push(`<span class="kei-badge kei-badge-warning" title="${dampTooltip}">Mono +${monoPenalty.toFixed(2)} (${formatPenalty(monoPenaltyDelta)})</span>`);
             }
             dampEl.innerHTML = dampBadges.join('');
             
