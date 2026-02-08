@@ -435,10 +435,10 @@
         <br><br>
         <strong>Interpretation der Zonen:</strong>
         <ul style="padding-left: 1.2rem; color: var(--text-muted); font-size: 0.9rem;">
-          <li><strong style="color:var(--purple);">High Efficiency (&gt; 15):</strong> Sehr hoher Fitness-Ertrag bei geringem Stress. Ideal für gezielte Peaks oder Feintuning.</li>
-          <li><strong style="color:var(--success);">Productive (5 bis 15):</strong> Effizienter Aufbau mit stabiler Belastbarkeit.</li>
-          <li><strong style="color:var(--warning);">Maintenance/Transition (0 bis 5):</strong> Erhalt, Übergang oder bewusste Stabilisierung ohne nennenswerten Aufbau.</li>
-          <li><strong style="color:var(--danger);">Inefficient/Risk (&lt; 0):</strong> Stress überwiegt den Fitness-Zuwachs. Risiko für Detraining oder Überlastung.</li>
+          <li><strong style="color:var(--success);">High Efficiency (≥ 8):</strong> Maximaler Fitness-Ertrag bei minimalem biologischem Preis.</li>
+          <li><strong style="color:var(--primary);">Productive (3 bis &lt; 8):</strong> Optimaler Trainingsreiz. Der Aufbau ist nachhaltig und kontrolliert.</li>
+          <li><strong style="color:var(--warning);">Maintenance / Transition (0 bis &lt; 3):</strong> Stabilisierungsphase. Kein signifikanter Aufbau, aber Erhalt des Niveaus.</li>
+          <li><strong style="color:var(--danger);">Inefficient / Risk (&lt; 0 Stress ohne Gewinn):</strong> Unwirtschaftlicher Bereich (Detraining oder massiver Stress-Überhang).</li>
         </ul>
     </div>
 
@@ -1254,13 +1254,12 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
             sgEl.style.fontSize = "1.1rem";
             sgEl.style.fontWeight = "bold";
             sgCell.classList.remove('kei-zone', 'kei-zone-green', 'kei-zone-blue', 'kei-zone-yellow', 'kei-zone-red');
-            const isStressHigh = acwr > 1.30 || monoActive;
             let keiZoneClass = 'kei-zone-yellow';
-            if (keiEffective >= 8) {
+            if (keiDisplay >= SG_ZONES.PROD_MAX) {
                 keiZoneClass = 'kei-zone-green';
-            } else if (keiEffective >= 3) {
+            } else if (keiDisplay >= SG_ZONES.MAINT_MAX) {
                 keiZoneClass = 'kei-zone-blue';
-            } else if (keiEffective < 0 || (keiEffective === 0 && isStressHigh)) {
+            } else if (keiDisplay < SG_ZONES.DETRAIN_MAX) {
                 keiZoneClass = 'kei-zone-red';
             }
             sgCell.classList.add('kei-zone', keiZoneClass);
