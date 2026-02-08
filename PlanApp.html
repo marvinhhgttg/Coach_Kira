@@ -1073,15 +1073,21 @@ function getSeedState(simBase) {
 
   let hist = [];
   if (Array.isArray(simBase.ctlHistoryYesterday)) {
-    hist = [...simBase.ctlHistoryYesterday];
+    hist = simBase.ctlHistoryYesterday.map((value) => {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : value;
+    });
   }
 
   const ctlFallback = Number.isFinite(ctl0) ? ctl0 : 0;
   const ctlYesterday = Number.isFinite(Number(simBase.ctlYesterday)) ? Number(simBase.ctlYesterday) : ctlFallback;
   if (hist.length >= 2 && Number.isFinite(ctlYesterday)) {
-    const dFirst = Math.abs(Number(hist[0]) - ctlYesterday);
-    const dLast = Math.abs(Number(hist[hist.length - 1]) - ctlYesterday);
-    if (dFirst < dLast) hist.reverse();
+    const first = Number(hist[0]);
+    const last = Number(hist[hist.length - 1]);
+    const tol = 1e-6;
+    const firstMatches = Number.isFinite(first) && Math.abs(first - ctlYesterday) <= tol;
+    const lastMatches = Number.isFinite(last) && Math.abs(last - ctlYesterday) <= tol;
+    if (firstMatches && !lastMatches) hist.reverse();
   }
 
   if (hist.length > 7) hist = hist.slice(-7);
@@ -1089,7 +1095,7 @@ function getSeedState(simBase) {
   if (Number.isFinite(ctlYesterday)) {
     if (hist.length === 0) {
       hist.push(ctlYesterday);
-    } else if (Number(hist[hist.length - 1]) !== ctlYesterday) {
+    } else if (hist.length < 7 && Number(hist[hist.length - 1]) !== ctlYesterday) {
       hist[hist.length - 1] = ctlYesterday;
     }
   }
@@ -1099,7 +1105,13 @@ function getSeedState(simBase) {
   }
 
   // Debugging für dich im Browser-Konsolen-Log
-  console.log("[PLANAPP] Seed State:", { atl0, ctl0, hist });
+  console.log("[PLANAPP] Seed State:", {
+    atl0,
+    ctl0,
+    ctlYesterday,
+    histRaw: simBase.ctlHistoryYesterday,
+    histFinal: hist
+  });
 
   return { atl0, ctl0, hist };
 }
