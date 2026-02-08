@@ -1113,7 +1113,8 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         // --- 3. Coach Kira Efficiency Index (KEI) V7.1 ---
         // KEI = (DeltaCTL_7d * 10) / (ACWR * (1 + Monotony))
         
-        const ctl7DaysAgo = (history.length >= 7) ? history[0] : history[0]; 
+        const historyIndex = history.length >= 7 ? history.length - 7 : 0;
+        const ctl7DaysAgo = history[historyIndex];
         const deltaCtl7d = (tCTL - ctl7DaysAgo);
         const deltaCtl7dPos = Math.max(0, deltaCtl7d);
 
