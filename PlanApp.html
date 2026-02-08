@@ -969,7 +969,7 @@ const targetLine = `🎯 SG ${targets.targetSG} | ACWR ${targets.targetACWR.toFi
         <i class="fas ${lockIconClass} lock-btn" id="lock_icon_${i}" onclick="toggleLock(${i})"></i>
     </td>
     <td>
-        <input type="range" class="sim-slider" min="0" max="300" step="1" id="slider_${i}" value="${startVal}" oninput="changeLoad(${i}, this.value)">
+        <input type="range" class="sim-slider" min="0" max="300" step="1" id="slider_${i}" data-idx="${i}" value="${startVal}">
         <div class="text-center mt-1 small"><span id="val_${i}" style="color:var(--warning); font-weight:bold;">${startVal}</span> ESS</div>
     </td>
     <td><input type="text" class="plan-text-input" id="sport_${i}" value="${simBase.plannedSports[i] || ''}"></td>
@@ -987,6 +987,9 @@ const targetLine = `🎯 SG ${targets.targetSG} | ACWR ${targets.targetACWR.toFi
     `;
         tbody.appendChild(tr);
     }
+
+    bindSliderEvents();
+    verifyTableIds();
 }
 
 // Funktion zum Umschalten des Locks
@@ -1003,9 +1006,40 @@ function toggleLock(i) {
 }
 
 function changeLoad(idx, val) {
+    console.debug("[PLANAPP] changeLoad", { idx, val });
     currentLoads[idx] = parseFloat(val);
     document.getElementById('val_'+idx).innerText = val;
     updateSimulation();
+}
+
+function bindSliderEvents() {
+    const tbody = document.getElementById('simBody');
+    if (!tbody || tbody.dataset.sliderEventsBound === 'true') return;
+    tbody.addEventListener('input', (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLInputElement)) return;
+        if (!target.classList.contains('sim-slider')) return;
+        const idx = Number(target.dataset.idx);
+        if (!Number.isFinite(idx)) return;
+        changeLoad(idx, target.value);
+    });
+    tbody.dataset.sliderEventsBound = 'true';
+}
+
+function verifyTableIds() {
+    for (let i = 0; i < 14; i++) {
+        const sgId = `sg_${i}`;
+        const sgCellId = `sg_cell_${i}`;
+        const sgMatches = document.querySelectorAll(`#${sgId}`);
+        const sgCellMatches = document.querySelectorAll(`#${sgCellId}`);
+        if (sgMatches.length !== 1 || sgCellMatches.length !== 1) {
+            console.warn("[PLANAPP] Table ID issue", {
+                index: i,
+                sgMatches: sgMatches.length,
+                sgCellMatches: sgCellMatches.length
+            });
+        }
+    }
 }
 
 function getSeedAnchor(simBase) {
