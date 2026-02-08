@@ -7630,8 +7630,7 @@ const ctlObsRaw = (idx.ctlObs > -1) ? startRowData[idx.ctlObs] : null;
 const observedColumnsEmpty =
   (atlObsRaw === '' || atlObsRaw == null) &&
   (ctlObsRaw === '' || ctlObsRaw == null);
-const snapshotHasLockedTruth = !!(snap && snap.lockedTruth === true);
-const snapshotOverridesAllowed = !!(snapshotActive && snap && (snapshotHasLockedTruth || observedColumnsEmpty));
+const snapshotOverridesAllowed = !!(snapshotActive && snap && observedColumnsEmpty);
 
 // Snapshot aktiv? -> Seed/History fixieren (mehr Stabilität der SG-Werte)
 if (snapshotActive && snap) {
