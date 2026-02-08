@@ -1963,8 +1963,43 @@ history.push(tCTL);
 // --- CHART LOGIK ---
 function initChart() {
     const ctx = document.getElementById('simChart').getContext('2d');
+    const keiZonePlugin = {
+        id: 'keiZoneBackground',
+        beforeDatasetsDraw(chart) {
+            const { chartArea, scales } = chart;
+            if (!chartArea || !scales?.y3) return;
+
+            const yScale = scales.y3;
+            const left = chartArea.left;
+            const right = chartArea.right;
+
+            const zones = [
+                { min: Number.NEGATIVE_INFINITY, max: SG_ZONES.DETRAIN_MAX, color: 'rgba(239, 68, 68, 0.08)' },
+                { min: SG_ZONES.DETRAIN_MAX, max: SG_ZONES.MAINT_MAX, color: 'rgba(245, 158, 11, 0.08)' },
+                { min: SG_ZONES.MAINT_MAX, max: SG_ZONES.PROD_MAX, color: 'rgba(59, 130, 246, 0.08)' },
+                { min: SG_ZONES.PROD_MAX, max: Number.POSITIVE_INFINITY, color: 'rgba(16, 185, 129, 0.08)' }
+            ];
+
+            zones.forEach((zone) => {
+                const topValue = Math.min(zone.max, yScale.max);
+                const bottomValue = Math.max(zone.min, yScale.min);
+                if (topValue <= bottomValue) return;
+
+                const yTop = yScale.getPixelForValue(topValue);
+                const yBottom = yScale.getPixelForValue(bottomValue);
+                const height = yBottom - yTop;
+
+                chart.ctx.save();
+                chart.ctx.fillStyle = zone.color;
+                chart.ctx.fillRect(left, yTop, right - left, height);
+                chart.ctx.restore();
+            });
+        }
+    };
+
     myChart = new Chart(ctx, {
         type: 'bar',
+        plugins: [keiZonePlugin],
         data: {
             labels: [],
             datasets: [
@@ -1977,13 +2012,13 @@ function initChart() {
                 },
                 {
                     type: 'line',
-                    label: 'Smart Gain',
+                    label: 'KEI',
                     data: [],
                     borderColor: '#d400ff', // Lila
                     borderWidth: 2,
                     tension: 0.3,
                     pointRadius: 2,
-                    yAxisID: 'y1',
+                    yAxisID: 'y3',
                     order: 2
                 },
                 {
@@ -2029,8 +2064,18 @@ function initChart() {
                     type: 'linear',
                     display: true,
                     position: 'right',
-                    title: { display: true, text: 'Load / Score' },
+                    title: { display: true, text: 'Load / CTL' },
                     grid: { color: 'rgba(200, 200, 200, 0.1)' }
+                },
+                y3: { // Rechts (KEI)
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    offset: true,
+                    min: -1,
+                    max: 10,
+                    title: { display: true, text: 'KEI' },
+                    grid: { drawOnChartArea: false }
                 },
                 x: { grid: { display: false } }
             }
