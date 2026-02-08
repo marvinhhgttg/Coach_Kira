@@ -1081,14 +1081,6 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
     const sgEl0 = document.getElementById('sg_0');
     if (sgEl0) {
         sgEl0.innerText = (sg0 > 0 ? "+" : "") + sg0.toFixed(1);
-        const sgCell0 = document.getElementById('sg_cell_0');
-        if (sgCell0) {
-            if (sg0 > SG_ZONES.PRIME_MAX) { sgCell0.style.color = 'var(--danger)'; sgCell0.style.background = 'rgba(239, 68, 68, 0.2)'; }
-            else if (sg0 >= SG_ZONES.PROD_MAX) { sgCell0.style.color = 'var(--purple)'; sgCell0.style.background = 'rgba(212, 0, 255, 0.15)'; }
-            else if (sg0 >= SG_ZONES.MAINT_MAX) { sgCell0.style.color = 'var(--success)'; sgCell0.style.background = 'rgba(16, 185, 129, 0.15)'; }
-            else if (sg0 >= SG_ZONES.DETRAIN_MAX) { sgCell0.style.color = 'var(--warning)'; sgCell0.style.background = 'rgba(245, 158, 11, 0.15)'; }
-            else { sgCell0.style.color = 'var(--danger)'; sgCell0.style.background = 'rgba(239, 68, 68, 0.1)'; }
-        }
     }
 
     // WICHTIG: Seed-Werte für die weitere Simulation anpassen
@@ -1203,23 +1195,6 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
             }
             dampEl.innerHTML = dampBadges.join('');
             
-            if (keiEffective >= SG_ZONES.PRIME_MAX) {
-              // ELITE EFFICIENCY
-              sgCell.style.color = 'var(--purple)';
-              sgCell.style.background = 'rgba(212, 0, 255, 0.15)';
-            } else if (keiEffective >= SG_ZONES.PROD_MAX) {
-              // HIGH EFFICIENCY
-              sgCell.style.color = 'var(--success)';
-              sgCell.style.background = 'rgba(16, 185, 129, 0.15)';
-            } else if (keiEffective >= SG_ZONES.MAINT_MAX) {
-              // PRODUCTIVE
-              sgCell.style.color = 'var(--warning)';
-              sgCell.style.background = 'rgba(245, 158, 11, 0.15)';
-            } else {
-              // LOW EFFICIENCY / DETRAINING
-              sgCell.style.color = 'var(--danger)';
-              sgCell.style.background = 'rgba(239, 68, 68, 0.1)';
-            }
         }
 
         // --- START V3 STATUS-ICONS (LIVE) ---
