@@ -1103,7 +1103,15 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
 
     // --- HEUTE-FIX: Row 0 nicht berechnen, sondern als Seed anzeigen ---
     // Wir erzwingen hier den Wert aus dem GSheet (smartGainsToday_obs oder sgToday)
-    const sg0 = Number(simBase.sgToday) || Number(simBase.smartGainsToday_obs) || 0;
+    const keiBaseline = Array.isArray(simBase.keiBaseline) ? simBase.keiBaseline : [];
+    const readKeiBaseline = (index) => {
+        const raw = keiBaseline[index];
+        if (raw === "" || raw === null || raw === undefined) return null;
+        const parsed = parseFloat(String(raw).replace(',', '.'));
+        return Number.isFinite(parsed) ? parsed : null;
+    };
+    const sg0Baseline = readKeiBaseline(0);
+    const sg0 = (sg0Baseline !== null) ? sg0Baseline : (Number(simBase.sgToday) || Number(simBase.smartGainsToday_obs) || 0);
     
     // UI & Charts für Tag 0
     const { atl0, ctl0 } = getSeedAnchor(simBase);
@@ -1218,8 +1226,10 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         // --- KEI EFFICIENCY ---
         const sgEl = document.getElementById('sg_'+i);
         const sgCell = document.getElementById('sg_cell_'+i);
+        const keiBaselineVal = readKeiBaseline(i);
+        const keiDisplay = (keiBaselineVal !== null) ? keiBaselineVal : keiEffective;
         if(sgEl && sgCell) {
-            sgEl.innerText = (keiEffective > 0 ? "+" : "") + keiEffective.toFixed(1);
+            sgEl.innerText = (keiDisplay > 0 ? "+" : "") + keiDisplay.toFixed(1);
             sgEl.style.fontSize = "1.1rem";
             sgEl.style.fontWeight = "bold";
 
@@ -1270,7 +1280,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         chartACWR.push(acwr.toFixed(2));
         const tsb = tCTL - tATL;
         chartTSB.push(Math.round(tsb));
-        chartSG.push(keiEffective.toFixed(1));
+        chartSG.push(keiDisplay.toFixed(1));
         
         const d = new Date(startDate); d.setDate(d.getDate() + i);
         chartLabels.push(d.toLocaleDateString('de-DE', {weekday:'short', day:'2-digit'}));
