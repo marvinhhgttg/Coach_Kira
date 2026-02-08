@@ -987,9 +987,34 @@ function changeLoad(idx, val) {
     updateSimulation();
 }
 
+function getSeedAnchor(simBase) {
+  const pickNumber = (...values) => {
+    for (const value of values) {
+      if (value === undefined || value === null || value === "") continue;
+      const parsed = Number(value);
+      if (!Number.isNaN(parsed)) return parsed;
+    }
+    return 0;
+  };
+
+  const atl0 = pickNumber(
+    simBase.atlToday,
+    simBase.atlYesterday,
+    simBase.atlPrev,
+    simBase.atl
+  );
+  const ctl0 = pickNumber(
+    simBase.ctlToday,
+    simBase.ctlYesterday,
+    simBase.ctlPrev,
+    simBase.ctl
+  );
+
+  return { atl0, ctl0 };
+}
+
 function getSeedState(simBase) {
-  const atl0 = Number(simBase.atlYesterday || simBase.atlPrev || 0);
-  const ctl0 = Number(simBase.ctlYesterday || simBase.ctlPrev || 0);
+  const { atl0, ctl0 } = getSeedAnchor(simBase);
 
   let hist = [];
   if (Array.isArray(simBase.ctlHistoryYesterday)) {
@@ -1081,8 +1106,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
     const sg0 = Number(simBase.sgToday) || Number(simBase.smartGainsToday_obs) || 0;
     
     // UI & Charts für Tag 0
-    const atl0 = Number(simBase.atlToday || simBase.atl); 
-    const ctl0 = Number(simBase.ctlToday || simBase.ctl);
+    const { atl0, ctl0 } = getSeedAnchor(simBase);
     const acwr0 = atl0 / (ctl0 || 1);
 
     if (document.getElementById('atl_0')) document.getElementById('atl_0').innerText = Math.round(atl0);
