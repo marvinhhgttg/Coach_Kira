@@ -7599,17 +7599,16 @@ if (startRowIndex < 1) startRowIndex = todayRow;
     const startRowData = data[startRowIndex];
 
     // Logik: Erst Observation, dann CoachE Forecast, dann Baseline
-    let finalATL = parseVal(startRowData[idx.atlObs]);
-    if (finalATL === 0) {
-        finalATL = parseVal(startRowData[idx.atlFc]);
-        if (finalATL === 0) finalATL = base.atl;
-    }
+    const pickObservedOrForecast = (rowData, obsIdx, fcIdx, fallback) => {
+      const obsVal = parseVal(rowData[obsIdx]);
+      if (obsVal > 0) return obsVal;
+      const fcVal = parseVal(rowData[fcIdx]);
+      if (fcVal > 0) return fcVal;
+      return fallback;
+    };
 
-    let finalCTL = parseVal(startRowData[idx.ctlObs]);
-    if (finalCTL === 0) {
-        finalCTL = parseVal(startRowData[idx.ctlFc]);
-        if (finalCTL === 0) finalCTL = base.ctl;
-    }
+    let finalATL = pickObservedOrForecast(startRowData, idx.atlObs, idx.atlFc, base.atl);
+    let finalCTL = pickObservedOrForecast(startRowData, idx.ctlObs, idx.ctlFc, base.ctl);
 
     // --- B) HISTORIE (Letzte 7 Tage BIS GESTERN) ---
 // Wir wollen CTL(t-7 ... t-1), wobei t = HEUTE. Seed ist GESTERN (= startRowIndex).
@@ -7617,9 +7616,7 @@ let ctlHistory = [];
 for (let k = 6; k >= 0; k--) {
   const r = startRowIndex - k;   // endet bei startRowIndex (= gestern)
   if (r >= 1) {
-    let histVal = parseVal(data[r][idx.ctlObs]); // Prio Observation
-    if (histVal === 0) histVal = parseVal(data[r][idx.ctlFc]);
-    if (histVal === 0) histVal = base.ctl;
+    const histVal = pickObservedOrForecast(data[r], idx.ctlObs, idx.ctlFc, base.ctl);
     ctlHistory.push(histVal);
   } else {
     ctlHistory.push(base.ctl);
