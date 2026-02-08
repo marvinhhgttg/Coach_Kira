@@ -416,10 +416,10 @@
     
     <div class="legend-box">
         <div style="font-weight:bold; color:var(--text-muted);">Efficiency Index (KEI) Legende:</div>
-        <div class="legend-item"><div class="dot" style="background:var(--danger)"></div> KEI = 0 trotz hoher Last / &lt; 0 Inefficient / Risk</div>
-        <div class="legend-item"><div class="dot" style="background:var(--warning)"></div> 0 bis &lt; 3 Maintenance / Transition</div>
-        <div class="legend-item"><div class="dot" style="background:var(--primary)"></div> 3 bis &lt; 8 Productive</div>
-        <div class="legend-item"><div class="dot" style="background:var(--success)"></div> ≥ 8 High Efficiency</div>
+        <div class="legend-item"><div class="dot" style="background:var(--success)"></div> High Efficiency (≥ 8)</div>
+        <div class="legend-item"><div class="dot" style="background:var(--primary)"></div> Productive (3 bis &lt; 8)</div>
+        <div class="legend-item"><div class="dot" style="background:var(--warning)"></div> Maintenance / Transition (0 bis &lt; 3)</div>
+        <div class="legend-item"><div class="dot" style="background:var(--danger)"></div> Inefficient / Risk (&lt; 0 Stress ohne Gewinn)</div>
     </div>
 
     <div style="margin-top: 20px; padding: 20px; background: rgba(37, 99, 235, 0.03); border-radius: 12px; border: 1px solid var(--border-color); font-size: 0.85rem; line-height: 1.6; color: var(--text-main);">
@@ -2439,6 +2439,38 @@ function updateChart(labels, loads, ctls, acwrs, sgs) {
     myChart.data.datasets[1].data = sgs;
     myChart.data.datasets[2].data = acwrs;
     myChart.data.datasets[3].data = ctls;
+
+    const finiteVals = (arr) => (Array.isArray(arr) ? arr.filter((v) => Number.isFinite(v)) : []);
+    const setAxisRange = (axis, values, { minBound = null, maxBound = null, minFloor = null, maxCeil = null } = {}) => {
+        if (!axis || values.length === 0) return;
+        let minVal = Math.min(...values);
+        let maxVal = Math.max(...values);
+        if (minFloor !== null) minVal = Math.min(minVal, minFloor);
+        if (maxCeil !== null) maxVal = Math.max(maxVal, maxCeil);
+        const span = Math.max(1, maxVal - minVal);
+        const pad = Math.max(0.5, span * 0.1);
+        let nextMin = minVal - pad;
+        let nextMax = maxVal + pad;
+        if (minBound !== null) nextMin = Math.max(nextMin, minBound);
+        if (maxBound !== null) nextMax = Math.min(nextMax, maxBound);
+        if (nextMin === nextMax) {
+            nextMin -= 1;
+            nextMax += 1;
+        }
+        axis.min = nextMin;
+        axis.max = nextMax;
+    };
+
+    const loadVals = finiteVals(loads);
+    const ctlVals = finiteVals(ctls);
+    const keiVals = finiteVals(sgs);
+
+    setAxisRange(myChart.options.scales?.y1, [...loadVals, ...ctlVals], { minBound: 0 });
+    setAxisRange(myChart.options.scales?.y3, keiVals, {
+        minFloor: SG_ZONES.DETRAIN_MAX,
+        maxCeil: SG_ZONES.PROD_MAX
+    });
+
     myChart.update('none'); // 'none' verhindert Animationen
 }
 
