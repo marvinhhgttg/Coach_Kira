@@ -1072,7 +1072,21 @@ function getSeedState(simBase) {
   const { atl0, ctl0 } = getSeedAnchor(simBase);
 
   let hist = [];
-  if (Array.isArray(simBase.ctlHistoryYesterday)) {
+  const timelineHistRaw = Array.isArray(simBase.timelineCtl7d)
+    ? simBase.timelineCtl7d
+    : (Array.isArray(simBase.ctlHistoryTimeline) ? simBase.ctlHistoryTimeline : null);
+
+  if (Array.isArray(timelineHistRaw)) {
+    hist = timelineHistRaw.map((value) => {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : value;
+    });
+    if (hist.length > 7) hist = hist.slice(-7);
+    while (hist.length < 7) {
+      const fallback = Number.isFinite(hist[0]) ? hist[0] : (Number.isFinite(ctl0) ? ctl0 : 0);
+      hist.unshift(fallback);
+    }
+  } else if (Array.isArray(simBase.ctlHistoryYesterday)) {
     hist = simBase.ctlHistoryYesterday.map((value) => {
       const parsed = Number(value);
       return Number.isFinite(parsed) ? parsed : value;
@@ -1081,7 +1095,7 @@ function getSeedState(simBase) {
 
   const ctlFallback = Number.isFinite(ctl0) ? ctl0 : 0;
   const ctlYesterday = Number.isFinite(Number(simBase.ctlYesterday)) ? Number(simBase.ctlYesterday) : ctlFallback;
-  if (hist.length >= 2 && Number.isFinite(ctlYesterday)) {
+  if (!Array.isArray(timelineHistRaw) && hist.length >= 2 && Number.isFinite(ctlYesterday)) {
     const first = Number(hist[0]);
     const last = Number(hist[hist.length - 1]);
     const tol = 1e-6;
@@ -1092,7 +1106,7 @@ function getSeedState(simBase) {
 
   if (hist.length > 7) hist = hist.slice(-7);
 
-  if (Number.isFinite(ctlYesterday)) {
+  if (!Array.isArray(timelineHistRaw) && Number.isFinite(ctlYesterday)) {
     if (hist.length === 0) {
       hist.push(ctlYesterday);
     } else if (hist.length < 7 && Number(hist[hist.length - 1]) !== ctlYesterday) {
@@ -1100,8 +1114,10 @@ function getSeedState(simBase) {
     }
   }
 
-  while (hist.length < 7) {
-    hist.unshift(ctlYesterday);
+  if (!Array.isArray(timelineHistRaw)) {
+    while (hist.length < 7) {
+      hist.unshift(ctlYesterday);
+    }
   }
 
   // Debugging für dich im Browser-Konsolen-Log
@@ -1109,7 +1125,7 @@ function getSeedState(simBase) {
     atl0,
     ctl0,
     ctlYesterday,
-    histRaw: simBase.ctlHistoryYesterday,
+    histRaw: timelineHistRaw || simBase.ctlHistoryYesterday,
     histFinal: hist
   });
 
