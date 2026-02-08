@@ -7626,17 +7626,29 @@ for (let k = 6; k >= 0; k--) {
   }
 }
 
+// Snapshot nur für Seed/History übernehmen, wenn er explizit als "locked truth" markiert ist
+// ODER wenn Observed-Spalten leer sind (sonst Priorität der Observed-Werte bewahren).
+const atlObsRaw = (idx.atlObs > -1) ? startRowData[idx.atlObs] : null;
+const ctlObsRaw = (idx.ctlObs > -1) ? startRowData[idx.ctlObs] : null;
+const observedColumnsEmpty =
+  (atlObsRaw === '' || atlObsRaw == null) &&
+  (ctlObsRaw === '' || ctlObsRaw == null);
+const snapshotHasLockedTruth = !!(snap && snap.lockedTruth === true);
+const snapshotOverridesAllowed = !!(snapshotActive && snap && (snapshotHasLockedTruth || observedColumnsEmpty));
+
 // Snapshot aktiv? -> Seed/History fixieren (mehr Stabilität der SG-Werte)
 if (snapshotActive && snap) {
   if (typeof snap.todayIsClosed === 'boolean') todayIsClosed = snap.todayIsClosed;
   if (typeof snap.startRowIndex === 'number') startRowIndex = snap.startRowIndex;
 
-  if (typeof snap.atlYesterday === 'number') finalATL = snap.atlYesterday;
-  if (typeof snap.ctlYesterday === 'number') finalCTL = snap.ctlYesterday;
+  if (snapshotOverridesAllowed) {
+    if (typeof snap.atlYesterday === 'number') finalATL = snap.atlYesterday;
+    if (typeof snap.ctlYesterday === 'number') finalCTL = snap.ctlYesterday;
 
-  if (Array.isArray(snap.ctlHistoryYesterday) && snap.ctlHistoryYesterday.length) {
-    ctlHistory = snap.ctlHistoryYesterday.slice(-7);
-    while (ctlHistory.length < 7) ctlHistory.unshift(finalCTL);
+    if (Array.isArray(snap.ctlHistoryYesterday) && snap.ctlHistoryYesterday.length) {
+      ctlHistory = snap.ctlHistoryYesterday.slice(-7);
+      while (ctlHistory.length < 7) ctlHistory.unshift(finalCTL);
+    }
   }
 }
 
