@@ -436,7 +436,7 @@
             KEI<sub>roh</sub> = (ΔCTL<sub>7d</sub> × 10) / (ACWR × (1 + Monotonie))
         </div>
         <div style="font-size: 0.8rem; text-align: center; color: var(--text-muted);">
-            Anzeige: KEI = tanh(KEI<sub>roh</sub>/50) × 50 (Ausreißer-Kompression).
+            Anzeige: KEI = KEI<sub>roh</sub> × 0,1 (lineare Skalierung).
         </div>
     </div>
 </div>
@@ -1138,11 +1138,11 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         const monoPenalty = (1 + monoVal);
         const monoActive = monoVal > 0;
         
-        // KEI Berechnung V7.2 (Nichtlineare Kompression für stabile Anzeige)
+        // KEI Berechnung V7.2 (Lineare Skalierung für stabile Anzeige)
         const keiRaw = (trend7d * 10);
         let kei = keiRaw / (acwrPenalty * monoPenalty);
-        const keiCompressed = Math.tanh(kei / 50) * 50;
-        const keiEffective = keiCompressed;
+        const keiScaled = kei * 0.1;
+        const keiEffective = keiScaled;
 
         // --- HISTORIE FORTSCHREIBEN ---
         // Der gerade berechnete tCTL wird der neue Anker für in 7 Tagen.
@@ -1181,7 +1181,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
             sgEl.style.fontSize = "1.1rem";
             sgEl.style.fontWeight = "bold";
 
-            const dampTooltip = "KEI_roh = ΔCTL_7d×10 / (ACWR × (1+Monotonie)); Anzeige: tanh(KEI_roh/50)×50";
+            const dampTooltip = "KEI_roh = ΔCTL_7d×10 / (ACWR × (1+Monotonie)); Anzeige: KEI_roh × 0,1 (linear)";
             let dampEl = sgCell.querySelector('.kei-damps');
             if (!dampEl) {
                 dampEl = document.createElement('div');
@@ -1195,7 +1195,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
             };
             const dampBadges = [
                 `<span class="kei-badge kei-badge-muted" title="${dampTooltip}">ACWR x${acwrPenalty.toFixed(2)} (${formatPenalty(acwrPenaltyDelta)})</span>`,
-                `<span class="kei-badge kei-badge-muted" title="${dampTooltip}">tanh x${keiCompressed.toFixed(1)}</span>`
+                `<span class="kei-badge kei-badge-muted" title="${dampTooltip}">Linear x0.1</span>`
             ];
             if (monoActive) {
                 const monoPenaltyDelta = Math.round((keiRaw / (acwrPenalty * monoPenalty)) - (keiRaw / acwrPenalty));
