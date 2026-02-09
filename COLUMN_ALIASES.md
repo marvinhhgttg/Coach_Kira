@@ -97,6 +97,18 @@ However, the sheet currently mixes styles. Until a migration is done, treat alia
   - `Week_Phase`
   - `week_phase`
 
+### 2.10 KEI-adjusted load columns
+- Canonical:
+  - `fkei`
+  - `load_star`
+  - `ctl_star`
+  - `ctl_gap`
+- Aliases observed:
+  - `fKEI` / `fkei`
+  - `Load*` / `load_star`
+  - `CTL*` / `ctl_star`
+  - `ctl_gap` / `CTL-CTL*` / `CTL−CTL*`
+
 ---
 
 ## 3) Migration plan (safe)
