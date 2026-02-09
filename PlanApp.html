@@ -1277,7 +1277,8 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         let avg = null;
         let stdDev = null;
         let monoRaw = 0;
-        const monoSheet = Number(simBase?.monoToday);
+        const monoSheetRaw = simBase?.monoToday;
+        const monoSheet = parseFloat(String(monoSheetRaw).replace(",", "."));
         if (Number.isFinite(monoSheet) && last7.length < 7) {
             monoRaw = monoSheet;
         } else if (last7.length >= 2) {
