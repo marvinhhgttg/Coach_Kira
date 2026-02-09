@@ -511,6 +511,7 @@
 <script>
 let simBase = null;
 let userGainOverride = false;
+let keiLiveOverride = false;
 let tsbPerfChart = null;
 let simLast = null; // <- hält die letzte komplette Simulation für die AI
 const COACH_KIRA_STORAGE_KEY = "coachKiraLastAnalysis";
@@ -806,6 +807,7 @@ window.onload = function () {
         console.log("=== KIRA DEBUG: SERVER DATA END ===");
 
         simBase = base;
+        keiLiveOverride = false;
 
         // Phase-Autotarget initial setzen (nur wenn kein Override)
         applyAutoTargetGain();
@@ -888,6 +890,7 @@ function loadDataFromServer() {
 
     google.script.run.withSuccessHandler(function(base) {
         simBase = base;
+        keiLiveOverride = false;
         currentLoads = [...base.plannedLoads]; 
         
         // Locks vom Server übernehmen
@@ -1021,6 +1024,7 @@ function bindSliderEvents() {
         if (!target.classList.contains('sim-slider')) return;
         const idx = Number(target.dataset.idx);
         if (!Number.isFinite(idx)) return;
+        keiLiveOverride = true;
         changeLoad(idx, target.value);
     });
     tbody.dataset.sliderEventsBound = 'true';
@@ -1310,7 +1314,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         const sgEl = document.getElementById('sg_'+i);
         const sgCell = document.getElementById('sg_cell_'+i);
         const keiBaselineVal = readKeiBaseline(i);
-        const keiDisplay = (keiBaselineVal !== null) ? keiBaselineVal : keiEffective;
+        const keiDisplay = keiLiveOverride ? keiEffective : (keiBaselineVal ?? keiEffective);
         if(sgEl && sgCell) {
             sgEl.innerText = (keiDisplay > 0 ? "+" : "") + keiDisplay.toFixed(1);
             sgEl.style.fontSize = "1.1rem";
