@@ -1271,14 +1271,21 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
             : ctlTimeline[0];
         const deltaCtl7d = (tCTL - ctl7DaysAgo);
 
-        // Monotonie-Check (letzte 4 Tage, inkl. heute) – erst ab Tag i>=3
-        const last4 = (i >= 3) ? currentLoads.slice(i - 3, i + 1) : [];
+        // Monotonie-Check (7 Tage, inkl. heute) – Sheet nutzt Monotony7
+        const last7Start = Math.max(0, i - 6);
+        const last7 = currentLoads.slice(last7Start, i + 1);
         let avg = null;
         let stdDev = null;
         let monoRaw = 0;
-        if (i >= 3) {
-            avg = last4.reduce((a, b) => a + b, 0) / last4.length;
-            const variance = last4.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / last4.length;
+        const monoSheetRaw = simBase?.monoToday;
+        const monoSheet = (monoSheetRaw === null || monoSheetRaw === undefined || monoSheetRaw === "")
+            ? NaN
+            : parseFloat(String(monoSheetRaw).replace(",", "."));
+        if (Number.isFinite(monoSheet) && last7.length < 7) {
+            monoRaw = monoSheet;
+        } else if (last7.length >= 2) {
+            avg = last7.reduce((a, b) => a + b, 0) / last7.length;
+            const variance = last7.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / last7.length;
             stdDev = Math.sqrt(variance);
             if (avg > 0 && stdDev > 0) {
                 monoRaw = avg / stdDev;
@@ -1333,7 +1340,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
                 ctl7DaysAgo,
                 deltaCtl7d,
                 acwr,
-                last4,
+                last7,
                 avg,
                 stdDev,
                 monoRaw,
