@@ -7928,18 +7928,11 @@ function saveSimulatedPlan(loads, teAeList, teAnList, sports, zones, locks) {
     const idx = {
       today: headers.indexOf('is_today'),
       ess: headers.indexOf('coache_ess_day'),
-      fix: headers.indexOf('fix'),
       teAe: headers.indexOf('target_aerobic_te'),
       teAn: headers.indexOf('target_anaerobic_te'),
       sport: headers.indexOf('sport_x'),
       zone: headers.indexOf('zone'),
-
-      // --- FB / Garmin optional ---
-      planMode: headers.indexOf('plan_mode'),
-      intent: headers.indexOf('plan_session_intent'),
-      focusLow: headers.indexOf('plan_focus_low_aerobic_pct'),
-      focusHigh: headers.indexOf('plan_focus_high_aerobic_pct'),
-      focusAna: headers.indexOf('plan_focus_anaerobic_pct')
+      coachZone: headers.indexOf('coach_zone')
     };
 
     if (idx.today === -1) throw new Error("Spalte 'is_today' fehlt in timeline.");
@@ -7994,40 +7987,17 @@ function saveSimulatedPlan(loads, teAeList, teAnList, sports, zones, locks) {
       const valAe = (Array.isArray(teAeList) && teAeList[i] !== undefined) ? toNum(teAeList[i], 0) : 0;
       const valAn = (Array.isArray(teAnList) && teAnList[i] !== undefined) ? toNum(teAnList[i], 0) : 0;
 
-      // Legacy Felder
+      // Legacy Felder (keine Forecast-/Derived-Spalten aus PlanApp schreiben)
       writeValues[i][idx.ess] = valLoad;
 
       if (idx.teAe > -1) writeValues[i][idx.teAe] = valAe;
       if (idx.teAn > -1) writeValues[i][idx.teAn] = valAn;
 
       if (idx.sport > -1 && Array.isArray(sports)) writeValues[i][idx.sport] = sports[i] !== undefined ? sports[i] : "";
-      if (idx.zone > -1 && Array.isArray(zones)) writeValues[i][idx.zone] = zones[i] !== undefined ? zones[i] : "";
-
-      // coachE_ATL_forecast, coachE_CTL_forecast, coachE_ACWR_forecast, coachE_Smart_Gains
-      // werden NICHT geschrieben, da das Sheet sie berechnet.
-
-      // Locks in 'fix'
-      if (idx.fix > -1 && Array.isArray(locks)) {
-        const lockVal = locks[i] ? 1 : 0;
-        writeValues[i][idx.fix] = lockVal;
-      }
-
-      // --- FB optional: Mode / Intent / Focus ---
-      // Nur schreiben, wenn Spalten existieren UND die optionalen Arrays/Values vorhanden sind
-      if (idx.planMode > -1 && planModeVal !== null) {
-        writeValues[i][idx.planMode] = planModeVal; // z.B. "fb" oder "legacy"
-      }
-      if (idx.intent > -1 && Array.isArray(intentArr)) {
-        writeValues[i][idx.intent] = intentArr[i] !== undefined ? String(intentArr[i]) : "";
-      }
-      if (idx.focusLow > -1 && Array.isArray(focusLowArr)) {
-        writeValues[i][idx.focusLow] = (focusLowArr[i] !== undefined) ? toNum(focusLowArr[i], "") : "";
-      }
-      if (idx.focusHigh > -1 && Array.isArray(focusHighArr)) {
-        writeValues[i][idx.focusHigh] = (focusHighArr[i] !== undefined) ? toNum(focusHighArr[i], "") : "";
-      }
-      if (idx.focusAna > -1 && Array.isArray(focusAnaArr)) {
-        writeValues[i][idx.focusAna] = (focusAnaArr[i] !== undefined) ? toNum(focusAnaArr[i], "") : "";
+      if (Array.isArray(zones)) {
+        const zoneVal = zones[i] !== undefined ? zones[i] : "";
+        if (idx.zone > -1) writeValues[i][idx.zone] = zoneVal;
+        if (idx.coachZone > -1) writeValues[i][idx.coachZone] = zoneVal;
       }
     }
 
