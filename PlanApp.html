@@ -1234,7 +1234,11 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
     history.push(ctl0);
     history = history.slice(-7);
 
-    if (window.KEI_DEBUG) console.log("[KEI DEBUG][seedHistory]", [...history]);
+    const seedHistory = [...history];
+    const ctlTimeline = [...seedHistory];
+    const historyBaseIndex = ctlTimeline.length - 1;
+
+    if (window.KEI_DEBUG) console.log("[KEI DEBUG][seedHistory]", [...seedHistory]);
 
     // Simulation startet ab Tag 1
     for (let i = 1; i < 14; i++) {
@@ -1260,8 +1264,10 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         // --- 3. Coach Kira Efficiency Index (KEI) V7.1 ---
         // KEI = (DeltaCTL_7d * 10) / (ACWR * (1 + Monotony)) * 0.1
         
-        const historyIndex = history.length >= 7 ? history.length - 7 : 0;
-        const ctl7DaysAgo = history[historyIndex];
+        const historyIndex = historyBaseIndex + i - 7;
+        const ctl7DaysAgo = (historyIndex >= 0 && historyIndex < ctlTimeline.length)
+            ? ctlTimeline[historyIndex]
+            : ctlTimeline[0];
         const deltaCtl7d = (tCTL - ctl7DaysAgo);
 
         // Monotonie-Check (letzte 7 Tage, inkl. heute)
@@ -1283,8 +1289,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
 
         // --- HISTORIE FORTSCHREIBEN ---
         // Der gerade berechnete tCTL wird der neue Anker für in 7 Tagen.
-        history.push(tCTL);
-        history = history.slice(-7);
+        ctlTimeline.push(tCTL);
 
         // --- UI UPDATES ---
         // --- PHYSIO SPALTEN (Größer & Fettdruck) ---
@@ -1327,7 +1332,9 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
                 mono,
                 keiEffective,
                 keiDisplay,
-                history: [...history]
+                historyIndex,
+                historyLength: ctlTimeline.length,
+                history: [...ctlTimeline]
             });
         }
         if(sgEl && sgCell) {
@@ -1388,7 +1395,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         chartLabels.push(d.toLocaleDateString('de-DE', {weekday:'short', day:'2-digit'}));
     }
 
-    if (window.KEI_DEBUG) console.log("[KEI DEBUG][finalHistory]", [...history]);
+    if (window.KEI_DEBUG) console.log("[KEI DEBUG][finalHistory]", [...ctlTimeline]);
     
     // ✅ Labels fürs Bubble-Chart global verfügbar machen
     window.chartLabels = chartLabels;
