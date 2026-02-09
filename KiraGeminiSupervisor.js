@@ -7463,6 +7463,7 @@ function getSimStartValues() {
   // Prio 2: Garmin/Observed (Fallback)
   atlObs: headers.indexOf('fbatl_obs'),
   ctlObs: headers.indexOf('fbctl_obs'),
+  ctlStar: headers.indexOf('ctl_star'),
   acwrFc: headers.indexOf('coache_acwr_forecast'),
   monotony7: headers.indexOf('monotony7'),
   sleepH: headers.indexOf('sleep_hours'),
@@ -7669,6 +7670,8 @@ if (startRowIndex < 1) startRowIndex = todayRow;
 
     let finalATL = pickObservedOrForecast(startRowData, idx.atlObs, idx.atlFc, base.atl);
     let finalCTL = pickObservedOrForecast(startRowData, idx.ctlObs, idx.ctlFc, base.ctl);
+    let finalCTLStar = (idx.ctlStar > -1) ? parseVal(startRowData[idx.ctlStar]) : finalCTL;
+    if (!Number.isFinite(finalCTLStar) || finalCTLStar === 0) finalCTLStar = finalCTL;
 
     // --- B) HISTORIE (Letzte 7 Tage BIS GESTERN) ---
 // Wir wollen CTL(t-7 ... t-1), wobei t = HEUTE. Seed ist GESTERN (= startRowIndex).
@@ -7895,6 +7898,7 @@ try {
     return {
   atl: finalATL, 
   ctl: finalCTL,
+  ctl_star: finalCTLStar,
   todayATL_fc, todayATL_obs, todayCTL_fc, todayCTL_obs,
 todayRowIndex: todayRow,
 startRowIndex: startRowIndex,
