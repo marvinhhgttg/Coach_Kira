@@ -1012,10 +1012,9 @@ function toggleLock(i) {
 function changeLoad(idx, val) {
     console.debug("[PLANAPP] changeLoad", { idx, val });
     currentLoads[idx] = parseFloat(val);
+    window.KEI_DEBUG = true;
+    console.log("[KEI DEBUG][slider]", { i: idx, load: currentLoads[idx] });
     document.getElementById('val_'+idx).innerText = val;
-    if (window.KEI_DEBUG) {
-        console.log("[KEI DEBUG][onSlider]", { index: idx, load: currentLoads[idx] });
-    }
     updateSimulation();
 }
 
@@ -1235,9 +1234,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
     history.push(ctl0);
     history = history.slice(-7);
 
-    if (window.KEI_DEBUG) {
-        console.log("[KEI DEBUG][history][before]", { history: [...history] });
-    }
+    if (window.KEI_DEBUG) console.log("[KEI DEBUG][seedHistory]", [...history]);
 
     // Simulation startet ab Tag 1
     for (let i = 1; i < 14; i++) {
@@ -1326,6 +1323,8 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         if (window.KEI_DEBUG) {
             console.log("[KEI DEBUG][day]", {
                 i,
+                load,
+                tATL,
                 tCTL,
                 ctl7DaysAgo,
                 deltaCtl7d,
@@ -1334,7 +1333,8 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
                 acwrPenalty,
                 monoPenalty,
                 keiEffective,
-                keiDisplay
+                keiDisplay,
+                history: [...history]
             });
         }
         if(sgEl && sgCell) {
@@ -1405,9 +1405,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         chartLabels.push(d.toLocaleDateString('de-DE', {weekday:'short', day:'2-digit'}));
     }
 
-    if (window.KEI_DEBUG) {
-        console.log("[KEI DEBUG][history][after]", { history: [...history] });
-    }
+    if (window.KEI_DEBUG) console.log("[KEI DEBUG][finalHistory]", [...history]);
     
     // ✅ Labels fürs Bubble-Chart global verfügbar machen
     window.chartLabels = chartLabels;
