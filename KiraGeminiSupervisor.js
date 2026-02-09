@@ -4912,13 +4912,25 @@ function updatePlannedLoad(planData) {
     const teAeIndex = headers.indexOf('Target_Aerobic_TE');
     const teAnIndex = headers.indexOf('Target_Anaerobic_TE');
 
+    const findHeaderIndex = (names) => {
+      for (const name of names) {
+        const idx = headers.indexOf(name);
+        if (idx !== -1) return idx;
+      }
+      return -1;
+    };
+
     // Indizes für FORMELN (Werden NICHT überschrieben)
     const formulaCols = [
       // coachE_ATL_forecast, coachE_CTL_forecast, coachE_ACWR_forecast wurden hier entfernt
       headers.indexOf('Monotony7'),
       headers.indexOf('Strain7'),
       headers.indexOf('coachE_ATL_morning'),
-      headers.indexOf('coachE_CTL_morning')
+      headers.indexOf('coachE_CTL_morning'),
+      findHeaderIndex(['fKEI', 'fkei']),
+      findHeaderIndex(['Load*', 'load_star', 'load*']),
+      findHeaderIndex(['CTL*', 'ctl_star', 'ctl*']),
+      findHeaderIndex(['ctl_gap', 'CTL-CTL*', 'CTL−CTL*'])
     ].filter(idx => idx !== -1);
 
     // Helper: Datum normalisieren
@@ -5747,6 +5759,14 @@ function approveDaySuggestion(suggestion) {
     const headers = data[0];
 
     // --- SPALTEN MAPPING ---
+    const findHeaderIndex = (names) => {
+      for (const name of names) {
+        const idx = headers.indexOf(name);
+        if (idx !== -1) return idx;
+      }
+      return -1;
+    };
+
     const indices = {
       date: headers.indexOf('date'),
       weekday: headers.indexOf('Weekday'),
@@ -5763,7 +5783,11 @@ function approveDaySuggestion(suggestion) {
       monotony: headers.indexOf('Monotony7'),
       strain: headers.indexOf('Strain7'),
       atlMorning: headers.indexOf('coachE_ATL_morning'),
-      ctlMorning: headers.indexOf('coachE_CTL_morning')
+      ctlMorning: headers.indexOf('coachE_CTL_morning'),
+      fkei: findHeaderIndex(['fKEI', 'fkei']),
+      loadStar: findHeaderIndex(['Load*', 'load_star', 'load*']),
+      ctlStar: findHeaderIndex(['CTL*', 'ctl_star', 'ctl*']),
+      ctlGap: findHeaderIndex(['ctl_gap', 'CTL-CTL*', 'CTL−CTL*'])
     };
 
     if (indices.date === -1 || indices.sport === -1 || indices.zone === -1) {
@@ -5834,7 +5858,8 @@ function approveDaySuggestion(suggestion) {
     // --- FORMELN KOPIEREN (Forecasts) ---
     const formulaCols = [
       indices.atlForecast, indices.ctlForecast, indices.acwrForecast,
-      indices.monotony, indices.strain, indices.atlMorning, indices.ctlMorning
+      indices.monotony, indices.strain, indices.atlMorning, indices.ctlMorning,
+      indices.fkei, indices.loadStar, indices.ctlStar, indices.ctlGap
     ];
 
     if (sourceRowIndex > 0) {

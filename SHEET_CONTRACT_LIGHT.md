@@ -95,6 +95,10 @@ These are directly used in multiple flows:
 Used for scoring, risk checks, or UI summaries:
 
 - `load_fb_day` — observed load
+- `fKEI` — clamp factor applied to KEI (formula-based)
+- `Load*` / `load_star` — KEI-adjusted load (formula-based)
+- `CTL*` / `ctl_star` — CTL computed from `Load*` (formula-based)
+- `ctl_gap` — optional: `CTL − CTL*` delta (formula-based)
 - `fbATL_obs`, `fbCTL_obs`, `fbACWR_obs` — observed training metrics
 - `coachE_ATL_forecast`, `coachE_CTL_forecast`, `coachE_ACWR_forecast` — forecast metrics
 - `Monotony7`, `Strain7` — 7d monotony/strain
@@ -127,6 +131,12 @@ Contract definition:
 #### Semantics
 - `is_today` must have **exactly one active row** (or last occurrence wins in some scans).
 - `date` should be parseable (Date object or ISO-like string).
+
+#### KEI-adjusted load formulas (in `timeline`)
+- `fKEI = CLAMP(0.85, 1 + 0.05 * KEI, 1.15)`
+- `Load* = Load * fKEI`
+- `CTL*` uses the same 42‑day smoothing as `CTL`, but on `Load*`
+- Optional: `ctl_gap = CTL − CTL*`
 
 #### Write patterns
 - Planning updates often write into `timeline`.
