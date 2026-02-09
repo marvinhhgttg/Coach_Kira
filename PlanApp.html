@@ -2149,8 +2149,6 @@ function initChart() {
                     type: 'linear',
                     display: true,
                     position: 'left',
-                    min: 0.5,
-                    max: 2.0,
                     title: { display: true, text: 'ACWR' },
                     grid: { drawOnChartArea: false }
                 },
@@ -2166,8 +2164,6 @@ function initChart() {
                     display: true,
                     position: 'right',
                     offset: true,
-                    min: -1,
-                    max: 10,
                     title: { display: true, text: 'KEI' },
                     grid: { drawOnChartArea: false }
                 },
@@ -2549,15 +2545,19 @@ function updateChart(labels, loads, ctls, acwrs, sgs) {
             nextMin -= 1;
             nextMax += 1;
         }
-        axis.min = nextMin;
-        axis.max = nextMax;
+        axis.suggestedMin = nextMin;
+        axis.suggestedMax = nextMax;
+        delete axis.min;
+        delete axis.max;
     };
 
     const loadVals = finiteVals(loads);
     const ctlVals = finiteVals(ctls);
+    const acwrVals = finiteVals(acwrs);
     const keiVals = finiteVals(sgs);
 
     setAxisRange(myChart.options.scales?.y1, [...loadVals, ...ctlVals], { minBound: 0 });
+    setAxisRange(myChart.options.scales?.y2, acwrVals, { minBound: 0 });
     setAxisRange(myChart.options.scales?.y3, keiVals, {
         minFloor: SG_ZONES.DETRAIN_MAX,
         maxCeil: SG_ZONES.PROD_MAX
