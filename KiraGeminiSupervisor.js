@@ -7992,38 +7992,41 @@ function saveSimulatedPlan(loads, teAeList, teAnList, sports, zones, locks) {
     if (maxWritable === 0) throw new Error("Kein Platz zum Schreiben (zu wenig Zeilen in timeline).");
 
     // Wir lesen den bestehenden Bereich einmal, modifizieren im Array, schreiben einmal zurück.
-    const width = sheet.getLastColumn();
-    const writeRange = sheet.getRange(firstWriteRow1, 1, maxWritable, width);
-    const writeValues = writeRange.getValues();
-
     // Helper: Nummern robust parse
     const toNum = (x, def) => {
       const v = parseFloat(String(x).replace(',', '.'));
       return Number.isFinite(v) ? v : def;
     };
 
+    const loadValues = [];
+    const teAeValues = [];
+    const teAnValues = [];
+    const sportValues = [];
+    const zoneValues = [];
+    const coachZoneValues = [];
+
     for (let i = 0; i < maxWritable; i++) {
-      // writeValues[i] ist die komplette Zeile
       const valLoad = toNum(loads[i], 0);
       const valAe = (Array.isArray(teAeList) && teAeList[i] !== undefined) ? toNum(teAeList[i], 0) : 0;
       const valAn = (Array.isArray(teAnList) && teAnList[i] !== undefined) ? toNum(teAnList[i], 0) : 0;
+      const sportVal = (idx.sport > -1 && Array.isArray(sports)) ? (sports[i] !== undefined ? sports[i] : "") : "";
+      const zoneVal = Array.isArray(zones) ? (zones[i] !== undefined ? zones[i] : "") : "";
 
-      // Legacy Felder (keine Forecast-/Derived-Spalten aus PlanApp schreiben)
-      writeValues[i][idx.ess] = valLoad;
-
-      if (idx.teAe > -1) writeValues[i][idx.teAe] = valAe;
-      if (idx.teAn > -1) writeValues[i][idx.teAn] = valAn;
-
-      if (idx.sport > -1 && Array.isArray(sports)) writeValues[i][idx.sport] = sports[i] !== undefined ? sports[i] : "";
-      if (Array.isArray(zones)) {
-        const zoneVal = zones[i] !== undefined ? zones[i] : "";
-        if (idx.zone > -1) writeValues[i][idx.zone] = zoneVal;
-        if (idx.coachZone > -1) writeValues[i][idx.coachZone] = zoneVal;
-      }
+      loadValues.push([valLoad]);
+      teAeValues.push([valAe]);
+      teAnValues.push([valAn]);
+      sportValues.push([sportVal]);
+      zoneValues.push([zoneVal]);
+      coachZoneValues.push([zoneVal]);
     }
 
-    // Batch write
-    writeRange.setValues(writeValues);
+    // Batch write only the intended columns (preserve formulas/other data)
+    sheet.getRange(firstWriteRow1, idx.ess + 1, maxWritable, 1).setValues(loadValues);
+    if (idx.teAe > -1) sheet.getRange(firstWriteRow1, idx.teAe + 1, maxWritable, 1).setValues(teAeValues);
+    if (idx.teAn > -1) sheet.getRange(firstWriteRow1, idx.teAn + 1, maxWritable, 1).setValues(teAnValues);
+    if (idx.sport > -1) sheet.getRange(firstWriteRow1, idx.sport + 1, maxWritable, 1).setValues(sportValues);
+    if (idx.zone > -1) sheet.getRange(firstWriteRow1, idx.zone + 1, maxWritable, 1).setValues(zoneValues);
+    if (idx.coachZone > -1) sheet.getRange(firstWriteRow1, idx.coachZone + 1, maxWritable, 1).setValues(coachZoneValues);
 
     // Flush bevor Refresh/Sync
     SpreadsheetApp.flush();
