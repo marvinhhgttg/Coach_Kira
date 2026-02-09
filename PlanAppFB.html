@@ -313,6 +313,7 @@
           <th>TE Ae</th>
           <th>TE An</th>
           <th>CTL</th>
+          <th>CTL*</th>
           <th>ACWR</th>
           <th>SmartGains</th>
           <th>Lock</th>
@@ -520,6 +521,7 @@ function simulateAtlCtl(loads) {
   const seed0 = getSeed();
   let tATL = Number(seed0.atl) || 0;
   let tCTL = Number(seed0.ctl) || 0;
+  let tCTLStar = Number(seed0.ctl) || 0;
 
   // todayIsClosed shift wie PlanApp
   const startI = simBase?.todayIsClosed ? 1 : 0;
@@ -538,7 +540,15 @@ function simulateAtlCtl(loads) {
 
   const atlArr = [];
   const ctlArr = [];
+  const ctlStarArr = [];
   const acwrArr = [];
+
+  let hist = Array.isArray(simBase?.ctlHistoryYesterday) ? [...simBase.ctlHistoryYesterday] : [];
+  hist = hist.map(v => p(v));
+  if (hist.length > 7) hist = hist.slice(-7);
+  while (hist.length < 7) hist.unshift(tCTL);
+  const ctlTimeline = [...hist];
+  const historyBaseIndex = ctlTimeline.length - 1;
 
   for (let i = 0; i < loads.length; i++) {
 
@@ -547,6 +557,7 @@ function simulateAtlCtl(loads) {
       const acwr0 = tATL / (tCTL || 1);
       atlArr.push(tATL);
       ctlArr.push(tCTL);
+      ctlStarArr.push(tCTLStar);
       acwrArr.push(acwr0);
       continue;
     }
@@ -569,12 +580,43 @@ function simulateAtlCtl(loads) {
 
     const acwr = tATL / (tCTL || 1);
 
+    const historyIndex = historyBaseIndex + i - 7;
+    const ctl7DaysAgo = (historyIndex >= 0 && historyIndex < ctlTimeline.length)
+      ? ctlTimeline[historyIndex]
+      : ctlTimeline[0];
+
+    const last7Start = Math.max(0, i - 6);
+    const last7 = loads.slice(last7Start, i + 1);
+    let avg = null;
+    let stdDev = null;
+    let monoRaw = 0;
+    const monoSheetRaw = simBase?.monoToday;
+    const monoSheet = p(monoSheetRaw);
+    if (Number.isFinite(monoSheet) && last7.length < 7) {
+      monoRaw = monoSheet;
+    } else if (last7.length >= 2) {
+      avg = last7.reduce((a, b) => a + b, 0) / last7.length;
+      const variance = last7.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / last7.length;
+      stdDev = Math.sqrt(variance);
+      if (avg > 0 && stdDev > 0) {
+        monoRaw = avg / stdDev;
+      }
+    }
+    const mono = Math.min(Math.max(monoRaw, 0), 3);
+    const keiEffective = ((tCTL - ctl7DaysAgo) * 10) / ((acwr || 1) * (1 + mono)) * 0.1;
+    const fKEI = clamp(1 + 0.05 * keiEffective, 0.85, 1.15);
+    const loadStar = L_internal * fKEI;
+    const stimCTLStar = (S_CTL * loadStar) + B_CTL + (wH_CTL * sleepH) + (wS_CTL * sleepS);
+    tCTLStar = (1 - alpha_CTL) * tCTLStar + alpha_CTL * stimCTLStar;
+
     atlArr.push(tATL);
     ctlArr.push(tCTL);
+    ctlStarArr.push(tCTLStar);
     acwrArr.push(acwr);
+    ctlTimeline.push(tCTL);
   }
 
-  return { atlArr, ctlArr, acwrArr, acwr: acwrArr, ctlEnd: ctlArr.length ? ctlArr[ctlArr.length - 1] : tCTL };
+  return { atlArr, ctlArr, ctlStarArr, acwrArr, acwr: acwrArr, ctlEnd: ctlArr.length ? ctlArr[ctlArr.length - 1] : tCTL };
 }
 
 
@@ -689,6 +731,7 @@ function renderTable() {
 
     tr.innerHTML += `
       <td id="ctl_${i}" style="font-weight:700;">-</td>
+      <td id="ctlstar_${i}" style="font-weight:700;">-</td>
       <td id="acwr_${i}" style="font-weight:700;">-</td>
       <td id="sg_${i}" style="font-weight:800;">-</td>`;
 
@@ -773,19 +816,23 @@ function updateDerivedColumnsFromCurrentLoads() {
 
   const atlArr  = sim.atlArr  || [];
   const ctlArr  = sim.ctlArr  || [];
+  const ctlStarArr = sim.ctlStarArr || [];
   const acwrArr = sim.acwrArr || sim.acwr || [];
   const sgArr   = computeSmartGains({ loads, atlArr, ctlArr });
 
   for (let i = 0; i < loads.length; i++) {
     const ctlEl  = document.getElementById(`ctl_${i}`);
+    const ctlStarEl  = document.getElementById(`ctlstar_${i}`);
     const acwrEl = document.getElementById(`acwr_${i}`);
     const sgEl   = document.getElementById(`sg_${i}`);
 
     const ctlVal  = ctlArr[i];
+    const ctlStarVal  = ctlStarArr[i];
     const acwrVal = acwrArr[i];
     const sgVal   = sgArr[i];
 
     if (ctlEl) ctlEl.textContent = Number.isFinite(ctlVal) ? Math.round(ctlVal) : "-";
+    if (ctlStarEl) ctlStarEl.textContent = Number.isFinite(ctlStarVal) ? Math.round(ctlStarVal) : "-";
 
     if (acwrEl) {
       if (Number.isFinite(acwrVal)) {
@@ -1437,7 +1484,8 @@ function initChart() {
         { label: "Load (ESS)", data: [], yAxisID: "y1", order: 3 },
         { type: "line", label: "SmartGains", data: [], borderWidth: 2, tension: 0.25, pointRadius: 2, yAxisID: "y1", order: 2 },
         { type: "line", label: "ACWR", data: [], borderWidth: 2, borderDash: [5,5], tension: 0.15, pointRadius: 0, yAxisID: "y2", order: 1 },
-        { type: "line", label: "CTL", data: [], borderWidth: 1, pointRadius: 0, yAxisID: "y1", order: 4 }
+        { type: "line", label: "CTL", data: [], borderWidth: 1, pointRadius: 0, yAxisID: "y1", order: 4 },
+        { type: "line", label: "CTL*", data: [], borderWidth: 1, borderDash: [4,4], pointRadius: 0, yAxisID: "y1", order: 5 }
       ]
     },
     options: {
@@ -1463,6 +1511,7 @@ function updateChartFromCurrent() {
 
   const atlArr  = sim.atlArr  || [];
   const ctlArr  = sim.ctlArr  || [];
+  const ctlStarArr = sim.ctlStarArr || [];
   const acwrArr = sim.acwrArr || sim.acwr || [];
   const sgArr   = computeSmartGains({ loads, atlArr, ctlArr });
 
@@ -1473,6 +1522,7 @@ function updateChartFromCurrent() {
   myChart.data.datasets[1].data = sgArr.map(v => Number.isFinite(v) ? Math.round(v) : null);
   myChart.data.datasets[2].data = acwrArr.map(v => Number.isFinite(v) ? Number(v.toFixed(2)) : null);
   myChart.data.datasets[3].data = ctlArr.map(v => Number.isFinite(v) ? Math.round(v) : null);
+  myChart.data.datasets[4].data = ctlStarArr.map(v => Number.isFinite(v) ? Math.round(v) : null);
 
   myChart.update("none");
 }

@@ -273,6 +273,7 @@
   <div style="display:flex; justify-content:space-around; margin-bottom:10px; border-bottom:1px solid var(--border-color); padding-bottom:10px;">
     <div style="text-align:center;"><div class="label" style="font-size:0.6rem;">Sim-ATL</div><div id="sim-atl-val" style="font-weight:bold; color:var(--text-main);">--</div></div>
     <div style="text-align:center;"><div class="label" style="font-size:0.6rem;">Sim-CTL</div><div id="sim-ctl-val" style="font-weight:bold; color:var(--text-main);">--</div></div>
+    <div style="text-align:center;"><div class="label" style="font-size:0.6rem;">Sim-CTL*</div><div id="sim-ctlstar-val" style="font-weight:bold; color:var(--text-main);">--</div></div>
   </div>
 
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -369,9 +370,20 @@
   // 5. ACWR Berechnung
   const acwr = simATL / (simCTL || 1);
 
+  // 5b. CTL* (KEI-basiert)
+  const keiEffective = ((simCTL - baselineCTL6DaysAgo) * 10) / ((acwr || 1) * (1 + 0)) * 0.1;
+  const fKEI = Math.min(1.15, Math.max(0.85, 1 + 0.05 * keiEffective));
+  const loadStar = added * fKEI;
+  const loadAdjustedCTLStar = (coachConfig.S_CTL * loadStar) +
+                              (coachConfig.B_CTL || 0) +
+                              (coachConfig.wH_CTL * sH) +
+                              (coachConfig.wS_CTL * sS);
+  const simCTLStar = (1 - coachConfig.alpha_CTL) * baselineCTL + coachConfig.alpha_CTL * loadAdjustedCTLStar;
+
   // --- UI UPDATE ---
   document.getElementById('sim-atl-val').innerText = Math.round(simATL);
   document.getElementById('sim-ctl-val').innerText = Math.round(simCTL);
+  document.getElementById('sim-ctlstar-val').innerText = Math.round(simCTLStar);
   document.getElementById('sim-acwr-new').innerText = acwr.toFixed(2);
   
   const bar = document.getElementById('sim-bar-acwr');

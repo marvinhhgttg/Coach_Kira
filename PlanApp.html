@@ -406,6 +406,7 @@
             <th width="10%">TE (Ae/An)</th>
             <th>ATL</th>
             <th>CTL</th>
+            <th>CTL*</th>
             <th>ACWR</th>
             <th>KEI</th>
           </tr>
@@ -986,6 +987,7 @@ const targetLine = `🎯 SG ${targets.targetSG} | ACWR ${targets.targetACWR.toFi
     </td>
     <td class="text-center val-box" id="atl_${i}" style="color:var(--text-muted); font-size:1.1rem; font-weight:bold;">-</td>
     <td class="text-center val-box" id="ctl_${i}" style="color:var(--text-muted); font-size:1.1rem; font-weight:bold;">-</td>
+    <td class="text-center val-box" id="ctlstar_${i}" style="color:var(--text-muted); font-size:1.1rem; font-weight:bold;">-</td>
     <td class="text-center val-box font-weight-bold" id="acwr_${i}" style="font-size:1.1rem; font-weight:bold;">-</td>
     <td class="text-center" id="sg_cell_${i}"><span class="val-box" id="sg_${i}" style="font-size:1.1rem; font-weight:bold;">-</span></td>
     `;
@@ -1153,6 +1155,7 @@ function updateSimulation() {
     const seed = getSeedState(simBase);
 let tATL = seed.atl0;
 let tCTL = seed.ctl0;
+let tCTLStar = seed.ctl0;
 // let chartTSB = [];
 let history = [...seed.hist];
 history = history.slice(-7);
@@ -1188,8 +1191,9 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
     const recoveryMod = (simBase.hrvToday < 40 || simBase.sleepToday < 70) ? 1.5 : 1.0;
     const monotonyPenalty = (simBase.monoToday > 2.0) ? 15 : 0;
 
-    let chartLoads = [], chartCTL = [], chartACWR = [], chartTSB = [], chartSG = [], chartLabels = [];
+    let chartLoads = [], chartCTL = [], chartCTLStar = [], chartACWR = [], chartTSB = [], chartSG = [], chartLabels = [];
     const startDate = new Date(simBase.startDate);
+    const clampValue = (min, value, max) => Math.min(Math.max(value, min), max);
 
     // --- HEUTE-FIX: Row 0 nicht berechnen, sondern als Seed anzeigen ---
     // Wir erzwingen hier den Wert aus dem GSheet (smartGainsToday_obs oder sgToday)
@@ -1209,6 +1213,10 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
 
     if (document.getElementById('atl_0')) document.getElementById('atl_0').innerText = Math.round(atl0);
     if (document.getElementById('ctl_0')) document.getElementById('ctl_0').innerText = Math.round(ctl0);
+    if (document.getElementById('ctlstar_0')) {
+        document.getElementById('ctlstar_0').innerText = Math.round(ctl0);
+        document.getElementById('ctlstar_0').style.color = "var(--warning)";
+    }
     if (document.getElementById('acwr_0')) {
         document.getElementById('acwr_0').innerText = acwr0.toFixed(2);
         document.getElementById('acwr_0').style.color = (acwr0 > 1.30) ? 'var(--danger)' : (acwr0 >= 0.80) ? 'var(--success)' : 'var(--text-muted)';
@@ -1216,6 +1224,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
     
     chartLoads.push(currentLoads[0]);
     chartCTL.push(Math.round(ctl0));
+    chartCTLStar.push(Math.round(ctl0));
     chartACWR.push(acwr0.toFixed(2));
     chartTSB.push(Math.round(ctl0 - atl0));
     chartSG.push(Math.round(sg0));
@@ -1231,6 +1240,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
     // WICHTIG: Seed-Werte für die weitere Simulation anpassen
     tATL = atl0;
     tCTL = ctl0;
+    tCTLStar = ctl0;
     if (history.length === 0) {
         history.push(ctl0);
     }
@@ -1296,6 +1306,12 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         // KEI Berechnung nach GSheet (Skalierung wie Formel)
         const keiEffective = ((tCTL - ctl7DaysAgo) * 10) / (acwrSafe * (1 + mono)) * 0.1;
 
+        // --- 2b. CTL* (KEI-basiert) ---
+        const fKEI = clampValue(0.85, 1 + 0.05 * keiEffective, 1.15);
+        const loadStar = load * fKEI;
+        const dailyImpactCTLStar = (S_CTL * loadStar) + B_CTL + (wH_CTL * sleepH) + (wS_CTL * sleepS);
+        tCTLStar = ((1 - alpha_CTL) * tCTLStar) + (alpha_CTL * dailyImpactCTLStar);
+
         // --- HISTORIE FORTSCHREIBEN ---
         // Der gerade berechnete tCTL wird der neue Anker für in 7 Tagen.
         ctlTimeline.push(tCTL);
@@ -1305,6 +1321,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         const atlEl = document.getElementById('atl_'+i);
         const ctlEl = document.getElementById('ctl_'+i);
         const acwrEl = document.getElementById('acwr_'+i);
+        const ctlStarEl = document.getElementById('ctlstar_'+i);
 
         if (atlEl) {
             atlEl.innerText = Math.round(tATL);
@@ -1316,6 +1333,12 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
             ctlEl.style.fontSize = "1.1rem";
             ctlEl.style.fontWeight = "bold";
             ctlEl.style.color = "var(--primary)";
+        }
+        if (ctlStarEl) {
+            ctlStarEl.innerText = Math.round(tCTLStar);
+            ctlStarEl.style.fontSize = "1.1rem";
+            ctlStarEl.style.fontWeight = "bold";
+            ctlStarEl.style.color = "var(--warning)";
         }
         if(acwrEl) {
             acwrEl.innerText = acwr.toFixed(2);
@@ -1399,6 +1422,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         // Daten für Chart
         chartLoads.push(load); // Nur EINMAL hinzufügen!
         chartCTL.push(Math.round(tCTL));
+        chartCTLStar.push(Math.round(tCTLStar));
         chartACWR.push(acwr.toFixed(2));
         const tsb = tCTL - tATL;
         chartTSB.push(Math.round(tsb));
@@ -1432,6 +1456,7 @@ simLast = {
   labels: [...chartLabels],
   loads:  [...chartLoads],
   ctl:    [...chartCTL],
+  ctlStar:[...chartCTLStar],
   acwr:   [...chartACWR].map(v => Number(String(v).replace(",", "."))), // sicher numerisch
   tsb:    [...chartTSB],
   sg:     [...chartSG],
@@ -1447,7 +1472,7 @@ simLast = {
   config: simBase?.config || {}
 };
 
-    updateChart(chartLabels, chartLoads, chartCTL, chartACWR, chartSG);
+    updateChart(chartLabels, chartLoads, chartCTL, chartCTLStar, chartACWR, chartSG);
     updateTsbPerfChart(chartTSB, chartSG, chartLoads, chartLabels);
     updateTrendArrow(tsbPerfChart, chartTSB, chartSG);
     tsbPerfChart.update("none");
@@ -2136,6 +2161,17 @@ function initChart() {
                     pointRadius: 0,
                     yAxisID: 'y1',
                     order: 4
+                },
+                {
+                    type: 'line',
+                    label: 'CTL*',
+                    data: [],
+                    borderColor: '#f59e0b', // Orange
+                    borderWidth: 1,
+                    borderDash: [4, 4],
+                    pointRadius: 0,
+                    yAxisID: 'y1',
+                    order: 5
                 }
             ]
         },
@@ -2520,13 +2556,14 @@ function bubbleBorderColor(ctx) {
   return "rgba(16,185,129,0.90)";
 }
 
-function updateChart(labels, loads, ctls, acwrs, sgs) {
+function updateChart(labels, loads, ctls, ctlStars, acwrs, sgs) {
     if (!myChart) return;
     myChart.data.labels = labels;
     myChart.data.datasets[0].data = loads;
     myChart.data.datasets[1].data = sgs;
     myChart.data.datasets[2].data = acwrs;
     myChart.data.datasets[3].data = ctls;
+    myChart.data.datasets[4].data = ctlStars;
 
     const finiteVals = (arr) => (Array.isArray(arr) ? arr.filter((v) => Number.isFinite(v)) : []);
     const setAxisRange = (axis, values, { minBound = null, maxBound = null, minFloor = null, maxCeil = null } = {}) => {
@@ -2553,10 +2590,11 @@ function updateChart(labels, loads, ctls, acwrs, sgs) {
 
     const loadVals = finiteVals(loads);
     const ctlVals = finiteVals(ctls);
+    const ctlStarVals = finiteVals(ctlStars);
     const acwrVals = finiteVals(acwrs);
     const keiVals = finiteVals(sgs);
 
-    setAxisRange(myChart.options.scales?.y1, [...loadVals, ...ctlVals], { minBound: 0 });
+    setAxisRange(myChart.options.scales?.y1, [...loadVals, ...ctlVals, ...ctlStarVals], { minBound: 0 });
     setAxisRange(myChart.options.scales?.y2, acwrVals, { minBound: 0 });
     setAxisRange(myChart.options.scales?.y3, keiVals, {
         minFloor: SG_ZONES.DETRAIN_MAX,
