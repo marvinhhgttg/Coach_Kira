@@ -7438,6 +7438,8 @@ function getSimStartValues() {
   // Prio 2: Garmin/Observed (Fallback)
   atlObs: headers.indexOf('fbatl_obs'),
   ctlObs: headers.indexOf('fbctl_obs'),
+  acwrFc: headers.indexOf('coache_acwr_forecast'),
+  monotony7: headers.indexOf('monotony7'),
   sleepH: headers.indexOf('sleep_hours'),
   sleepS: headers.indexOf('sleep_score_0_100'),
   today: headers.indexOf('is_today'),
@@ -7547,6 +7549,25 @@ for (let offset = 7; offset >= 1; offset--) {
     timelineCtl7d.push(base.ctl);
   }
 }
+
+// --- DEBUG: CTL/ACWR/Monotonie HEUTE inkl. Datum (wie Sheet-Formeln) ---
+const todayRowDateRaw = (idx.date > -1) ? data[todayRow][idx.date] : null;
+const todayRowDateKey = todayRowDateRaw ? _dateKey_(todayRowDateRaw) : "unknown";
+const ctlTodaySheet = (idx.ctlFc > -1) ? parseVal(data[todayRow][idx.ctlFc]) : 0;
+const ctl7dAgoRow = todayRow - 7;
+const ctl7dAgoSheet = (idx.ctlFc > -1 && ctl7dAgoRow >= 1 && data[ctl7dAgoRow])
+  ? parseVal(data[ctl7dAgoRow][idx.ctlFc])
+  : base.ctl;
+const acwrTodaySheet = (idx.acwrFc > -1) ? parseVal(data[todayRow][idx.acwrFc]) : 0;
+const monotonyTodaySheet = (idx.monotony7 > -1) ? parseVal(data[todayRow][idx.monotony7]) : 0;
+
+Logger.log(
+  `[SIM-INIT] Timeline TodayRow date=${todayRowDateKey} (row ${todayRow}) ` +
+  `CTL_today(coache_ctl_forecast)=${ctlTodaySheet} ` +
+  `CTL_t-7(coache_ctl_forecast)=${ctl7dAgoSheet} ` +
+  `ACWR_today(coache_acwr_forecast)=${acwrTodaySheet} ` +
+  `Monotony_today(monotony7)=${monotonyTodaySheet}`
+);
 
 
 // Snapshot von einem anderen Tag automatisch verwerfen (sonst bleibt PlanApp auf 'gestern' hängen)
