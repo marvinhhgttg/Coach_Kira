@@ -661,6 +661,7 @@ let currentLoads = [];
 let myChart = null; // Chart Instanz
 // NEU: Speichert den Lock-Status für jeden Tag
 let lockedDays = new Array(14).fill(false); 
+window.KEI_DEBUG = window.KEI_DEBUG ?? false;
 
 function escapeHtml(str) {
   return String(str ?? "")
@@ -1012,6 +1013,9 @@ function changeLoad(idx, val) {
     console.debug("[PLANAPP] changeLoad", { idx, val });
     currentLoads[idx] = parseFloat(val);
     document.getElementById('val_'+idx).innerText = val;
+    if (window.KEI_DEBUG) {
+        console.log("[KEI DEBUG][onSlider]", { index: idx, load: currentLoads[idx] });
+    }
     updateSimulation();
 }
 
@@ -1231,6 +1235,10 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
     history.push(ctl0);
     history = history.slice(-7);
 
+    if (window.KEI_DEBUG) {
+        console.log("[KEI DEBUG][history][before]", { history: [...history] });
+    }
+
     // Simulation startet ab Tag 1
     for (let i = 1; i < 14; i++) {
         const load = currentLoads[i];
@@ -1315,6 +1323,20 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         const sgCell = document.getElementById('sg_cell_'+i);
         const keiBaselineVal = readKeiBaseline(i);
         const keiDisplay = keiLiveOverride ? keiEffective : (keiBaselineVal ?? keiEffective);
+        if (window.KEI_DEBUG) {
+            console.log("[KEI DEBUG][day]", {
+                i,
+                tCTL,
+                ctl7DaysAgo,
+                deltaCtl7d,
+                acwr,
+                monoC,
+                acwrPenalty,
+                monoPenalty,
+                keiEffective,
+                keiDisplay
+            });
+        }
         if(sgEl && sgCell) {
             sgEl.innerText = (keiDisplay > 0 ? "+" : "") + keiDisplay.toFixed(1);
             sgEl.style.fontSize = "1.1rem";
@@ -1381,6 +1403,10 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         
         const d = new Date(startDate); d.setDate(d.getDate() + i);
         chartLabels.push(d.toLocaleDateString('de-DE', {weekday:'short', day:'2-digit'}));
+    }
+
+    if (window.KEI_DEBUG) {
+        console.log("[KEI DEBUG][history][after]", { history: [...history] });
     }
     
     // ✅ Labels fürs Bubble-Chart global verfügbar machen
