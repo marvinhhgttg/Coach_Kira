@@ -7463,6 +7463,7 @@ function getSimStartValues() {
   // Prio 2: Garmin/Observed (Fallback)
   atlObs: headers.indexOf('fbatl_obs'),
   ctlObs: headers.indexOf('fbctl_obs'),
+  ctlStar: headers.indexOf('ctl_star'),
   acwrFc: headers.indexOf('coache_acwr_forecast'),
   monotony7: headers.indexOf('monotony7'),
   sleepH: headers.indexOf('sleep_hours'),
@@ -7669,6 +7670,8 @@ if (startRowIndex < 1) startRowIndex = todayRow;
 
     let finalATL = pickObservedOrForecast(startRowData, idx.atlObs, idx.atlFc, base.atl);
     let finalCTL = pickObservedOrForecast(startRowData, idx.ctlObs, idx.ctlFc, base.ctl);
+    let finalCTLStar = (idx.ctlStar > -1) ? parseVal(startRowData[idx.ctlStar]) : finalCTL;
+    if (!Number.isFinite(finalCTLStar) || finalCTLStar === 0) finalCTLStar = finalCTL;
 
     // --- B) HISTORIE (Letzte 7 Tage BIS GESTERN) ---
 // Wir wollen CTL(t-7 ... t-1), wobei t = HEUTE. Seed ist GESTERN (= startRowIndex).
@@ -7895,6 +7898,7 @@ try {
     return {
   atl: finalATL, 
   ctl: finalCTL,
+  ctl_star: finalCTLStar,
   todayATL_fc, todayATL_obs, todayCTL_fc, todayCTL_obs,
 todayRowIndex: todayRow,
 startRowIndex: startRowIndex,
@@ -8063,18 +8067,12 @@ function saveSimulatedPlan(loads, teAeList, teAnList, sports, zones, locks) {
       console.log("Refresh Warning: " + e.message);
     }
 
-    // 7) Kalender Sync
+    // 7) Kalender Sync asynchron triggern (UI nicht blockieren)
     let syncMsg = "";
     try {
-      if (typeof syncToGoogleCalendar === 'function') {
-        syncToGoogleCalendar();
-        syncMsg = " & Kalender 🗓️";
-      } else {
-        console.warn("Funktion 'syncToGoogleCalendar' nicht gefunden!");
-        syncMsg = " (Kein Kalender-Modul gefunden)";
-      }
+      syncMsg = schedulePlanCalendarSync_();
     } catch (e) {
-      syncMsg = " (Kalender Fehler: " + e.message + ")";
+      syncMsg = " (Kalender Trigger Fehler: " + e.message + ")";
     }
 
     // 8) Snapshot aktualisieren
@@ -8088,6 +8086,50 @@ function saveSimulatedPlan(loads, teAeList, teAnList, sports, zones, locks) {
 
   } catch (e) {
     return "❌ FEHLER: " + e.message;
+  }
+}
+
+/**
+ * Plant den Kalendersync asynchron als einmaligen Trigger ein.
+ * Vorteil: saveSimulatedPlan() kann sofort an die WebApp zurückkehren.
+ */
+function schedulePlanCalendarSync_() {
+  if (typeof syncToGoogleCalendar !== 'function') {
+    return " (Kein Kalender-Modul gefunden)";
+  }
+
+  const triggerFn = 'runPlanCalendarSyncAsync_';
+  const triggers = ScriptApp.getProjectTriggers();
+  for (const t of triggers) {
+    if (t.getHandlerFunction && t.getHandlerFunction() === triggerFn) {
+      ScriptApp.deleteTrigger(t);
+    }
+  }
+
+  ScriptApp.newTrigger(triggerFn)
+    .timeBased()
+    .after(10 * 1000)
+    .create();
+
+  return " (Kalendersync asynchron gestartet 🗓️)";
+}
+
+/**
+ * Trigger-Entry-Point für den entkoppelten Plan-Kalendersync.
+ */
+function runPlanCalendarSyncAsync_() {
+  try {
+    syncToGoogleCalendar();
+  } catch (e) {
+    console.warn('[PlanApp] Async Kalender-Sync Fehler: ' + e.message);
+  } finally {
+    const triggerFn = 'runPlanCalendarSyncAsync_';
+    const triggers = ScriptApp.getProjectTriggers();
+    for (const t of triggers) {
+      if (t.getHandlerFunction && t.getHandlerFunction() === triggerFn) {
+        ScriptApp.deleteTrigger(t);
+      }
+    }
   }
 }
 
