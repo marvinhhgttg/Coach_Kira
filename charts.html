@@ -1327,6 +1327,15 @@ function fetchTimelineViaGas(days, futureDays){
 }
 
 async function fetchTimeline(days, futureDays) {
+  // In HtmlService-Umgebung ist google.script.run am robustesten (kein CORS/Key-Problem).
+  if (window.google?.script?.run) {
+    try {
+      return await fetchTimelineViaGas(days, futureDays);
+    } catch (gasErr) {
+      console.warn('[charts] GAS timeline call fehlgeschlagen, fallback auf HTTP:', gasErr?.message || gasErr);
+    }
+  }
+
   const base = getExecBaseUrl(); // MUSS .../exec sein, nicht userCodeAppPanel
   const u = new URL(base);
 
@@ -1359,6 +1368,9 @@ async function fetchTimeline(days, futureDays) {
   headers: { "Accept": "application/json" }
 });
   } catch (err) {
+    if (window.google?.script?.run) {
+      return await fetchTimelineViaGas(days, futureDays);
+    }
     throw new Error(`Fetch-Request fehlgeschlagen (URL: ${u.toString()}): ${err?.message || err}`);
   }
 
