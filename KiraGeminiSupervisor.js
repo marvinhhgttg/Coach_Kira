@@ -8067,18 +8067,12 @@ function saveSimulatedPlan(loads, teAeList, teAnList, sports, zones, locks) {
       console.log("Refresh Warning: " + e.message);
     }
 
-    // 7) Kalender Sync
+    // 7) Kalender Sync asynchron triggern (UI nicht blockieren)
     let syncMsg = "";
     try {
-      if (typeof syncToGoogleCalendar === 'function') {
-        syncToGoogleCalendar();
-        syncMsg = " & Kalender 🗓️";
-      } else {
-        console.warn("Funktion 'syncToGoogleCalendar' nicht gefunden!");
-        syncMsg = " (Kein Kalender-Modul gefunden)";
-      }
+      syncMsg = schedulePlanCalendarSync_();
     } catch (e) {
-      syncMsg = " (Kalender Fehler: " + e.message + ")";
+      syncMsg = " (Kalender Trigger Fehler: " + e.message + ")";
     }
 
     // 8) Snapshot aktualisieren
@@ -8092,6 +8086,50 @@ function saveSimulatedPlan(loads, teAeList, teAnList, sports, zones, locks) {
 
   } catch (e) {
     return "❌ FEHLER: " + e.message;
+  }
+}
+
+/**
+ * Plant den Kalendersync asynchron als einmaligen Trigger ein.
+ * Vorteil: saveSimulatedPlan() kann sofort an die WebApp zurückkehren.
+ */
+function schedulePlanCalendarSync_() {
+  if (typeof syncToGoogleCalendar !== 'function') {
+    return " (Kein Kalender-Modul gefunden)";
+  }
+
+  const triggerFn = 'runPlanCalendarSyncAsync_';
+  const triggers = ScriptApp.getProjectTriggers();
+  for (const t of triggers) {
+    if (t.getHandlerFunction && t.getHandlerFunction() === triggerFn) {
+      ScriptApp.deleteTrigger(t);
+    }
+  }
+
+  ScriptApp.newTrigger(triggerFn)
+    .timeBased()
+    .after(10 * 1000)
+    .create();
+
+  return " (Kalendersync asynchron gestartet 🗓️)";
+}
+
+/**
+ * Trigger-Entry-Point für den entkoppelten Plan-Kalendersync.
+ */
+function runPlanCalendarSyncAsync_() {
+  try {
+    syncToGoogleCalendar();
+  } catch (e) {
+    console.warn('[PlanApp] Async Kalender-Sync Fehler: ' + e.message);
+  } finally {
+    const triggerFn = 'runPlanCalendarSyncAsync_';
+    const triggers = ScriptApp.getProjectTriggers();
+    for (const t of triggers) {
+      if (t.getHandlerFunction && t.getHandlerFunction() === triggerFn) {
+        ScriptApp.deleteTrigger(t);
+      }
+    }
   }
 }
 
