@@ -1304,6 +1304,28 @@ refreshModeLabel();
 
 //$("btnLoadDemo").click();
 
+
+function fetchTimelineViaGas(days, futureDays){
+  return new Promise((resolve, reject) => {
+    if (!window.google || !google.script || !google.script.run) {
+      reject(new Error('google.script.run nicht verfügbar'));
+      return;
+    }
+    google.script.run
+      .withSuccessHandler((payload) => {
+        if (!payload || payload.error) {
+          reject(new Error(payload?.message || 'timeline payload not ok'));
+          return;
+        }
+        resolve(payload);
+      })
+      .withFailureHandler((err) => {
+        reject(new Error(err?.message || err || 'Apps Script call failed'));
+      })
+      .getTimelinePayload(days, futureDays);
+  });
+}
+
 async function fetchTimeline(days, futureDays) {
   const base = getExecBaseUrl(); // MUSS .../exec sein, nicht userCodeAppPanel
   const u = new URL(base);
@@ -1332,7 +1354,7 @@ async function fetchTimeline(days, futureDays) {
   try {
     res = await fetch(u.toString(), {
   cache: "no-store",
-  credentials: "omit",
+  credentials: "include",
   redirect: "follow",
   headers: { "Accept": "application/json" }
 });
@@ -1344,12 +1366,20 @@ async function fetchTimeline(days, futureDays) {
   text = await res.text();
 
   if (!res.ok) {
-    throw new Error(`HTTP ${res.status} (URL: ${u.toString()}): ${text.slice(0, 200)}`);
+    const start = text.slice(0, 200);
+    if ((res.status === 401 || res.status === 403 || /unauthorized/i.test(start)) && window.google?.script?.run) {
+      return await fetchTimelineViaGas(days, futureDays);
+    }
+    throw new Error(`HTTP ${res.status} (URL: ${u.toString()}): ${start}`);
   }
   if (!ct.includes("application/json")) {
+    const start = text.slice(0, 200);
+    if (/unauthorized/i.test(start) && window.google?.script?.run) {
+      return await fetchTimelineViaGas(days, futureDays);
+    }
     throw new Error(
       `Timeline liefert kein JSON (content-type: ${ct || "?"}, URL: ${u.toString()}). ` +
-      `Start: ${text.slice(0, 200)}`
+      `Start: ${start}`
     );
   }
 
@@ -1357,7 +1387,13 @@ async function fetchTimeline(days, futureDays) {
   try { j = JSON.parse(text); }
   catch (err) { throw new Error(`JSON-Parse-Fehler: ${err?.message || err}. Start: ${text.slice(0, 200)}`); }
 
-  if (!j || j.error) throw new Error(j?.message || "timeline fetch failed");
+  if (!j || j.error) {
+    const msg = String(j?.message || 'timeline fetch failed');
+    if (/unauthorized/i.test(msg) && window.google?.script?.run) {
+      return await fetchTimelineViaGas(days, futureDays);
+    }
+    throw new Error(msg);
+  }
   if (!j.ok) throw new Error("timeline payload not ok");
   return j;
 }
