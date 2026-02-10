@@ -1411,7 +1411,7 @@ async function fetchTimeline(days, futureDays) {
   try {
     res = await fetch(u.toString(), {
   cache: "no-store",
-  credentials: "omit",
+  credentials: "include",
   redirect: "follow",
   headers: { "Accept": "application/json" }
 });
