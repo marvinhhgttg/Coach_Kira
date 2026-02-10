@@ -8290,15 +8290,21 @@ function getKEIAssessment(value) {
   const v = Number(value);
   if (!isFinite(v)) return { score: 0, ampel: "GRAU", text: "n/a" };
 
+  // 4-stufige KEI-Abstufung (wie Legende):
+  // 1) >= 8: High Efficiency
+  // 2) 3 bis < 8: Productive
+  // 3) 0 bis < 3: Maintenance / Transition
+  // 4) < 0: Ineffizient
   if (v >= 8) return { score: 100, ampel: "GRÜN", text: "High Efficiency" };
-  if (v >= 3) return { score: 85, ampel: "GRÜN", text: "Productive" };
-  if (v >= 0) return { score: 60, ampel: "GELB", text: "Maintenance / Transition" };
-  return { score: 30, ampel: "ROT", text: "Ineffizient" };
+  if (v >= 3) return { score: 80, ampel: "GRÜN", text: "Productive" };
+  if (v >= 0) return { score: 55, ampel: "GELB", text: "Maintenance / Transition" };
+  return { score: 25, ampel: "ROT", text: "Ineffizient" };
 }
 
 function getSmartGainsAssessment(value) {
   return getKEIAssessment(value);
 }
+
 
 
 function debugTimelineColumns() {
