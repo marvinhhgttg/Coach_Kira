@@ -8301,7 +8301,6 @@ function getSmartGainsAssessment(value) {
 }
 
 
-
 function debugTimelineColumns() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getSheetByName('KK_TIMELINE');
