@@ -1139,7 +1139,7 @@ function calculateRollingTEVarianz(allRawData, currentRowIndex, lookbackDays, te
 /**
  * V160-ULTRA-ROBUST: Fix für HRV-Crash & Smart-Gains-Read.
  * FIX 1: HRV Thresholds werden sicher als String behandelt, um .includes() Fehler zu vermeiden.
- * FIX 2: Smart Gains wird direkt aus dem Tabellenblatt AI_DATA_HISTORY gelesen (Spalte N), 
+ * FIX 2: KEI wird direkt aus dem Tabellenblatt AI_DATA_HISTORY gelesen (Spalte N), 
  * statt sich auf fehleranfälliges CSV-Parsing zu verlassen.
  */
 function calculateFitnessMetrics(datenPaket) {
@@ -1359,7 +1359,7 @@ const displayAcwrSheet = Number.isFinite(acwrValNum) ? acwrValNum.toFixed(2).rep
   const proteinRaw = parseGermanFloat(heute['protein_g']) || 0;
   scores.push({ metrik: "Protein-Invest", raw_wert: `${proteinRaw}g`, num_score: normalizeProteinScore(proteinRaw/76), ampel: proteinRaw < 10 ? "OFFEN" : getAmpelFromScore(normalizeProteinScore(proteinRaw/76)) });
 
-  // --- 11. SMART GAINS (UPDATED: AGGRESSIVE SKALA) ---
+  // --- 11. KEI (UPDATED: AGGRESSIVE SKALA) ---
   let smartRaw = 0;
   let smartSource = "Fallback";
 
@@ -1402,7 +1402,7 @@ if (smartRaw > 189) {
   let smartText = (smartRaw > 0 ? "+" : "") + smartRaw.toFixed(2).replace('.', ',');
   
   scores.push({ 
-      metrik: "Smart Gains", 
+      metrik: "KEI", 
       raw_wert: smartText, 
       num_score: sgScore, 
       ampel: sgAmpel 
@@ -1966,7 +1966,7 @@ DEINE AUFGABE (MAXIMALER KONTEXT & SPORTWISSENSCHAFTLICHE ANALYSE):
       * **WICHTIG (V110):** Du MUSST für **JEDEN** der folgenden Keys einen Kommentar liefern (exakte Schreibweise):
       * [${metricsChecklist}]
       
-      *** SPEZIAL-BRIEFING "Smart Gains" (Der Wahrheits-Detektor): ***
+      *** SPEZIAL-BRIEFING "KEI" (Der Wahrheits-Detektor): ***
     * Dieser Wert misst: "Fitness-Gewinn (CTL-Trend) MINUS Aufwand (Strain)".
     * **INTERPRETATIONSHILFE FÜR DICH (WICHTIG - NEUE SKALA):**
       * **Wert > 189:** "Danger / Overkill". (Risiko für Verletzung steigt akut -> WARNUNG).
@@ -2194,7 +2194,7 @@ if (rowMap.has(upKey)) {
 /**
  * V202-HYBRID: Exportiert Daten für Looker Studio.
  * KOMBINATION: 
- * 1. Liest Smart Gains, ACWR & TE Balance direkt aus KK_TIMELINE (Sheet-Formeln).
+ * 1. Liest KEI, ACWR & TE Balance direkt aus KK_TIMELINE (Sheet-Formeln).
  * 2. Berechnet weiterhin Scores (Recovery/Training) für die Historie via Script.
  */
 function exportLookerChartsData() {
@@ -2234,7 +2234,7 @@ function exportLookerChartsData() {
     
     // >>> QUELLEN AUS TABELLE (DEINE ANFORDERUNG) <<<
     acwr_forecast: headersNorm.indexOf('coache_acwr_forecast'), // Spalte ACWR Forecast
-    smart_gains: headersNorm.indexOf('coache_smart_gains'),   // Spalte Smart Gains
+    smart_gains: headersNorm.indexOf('coache_smart_gains'),   // Spalte KEI
     te_balance: headersNorm.indexOf('te_balance_trend'),      // Spalte TE Balance Trend
     
     // Metriken
@@ -2327,7 +2327,7 @@ function exportLookerChartsData() {
         // TE Balance (Mal 100 für Prozent)
         const teBalanceVal = getVal(rowRaw, indices.te_balance) * 100;
         
-        // Smart Gains
+        // KEI
         const smartGainsVal = getVal(rowRaw, indices.smart_gains);
 
         // Speicher für Forecast-Übergang aktualisieren
@@ -2365,7 +2365,7 @@ function exportLookerChartsData() {
     // Da die Formel im Sheet ist, vertrauen wir ihr.
     const forecastVarianz = getVal(rowRaw, indices.te_balance) * 100;
 
-    // 2. Smart Gains (aus Spalte coachE_Smart_Gains)
+    // 2. KEI (aus Spalte coachE_Smart_Gains)
     const smartScoreV2 = getVal(rowRaw, indices.smart_gains);
 
     // 3. ACWR (aus Spalte coachE_ACWR_forecast)
@@ -2402,9 +2402,9 @@ function exportLookerChartsData() {
       'Monotony7', 'Strain7', 'TE Balance (% Intensiv)', 
       'Recovery Score', 'Training Score', 'Recovery Score (Ø7d)', 'Training Score (Ø7d)',
       'CTL (Fitness)', 'CTL Trend (7d)',
-      'Smart Gains Score' 
+      'KEI Score' 
   ];
-  const forecastHeaders = ['Datum', 'Geplanter Load (ESS)', 'ATL Prognose', 'CTL Prognose', 'ACWR Prognose', 'Monotony7 Prognose', 'Strain7 Prognose', 'TE Balance (% Intensiv)', 'Recovery Score', 'Training Score', 'Smart Gain Forecast'];
+  const forecastHeaders = ['Datum', 'Geplanter Load (ESS)', 'ATL Prognose', 'CTL Prognose', 'ACWR Prognose', 'Monotony7 Prognose', 'Strain7 Prognose', 'TE Balance (% Intensiv)', 'Recovery Score', 'Training Score', 'KEI Forecast'];
 
   let historySheet = ss.getSheetByName('AI_DATA_HISTORY');
   if (!historySheet) historySheet = ss.insertSheet('AI_DATA_HISTORY');
@@ -4827,17 +4827,17 @@ ANTWORTE NUR ALS REINER TEXT.`;
 
 /**
  * NEU (V128): Berechnet Recovery- und Training-Subscores.
- * UPDATE: "Smart Gains" wurde zum Training-Score hinzugefügt!
+ * UPDATE: "KEI" wurde zum Training-Score hinzugefügt!
  */
 function calculateSubScores(fitnessScores) {
     let recoveryMetrics = ["RHR", "Schlafdauer", "Schlafscore", "HRV Status"];
     
-    // HIER IST DAS UPDATE: "Smart Gains" hinzufügen
+    // HIER IST DAS UPDATE: "KEI" hinzufügen
     let trainingMetrics = [  
         "TE Balance (% Intensiv)", 
         "ACWR (Forecast)", 
         "Training Status",
-        "Smart Gains" // <--- NEU!
+        "KEI" // <--- NEU!
     ];
 
     let recoveryTotalScore = 0;
@@ -4868,7 +4868,7 @@ function calculateSubScores(fitnessScores) {
         
         // Training Score Calculation
         if (trainingMetrics.includes(s.metrik)) {
-            // Optional: Willst du Smart Gains höher gewichten? 
+            // Optional: Willst du KEI höher gewichten? 
             // Aktuell zählt er einfach (Faktor 1) wie alle anderen.
             trainingTotalScore += score;
             trainingTotalWeight += 1;
@@ -5287,8 +5287,8 @@ function getDashboardDataAsStringV76() {
         const rawSmartGain = tData[todayRowIndex][idx.smartGainFc];
         const smartGainValue = parseFloat(String(rawSmartGain).replace(',', '.')) || 0;
 
-        // Wir suchen im statusData (aus AI_REPORT_STATUS) nach dem Eintrag "Smart Gains"
-        let smartGainScoreObj = statusData.scores.find(s => s.metrik === "Smart Gains");
+        // Wir suchen im statusData (aus AI_REPORT_STATUS) nach dem Eintrag "KEI"
+        let smartGainScoreObj = statusData.scores.find(s => s.metrik === "KEI") || statusData.scores.find(s => s.metrik === "Smart Gains");
         
         if (smartGainScoreObj) {
             // Wir überschreiben den Wert aus dem Report mit dem Live-Wert aus der Timeline
@@ -5311,7 +5311,7 @@ function getDashboardDataAsStringV76() {
         load: parseFloat(d.load) || 0 // Wir zwingen die Engine, DEINEN Plan zu nutzen
     }));
     
-    // Wir berechnen nur die physiologischen Folgen (Smart Gains V2) basierend auf DEINEM Plan
+    // Wir berechnen nur die physiologischen Folgen (KEI V2) basierend auf DEINEM Plan
     const calculatedV2Plan = enrichPlanWithProjections(simulationInput, baseData);
 
     // Wir bauen das finale Objekt
@@ -5325,7 +5325,8 @@ function getDashboardDataAsStringV76() {
             kiLoad: day.load,        // Rechte Spalte: Identisch (damit keine Verwirrung entsteht)
             
             // Hier kommen die frischen V2 Metriken rein
-            projectedSG: v2Data.projectedSG, 
+            projectedSG: v2Data.projectedSG,
+            projectedKEI: v2Data.projectedSG,
             projectedACWR: v2Data.projectedACWR
         };
     });
@@ -5930,11 +5931,12 @@ function calculateGesamtScore(inputScores) {
   let totalScore = 0;
   let totalWeight = 0;
 
-  // Gewichtung (HRV, Readiness, Smart Gains zählen doppelt)
+  // Gewichtung (HRV, Readiness, KEI zählt doppelt)
   const weights = {
     "HRV Status": 2,          
     "Training Readiness": 2,  
-    "Smart Gains": 2,         
+    "KEI": 2,
+    "Smart Gains": 2,         // Legacy Fallback
     
     // Basis (Faktor 1)
     "RHR": 1,
@@ -6188,7 +6190,7 @@ function getDashboardDataV76() {
           sparklines["Protein-Invest"] = getRobustTrend('protein_g');
           
           const ctlArr = getRobustTrend('coachE_CTL_forecast');
-          if (ctlArr.length > 0) sparklines["Smart Gains"] = ctlArr;
+          if (ctlArr.length > 0) sparklines["KEI"] = ctlArr;
 
           // --- LIVE FIX: Bilanz Score ---
           // Falls Bilanz nicht im Status-Report steht, bauen wir sie hier künstlich ein
@@ -7161,11 +7163,11 @@ function updateHistoryWithRIS() {
   
   // Indizes finden
   const idxTR = headers.indexOf("Training Readiness");
-  const idxSG = headers.indexOf("Smart Gains Score");
+  const idxSG = headers.indexOf("KEI Score") > -1 ? headers.indexOf("KEI Score") : headers.indexOf("Smart Gains Score");
   const idxRIS = 14; // Spalte O
 
   if (idxTR === -1 || idxSG === -1) {
-    Logger.log("Fehler: Header für TR oder SG nicht gefunden.");
+    Logger.log("Fehler: Header für TR oder KEI nicht gefunden.");
     return;
   }
 
@@ -7180,7 +7182,7 @@ function updateHistoryWithRIS() {
     const tr = parseFloat(String(data[i][idxTR]).replace(',', '.')) || 0;
     const sg = parseFloat(String(data[i][idxSG]).replace(',', '.')) || 0;
     
-    // Berechnung: RIS = SG * (TR / 100)
+    // Berechnung: RIS = KEI * (TR / 100)
     // Wir runden auf 2 Dezimalstellen
     let ris = sg * (tr / 100);
     
@@ -7194,7 +7196,7 @@ function updateHistoryWithRIS() {
 }
 
 /**
- * V151: Aktive Load-Optimierung basierend auf Smart Gain & ACWR-Schutz.
+ * V151: Aktive Load-Optimierung basierend auf KEI & ACWR-Schutz.
  * Sucht für jeden Tag den mathematisch effizientesten Load.
  */
 function generateOptimized14DayPlan(planData, base) {
@@ -7229,7 +7231,7 @@ function generateOptimized14DayPlan(planData, base) {
       const tCTL = (1 - cfg.alpha_CTL) * currentCTL + cfg.alpha_CTL * adjCTL;
       const tACWR = tATL / (tCTL || 1);
       
-      // Smart Gains V2 Logik für den Optimizer
+      // KEI V2 Logik für den Optimizer
       const fitnessGain = (tCTL - ctlHistory[0]) * 2.0; // Trend doppelt gewichtet
       const absoluteBonus = tCTL / 10.0;                // Belohnung für hohes Niveau
       const fatigueCost = (tATL * 7) / 500.0;           // Strain Proxy (ATL*7) / 500
@@ -7273,6 +7275,7 @@ function generateOptimized14DayPlan(planData, base) {
       originalLoad: parseFloat(day.load) || 0,
       recommendedLoad: bestLoad,
       projectedSG: bestScore,
+      projectedKEI: bestScore,
       projectedACWR: currentATL / (currentCTL || 1)
     };
   });
@@ -7298,13 +7301,13 @@ function simulateDay(load, oldATL, oldCTL, dayMeta, cfg, ctl7dAgo) {
   
   const acwr = newATL / (newCTL || 1);
   const trend = newCTL - ctl7dAgo;
-  const smart = trend - ((newATL * 7) / 400); // Deine Smart Gain Formel
+  const smart = trend - ((newATL * 7) / 400); // Deine KEI-Formel
 
   return { atl: newATL, ctl: newCTL, acwr: acwr, smartGain: smart };
 }
 
 /**
- * V2-ULTRA-STABLE: Nutzt echtes 7-Tage-Gedächtnis für Smart Gains.
+ * V2-ULTRA-STABLE: Nutzt echtes 7-Tage-Gedächtnis für KEI.
  */
 function enrichPlanWithProjections(planData, base) {
   const cfg = base.config || {};
@@ -7356,7 +7359,8 @@ function enrichPlanWithProjections(planData, base) {
       projectedATL: nextATL,
       projectedCTL: nextCTL,
       projectedACWR: acwr,
-      projectedSG: smartGainV2
+      projectedSG: smartGainV2,
+      projectedKEI: smartGainV2
     };
   });
 }
@@ -7368,7 +7372,7 @@ function writeProjectionsToForecastSheet(performancePlan) {
   if (!forecastSheet) return;
 
   const headers = ["Datum", "Geplanter Load (ESS)", "ATL Prognose", "CTL Prognose", "ACWR Prognose", 
-                   "Monotony7 Prognose", "Strain7 Prognose", "TE Balance", "Recovery Score", "Training Score", "Smart Gain Forecast"];
+                   "Monotony7 Prognose", "Strain7 Prognose", "TE Balance", "Recovery Score", "Training Score", "KEI Forecast"];
 
   // Helfer: Macht aus jedem Input eine saubere Zahl für die Berechnung/Speicherung
   const toNum = (val) => {
@@ -7695,7 +7699,7 @@ const observedColumnsEmpty =
   (ctlObsRaw === '' || ctlObsRaw == null);
 const snapshotOverridesAllowed = !!(snapshotActive && snap && observedColumnsEmpty);
 
-// Snapshot aktiv? -> Seed/History fixieren (mehr Stabilität der SG-Werte)
+// Snapshot aktiv? -> Seed/History fixieren (mehr Stabilität der KEI-Werte)
 if (snapshotActive && snap) {
   if (typeof snap.todayIsClosed === 'boolean') todayIsClosed = snap.todayIsClosed;
   if (typeof snap.startRowIndex === 'number') startRowIndex = snap.startRowIndex;
@@ -7783,7 +7787,7 @@ if (!futureSheet) throw new Error("Sheet 'AI_FUTURE_STATUS' nicht gefunden.");
 kiraBriefing = String(futureSheet.getRange(1, 1).getValue() || "");
 
 // Snapshot aktiv? Dann Plan-Horizont auf den gespeicherten Anker-Row setzen
-// (damit SG & Forecast nicht jeden Tag "springen")
+// (damit KEI & Forecast nicht jeden Tag "springen")
 const liveTodayRowIndex = todayRow;
 
 if (snapshotActive && snap && typeof snap === 'object') {
@@ -7864,8 +7868,8 @@ const todayCTL_fc = (idx.ctlFc > -1) ? parseVal(data[todayRow][idx.ctlFc]) : 0;
       }
     }
     // ---------- /NEU ----------
-    // --- NEU: Smart Gains HEUTE aus KK_TIMELINE holen ---
-let smartGainsToday_obs = 0;
+    // --- NEU: KEI HEUTE aus KK_TIMELINE holen ---
+let keiToday_obs = 0;
 try {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const kk = ss.getSheetByName('KK_TIMELINE');
@@ -7884,12 +7888,12 @@ try {
         if (v === "1" || v === "TRUE") { kkTodayRow = r; break; }
       }
       if (kkTodayRow > -1) {
-        smartGainsToday_obs = Number(String(kkData[kkTodayRow][idxSG]).replace(',', '.')) || 0;
+        keiToday_obs = Number(String(kkData[kkTodayRow][idxSG]).replace(',', '.')) || 0;
       }
     }
   }
 } catch(e) {
-  Logger.log("SG read warning: " + e.message);
+  Logger.log("KEI read warning: " + e.message);
 }
 
 
@@ -7913,7 +7917,8 @@ hrvDeltaLowToday: hrvDeltaLowToday,
   ctlYesterday: finalCTL,
   ctlHistoryYesterday: ctlHistory,
   timelineCtl7d: timelineCtl7d,
-  smartGainsToday_obs: smartGainsToday_obs,
+  keiToday_obs: keiToday_obs,
+  smartGainsToday_obs: keiToday_obs,
   config: base.config,
   startDate: startDateMs,
   todayDateMs: todayDateMs,
@@ -8199,7 +8204,7 @@ function getBriefHistoryContext() {
   const sheet = ss.getSheetByName('AI_DATA_HISTORY');
   if(!sheet) return "Keine Historie verfügbar.";
   const vals = sheet.getRange("A2:N8").getValues(); // Letzte 7 Zeilen
-  return vals.map(r => `Tag: ${r[0]}, Load: ${r[2]}, SG: ${r[13]}`).join(" | ");
+  return vals.map(r => `Tag: ${r[0]}, Load: ${r[2]}, KEI: ${r[13]}`).join(" | ");
 }
 
 function syncCalendarFromTimeline() {
@@ -8284,14 +8289,14 @@ function getKiraConfig(key) {
 }
 
 /**
- * Smart Gains V3 – neue Bereiche (wie PlanApp-Legende)
+ * KEI V3 – neue Bereiche (wie PlanApp-Legende)
  * < 28     -> Detraining   (ROT)
  * 28–80    -> Maintenance  (GELB)
  * 80–122   -> Productive   (GRUEN)
  * 122–181  -> Prime        (LILA)
  * > 181    -> Danger       (ROT)
  */
-function getSmartGainsAssessment(value) {
+function getKEIAssessment(value) {
   const v = Number(value);
   if (!isFinite(v)) return { score: 0, ampel: "GRAU", text: "n/a" };
 
@@ -8300,6 +8305,10 @@ function getSmartGainsAssessment(value) {
   if (v < 142)  return { score: 85,  ampel: "GRUEN", text: "Productive" };
   if (v <= 189) return { score: 100, ampel: "LILA",  text: "Prime" };
   return         { score: 25,  ampel: "ROT",   text: "Danger" };
+}
+
+function getSmartGainsAssessment(value) {
+  return getKEIAssessment(value);
 }
 
 
@@ -8406,7 +8415,7 @@ function getPlanForWidget() {
     let sport = row[colSport] || "-";
     let zone = row[colZone] || row[colZoneBackup] || "";
     
-    // Farblogik (Smart Gains)
+    // Farblogik (KEI)
 let color = "gray";
 if (sg > 189) color = "red";           // Danger
 else if (sg >= 142) color = "purple";  // Prime
