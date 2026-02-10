@@ -1073,12 +1073,17 @@ function getSeedAnchor(simBase) {
     simBase.ctlPrev,
     simBase.ctl
   );
+  const ctlStar0 = pickNumber(
+    simBase.ctl_star,
+    simBase.ctlStar,
+    ctl0
+  );
 
-  return { atl0, ctl0 };
+  return { atl0, ctl0, ctlStar0 };
 }
 
 function getSeedState(simBase) {
-  const { atl0, ctl0 } = getSeedAnchor(simBase);
+  const { atl0, ctl0, ctlStar0 } = getSeedAnchor(simBase);
 
   let hist = [];
   const timelineHistRaw = Array.isArray(simBase.timelineCtl7d)
@@ -1133,12 +1138,13 @@ function getSeedState(simBase) {
   console.log("[PLANAPP] Seed State:", {
     atl0,
     ctl0,
+    ctlStar0,
     ctlYesterday,
     histRaw: timelineHistRaw || simBase.ctlHistoryYesterday,
     histFinal: hist
   });
 
-  return { atl0, ctl0, hist };
+  return { atl0, ctl0, ctlStar0, hist };
 }
 
 
@@ -1155,7 +1161,7 @@ function updateSimulation() {
     const seed = getSeedState(simBase);
 let tATL = seed.atl0;
 let tCTL = seed.ctl0;
-let tCTLStar = seed.ctl0;
+let tCTLStar = seed.ctlStar0;
 // let chartTSB = [];
 let history = [...seed.hist];
 history = history.slice(-7);
@@ -1208,13 +1214,13 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
     const sg0 = (sg0Baseline !== null) ? sg0Baseline : (Number(simBase.sgToday) || Number(simBase.smartGainsToday_obs) || 0);
     
     // UI & Charts für Tag 0
-    const { atl0, ctl0 } = getSeedAnchor(simBase);
+    const { atl0, ctl0, ctlStar0 } = getSeedAnchor(simBase);
     const acwr0 = atl0 / (ctl0 || 1);
 
     if (document.getElementById('atl_0')) document.getElementById('atl_0').innerText = Math.round(atl0);
     if (document.getElementById('ctl_0')) document.getElementById('ctl_0').innerText = Math.round(ctl0);
     if (document.getElementById('ctlstar_0')) {
-        document.getElementById('ctlstar_0').innerText = Math.round(ctl0);
+        document.getElementById('ctlstar_0').innerText = Math.round(ctlStar0);
         document.getElementById('ctlstar_0').style.color = "var(--warning)";
     }
     if (document.getElementById('acwr_0')) {
@@ -1224,7 +1230,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
     
     chartLoads.push(currentLoads[0]);
     chartCTL.push(Math.round(ctl0));
-    chartCTLStar.push(Math.round(ctl0));
+    chartCTLStar.push(Math.round(ctlStar0));
     chartACWR.push(acwr0.toFixed(2));
     chartTSB.push(Math.round(ctl0 - atl0));
     chartSG.push(Math.round(sg0));
@@ -1240,7 +1246,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
     // WICHTIG: Seed-Werte für die weitere Simulation anpassen
     tATL = atl0;
     tCTL = ctl0;
-    tCTLStar = ctl0;
+    tCTLStar = ctlStar0;
     if (history.length === 0) {
         history.push(ctl0);
     }
