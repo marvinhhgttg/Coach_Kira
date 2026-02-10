@@ -1316,6 +1316,12 @@ function normalizeTimelinePayload(payload){
   // Standard contract
   if (p && p.ok === true && Array.isArray(p.headers) && Array.isArray(p.rows)) return p;
 
+  // Häufige Wrapper-Varianten aus RPC/Proxies
+  const wrapped = p && (p.payload || p.result || p.data || p.timeline || p.value);
+  if (wrapped && Array.isArray(wrapped.headers) && Array.isArray(wrapped.rows)) {
+    return { ...wrapped, ok: true };
+  }
+
   // Toleranter Fallback: manche Backends liefern headers/rows ohne ok-Flag
   if (p && Array.isArray(p.headers) && Array.isArray(p.rows)) {
     return { ...p, ok: true };
@@ -1334,7 +1340,14 @@ function fetchTimelineViaGas(days, futureDays){
       .withSuccessHandler((payload) => {
         const normalized = normalizeTimelinePayload(payload);
         if (!normalized || normalized.error || normalized.ok === false) {
-          reject(new Error(normalized?.message || 'timeline payload not ok'));
+          const sample = (() => {
+            try {
+              return JSON.stringify(payload).slice(0, 280);
+            } catch (_) {
+              return String(payload).slice(0, 280);
+            }
+          })();
+          reject(new Error(normalized?.message || `timeline payload not ok (sample: ${sample})`));
           return;
         }
         resolve(normalized);
@@ -1352,7 +1365,13 @@ async function fetchTimeline(days, futureDays) {
     try {
       return await fetchTimelineViaGas(days, futureDays);
     } catch (gasErr) {
-      console.warn('[charts] GAS timeline call fehlgeschlagen, fallback auf HTTP:', gasErr?.message || gasErr);
+      const msg = gasErr?.message || String(gasErr || '');
+      // In HtmlService ist HTTP-Fetch häufig durch CORS/302 blockiert.
+      // Bei funktionalem GAS-Fehler lieber direkt transparent abbrechen statt CORS-Fallback-Lärm.
+      if (/timeline payload not ok|payload malformed|sheet|nicht gefunden|not found/i.test(msg)) {
+        throw gasErr;
+      }
+      console.warn('[charts] GAS timeline call fehlgeschlagen, fallback auf HTTP:', msg);
     }
   }
 
