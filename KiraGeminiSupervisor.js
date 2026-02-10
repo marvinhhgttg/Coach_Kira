@@ -1369,7 +1369,9 @@ const displayAcwrSheet = Number.isFinite(acwrValNum) ? acwrValNum.toFixed(2).rep
       const data = fcSheet.getRange(1, 1, 2, fcSheet.getLastColumn()).getValues();
       const headers = data[0].map(h => h.toString().toLowerCase());
       const rowData = data[1]; 
-      const colIdx = headers.indexOf('smart gain forecast');
+      const colIdx = headers.indexOf('kei forecast') > -1
+        ? headers.indexOf('kei forecast')
+        : headers.indexOf('smart gain forecast');
       if (colIdx !== -1 && rowData && rowData[colIdx] !== "") {
         smartRaw = parseGermanFloat(rowData[colIdx]);
         smartSource = "Forecast";
@@ -1386,18 +1388,12 @@ const displayAcwrSheet = Number.isFinite(acwrValNum) ? acwrValNum.toFixed(2).rep
 let sgScore = 0;
 let sgAmpel = "ROT";
 
-// Skala: >181 (Danger), 122–181 (Prime), 80–122 (Productive), 28–80 (Maintenance), <28 (Detraining)
-if (smartRaw > 189) {
-    sgScore = 40; sgAmpel = "ROT"; // Danger / Overkill
-} else if (smartRaw >= 142) {
-    sgScore = 100; sgAmpel = "LILA"; // Prime
-} else if (smartRaw >= 95) {
-    sgScore = 90; sgAmpel = "GRÜN"; // Productive
-} else if (smartRaw >= 39) {
-    sgScore = 60; sgAmpel = "GELB"; // Maintenance
-} else {
-    sgScore = 30; sgAmpel = "ROT"; // Detraining
-}
+// KEI Legende (neu):
+// High Efficiency (>= 8), Productive (3 bis < 8), Maintenance/Transition (0 bis < 3)
+// Werte < 0 = ineffizient/Überlast-Risiko
+const keiAssessment = getKEIAssessment(smartRaw);
+sgScore = keiAssessment.score;
+sgAmpel = keiAssessment.ampel;
   
   let smartText = (smartRaw > 0 ? "+" : "") + smartRaw.toFixed(2).replace('.', ',');
   
@@ -1968,18 +1964,12 @@ DEINE AUFGABE (MAXIMALER KONTEXT & SPORTWISSENSCHAFTLICHE ANALYSE):
       
       *** SPEZIAL-BRIEFING "KEI" (Der Wahrheits-Detektor): ***
     * Dieser Wert misst: "Fitness-Gewinn (CTL-Trend) MINUS Aufwand (Strain)".
-    * **INTERPRETATIONSHILFE FÜR DICH (WICHTIG - NEUE SKALA):**
-      * **Wert > 189:** "Danger / Overkill". (Risiko für Verletzung steigt akut -> WARNUNG).
-* **Wert 142 bis 189:** "Prime / Aggressiv." (Maximal effizient -> LOBEN!).
-* **Wert 95 bis 142:** "Productive." (Solider, gesunder Aufbau).
-* **Wert 39 bis 95:** "Maintenance." (Erhalt).
-* **Wert < 39:** ... Unterscheide genau:
-        1. **Wert < 10 UND Strain ist NIEDRIG:** -> Das ist **Detraining/Erholung**.
-           -> Schreib: "Fitness-Rückgang durch Pause. Physiologisch notwendig." (Keine Panik verbreiten).
-        2. **Wert < 10 UND Strain ist HOCH:**
-           -> Das ist **Ineffizienz** ("Junk Miles").
-           -> Schreib: "Warnung: Hoher Aufwand für wenig Ertrag. Training optimieren!"
-        ** Bewerte diesen Score schonungslos ehrlich!
+    * **INTERPRETATIONSHILFE FÜR DICH (KEI-LEGENDEN-SKALA):**
+      * **Wert >= 8:** "High Efficiency" (sehr effizient, loben).
+      * **Wert 3 bis < 8:** "Productive" (solider Aufbau).
+      * **Wert 0 bis < 3:** "Maintenance / Transition" (Erhalt/Übergang).
+      * **Wert < 0:** Ineffizienter Reiz / Warnsignal.
+        -> Schreib klar: "Aufwand hoch, Ertrag niedrig. Plan anpassen."
     * Gib für jeden Score einen **aussagekräftigen Kommentar (1-2 Sätze)**.
 
 REGELN FÜR 'plan_status':
@@ -8289,22 +8279,21 @@ function getKiraConfig(key) {
 }
 
 /**
- * KEI V3 – neue Bereiche (wie PlanApp-Legende)
- * < 28     -> Detraining   (ROT)
- * 28–80    -> Maintenance  (GELB)
- * 80–122   -> Productive   (GRUEN)
- * 122–181  -> Prime        (LILA)
- * > 181    -> Danger       (ROT)
+ * KEI-Bewertung (AI_REPORT_STATUS)
+ * Legende:
+ * - High Efficiency (>= 8)
+ * - Productive (3 bis < 8)
+ * - Maintenance / Transition (0 bis < 3)
+ * - < 0 = ineffizient / rote Flagge
  */
 function getKEIAssessment(value) {
   const v = Number(value);
   if (!isFinite(v)) return { score: 0, ampel: "GRAU", text: "n/a" };
 
-  if (v < 39)   return { score: 20,  ampel: "ROT",   text: "Detraining" };
-  if (v < 95)   return { score: 55,  ampel: "GELB",  text: "Maintenance" };
-  if (v < 142)  return { score: 85,  ampel: "GRUEN", text: "Productive" };
-  if (v <= 189) return { score: 100, ampel: "LILA",  text: "Prime" };
-  return         { score: 25,  ampel: "ROT",   text: "Danger" };
+  if (v >= 8) return { score: 100, ampel: "GRÜN", text: "High Efficiency" };
+  if (v >= 3) return { score: 85, ampel: "GRÜN", text: "Productive" };
+  if (v >= 0) return { score: 60, ampel: "GELB", text: "Maintenance / Transition" };
+  return { score: 30, ampel: "ROT", text: "Ineffizient" };
 }
 
 function getSmartGainsAssessment(value) {
