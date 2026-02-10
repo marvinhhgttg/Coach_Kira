@@ -1336,7 +1336,7 @@ function fetchTimelineViaGas(days, futureDays){
       reject(new Error('google.script.run nicht verfügbar'));
       return;
     }
-    google.script.run
+    const runner = google.script.run
       .withSuccessHandler((payload) => {
         const normalized = normalizeTimelinePayload(payload);
         if (!normalized || normalized.error || normalized.ok === false) {
@@ -1354,8 +1354,17 @@ function fetchTimelineViaGas(days, futureDays){
       })
       .withFailureHandler((err) => {
         reject(new Error(err?.message || err || 'Apps Script call failed'));
-      })
-      .getTimelinePayloadForCharts(days, futureDays);
+      });
+
+    const rpcName = (typeof runner.getTimelinePayloadForCharts === 'function')
+      ? 'getTimelinePayloadForCharts'
+      : 'getTimelinePayload';
+
+    try {
+      runner[rpcName](days, futureDays);
+    } catch (err) {
+      reject(new Error(`Apps Script RPC-Aufruf fehlgeschlagen (${rpcName}): ${err?.message || err}`));
+    }
   });
 }
 
