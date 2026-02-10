@@ -1008,7 +1008,7 @@ h2 {
   </div>
 
   <div class="status-box" id="box-smart">
-    <span class="status-label">Smart Gains</span>
+    <span class="status-label">KEI</span>
     <div class="gauge-wrapper">
        <div class="gauge-bg"></div>
        <div class="gauge-needle" id="needle-smart"></div>
@@ -1471,7 +1471,7 @@ function renderDashboard(jsonString, timestamp) {
     updateStatusBox('box-recovery', 'val-recovery', data.recoveryScore, data.recoveryAmpel);
     updateStatusBox('box-training', 'val-training', data.trainingScore, data.trainingAmpel);
     
-    const smartObj = data.scores ? data.scores.find(s => s.metrik === "Smart Gains") : null;
+    const smartObj = data.scores ? (data.scores.find(s => s.metrik === "KEI") || data.scores.find(s => s.metrik === "Smart Gains")) : null;
     const smartVal = smartObj ? smartObj.num_score : "--"; // Score für Gauge nutzen
     updateStatusBox('box-smart', 'val-smart', smartVal, smartObj ? smartObj.ampel : "GRAU");
     
@@ -1563,7 +1563,7 @@ if (data.planData && data.planData.length > 0) {
 
     // SCORE TABLE (Mit Gauge Balken)
     const scoreGroups = {
-        "Training": ["ACWR (Forecast)", "TE Balance (% Intensiv)", "Training Status", "Smart Gains"],
+        "Training": ["ACWR (Forecast)", "TE Balance (% Intensiv)", "Training Status", "KEI"],
         "Recovery": ["RHR", "Schlafdauer", "Schlafscore", "HRV Status", "Training Readiness"],
         "Ernährung": ["7-Tage-Bilanz", "Protein-Invest"]
     };
@@ -1592,7 +1592,15 @@ if (data.planData && data.planData.length > 0) {
             scoreTable.appendChild(headerRow);
 
             metrics.forEach(metricName => {
-                const score = data.scores.find(s => s.metrik === metricName);
+                const score = (() => {
+                    if (metricName === "KEI") {
+                        return data.scores.find(s => s.metrik === "KEI") || data.scores.find(s => s.metrik === "Smart Gains");
+                    }
+                    if (metricName === "Smart Gains") {
+                        return data.scores.find(s => s.metrik === "Smart Gains") || data.scores.find(s => s.metrik === "KEI");
+                    }
+                    return data.scores.find(s => s.metrik === metricName);
+                })();
                 if (score) {
                     let comment = score.text || ""; 
                     let valForColor = score.num_score; 
