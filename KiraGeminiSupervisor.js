@@ -9203,6 +9203,30 @@ function getTimelinePayload(days, futureDays) {
   };
 }
 
+/**
+ * HtmlService/RPC-sicherer Wrapper für charts.html.
+ * Liefert IMMER ein Objekt mit ok/error/message statt null/undefined.
+ */
+function getTimelinePayloadForCharts(days, futureDays) {
+  try {
+    const payload = getTimelinePayload(days, futureDays);
+    if (payload && Array.isArray(payload.headers) && Array.isArray(payload.rows)) {
+      return (payload.ok === false) ? payload : { ...payload, ok: true };
+    }
+    return {
+      ok: false,
+      error: true,
+      message: 'timeline payload leer oder ungültig (headers/rows fehlen)'
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      error: true,
+      message: String((err && err.stack) || (err && err.message) || err || 'getTimelinePayloadForCharts failed')
+    };
+  }
+}
+
 function _median_(arr) {
   const a = (arr || []).filter(x => Number.isFinite(x)).slice().sort((x,y)=>x-y);
   if (!a.length) return null;

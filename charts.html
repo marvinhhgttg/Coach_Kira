@@ -1355,7 +1355,7 @@ function fetchTimelineViaGas(days, futureDays){
       .withFailureHandler((err) => {
         reject(new Error(err?.message || err || 'Apps Script call failed'));
       })
-      .getTimelinePayload(days, futureDays);
+      .getTimelinePayloadForCharts(days, futureDays);
   });
 }
 
