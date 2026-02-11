@@ -1370,23 +1370,42 @@ function fetchTimelineViaGas(days, futureDays){
                 return String(payload).slice(0, 280);
               }
             })();
-            reject(new Error(normalized?.message || `timeline payload not ok (rpc: ${rpcName}, sample: ${sample})`));
+            reject(new Error(
+              normalized?.message ||
+              `Timeline-Payload ungültig (RPC: ${rpcName}). ` +
+              `Bitte Zeitraum reduzieren oder später erneut versuchen (möglicher Größen-/Timeout-Effekt). ` +
+              `Sample: ${sample}`
+            ));
             return;
           }
           resolve(normalized);
         })
         .withFailureHandler((err) => {
-          reject(new Error(err?.message || err || 'Apps Script call failed'));
+          const msg = String(err?.message || err || 'Apps Script call failed');
+          if (allowFallbackToLegacy && rpcName === 'getTimelinePayloadForCharts' && /not a function|undefined|is not a function/i.test(msg)) {
+            callRpc('getTimelinePayload', {
+              allowFallbackToLegacy: false,
+              allowSmallerRangeRetry: true,
+              requestDays
+            });
+            return;
+          }
+          reject(new Error(msg));
         });
 
       try {
         runner[rpcName](daysArg, futureDaysArg);
       } catch (err) {
-        if (allowFallbackToLegacy && rpcName !== 'getTimelinePayload') {
-          callRpc('getTimelinePayload', false);
+        const msg = String(err?.message || err || 'RPC call failed');
+        if (allowFallbackToLegacy && rpcName === 'getTimelinePayloadForCharts' && /not a function|undefined|is not a function/i.test(msg)) {
+          callRpc('getTimelinePayload', {
+            allowFallbackToLegacy: false,
+            allowSmallerRangeRetry: true,
+            requestDays
+          });
           return;
         }
-        reject(new Error(`Apps Script RPC-Aufruf fehlgeschlagen (${rpcName}): ${err?.message || err}`));
+        reject(new Error(`Apps Script RPC-Aufruf fehlgeschlagen (${rpcName}): ${msg}`));
       }
     };
 
