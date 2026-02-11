@@ -1337,57 +1337,26 @@ function fetchTimelineViaGas(days, futureDays){
       return;
     }
 
-    const RETRY_DAYS_ON_NULL = 90;
-    const statusEl = $("dataStatus");
-    const setStatus = (msg) => {
-      if (statusEl) statusEl.textContent = msg;
-    };
-
-    const callRpc = (rpcName, opts = {}) => {
-      const {
-        allowFallbackToLegacy = false,
-        allowSmallerRangeRetry = false,
-        requestDays = days
-      } = opts;
-
+    const callRpc = (rpcName, allowFallbackToLegacy, daysArg = days, futureDaysArg = futureDays) => {
       const runner = google.script.run
         .withSuccessHandler((payload) => {
-          // Zentrale Behandlung für leere Payloads.
-          if (payload == null) {
-            if (allowFallbackToLegacy && rpcName === 'getTimelinePayloadForCharts') {
-              callRpc('getTimelinePayload', {
-                allowFallbackToLegacy: false,
-                allowSmallerRangeRetry: true,
-                requestDays
-              });
-              return;
-            }
-
-            const shouldRetrySmallerRange =
-              allowSmallerRangeRetry && Number.isFinite(Number(requestDays)) && Number(requestDays) > RETRY_DAYS_ON_NULL;
-
-            if (shouldRetrySmallerRange) {
-              setStatus(`GAS-Antwort leer – erneuter Versuch mit kleinerem Zeitraum (${RETRY_DAYS_ON_NULL} Tage)…`);
-              callRpc(rpcName, {
-                allowFallbackToLegacy: false,
-                allowSmallerRangeRetry: false,
-                requestDays: RETRY_DAYS_ON_NULL
-              });
-              return;
-            }
-
-            reject(new Error(
-              `Apps Script lieferte eine leere Timeline-Antwort (RPC: ${rpcName}). ` +
-              `Mögliche Ursache: Zeitraum zu groß oder Ausführung lief in ein Timeout.`
-            ));
+          // Einige Deployments liefern hier null zurück -> Legacy-RPC als Rettung versuchen
+          if (payload == null && rpcName !== 'getTimelinePayload') {
+            callRpc('getTimelinePayload', false);
             return;
           }
 
-          // Wenn selbst Legacy null liefert: sauberer, klarer Fehler statt kryptischem sample=null
-          if (payload == null) {
+          // Legacy ebenfalls null: letzter Rettungsversuch mit kleinerem Fenster
+          if (payload == null && rpcName === 'getTimelinePayload') {
+            const reducedDays = Math.min(30, Number(days) || 30);
+            if (Number(days) > reducedDays) {
+              callRpc('getTimelinePayload', false, reducedDays, futureDays);
+              return;
+            }
+
             reject(new Error(
               `Apps Script lieferte eine leere Timeline-Antwort (RPC: ${rpcName}). ` +
-              `Mögliche Ursache: Zeitraum zu groß oder Ausführung lief in ein Timeout.`
+              `Bitte Deployment prüfen (WebApp ggf. neu deployen) – Rückgabe war null.`
             ));
             return;
           }
@@ -1425,7 +1394,7 @@ function fetchTimelineViaGas(days, futureDays){
         });
 
       try {
-        runner[rpcName](requestDays, futureDays);
+        runner[rpcName](daysArg, futureDaysArg);
       } catch (err) {
         const msg = String(err?.message || err || 'RPC call failed');
         if (allowFallbackToLegacy && rpcName === 'getTimelinePayloadForCharts' && /not a function|undefined|is not a function/i.test(msg)) {

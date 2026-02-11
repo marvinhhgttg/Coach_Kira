@@ -9097,6 +9097,19 @@ function getTimelinePayload(days, futureDays) {
     ? fDefault
     : ((Number.isFinite(Number(futureDays)) && Number(futureDays) > 0) ? Math.floor(Number(futureDays)) : 0);
 
+  const tz = Session.getScriptTimeZone();
+
+  function serializeCell(raw){
+    if (raw instanceof Date && !isNaN(raw.getTime())) {
+      return Utilities.formatDate(raw, tz, 'yyyy-MM-dd');
+    }
+    return raw;
+  }
+
+  function serializeRows(rowsIn){
+    return (rowsIn || []).map(r => (r || []).map(serializeCell));
+  }
+
   // Ohne Date-Spalte: Future/Range nicht möglich -> tail return (Performance-Schutz)
   const MAX_ROWS_WITHOUT_DATE = 1000;
   if (idxDate === -1) {
@@ -9113,7 +9126,7 @@ function getTimelinePayload(days, futureDays) {
       generatedAt: Date.now(),
       count: rowsNoDate.length,
       headers: headersRaw,
-      rows: rowsNoDate,
+      rows: serializeRows(rowsNoDate),
       missingHeaders,
       days: dHist,
       futureDays: dFut,
@@ -9121,7 +9134,6 @@ function getTimelinePayload(days, futureDays) {
     };
   }
 
-  const tz = Session.getScriptTimeZone();
   const fmtKey = (d) => Utilities.formatDate(new Date(d), tz, 'yyyy-MM-dd');
 
   const today = new Date();
@@ -9309,15 +9321,58 @@ function getTimelinePayload(days, futureDays) {
     ? `Timeline-Payload auf ${mergedFinal.length} Zeilen begrenzt (von ${merged.length}).`
     : undefined;
 
+  // Safety-Cap gegen sehr große Payloads
+  const MAX_ROWS_EXPORT = 1200;
+  const mergedFinal = merged.length > MAX_ROWS_EXPORT
+    ? merged.slice(merged.length - MAX_ROWS_EXPORT)
+    : merged;
+
+  // Benötigte Zeilen effizient in Blöcken lesen
+  const selectedRows = mergedFinal.map(x => x.rowIndex).sort((a, b) => a - b);
+  const rowMap = new Map();
+  if (selectedRows.length) {
+    let startRow = selectedRows[0];
+    let prevRow = selectedRows[0];
+
+    const flushBlock = (sRow, eRow) => {
+      const numRows = eRow - sRow + 1;
+      const vals = sh.getRange(sRow, 1, numRows, lastCol).getValues();
+      for (let i = 0; i < vals.length; i++) {
+        rowMap.set(sRow + i, vals[i]);
+      }
+    };
+
+    for (let i = 1; i < selectedRows.length; i++) {
+      const curr = selectedRows[i];
+      if (curr === prevRow + 1) {
+        prevRow = curr;
+        continue;
+      }
+      flushBlock(startRow, prevRow);
+      startRow = curr;
+      prevRow = curr;
+    }
+    flushBlock(startRow, prevRow);
+  }
+
+  const outRows = mergedFinal
+    .map(x => rowMap.get(x.rowIndex))
+    .filter(r => Array.isArray(r));
+  const outRowsSerialized = serializeRows(outRows);
+
+  const message = merged.length > mergedFinal.length
+    ? `Timeline-Payload auf ${mergedFinal.length} Zeilen begrenzt (von ${merged.length}).`
+    : undefined;
+
   return {
     ok: true,
     sheet: sh.getName(),
     generatedAt: Date.now(),
     days: dHist,
     futureDays: dFut,
-    count: outRows.length,
+    count: outRowsSerialized.length,
     headers: headersRaw,
-    rows: outRows,
+    rows: outRowsSerialized,
     missingHeaders,
     ...(message ? { message } : {})
   };
