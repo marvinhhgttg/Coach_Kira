@@ -144,6 +144,9 @@
     }
     .kei-badge-muted { color: var(--text-muted); background: rgba(107, 114, 128, 0.15); }
     .kei-badge-warning { color: var(--warning); background: rgba(245, 158, 11, 0.15); }
+    .overkill-badge { color: var(--danger); background: rgba(239, 68, 68, 0.18); }
+    .kei-overkill-line { margin-top: 4px; }
+    .flag-overkill { color: var(--danger); font-size: 1.1rem; font-weight: 700; }
     .kei-zone {
       border-radius: 6px;
       padding: 6px 4px;
@@ -409,6 +412,7 @@
             <th>CTL*</th>
             <th>ACWR</th>
             <th>KEI</th>
+            <th>⚑</th>
           </tr>
         </thead>
         <tbody id="simBody"></tbody>
@@ -550,6 +554,13 @@ function isKeiRisk(sg, load) {
     return Number.isFinite(ln) && ln >= SAFETY.keiHighLoad;
   }
   return false;
+}
+
+function computeOverkillFlag(acwr, keiDisplay) {
+  const acwrNum = Number(acwr);
+  const keiNum = Number(keiDisplay);
+  if (!Number.isFinite(acwrNum) || !Number.isFinite(keiNum)) return false;
+  return acwrNum > SAFETY.acwrMax && keiNum <= SG_ZONES.DETRAIN_MAX;
 }
 
 // ===== DYNAMISCHE TSB-SCHWELLEN (abhängig von CTL) =====
@@ -989,7 +1000,13 @@ const targetLine = `🎯 SG ${targets.targetSG} | ACWR ${targets.targetACWR.toFi
     <td class="text-center val-box" id="ctl_${i}" style="color:var(--text-muted); font-size:1.1rem; font-weight:bold;">-</td>
     <td class="text-center val-box" id="ctlstar_${i}" style="color:var(--text-muted); font-size:1.1rem; font-weight:bold;">-</td>
     <td class="text-center val-box font-weight-bold" id="acwr_${i}" style="font-size:1.1rem; font-weight:bold;">-</td>
-    <td class="text-center" id="sg_cell_${i}"><span class="val-box" id="sg_${i}" style="font-size:1.1rem; font-weight:bold;">-</span></td>
+    <td class="text-center" id="sg_cell_${i}">
+      <span class="val-box" id="sg_${i}" style="font-size:1.1rem; font-weight:bold;">-</span>
+      <div class="kei-overkill-line">
+        <span class="kei-badge overkill-badge" id="overkill_badge_${i}" style="display:none;">OVERKILL</span>
+      </div>
+    </td>
+    <td class="text-center" id="flag_${i}"></td>
     `;
         tbody.appendChild(tr);
     }
@@ -1369,8 +1386,11 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         // --- KEI EFFICIENCY ---
         const sgEl = document.getElementById('sg_'+i);
         const sgCell = document.getElementById('sg_cell_'+i);
+        const overkillBadgeEl = document.getElementById('overkill_badge_'+i);
+        const flagEl = document.getElementById('flag_'+i);
         const keiBaselineVal = readKeiBaseline(i);
         const keiDisplay = keiLiveOverride ? keiEffective : (keiBaselineVal ?? keiEffective);
+        const is_overkill = computeOverkillFlag(acwr, keiDisplay);
         if (window.KEI_DEBUG) {
             console.log("[KEI DEBUG][day]", {
                 i,
@@ -1387,6 +1407,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
                 mono,
                 keiEffective,
                 keiDisplay,
+                is_overkill,
                 historyIndex,
                 historyLength: ctlTimeline.length,
                 history: [...ctlTimeline]
@@ -1419,7 +1440,13 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
                 `<span class="kei-badge kei-badge-warning" title="${dampTooltip}">Mono ${mono.toFixed(2)}</span>`
             ];
             dampEl.innerHTML = dampBadges.join('');
-            
+        }
+
+        if (overkillBadgeEl) {
+            overkillBadgeEl.style.display = is_overkill ? 'inline-block' : 'none';
+        }
+        if (flagEl) {
+            flagEl.innerHTML = is_overkill ? '<span class="flag-overkill" title="Overkill erkannt">🚩</span>' : '';
         }
 
         // --- START V3 STATUS-ICONS (LIVE) ---
