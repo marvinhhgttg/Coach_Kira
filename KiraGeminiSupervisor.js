@@ -8996,8 +8996,9 @@ function getTimelinePayload(days, futureDays) {
     return { ok: true, sheet: sh.getName(), generatedAt: Date.now(), count: 0, headers: [], rows: [], missingHeaders: [], days: null, futureDays: f };
   }
 
-  const data = sh.getRange(1, 1, lastRow, lastCol).getValues();
-  const headersRaw = data[0].map(h => String(h || "").trim());
+  // Performance-Fix: keine Full-Sheet Reads (timeline hat ~50k Zeilen)
+  // 1) Header separat laden (für Spaltenindizes + Contract-Checks)
+  const headersRaw = sh.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h || "").trim());
   const headersLC  = headersRaw.map(h => h.toLowerCase());
 
   // date Spalte finden (date/datum/day) – via alias helper
@@ -9097,15 +9098,16 @@ function getTimelinePayload(days, futureDays) {
     ? fDefault
     : ((Number.isFinite(Number(futureDays)) && Number(futureDays) > 0) ? Math.floor(Number(futureDays)) : 0);
 
-  // Ohne Date-Spalte: Future/Range nicht möglich -> raw return
+  // Ohne Date-Spalte: Future/Range nicht möglich -> Fallback auf kompletten Datenbereich
   if (idxDate === -1) {
+    const rawRows = sh.getRange(2, 1, lastRow - 1, lastCol).getValues();
     return {
       ok: true,
       sheet: sh.getName(),
       generatedAt: Date.now(),
-      count: data.length - 1,
+      count: rawRows.length,
       headers: headersRaw,
-      rows: data.slice(1),
+      rows: rawRows,
       missingHeaders,
       days: dHist,
       futureDays: dFut
@@ -9152,43 +9154,117 @@ function getTimelinePayload(days, futureDays) {
     return isNaN(d.getTime()) ? null : d;
   }
 
-  // Zeilen mit Datum sammeln
-  const rows = [];
-  for (let i = 1; i < data.length; i++) {
-    const dt = parseSheetDate(data[i][idxDate]);
+  // 2) Nur Date (und optional is_today) laden, um relevanten Bereich zu bestimmen
+  const dateCol = sh.getRange(2, idxDate + 1, lastRow - 1, 1).getValues();
+  const idxIsToday = headersLC.indexOf('is_today');
+
+  let todayRow = -1; // 1-based Sheet Row
+  if (idxIsToday !== -1) {
+    const isTodayCol = sh.getRange(2, idxIsToday + 1, lastRow - 1, 1).getValues();
+    for (let i = 0; i < isTodayCol.length; i++) {
+      if (parseFloat(String(isTodayCol[i][0]).replace(',', '.')) == 1) {
+        todayRow = i + 2;
+        break;
+      }
+    }
+  }
+
+  const dateRows = [];
+  for (let i = 0; i < dateCol.length; i++) {
+    const dt = parseSheetDate(dateCol[i][0]);
     if (!dt) continue;
-    rows.push({ key: fmtKey(dt), row: data[i] });
-  }
-  rows.sort((a, b) => a.key.localeCompare(b.key));
-
-  // -------- Historie bis inkl heute --------
-  const rowsToToday = rows.filter(r => r.key <= todayKey);
-
-  // -------- Historie slicen (wenn dHist gesetzt), sonst ALL history --------
-  const histSliced = (dHist && dHist > 0)
-    ? rowsToToday.slice(Math.max(0, rowsToToday.length - dHist))
-    : rowsToToday;
-
-  // -------- Future ab heute (inkl.) bis today + (dFut-1) --------
-  let futSliced = [];
-  if (dFut > 0) {
-    const end = new Date(today);
-    end.setDate(end.getDate() + (dFut - 1));
-    const endKey = fmtKey(end);
-    futSliced = rows.filter(r => r.key >= todayKey && r.key <= endKey);
+    dateRows.push({ rowNum: i + 2, key: fmtKey(dt) });
   }
 
-  // Merge ohne Duplikate (heute kann in Hist + Fut drin sein)
-  const seen = new Set();
-  const merged = [];
-  [...histSliced, ...futSliced].forEach(r => {
-    if (seen.has(r.key)) return;
-    seen.add(r.key);
-    merged.push(r);
+  if (!dateRows.length) {
+    return {
+      ok: true,
+      sheet: sh.getName(),
+      generatedAt: Date.now(),
+      days: dHist,
+      futureDays: dFut,
+      count: 0,
+      headers: headersRaw,
+      rows: [],
+      missingHeaders
+    };
+  }
+
+  // todayKey bevorzugt aus is_today-Reihe, sonst "heute"
+  let effectiveTodayKey = todayKey;
+  if (todayRow >= 2) {
+    const match = dateRows.find(r => r.rowNum === todayRow);
+    if (match && match.key) effectiveTodayKey = match.key;
+  }
+
+  const fromHistKey = (dHist && dHist > 0)
+    ? (function () {
+        const d = new Date(effectiveTodayKey + 'T00:00:00');
+        d.setDate(d.getDate() - (dHist - 1));
+        return fmtKey(d);
+      })()
+    : null;
+
+  const toFutureKey = (dFut > 0)
+    ? (function () {
+        const d = new Date(effectiveTodayKey + 'T00:00:00');
+        d.setDate(d.getDate() + (dFut - 1));
+        return fmtKey(d);
+      })()
+    : effectiveTodayKey;
+
+  // Historie + kleiner Vorwärtsbereich um today
+  let selectedMeta = dateRows.filter(r => {
+    const isInHist = (fromHistKey ? (r.key >= fromHistKey && r.key <= effectiveTodayKey) : (r.key <= effectiveTodayKey));
+    const isInFuture = (dFut > 0) ? (r.key >= effectiveTodayKey && r.key <= toFutureKey) : false;
+    return isInHist || isInFuture;
   });
 
-  // Wichtig: sortiert lassen (falls Merge-Reihenfolge mal kippt)
-  merged.sort((a, b) => a.key.localeCompare(b.key));
+  // Merge by rowNum, anschließend stabil sortieren via date key
+  const byRow = new Map();
+  selectedMeta.forEach(r => byRow.set(r.rowNum, r));
+  selectedMeta = Array.from(byRow.values()).sort((a, b) => {
+    const k = a.key.localeCompare(b.key);
+    return k !== 0 ? k : (a.rowNum - b.rowNum);
+  });
+
+  // 4) Optionale harte Obergrenze
+  const MAX_EXPORT_ROWS = 800;
+  let truncationMessage = '';
+  if (selectedMeta.length > MAX_EXPORT_ROWS) {
+    const dropped = selectedMeta.length - MAX_EXPORT_ROWS;
+    selectedMeta = selectedMeta.slice(-MAX_EXPORT_ROWS);
+    truncationMessage = `Timeline export wurde auf ${MAX_EXPORT_ROWS} Zeilen begrenzt (${dropped} ältere Zeilen ausgelassen).`;
+  }
+
+  if (!selectedMeta.length) {
+    return {
+      ok: true,
+      sheet: sh.getName(),
+      generatedAt: Date.now(),
+      days: dHist,
+      futureDays: dFut,
+      count: 0,
+      headers: headersRaw,
+      rows: [],
+      missingHeaders,
+      ...(truncationMessage ? { message: truncationMessage } : {})
+    };
+  }
+
+  // 3) Nur den minimal nötigen Zeilenbereich in voller Breite laden
+  const minRow = selectedMeta.reduce((m, r) => Math.min(m, r.rowNum), Number.POSITIVE_INFINITY);
+  const maxRow = selectedMeta.reduce((m, r) => Math.max(m, r.rowNum), 0);
+  const spanRows = Math.max(1, maxRow - minRow + 1);
+  const fullSlice = sh.getRange(minRow, 1, spanRows, lastCol).getValues();
+  const byRowData = new Map();
+  for (let i = 0; i < fullSlice.length; i++) {
+    byRowData.set(minRow + i, fullSlice[i]);
+  }
+
+  const rowsOut = selectedMeta
+    .map(r => byRowData.get(r.rowNum))
+    .filter(Boolean);
 
   return {
     ok: true,
@@ -9196,10 +9272,11 @@ function getTimelinePayload(days, futureDays) {
     generatedAt: Date.now(),
     days: dHist,
     futureDays: dFut, // <- hier ist dein "forecast=14" Default drin
-    count: merged.length,
+    count: rowsOut.length,
     headers: headersRaw,
-    rows: merged.map(x => x.row),
-    missingHeaders
+    rows: rowsOut,
+    missingHeaders,
+    ...(truncationMessage ? { message: truncationMessage } : {})
   };
 }
 
