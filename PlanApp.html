@@ -552,6 +552,23 @@ function isKeiRisk(sg, load) {
   return false;
 }
 
+function computeOverkillFlag(acwr, kei) {
+  const acwrNum = Number(acwr);
+  const keiNum = Number(kei);
+  const acwrOver = Number.isFinite(acwrNum) && acwrNum > 1.3;
+  const keiOver = Number.isFinite(keiNum) && keiNum > 30;
+  return acwrOver || keiOver;
+}
+
+if (!window.__overkillSelfCheckDone) {
+  window.__overkillSelfCheckDone = true;
+  console.assert(computeOverkillFlag(1.31, 30.00) === true, "computeOverkillFlag self-check failed: expected true for ACWR 1.31 / KEI 30.00");
+  console.assert(computeOverkillFlag(1.30, 30.01) === true, "computeOverkillFlag self-check failed: expected true for ACWR 1.30 / KEI 30.01");
+  console.assert(computeOverkillFlag(1.30, 30.00) === false, "computeOverkillFlag self-check failed: expected false for ACWR 1.30 / KEI 30.00");
+  console.assert(computeOverkillFlag(null, 30.00) === false, "computeOverkillFlag self-check failed: expected false for ACWR null / KEI 30.00");
+  console.assert(computeOverkillFlag(NaN, NaN) === false, "computeOverkillFlag self-check failed: expected false for NaN / NaN");
+}
+
 // ===== DYNAMISCHE TSB-SCHWELLEN (abhängig von CTL) =====
 // Idee: Bei höherem CTL darf TSB "negativer" sein, ohne sofort rot zu werden.
 // Caps verhindern Freifahrtschein.
