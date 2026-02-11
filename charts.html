@@ -1337,6 +1337,8 @@ function fetchTimelineViaGas(days, futureDays){
       return;
     }
 
+    let hasRetriedWithReducedWindow = false;
+
     const callRpc = (rpcName, allowFallbackToLegacy, daysArg = days, futureDaysArg = futureDays) => {
       const runner = google.script.run
         .withSuccessHandler((payload) => {
@@ -1348,9 +1350,12 @@ function fetchTimelineViaGas(days, futureDays){
 
           // Legacy ebenfalls null: letzter Rettungsversuch mit kleinerem Fenster
           if (payload == null && rpcName === 'getTimelinePayload') {
-            const reducedDays = Math.min(30, Number(days) || 30);
-            if (Number(days) > reducedDays) {
-              callRpc('getTimelinePayload', false, reducedDays, futureDays);
+            const requestedDays = Number(daysArg);
+            const reducedDays = Math.min(30, requestedDays || 30);
+
+            if (!hasRetriedWithReducedWindow && requestedDays > reducedDays) {
+              hasRetriedWithReducedWindow = true;
+              callRpc('getTimelinePayload', false, reducedDays, futureDaysArg);
               return;
             }
 
@@ -1383,11 +1388,7 @@ function fetchTimelineViaGas(days, futureDays){
         .withFailureHandler((err) => {
           const msg = String(err?.message || err || 'Apps Script call failed');
           if (allowFallbackToLegacy && rpcName === 'getTimelinePayloadForCharts' && /not a function|undefined|is not a function/i.test(msg)) {
-            callRpc('getTimelinePayload', {
-              allowFallbackToLegacy: false,
-              allowSmallerRangeRetry: true,
-              requestDays
-            });
+            callRpc('getTimelinePayload', false, daysArg, futureDaysArg);
             return;
           }
           reject(new Error(msg));
@@ -1398,11 +1399,7 @@ function fetchTimelineViaGas(days, futureDays){
       } catch (err) {
         const msg = String(err?.message || err || 'RPC call failed');
         if (allowFallbackToLegacy && rpcName === 'getTimelinePayloadForCharts' && /not a function|undefined|is not a function/i.test(msg)) {
-          callRpc('getTimelinePayload', {
-            allowFallbackToLegacy: false,
-            allowSmallerRangeRetry: true,
-            requestDays
-          });
+          callRpc('getTimelinePayload', false, daysArg, futureDaysArg);
           return;
         }
         reject(new Error(`Apps Script RPC-Aufruf fehlgeschlagen (${rpcName}): ${msg}`));
