@@ -412,7 +412,7 @@
             <th>CTL*</th>
             <th>ACWR</th>
             <th>KEI</th>
-            <th>⚑</th>
+            <th>FLAG</th>
           </tr>
         </thead>
         <tbody id="simBody"></tbody>
@@ -692,6 +692,14 @@ function escapeHtml(str) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+function computeOverkillFlag(acwr, kei) {
+  const a = Number(acwr);
+  const k = Number(kei);
+  const acwrHit = Number.isFinite(a) && a > 1.3;
+  const keiHit = Number.isFinite(k) && k > 30;
+  return acwrHit || keiHit;
 }
 
 // Robust: kann auch so ein Sheet-„quoted JSON“ schlucken (""briefing"")
@@ -1010,13 +1018,8 @@ const targetLine = `🎯 SG ${targets.targetSG} | ACWR ${targets.targetACWR.toFi
     <td class="text-center val-box" id="ctl_${i}" style="color:var(--text-muted); font-size:1.1rem; font-weight:bold;">-</td>
     <td class="text-center val-box" id="ctlstar_${i}" style="color:var(--text-muted); font-size:1.1rem; font-weight:bold;">-</td>
     <td class="text-center val-box font-weight-bold" id="acwr_${i}" style="font-size:1.1rem; font-weight:bold;">-</td>
-    <td class="text-center" id="sg_cell_${i}">
-      <span class="val-box" id="sg_${i}" style="font-size:1.1rem; font-weight:bold;">-</span>
-      <div class="kei-overkill-line">
-        <span class="kei-badge overkill-badge" id="overkill_badge_${i}" style="display:none;">OVERKILL</span>
-      </div>
-    </td>
-    <td class="text-center" id="flag_${i}"></td>
+    <td class="text-center" id="sg_cell_${i}"><span class="val-box" id="sg_${i}" style="font-size:1.1rem; font-weight:bold;">-</span></td>
+    <td class="text-center" id="v3_status_${i}" style="font-size:0.7rem; font-weight:700; color:var(--text-muted);">-</td>
     `;
         tbody.appendChild(tr);
     }
@@ -1238,6 +1241,8 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
     const monotonyPenalty = (simBase.monoToday > 2.0) ? 15 : 0;
 
     let chartLoads = [], chartCTL = [], chartCTLStar = [], chartACWR = [], chartTSB = [], chartSG = [], chartLabels = [];
+    const overkillFlags = [];
+    const simDays = [];
     const startDate = new Date(simBase.startDate);
     const clampValue = (min, value, max) => Math.min(Math.max(value, min), max);
 
@@ -1256,6 +1261,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
     // UI & Charts für Tag 0
     const { atl0, ctl0, ctlStar0 } = getSeedAnchor(simBase);
     const acwr0 = atl0 / (ctl0 || 1);
+    const isOverkill0 = computeOverkillFlag(acwr0, sg0);
 
     if (document.getElementById('atl_0')) document.getElementById('atl_0').innerText = Math.round(atl0);
     if (document.getElementById('ctl_0')) document.getElementById('ctl_0').innerText = Math.round(ctl0);
@@ -1282,6 +1288,14 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
     if (sgEl0) {
         sgEl0.innerText = (sg0 > 0 ? "+" : "") + sg0.toFixed(1);
     }
+    const v3El0 = document.getElementById('v3_status_0');
+    if (v3El0) {
+        v3El0.innerHTML = isOverkill0
+            ? '<span title="Overkill: ACWR > 1.30 oder KEI > 30" style="color:var(--danger); font-weight:800;">OVERKILL</span>'
+            : '<span style="color:var(--success); opacity:0.3; font-size:0.7rem;">OK</span>';
+    }
+    overkillFlags.push(isOverkill0);
+    simDays.push({ dayIndex: 0, acwr: acwr0, kei: sg0, is_overkill: isOverkill0 });
 
     // WICHTIG: Seed-Werte für die weitere Simulation anpassen
     tATL = atl0;
@@ -1400,7 +1414,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         const flagEl = document.getElementById('flag_'+i);
         const keiBaselineVal = readKeiBaseline(i);
         const keiDisplay = keiLiveOverride ? keiEffective : (keiBaselineVal ?? keiEffective);
-        const is_overkill = computeOverkillFlag(acwr, keiDisplay);
+        const isOverkill = computeOverkillFlag(acwr, keiDisplay);
         if (window.KEI_DEBUG) {
             console.log("[KEI DEBUG][day]", {
                 i,
@@ -1449,6 +1463,9 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
                 `<span class="kei-badge kei-badge-muted" title="${dampTooltip}">ACWR ${acwr.toFixed(2)}</span>`,
                 `<span class="kei-badge kei-badge-warning" title="${dampTooltip}">Mono ${mono.toFixed(2)}</span>`
             ];
+            if (isOverkill) {
+                dampBadges.push('<span class="kei-badge kei-badge-warning" title="Overkill: ACWR > 1.30 oder KEI > 30">OVERKILL</span>');
+            }
             dampEl.innerHTML = dampBadges.join('');
         }
 
@@ -1471,6 +1488,9 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
             if (simBase.monoToday > 2.0) {
                 statusHtml += `<span title="Monotonie-Strafe: Einseitiger Reiz" style="color:var(--warning); cursor:help; margin-left:4px;">🔁</span>`;
             }
+            if (isOverkill) {
+                statusHtml += `<span title="Overkill: ACWR > 1.30 oder KEI > 30" style="color:var(--danger); margin-left:4px; font-weight:800;">OVERKILL</span>`;
+            }
             v3El.innerHTML = statusHtml || '<span style="color:var(--success); opacity:0.3; font-size:0.7rem;">OK</span>';
         }
         // --- ENDE V3 STATUS-ICONS ---
@@ -1483,6 +1503,8 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         const tsb = tCTL - tATL;
         chartTSB.push(Math.round(tsb));
         chartSG.push(keiDisplay.toFixed(1));
+        overkillFlags.push(isOverkill);
+        simDays.push({ dayIndex: i, acwr, kei: keiDisplay, is_overkill: isOverkill });
         
         const d = new Date(startDate); d.setDate(d.getDate() + i);
         chartLabels.push(d.toLocaleDateString('de-DE', {weekday:'short', day:'2-digit'}));
@@ -1516,6 +1538,8 @@ simLast = {
   acwr:   [...chartACWR].map(v => Number(String(v).replace(",", "."))), // sicher numerisch
   tsb:    [...chartTSB],
   sg:     [...chartSG],
+  overkillFlags: [...overkillFlags],
+  days: [...simDays],
 
   // Bio / Kontext
   hrvToday: simBase?.hrvToday,
@@ -1549,6 +1573,9 @@ function runKiraAiCheck() {
     try {
         const dateElements = document.querySelectorAll('.text-date');
         for(let i=0; i<14; i++) {
+            const dayMetrics = simLast?.days?.[i] || {};
+            const acwrDay = dayMetrics?.acwr;
+            const keiDay = dayMetrics?.kei;
             simData.push({
                 tag: i + 1,
                 // Datum säubern (nur Text, ohne HTML tags)
@@ -1556,7 +1583,10 @@ function runKiraAiCheck() {
                 load: currentLoads[i], // Das sind die Werte von den Schiebereglern!
                 sport: document.getElementById('sport_'+i).value,
                 zone: document.getElementById('zone_'+i).value,
-                phase: simBase.phases[i]
+                phase: simBase.phases[i],
+                acwr: acwrDay,
+                kei: keiDay,
+                is_overkill: dayMetrics?.is_overkill ?? computeOverkillFlag(acwrDay, keiDay)
             });
         }
     } catch (e) {
