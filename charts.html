@@ -1337,25 +1337,37 @@ function fetchTimelineViaGas(days, futureDays){
       return;
     }
 
+    let hasRetriedWithReducedWindow = false;
+
     const callRpc = (rpcName, allowFallbackToLegacy, daysArg = days, futureDaysArg = futureDays) => {
       const runner = google.script.run
         .withSuccessHandler((payload) => {
           // Einige Deployments liefern hier null zurück -> Legacy-RPC als Rettung versuchen
           if (payload == null && rpcName !== 'getTimelinePayload') {
-            callRpc('getTimelinePayload', false);
+            callRpc('getTimelinePayload', false, daysArg, futureDaysArg);
             return;
           }
 
           // Legacy ebenfalls null: letzter Rettungsversuch mit kleinerem Fenster
           if (payload == null && rpcName === 'getTimelinePayload') {
-            const reducedDays = Math.min(30, Number(days) || 30);
-            if (Number(days) > reducedDays) {
-              callRpc('getTimelinePayload', false, reducedDays, futureDays);
+            const reducedDays = Math.min(30, Number(daysArg) || 30);
+            const requestedDays = (daysArg == null || String(daysArg).trim() === '') ? null : Number(daysArg);
+            const shouldRetryReducedWindow = (
+              !hasRetriedWithReducedWindow &&
+              (requestedDays == null || !Number.isFinite(requestedDays) || requestedDays > reducedDays)
+            );
+
+            if (shouldRetryReducedWindow) {
+              hasRetriedWithReducedWindow = true;
+              callRpc('getTimelinePayload', false, reducedDays, futureDaysArg);
               return;
             }
 
             reject(new Error(
               `Apps Script lieferte eine leere Timeline-Antwort (RPC: ${rpcName}). ` +
+              (hasRetriedWithReducedWindow
+                ? 'Retry mit kleinerem Zeitraum fehlgeschlagen. '
+                : '') +
               `Bitte Deployment prüfen (WebApp ggf. neu deployen) – Rückgabe war null.`
             ));
             return;
@@ -1383,11 +1395,7 @@ function fetchTimelineViaGas(days, futureDays){
         .withFailureHandler((err) => {
           const msg = String(err?.message || err || 'Apps Script call failed');
           if (allowFallbackToLegacy && rpcName === 'getTimelinePayloadForCharts' && /not a function|undefined|is not a function/i.test(msg)) {
-            callRpc('getTimelinePayload', {
-              allowFallbackToLegacy: false,
-              allowSmallerRangeRetry: true,
-              requestDays
-            });
+            callRpc('getTimelinePayload', false, daysArg, futureDaysArg);
             return;
           }
           reject(new Error(msg));
@@ -1398,11 +1406,7 @@ function fetchTimelineViaGas(days, futureDays){
       } catch (err) {
         const msg = String(err?.message || err || 'RPC call failed');
         if (allowFallbackToLegacy && rpcName === 'getTimelinePayloadForCharts' && /not a function|undefined|is not a function/i.test(msg)) {
-          callRpc('getTimelinePayload', {
-            allowFallbackToLegacy: false,
-            allowSmallerRangeRetry: true,
-            requestDays
-          });
+          callRpc('getTimelinePayload', false, daysArg, futureDaysArg);
           return;
         }
         reject(new Error(`Apps Script RPC-Aufruf fehlgeschlagen (${rpcName}): ${msg}`));
@@ -1414,22 +1418,7 @@ function fetchTimelineViaGas(days, futureDays){
   });
 }
 
-async function fetchTimeline(days, futureDays) {
-  // In HtmlService-Umgebung ist google.script.run am robustesten (kein CORS/Key-Problem).
-  if (window.google?.script?.run) {
-    try {
-      return await fetchTimelineViaGas(days, futureDays);
-    } catch (gasErr) {
-      const msg = gasErr?.message || String(gasErr || '');
-      // In HtmlService ist HTTP-Fetch häufig durch CORS/302 blockiert.
-      // Daher bei vorhandenem google.script.run keinen HTTP-Fallback erzwingen.
-      if (/timeline payload not ok|payload malformed|sheet|nicht gefunden|not found|leere timeline-antwort|timeout/i.test(msg)) {
-        throw gasErr;
-      }
-      throw gasErr;
-    }
-  }
-
+async function fetchTimelineViaHttp(days, futureDays) {
   const base = getExecBaseUrl(); // MUSS .../exec sein, nicht userCodeAppPanel
   const u = new URL(base);
 
@@ -1453,55 +1442,41 @@ async function fetchTimeline(days, futureDays) {
     else u.searchParams.delete("future");
   }
 
-  let res, text, ct;
+  let res, textBody, ct;
   try {
     res = await fetch(u.toString(), {
-  cache: "no-store",
-  credentials: "include",
-  redirect: "follow",
-  headers: { "Accept": "application/json" }
-});
+      cache: "no-store",
+      credentials: "include",
+      redirect: "follow",
+      headers: { "Accept": "application/json" }
+    });
   } catch (err) {
-    if (window.google?.script?.run) {
-      return await fetchTimelineViaGas(days, futureDays);
-    }
     throw new Error(`Fetch-Request fehlgeschlagen (URL: ${u.toString()}): ${err?.message || err}`);
   }
 
   ct = (res.headers.get("content-type") || "").toLowerCase();
-  text = await res.text();
+  textBody = await res.text();
 
   if (!res.ok) {
-    const start = text.slice(0, 200);
-    if ((res.status === 401 || res.status === 403 || /unauthorized/i.test(start)) && window.google?.script?.run) {
-      return await fetchTimelineViaGas(days, futureDays);
-    }
-    throw new Error(`HTTP ${res.status} (URL: ${u.toString()}): ${start}`);
+    throw new Error(`HTTP ${res.status} (URL: ${u.toString()}): ${textBody.slice(0, 200)}`);
   }
   if (!ct.includes("application/json")) {
-    const start = text.slice(0, 200);
-    if (/unauthorized/i.test(start) && window.google?.script?.run) {
-      return await fetchTimelineViaGas(days, futureDays);
-    }
     throw new Error(
       `Timeline liefert kein JSON (content-type: ${ct || "?"}, URL: ${u.toString()}). ` +
-      `Start: ${start}`
+      `Start: ${textBody.slice(0, 200)}`
     );
   }
 
   let j;
-  try { j = JSON.parse(text); }
-  catch (err) { throw new Error(`JSON-Parse-Fehler: ${err?.message || err}. Start: ${text.slice(0, 200)}`); }
+  try {
+    j = JSON.parse(textBody);
+  } catch (err) {
+    throw new Error(`JSON-Parse-Fehler: ${err?.message || err}. Start: ${textBody.slice(0, 200)}`);
+  }
 
   j = normalizeTimelinePayload(j);
 
-  if (!j || j.error) {
-    const msg = String(j?.message || 'timeline fetch failed');
-    if (/unauthorized/i.test(msg) && window.google?.script?.run) {
-      return await fetchTimelineViaGas(days, futureDays);
-    }
-    throw new Error(msg);
-  }
+  if (!j || j.error) throw new Error(String(j?.message || 'timeline fetch failed'));
   if (j.ok === false) throw new Error(j?.message || "timeline payload not ok");
   if (!Array.isArray(j.headers) || !Array.isArray(j.rows)) {
     throw new Error("timeline payload malformed (headers/rows fehlen)");
@@ -1509,6 +1484,30 @@ async function fetchTimeline(days, futureDays) {
   return j;
 }
 
+async function fetchTimeline(days, futureDays) {
+  if (window.google?.script?.run) {
+    try {
+      return await fetchTimelineViaGas(days, futureDays);
+    } catch (gasErr) {
+      const msg = String(gasErr?.message || gasErr || '');
+      const shouldTryHttpFallback = /leere timeline-antwort|null|timeout|exceeded|service invoked too many times|payload/i.test(msg);
+
+      if (shouldTryHttpFallback) {
+        try {
+          return await fetchTimelineViaHttp(days, futureDays);
+        } catch (httpErr) {
+          throw new Error(
+            `Apps Script RPC fehlgeschlagen (${msg}). HTTP-Fallback ebenfalls fehlgeschlagen: ` +
+            `${httpErr?.message || httpErr}`
+          );
+        }
+      }
+      throw gasErr;
+    }
+  }
+
+  return await fetchTimelineViaHttp(days, futureDays);
+}
 async function initChartsPage() {
   hideErr();
   try {
