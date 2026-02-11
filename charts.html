@@ -1359,6 +1359,9 @@ function fetchTimelineViaGas(days, futureDays){
 
             if (shouldRetryReducedWindow) {
               hasRetriedWithReducedWindow = true;
+            const reducedDays = Math.min(30, Number(days) || 30);
+            const originalDays = (days == null || String(days).trim() === '') ? null : Number(days);
+            if (originalDays == null || !Number.isFinite(originalDays) || originalDays > reducedDays) {
               callRpc('getTimelinePayload', false, reducedDays, futureDaysArg);
               return;
             }
@@ -1368,6 +1371,7 @@ function fetchTimelineViaGas(days, futureDays){
               (hasRetriedWithReducedWindow
                 ? 'Retry mit kleinerem Zeitraum fehlgeschlagen. '
                 : '') +
+              `Retry mit kleinerem Zeitraum fehlgeschlagen. ` +
               `Bitte Deployment prüfen (WebApp ggf. neu deployen) – Rückgabe war null.`
             ));
             return;
