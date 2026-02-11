@@ -8988,16 +8988,17 @@ function getTimelinePayload(days, futureDays) {
 
   const lastRow = sh.getLastRow();
   const lastCol = sh.getLastColumn();
+  const fDefault = 14;
+  const f = (futureDays === undefined || futureDays === null || futureDays === "")
+    ? fDefault
+    : (Number(futureDays) || fDefault);
+
   if (lastRow < 2 || lastCol < 1) {
-    const fDef = 14;
-    const f = (futureDays === undefined || futureDays === null || futureDays === "")
-      ? fDef
-      : (Number(futureDays) || fDef);
     return { ok: true, sheet: sh.getName(), generatedAt: Date.now(), count: 0, headers: [], rows: [], missingHeaders: [], days: null, futureDays: f };
   }
 
-  const data = sh.getRange(1, 1, lastRow, lastCol).getValues();
-  const headersRaw = data[0].map(h => String(h || "").trim());
+  // Header separat laden (Performance)
+  const headersRaw = sh.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h || "").trim());
   const headersLC  = headersRaw.map(h => h.toLowerCase());
 
   // date Spalte finden (date/datum/day) – via alias helper
@@ -9092,27 +9093,48 @@ function getTimelinePayload(days, futureDays) {
     : ((Number.isFinite(Number(days)) && Number(days) > 0) ? Math.floor(Number(days)) : null);
 
   // DEFAULT: futureDays=14 (das ist dein "forecast=14" Wunsch)
-  const fDefault = 14;
   const dFut = (futureDays === undefined || futureDays === null || futureDays === "")
     ? fDefault
     : ((Number.isFinite(Number(futureDays)) && Number(futureDays) > 0) ? Math.floor(Number(futureDays)) : 0);
 
-  // Ohne Date-Spalte: Future/Range nicht möglich -> raw return
+  const tz = Session.getScriptTimeZone();
+
+  function serializeCell(raw){
+    if (raw instanceof Date && !isNaN(raw.getTime())) {
+      return Utilities.formatDate(raw, tz, 'yyyy-MM-dd');
+    }
+    return raw;
+  }
+
+  function serializeRows(rowsIn){
+    return (rowsIn || []).map(r => (r || []).map(serializeCell));
+  }
+
+  // Ohne Date-Spalte: Future/Range nicht möglich -> tail return (Performance-Schutz)
+  const MAX_ROWS_WITHOUT_DATE = 1000;
   if (idxDate === -1) {
-    return {
+    const dataStart = Math.max(2, lastRow - MAX_ROWS_WITHOUT_DATE + 1);
+    const rowCount = Math.max(0, lastRow - dataStart + 1);
+    const rowsNoDate = rowCount > 0 ? sh.getRange(dataStart, 1, rowCount, lastCol).getValues() : [];
+    const message = (rowCount < (lastRow - 1))
+      ? `Date-Spalte fehlt: Rückgabe auf die letzten ${rowCount} Zeilen begrenzt (von ${lastRow - 1}).`
+      : undefined;
+
+    const noDatePayload = {
       ok: true,
       sheet: sh.getName(),
       generatedAt: Date.now(),
-      count: data.length - 1,
+      count: rowsNoDate.length,
       headers: headersRaw,
-      rows: data.slice(1),
-      missingHeaders,
+      rows: serializeRows(rowsNoDate),
+      missingHeaders: missingHeaders,
       days: dHist,
       futureDays: dFut
     };
+    if (message) noDatePayload.message = message;
+    return noDatePayload;
   }
 
-  const tz = Session.getScriptTimeZone();
   const fmtKey = (d) => Utilities.formatDate(new Date(d), tz, 'yyyy-MM-dd');
 
   const today = new Date();
@@ -9152,12 +9174,13 @@ function getTimelinePayload(days, futureDays) {
     return isNaN(d.getTime()) ? null : d;
   }
 
-  // Zeilen mit Datum sammeln
+  // Nur date-Spalte lesen (Performance)
+  const dateCol = sh.getRange(2, idxDate + 1, lastRow - 1, 1).getValues();
   const rows = [];
-  for (let i = 1; i < data.length; i++) {
-    const dt = parseSheetDate(data[i][idxDate]);
+  for (let i = 0; i < dateCol.length; i++) {
+    const dt = parseSheetDate(dateCol[i][0]);
     if (!dt) continue;
-    rows.push({ key: fmtKey(dt), row: data[i] });
+    rows.push({ key: fmtKey(dt), rowIndex: i + 2 });
   }
   rows.sort((a, b) => a.key.localeCompare(b.key));
 
@@ -9190,23 +9213,63 @@ function getTimelinePayload(days, futureDays) {
   // Wichtig: sortiert lassen (falls Merge-Reihenfolge mal kippt)
   merged.sort((a, b) => a.key.localeCompare(b.key));
 
-  return {
+  // Safety-Cap gegen sehr große Payloads
+  const MAX_ROWS_EXPORT = 1200;
+  const mergedFinal = merged.length > MAX_ROWS_EXPORT
+    ? merged.slice(merged.length - MAX_ROWS_EXPORT)
+    : merged;
+
+  // Benötigte Zeilen effizient in Blöcken lesen
+  const selectedRows = mergedFinal.map(x => x.rowIndex).sort((a, b) => a - b);
+  const rowMap = new Map();
+  if (selectedRows.length) {
+    let startRow = selectedRows[0];
+    let prevRow = selectedRows[0];
+
+    const flushBlock = (sRow, eRow) => {
+      const numRows = eRow - sRow + 1;
+      const vals = sh.getRange(sRow, 1, numRows, lastCol).getValues();
+      for (let i = 0; i < vals.length; i++) {
+        rowMap.set(sRow + i, vals[i]);
+      }
+    };
+
+    for (let i = 1; i < selectedRows.length; i++) {
+      const curr = selectedRows[i];
+      if (curr === prevRow + 1) {
+        prevRow = curr;
+        continue;
+      }
+      flushBlock(startRow, prevRow);
+      startRow = curr;
+      prevRow = curr;
+    }
+    flushBlock(startRow, prevRow);
+  }
+
+  const outRows = mergedFinal
+    .map(x => rowMap.get(x.rowIndex))
+    .filter(r => Array.isArray(r));
+  const outRowsSerialized = serializeRows(outRows);
+
+  const message = merged.length > mergedFinal.length
+    ? `Timeline-Payload auf ${mergedFinal.length} Zeilen begrenzt (von ${merged.length}).`
+    : undefined;
+
+  const payloadOut = {
     ok: true,
     sheet: sh.getName(),
     generatedAt: Date.now(),
     days: dHist,
-    futureDays: dFut, // <- hier ist dein "forecast=14" Default drin
-    count: merged.length,
+    futureDays: dFut,
+    count: outRowsSerialized.length,
     headers: headersRaw,
-    rows: merged.map(x => x.row),
-    missingHeaders
+    rows: outRowsSerialized,
+    missingHeaders: missingHeaders
   };
+  if (message) payloadOut.message = message;
+  return payloadOut;
 }
-
-/**
- * HtmlService/RPC-sicherer Wrapper für charts.html.
- * Liefert IMMER ein Objekt mit ok/error/message statt null/undefined.
- */
 function getTimelinePayloadForCharts(days, futureDays) {
   try {
     const payload = getTimelinePayload(days, futureDays);
