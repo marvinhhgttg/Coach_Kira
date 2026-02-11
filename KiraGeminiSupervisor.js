@@ -9169,36 +9169,103 @@ function getTimelinePayload(days, futureDays) {
     if (!dt) continue;
     rows.push({ key: fmtKey(dt), rowIndex: i + 2 });
   }
-  rows.sort((a, b) => a.key.localeCompare(b.key));
 
-  // -------- Historie bis inkl heute --------
-  const rowsToToday = rows.filter(r => r.key <= todayKey);
-
-  // -------- Historie slicen (wenn dHist gesetzt), sonst ALL history --------
-  const histSliced = (dHist && dHist > 0)
-    ? rowsToToday.slice(Math.max(0, rowsToToday.length - dHist))
-    : rowsToToday;
-
-  // -------- Future ab heute (inkl.) bis today + (dFut-1) --------
-  let futSliced = [];
-  if (dFut > 0) {
-    const end = new Date(today);
-    end.setDate(end.getDate() + (dFut - 1));
-    const endKey = fmtKey(end);
-    futSliced = rows.filter(r => r.key >= todayKey && r.key <= endKey);
+  const dateRows = [];
+  for (let i = 0; i < dateCol.length; i++) {
+    const dt = parseSheetDate(dateCol[i][0]);
+    if (!dt) continue;
+    dateRows.push({ rowNum: i + 2, key: fmtKey(dt) });
   }
 
-  // Merge ohne Duplikate (heute kann in Hist + Fut drin sein)
-  const seen = new Set();
-  const merged = [];
-  [...histSliced, ...futSliced].forEach(r => {
-    if (seen.has(r.key)) return;
-    seen.add(r.key);
-    merged.push(r);
+  if (!dateRows.length) {
+    return {
+      ok: true,
+      sheet: sh.getName(),
+      generatedAt: Date.now(),
+      days: dHist,
+      futureDays: dFut,
+      count: 0,
+      headers: headersRaw,
+      rows: [],
+      missingHeaders
+    };
+  }
+
+  // todayKey bevorzugt aus is_today-Reihe, sonst "heute"
+  let effectiveTodayKey = todayKey;
+  if (todayRow >= 2) {
+    const match = dateRows.find(r => r.rowNum === todayRow);
+    if (match && match.key) effectiveTodayKey = match.key;
+  }
+
+  const fromHistKey = (dHist && dHist > 0)
+    ? (function () {
+        const d = new Date(effectiveTodayKey + 'T00:00:00');
+        d.setDate(d.getDate() - (dHist - 1));
+        return fmtKey(d);
+      })()
+    : null;
+
+  const toFutureKey = (dFut > 0)
+    ? (function () {
+        const d = new Date(effectiveTodayKey + 'T00:00:00');
+        d.setDate(d.getDate() + (dFut - 1));
+        return fmtKey(d);
+      })()
+    : effectiveTodayKey;
+
+  // Historie + kleiner Vorwärtsbereich um today
+  let selectedMeta = dateRows.filter(r => {
+    const isInHist = (fromHistKey ? (r.key >= fromHistKey && r.key <= effectiveTodayKey) : (r.key <= effectiveTodayKey));
+    const isInFuture = (dFut > 0) ? (r.key >= effectiveTodayKey && r.key <= toFutureKey) : false;
+    return isInHist || isInFuture;
   });
 
-  // Wichtig: sortiert lassen (falls Merge-Reihenfolge mal kippt)
-  merged.sort((a, b) => a.key.localeCompare(b.key));
+  // Merge by rowNum, anschließend stabil sortieren via date key
+  const byRow = new Map();
+  selectedMeta.forEach(r => byRow.set(r.rowNum, r));
+  selectedMeta = Array.from(byRow.values()).sort((a, b) => {
+    const k = a.key.localeCompare(b.key);
+    return k !== 0 ? k : (a.rowNum - b.rowNum);
+  });
+
+  // 4) Optionale harte Obergrenze
+  const MAX_EXPORT_ROWS = 800;
+  let truncationMessage = '';
+  if (selectedMeta.length > MAX_EXPORT_ROWS) {
+    const dropped = selectedMeta.length - MAX_EXPORT_ROWS;
+    selectedMeta = selectedMeta.slice(-MAX_EXPORT_ROWS);
+    truncationMessage = `Timeline export wurde auf ${MAX_EXPORT_ROWS} Zeilen begrenzt (${dropped} ältere Zeilen ausgelassen).`;
+  }
+
+  if (!selectedMeta.length) {
+    return {
+      ok: true,
+      sheet: sh.getName(),
+      generatedAt: Date.now(),
+      days: dHist,
+      futureDays: dFut,
+      count: 0,
+      headers: headersRaw,
+      rows: [],
+      missingHeaders,
+      ...(truncationMessage ? { message: truncationMessage } : {})
+    };
+  }
+
+  // 3) Nur den minimal nötigen Zeilenbereich in voller Breite laden
+  const minRow = selectedMeta.reduce((m, r) => Math.min(m, r.rowNum), Number.POSITIVE_INFINITY);
+  const maxRow = selectedMeta.reduce((m, r) => Math.max(m, r.rowNum), 0);
+  const spanRows = Math.max(1, maxRow - minRow + 1);
+  const fullSlice = sh.getRange(minRow, 1, spanRows, lastCol).getValues();
+  const byRowData = new Map();
+  for (let i = 0; i < fullSlice.length; i++) {
+    byRowData.set(minRow + i, fullSlice[i]);
+  }
+
+  const rowsOut = selectedMeta
+    .map(r => byRowData.get(r.rowNum))
+    .filter(Boolean);
 
   // Safety-Cap gegen sehr große Payloads
   const MAX_ROWS_EXPORT = 1200;

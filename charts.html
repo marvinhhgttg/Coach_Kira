@@ -1337,12 +1337,49 @@ function fetchTimelineViaGas(days, futureDays){
       return;
     }
 
-    const callRpc = (rpcName, allowFallbackToLegacy) => {
+    const RETRY_DAYS_ON_NULL = 90;
+    const statusEl = $("dataStatus");
+    const setStatus = (msg) => {
+      if (statusEl) statusEl.textContent = msg;
+    };
+
+    const callRpc = (rpcName, opts = {}) => {
+      const {
+        allowFallbackToLegacy = false,
+        allowSmallerRangeRetry = false,
+        requestDays = days
+      } = opts;
+
       const runner = google.script.run
         .withSuccessHandler((payload) => {
-          // Einige Deployments liefern hier null zurück -> Legacy-RPC als Rettung versuchen
-          if (payload == null && allowFallbackToLegacy && rpcName !== 'getTimelinePayload') {
-            callRpc('getTimelinePayload', false);
+          // Zentrale Behandlung für leere Payloads.
+          if (payload == null) {
+            if (allowFallbackToLegacy && rpcName === 'getTimelinePayloadForCharts') {
+              callRpc('getTimelinePayload', {
+                allowFallbackToLegacy: false,
+                allowSmallerRangeRetry: true,
+                requestDays
+              });
+              return;
+            }
+
+            const shouldRetrySmallerRange =
+              allowSmallerRangeRetry && Number.isFinite(Number(requestDays)) && Number(requestDays) > RETRY_DAYS_ON_NULL;
+
+            if (shouldRetrySmallerRange) {
+              setStatus(`GAS-Antwort leer – erneuter Versuch mit kleinerem Zeitraum (${RETRY_DAYS_ON_NULL} Tage)…`);
+              callRpc(rpcName, {
+                allowFallbackToLegacy: false,
+                allowSmallerRangeRetry: false,
+                requestDays: RETRY_DAYS_ON_NULL
+              });
+              return;
+            }
+
+            reject(new Error(
+              `Apps Script lieferte eine leere Timeline-Antwort (RPC: ${rpcName}). ` +
+              `Mögliche Ursache: Zeitraum zu groß oder Ausführung lief in ein Timeout.`
+            ));
             return;
           }
 
@@ -1364,23 +1401,42 @@ function fetchTimelineViaGas(days, futureDays){
                 return String(payload).slice(0, 280);
               }
             })();
-            reject(new Error(normalized?.message || `timeline payload not ok (rpc: ${rpcName}, sample: ${sample})`));
+            reject(new Error(
+              normalized?.message ||
+              `Timeline-Payload ungültig (RPC: ${rpcName}). ` +
+              `Bitte Zeitraum reduzieren oder später erneut versuchen (möglicher Größen-/Timeout-Effekt). ` +
+              `Sample: ${sample}`
+            ));
             return;
           }
           resolve(normalized);
         })
         .withFailureHandler((err) => {
-          reject(new Error(err?.message || err || 'Apps Script call failed'));
+          const msg = String(err?.message || err || 'Apps Script call failed');
+          if (allowFallbackToLegacy && rpcName === 'getTimelinePayloadForCharts' && /not a function|undefined|is not a function/i.test(msg)) {
+            callRpc('getTimelinePayload', {
+              allowFallbackToLegacy: false,
+              allowSmallerRangeRetry: true,
+              requestDays
+            });
+            return;
+          }
+          reject(new Error(msg));
         });
 
       try {
-        runner[rpcName](days, futureDays);
+        runner[rpcName](requestDays, futureDays);
       } catch (err) {
-        if (allowFallbackToLegacy && rpcName !== 'getTimelinePayload') {
-          callRpc('getTimelinePayload', false);
+        const msg = String(err?.message || err || 'RPC call failed');
+        if (allowFallbackToLegacy && rpcName === 'getTimelinePayloadForCharts' && /not a function|undefined|is not a function/i.test(msg)) {
+          callRpc('getTimelinePayload', {
+            allowFallbackToLegacy: false,
+            allowSmallerRangeRetry: true,
+            requestDays
+          });
           return;
         }
-        reject(new Error(`Apps Script RPC-Aufruf fehlgeschlagen (${rpcName}): ${err?.message || err}`));
+        reject(new Error(`Apps Script RPC-Aufruf fehlgeschlagen (${rpcName}): ${msg}`));
       }
     };
 
