@@ -1458,9 +1458,17 @@ async function fetchTimelineViaHttp(days, futureDays) {
   textBody = await res.text();
 
   if (!res.ok) {
-    throw new Error(`HTTP ${res.status} (URL: ${u.toString()}): ${textBody.slice(0, 200)}`);
+    const start = textBody.slice(0, 200);
+    if ((res.status === 401 || res.status === 403 || /unauthorized/i.test(start)) && window.google?.script?.run) {
+      return await fetchTimelineViaGas(days, futureDays);
+    }
+    throw new Error(`HTTP ${res.status} (URL: ${u.toString()}): ${start}`);
   }
   if (!ct.includes("application/json")) {
+    const start = textBody.slice(0, 200);
+    if (/unauthorized/i.test(start) && window.google?.script?.run) {
+      return await fetchTimelineViaGas(days, futureDays);
+    }
     throw new Error(
       `Timeline liefert kein JSON (content-type: ${ct || "?"}, URL: ${u.toString()}). ` +
       `Start: ${textBody.slice(0, 200)}`
@@ -1482,31 +1490,6 @@ async function fetchTimelineViaHttp(days, futureDays) {
     throw new Error("timeline payload malformed (headers/rows fehlen)");
   }
   return j;
-}
-
-async function fetchTimeline(days, futureDays) {
-  if (window.google?.script?.run) {
-    try {
-      return await fetchTimelineViaGas(days, futureDays);
-    } catch (gasErr) {
-      const msg = String(gasErr?.message || gasErr || '');
-      const shouldTryHttpFallback = /leere timeline-antwort|null|timeout|exceeded|service invoked too many times|payload/i.test(msg);
-
-      if (shouldTryHttpFallback) {
-        try {
-          return await fetchTimelineViaHttp(days, futureDays);
-        } catch (httpErr) {
-          throw new Error(
-            `Apps Script RPC fehlgeschlagen (${msg}). HTTP-Fallback ebenfalls fehlgeschlagen: ` +
-            `${httpErr?.message || httpErr}`
-          );
-        }
-      }
-      throw gasErr;
-    }
-  }
-
-  return await fetchTimelineViaHttp(days, futureDays);
 }
 async function initChartsPage() {
   hideErr();
