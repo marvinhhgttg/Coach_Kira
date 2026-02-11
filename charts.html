@@ -235,7 +235,7 @@
       <pre id="errBox" style="display:none;white-space:pre-wrap;border:1px solid #fca5a5;background:#fff1f2;padding:10px;border-radius:10px;margin-top:10px"></pre>
 
       <div class="hint">
-        Logische Abfolge: <b>Training</b> → <b>ACWR/TSB</b> → <b>Recovery</b> → <b>Smart Gains</b> → <b>Ernährung</b>.
+        Logische Abfolge: <b>Training</b> → <b>ACWR/TSB</b> → <b>Recovery</b> → <b>KEI</b> → <b>Ernährung</b>.
         Später kannst du statt Demo-Daten einfach <code>setDashboardData(json)</code> aufrufen (siehe Script unten).
       </div>
     </div>
@@ -247,7 +247,12 @@
 
 <script>
 
-  Chart.register(window['chartjs-plugin-annotation']);
+  const annotationPlugin = window['chartjs-plugin-annotation'];
+  if (annotationPlugin) {
+    Chart.register(annotationPlugin);
+  } else {
+    console.warn('[charts] chartjs-plugin-annotation nicht geladen – Annotationen deaktiviert.');
+  }
 
 // =========================
 // Quadrant / Threshold Config
@@ -314,7 +319,7 @@ function cardConfig() {
     },
     {
       key: "sg",
-      title: "4) Smart Gains",
+      title: "4) KEI",
       chips: ["Load (Bar)", "CTL (Line)", "SG (Line)", "CTL Δ7d (Line)"],
       canvasId: "chSmartGains",
       rangeSelId: "rngSg",
@@ -689,7 +694,7 @@ function timelinePayloadToDash(payload, mode){
   let atl  = colAny(["coachE_ATL_forecast","coache_atl_forecast"]);
   let ctl  = colAny(["coachE_CTL_forecast","coache_ctl_forecast"]);
   let acwr = colAny(["coachE_ACWR_forecast","coache_acwr_forecast"]);
-  const smartGains = col(headers, rows, "coachE_Smart_Gains") || col(headers, rows, "SG_V3") || [];
+  const smartGains = colAny(["coachE_Smart_Gains", "coache_smart_gains", "kei_forecast", "kei forecast", "SG_V3"]);
 
   // FIX: Fallback falls Forecast-Werte (noch) 0 sind (typisch bei Plan-Reset)
   // Wir führen eine minimale Simulation durch, wenn die Basiszahlen da sind aber ATL/CTL auf 0 hängen.
@@ -834,7 +839,7 @@ function setDashboardData(input) {
     renderRecoveryChart(sliceMaybe(data, rangeVal("rngRecovery", 14)));
   }
 
-  // 4) Smart Gains
+  // 4) KEI
   if (document.getElementById("chSmartGains") && typeof renderSgChart === "function") {
     renderSgChart(sliceMaybe(data, rangeVal("rngSg", 14)));
   }
@@ -912,7 +917,7 @@ function renderTrainingChart(d){
         { label: "ATL", data: atl, type: "line", yAxisID: "yForm",
           order: 2, pointRadius: 0, tension: 0.25, borderWidth: 2 },
 
-        { label: "Smart Gains", data: sg, type: "line", yAxisID: "ySG",
+        { label: "KEI", data: sg, type: "line", yAxisID: "ySG",
           order: 3, pointRadius: 0, tension: 0.25, borderWidth: 2 },
       ]
     },
@@ -924,7 +929,7 @@ function renderTrainingChart(d){
       scales: {
         yLoad: { beginAtZero: true, title: { display: true, text: "Load" } },
         yForm: { position: "right", grid: { drawOnChartArea: false }, title: { display: true, text: "ATL/CTL" } },
-        ySG:   { position: "right", offset: true, grid: { drawOnChartArea: false }, title: { display: true, text: "Smart Gains" } },
+        ySG:   { position: "right", offset: true, grid: { drawOnChartArea: false }, title: { display: true, text: "KEI" } },
         x: { ticks: { maxRotation: 0 } }
       }
     }
@@ -1060,7 +1065,7 @@ function renderSgChart(d){
       datasets:[
   { label:"Load", data: load, yAxisID:"yLoad", order: 4 },
   { label:"CTL (roh)", data: ctl, type:"line", yAxisID:"yCTL", pointRadius:0, tension:0.25, borderWidth:2, order: 1 },
-  { label:"Smart Gains", data:d.smartGains, type:"line", yAxisID:"ySG", pointRadius:0, tension:0.25, borderWidth:2, order: 2 },
+  { label:"KEI", data:d.smartGains, type:"line", yAxisID:"ySG", pointRadius:0, tension:0.25, borderWidth:2, order: 2 },
   { label:"CTL Trend (Δ7d)", data:ctlTrend, type:"line", yAxisID:"yTR", pointRadius:0, tension:0.25, borderWidth:2, order: 3 },
 ]
     },
@@ -1074,7 +1079,7 @@ function renderSgChart(d){
 
   yCTL:{ position:"left", grid:{ drawOnChartArea:false }, title:{ display:true, text:"CTL" } },
 
-  ySG:{ position:"right", grid:{ drawOnChartArea:false }, title:{ display:true, text:"Smart Gains" } },
+  ySG:{ position:"right", grid:{ drawOnChartArea:false }, title:{ display:true, text:"KEI" } },
   yTR:{ position:"right", grid:{ drawOnChartArea:false }, title:{ display:true, text:"CTL Δ7d" } }
 }
     }
@@ -1299,7 +1304,101 @@ refreshModeLabel();
 
 //$("btnLoadDemo").click();
 
+
+
+function normalizeTimelinePayload(payload){
+  let p = payload;
+
+  if (typeof p === "string") {
+    try { p = JSON.parse(p); } catch (_) {}
+  }
+
+  // Standard contract
+  if (p && p.ok === true && Array.isArray(p.headers) && Array.isArray(p.rows)) return p;
+
+  // Häufige Wrapper-Varianten aus RPC/Proxies
+  const wrapped = p && (p.payload || p.result || p.data || p.timeline || p.value);
+  if (wrapped && Array.isArray(wrapped.headers) && Array.isArray(wrapped.rows)) {
+    return { ...wrapped, ok: true };
+  }
+
+  // Toleranter Fallback: manche Backends liefern headers/rows ohne ok-Flag
+  if (p && Array.isArray(p.headers) && Array.isArray(p.rows)) {
+    return { ...p, ok: true };
+  }
+
+  return p;
+}
+
+function fetchTimelineViaGas(days, futureDays){
+  return new Promise((resolve, reject) => {
+    if (!window.google || !google.script || !google.script.run) {
+      reject(new Error('google.script.run nicht verfügbar'));
+      return;
+    }
+
+    const callRpc = (rpcName, allowFallbackToLegacy) => {
+      const runner = google.script.run
+        .withSuccessHandler((payload) => {
+          // Einige Deployments liefern hier null zurück -> Legacy-RPC als Rettung versuchen
+          if (payload == null && allowFallbackToLegacy && rpcName !== 'getTimelinePayload') {
+            callRpc('getTimelinePayload', false);
+            return;
+          }
+
+          const normalized = normalizeTimelinePayload(payload);
+          if (!normalized || normalized.error || normalized.ok === false) {
+            const sample = (() => {
+              try {
+                return JSON.stringify(payload).slice(0, 280);
+              } catch (_) {
+                return String(payload).slice(0, 280);
+              }
+            })();
+            reject(new Error(normalized?.message || `timeline payload not ok (rpc: ${rpcName}, sample: ${sample})`));
+            return;
+          }
+          resolve(normalized);
+        })
+        .withFailureHandler((err) => {
+          reject(new Error(err?.message || err || 'Apps Script call failed'));
+        });
+
+      try {
+        runner[rpcName](days, futureDays);
+      } catch (err) {
+        if (allowFallbackToLegacy && rpcName !== 'getTimelinePayload') {
+          callRpc('getTimelinePayload', false);
+          return;
+        }
+        reject(new Error(`Apps Script RPC-Aufruf fehlgeschlagen (${rpcName}): ${err?.message || err}`));
+      }
+    };
+
+    const preferredRpc = (typeof google.script.run.getTimelinePayloadForCharts === 'function')
+      ? 'getTimelinePayloadForCharts'
+      : 'getTimelinePayload';
+
+    callRpc(preferredRpc, true);
+  });
+}
+
 async function fetchTimeline(days, futureDays) {
+  // In HtmlService-Umgebung ist google.script.run am robustesten (kein CORS/Key-Problem).
+  if (window.google?.script?.run) {
+    try {
+      return await fetchTimelineViaGas(days, futureDays);
+    } catch (gasErr) {
+      const msg = gasErr?.message || String(gasErr || '');
+      // In HtmlService ist HTTP-Fetch häufig durch CORS/302 blockiert.
+      // Bei funktionalem GAS-Fehler lieber direkt transparent abbrechen statt CORS-Fallback-Lärm.
+      if (/timeline payload not ok|payload malformed|sheet|nicht gefunden|not found/i.test(msg)) {
+        throw gasErr;
+      }
+      console.warn('[charts] GAS timeline call fehlgeschlagen, fallback auf HTTP:', msg);
+    }
+  }
+
   const base = getExecBaseUrl(); // MUSS .../exec sein, nicht userCodeAppPanel
   const u = new URL(base);
 
@@ -1332,6 +1431,9 @@ async function fetchTimeline(days, futureDays) {
   headers: { "Accept": "application/json" }
 });
   } catch (err) {
+    if (window.google?.script?.run) {
+      return await fetchTimelineViaGas(days, futureDays);
+    }
     throw new Error(`Fetch-Request fehlgeschlagen (URL: ${u.toString()}): ${err?.message || err}`);
   }
 
@@ -1339,12 +1441,20 @@ async function fetchTimeline(days, futureDays) {
   text = await res.text();
 
   if (!res.ok) {
-    throw new Error(`HTTP ${res.status} (URL: ${u.toString()}): ${text.slice(0, 200)}`);
+    const start = text.slice(0, 200);
+    if ((res.status === 401 || res.status === 403 || /unauthorized/i.test(start)) && window.google?.script?.run) {
+      return await fetchTimelineViaGas(days, futureDays);
+    }
+    throw new Error(`HTTP ${res.status} (URL: ${u.toString()}): ${start}`);
   }
   if (!ct.includes("application/json")) {
+    const start = text.slice(0, 200);
+    if (/unauthorized/i.test(start) && window.google?.script?.run) {
+      return await fetchTimelineViaGas(days, futureDays);
+    }
     throw new Error(
       `Timeline liefert kein JSON (content-type: ${ct || "?"}, URL: ${u.toString()}). ` +
-      `Start: ${text.slice(0, 200)}`
+      `Start: ${start}`
     );
   }
 
@@ -1352,8 +1462,19 @@ async function fetchTimeline(days, futureDays) {
   try { j = JSON.parse(text); }
   catch (err) { throw new Error(`JSON-Parse-Fehler: ${err?.message || err}. Start: ${text.slice(0, 200)}`); }
 
-  if (!j || j.error) throw new Error(j?.message || "timeline fetch failed");
-  if (!j.ok) throw new Error("timeline payload not ok");
+  j = normalizeTimelinePayload(j);
+
+  if (!j || j.error) {
+    const msg = String(j?.message || 'timeline fetch failed');
+    if (/unauthorized/i.test(msg) && window.google?.script?.run) {
+      return await fetchTimelineViaGas(days, futureDays);
+    }
+    throw new Error(msg);
+  }
+  if (j.ok === false) throw new Error(j?.message || "timeline payload not ok");
+  if (!Array.isArray(j.headers) || !Array.isArray(j.rows)) {
+    throw new Error("timeline payload malformed (headers/rows fehlen)");
+  }
   return j;
 }
 
@@ -1601,7 +1722,7 @@ const SG_S2  = Number(opts.sgHighMin ?? PERF_CFG.sg.highMin);
         legend: { position: "top" },
         title: {
           display: true,
-          text: `TSB vs Smart Gains – ${opts.titleSuffix || ""}`.trim()
+          text: `TSB vs KEI – ${opts.titleSuffix || ""}`.trim()
         },
 
         annotation: {
@@ -1672,7 +1793,7 @@ const SG_S2  = Number(opts.sgHighMin ?? PERF_CFG.sg.highMin);
       },
       scales: {
         x: { title: { display: true, text: "TSB (Form)" }, min: X.min, max: X.max },
-        y: { title: { display: true, text: "Smart Gains" }, min: Y.min, max: Y.max }
+        y: { title: { display: true, text: "KEI" }, min: Y.min, max: Y.max }
       }
     }
   });
