@@ -1337,12 +1337,27 @@ function fetchTimelineViaGas(days, futureDays){
       return;
     }
 
-    const callRpc = (rpcName, allowFallbackToLegacy) => {
+    const callRpc = (rpcName, allowFallbackToLegacy, daysArg = days, futureDaysArg = futureDays) => {
       const runner = google.script.run
         .withSuccessHandler((payload) => {
           // Einige Deployments liefern hier null zurück -> Legacy-RPC als Rettung versuchen
-          if (payload == null && allowFallbackToLegacy && rpcName !== 'getTimelinePayload') {
+          if (payload == null && rpcName !== 'getTimelinePayload') {
             callRpc('getTimelinePayload', false);
+            return;
+          }
+
+          // Legacy ebenfalls null: letzter Rettungsversuch mit kleinerem Fenster
+          if (payload == null && rpcName === 'getTimelinePayload') {
+            const reducedDays = Math.min(30, Number(days) || 30);
+            if (Number(days) > reducedDays) {
+              callRpc('getTimelinePayload', false, reducedDays, futureDays);
+              return;
+            }
+
+            reject(new Error(
+              `Apps Script lieferte eine leere Timeline-Antwort (RPC: ${rpcName}). ` +
+              `Bitte Deployment prüfen (WebApp ggf. neu deployen) – Rückgabe war null.`
+            ));
             return;
           }
 
@@ -1365,7 +1380,7 @@ function fetchTimelineViaGas(days, futureDays){
         });
 
       try {
-        runner[rpcName](days, futureDays);
+        runner[rpcName](daysArg, futureDaysArg);
       } catch (err) {
         if (allowFallbackToLegacy && rpcName !== 'getTimelinePayload') {
           callRpc('getTimelinePayload', false);
@@ -1375,11 +1390,8 @@ function fetchTimelineViaGas(days, futureDays){
       }
     };
 
-    const preferredRpc = (typeof google.script.run.getTimelinePayloadForCharts === 'function')
-      ? 'getTimelinePayloadForCharts'
-      : 'getTimelinePayload';
-
-    callRpc(preferredRpc, true);
+    // Immer zuerst den RPC-sicheren Wrapper probieren; bei älteren Deployments Fallback auf Legacy.
+    callRpc('getTimelinePayloadForCharts', true);
   });
 }
 
@@ -1391,11 +1403,11 @@ async function fetchTimeline(days, futureDays) {
     } catch (gasErr) {
       const msg = gasErr?.message || String(gasErr || '');
       // In HtmlService ist HTTP-Fetch häufig durch CORS/302 blockiert.
-      // Bei funktionalem GAS-Fehler lieber direkt transparent abbrechen statt CORS-Fallback-Lärm.
-      if (/timeline payload not ok|payload malformed|sheet|nicht gefunden|not found/i.test(msg)) {
+      // Daher bei vorhandenem google.script.run keinen HTTP-Fallback erzwingen.
+      if (/timeline payload not ok|payload malformed|sheet|nicht gefunden|not found|leere timeline-antwort|timeout/i.test(msg)) {
         throw gasErr;
       }
-      console.warn('[charts] GAS timeline call fehlgeschlagen, fallback auf HTTP:', msg);
+      throw gasErr;
     }
   }
 
