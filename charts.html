@@ -1337,27 +1337,37 @@ function fetchTimelineViaGas(days, futureDays){
       return;
     }
 
+    let hasRetriedWithReducedWindow = false;
+
     const callRpc = (rpcName, allowFallbackToLegacy, daysArg = days, futureDaysArg = futureDays) => {
       const runner = google.script.run
         .withSuccessHandler((payload) => {
           // Einige Deployments liefern hier null zurück -> Legacy-RPC als Rettung versuchen
           if (payload == null && rpcName !== 'getTimelinePayload') {
-            callRpc('getTimelinePayload', false);
+            callRpc('getTimelinePayload', false, daysArg, futureDaysArg);
             return;
           }
 
           // Legacy ebenfalls null: letzter Rettungsversuch mit kleinerem Fenster
           if (payload == null && rpcName === 'getTimelinePayload') {
-            const reducedDays = Math.min(30, Number(days) || 30);
-            const originalDays = (days == null || String(days).trim() === '') ? null : Number(days);
-            if (originalDays == null || !Number.isFinite(originalDays) || originalDays > reducedDays) {
+            const reducedDays = Math.min(30, Number(daysArg) || 30);
+            const requestedDays = (daysArg == null || String(daysArg).trim() === '') ? null : Number(daysArg);
+            const shouldRetryReducedWindow = (
+              !hasRetriedWithReducedWindow &&
+              (requestedDays == null || !Number.isFinite(requestedDays) || requestedDays > reducedDays)
+            );
+
+            if (shouldRetryReducedWindow) {
+              hasRetriedWithReducedWindow = true;
               callRpc('getTimelinePayload', false, reducedDays, futureDaysArg);
               return;
             }
 
             reject(new Error(
               `Apps Script lieferte eine leere Timeline-Antwort (RPC: ${rpcName}). ` +
-              `Retry mit kleinerem Zeitraum fehlgeschlagen. ` +
+              (hasRetriedWithReducedWindow
+                ? 'Retry mit kleinerem Zeitraum fehlgeschlagen. '
+                : '') +
               `Bitte Deployment prüfen (WebApp ggf. neu deployen) – Rückgabe war null.`
             ));
             return;
@@ -1385,11 +1395,7 @@ function fetchTimelineViaGas(days, futureDays){
         .withFailureHandler((err) => {
           const msg = String(err?.message || err || 'Apps Script call failed');
           if (allowFallbackToLegacy && rpcName === 'getTimelinePayloadForCharts' && /not a function|undefined|is not a function/i.test(msg)) {
-            callRpc('getTimelinePayload', {
-              allowFallbackToLegacy: false,
-              allowSmallerRangeRetry: true,
-              requestDays
-            });
+            callRpc('getTimelinePayload', false, daysArg, futureDaysArg);
             return;
           }
           reject(new Error(msg));
@@ -1400,11 +1406,7 @@ function fetchTimelineViaGas(days, futureDays){
       } catch (err) {
         const msg = String(err?.message || err || 'RPC call failed');
         if (allowFallbackToLegacy && rpcName === 'getTimelinePayloadForCharts' && /not a function|undefined|is not a function/i.test(msg)) {
-          callRpc('getTimelinePayload', {
-            allowFallbackToLegacy: false,
-            allowSmallerRangeRetry: true,
-            requestDays
-          });
+          callRpc('getTimelinePayload', false, daysArg, futureDaysArg);
           return;
         }
         reject(new Error(`Apps Script RPC-Aufruf fehlgeschlagen (${rpcName}): ${msg}`));
@@ -1415,6 +1417,7 @@ function fetchTimelineViaGas(days, futureDays){
     callRpc('getTimelinePayloadForCharts', true);
   });
 }
+
 
 async function fetchTimeline(days, futureDays) {
   // In HtmlService-Umgebung ist google.script.run am robustesten (kein CORS/Key-Problem).
