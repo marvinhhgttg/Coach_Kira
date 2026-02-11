@@ -1056,23 +1056,36 @@ function getSeedAnchor(simBase) {
     for (const value of values) {
       if (value === undefined || value === null || value === "") continue;
       const parsed = Number(value);
-      if (!Number.isNaN(parsed)) return parsed;
+      if (Number.isFinite(parsed)) return parsed;
     }
     return 0;
   };
 
-  const atl0 = pickNumber(
-    simBase.atlToday,
-    simBase.atlYesterday,
-    simBase.atlPrev,
-    simBase.atl
-  );
-  const ctl0 = pickNumber(
-    simBase.ctlToday,
-    simBase.ctlYesterday,
-    simBase.ctlPrev,
-    simBase.ctl
-  );
+  const pickPositive = (...values) => {
+    for (const value of values) {
+      if (value === undefined || value === null || value === "") continue;
+      const parsed = Number(value);
+      if (Number.isFinite(parsed) && parsed > 0) return parsed;
+    }
+    return null;
+  };
+
+  // Day-0 muss der HEUTE-Wert aus der Timeline sein.
+  // In der Payload ist simBase.atl/ctl häufig der Seed von gestern,
+  // deshalb priorisieren wir je nach Tagesstatus zuerst today*_fc/obs.
+  const todayAtlObs = pickPositive(simBase.todayATL_obs, simBase.atlToday_obs);
+  const todayCtlObs = pickPositive(simBase.todayCTL_obs, simBase.ctlToday_obs);
+  const todayAtlFc = pickPositive(simBase.todayATL_fc, simBase.atlToday_fc, simBase.atlToday);
+  const todayCtlFc = pickPositive(simBase.todayCTL_fc, simBase.ctlToday_fc, simBase.ctlToday);
+
+  const atl0 = (simBase.todayIsClosed)
+    ? pickNumber(todayAtlObs, todayAtlFc, simBase.atl, simBase.atlYesterday, simBase.atlPrev)
+    : pickNumber(todayAtlFc, todayAtlObs, simBase.atl, simBase.atlYesterday, simBase.atlPrev);
+
+  const ctl0 = (simBase.todayIsClosed)
+    ? pickNumber(todayCtlObs, todayCtlFc, simBase.ctl, simBase.ctlYesterday, simBase.ctlPrev)
+    : pickNumber(todayCtlFc, todayCtlObs, simBase.ctl, simBase.ctlYesterday, simBase.ctlPrev);
+
   const ctlStar0 = pickNumber(
     simBase.ctl_star,
     simBase.ctlStar,
