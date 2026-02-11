@@ -1336,35 +1336,50 @@ function fetchTimelineViaGas(days, futureDays){
       reject(new Error('google.script.run nicht verfügbar'));
       return;
     }
-    const runner = google.script.run
-      .withSuccessHandler((payload) => {
-        const normalized = normalizeTimelinePayload(payload);
-        if (!normalized || normalized.error || normalized.ok === false) {
-          const sample = (() => {
-            try {
-              return JSON.stringify(payload).slice(0, 280);
-            } catch (_) {
-              return String(payload).slice(0, 280);
-            }
-          })();
-          reject(new Error(normalized?.message || `timeline payload not ok (sample: ${sample})`));
+
+    const callRpc = (rpcName, allowFallbackToLegacy) => {
+      const runner = google.script.run
+        .withSuccessHandler((payload) => {
+          // Einige Deployments liefern hier null zurück -> Legacy-RPC als Rettung versuchen
+          if (payload == null && allowFallbackToLegacy && rpcName !== 'getTimelinePayload') {
+            callRpc('getTimelinePayload', false);
+            return;
+          }
+
+          const normalized = normalizeTimelinePayload(payload);
+          if (!normalized || normalized.error || normalized.ok === false) {
+            const sample = (() => {
+              try {
+                return JSON.stringify(payload).slice(0, 280);
+              } catch (_) {
+                return String(payload).slice(0, 280);
+              }
+            })();
+            reject(new Error(normalized?.message || `timeline payload not ok (rpc: ${rpcName}, sample: ${sample})`));
+            return;
+          }
+          resolve(normalized);
+        })
+        .withFailureHandler((err) => {
+          reject(new Error(err?.message || err || 'Apps Script call failed'));
+        });
+
+      try {
+        runner[rpcName](days, futureDays);
+      } catch (err) {
+        if (allowFallbackToLegacy && rpcName !== 'getTimelinePayload') {
+          callRpc('getTimelinePayload', false);
           return;
         }
-        resolve(normalized);
-      })
-      .withFailureHandler((err) => {
-        reject(new Error(err?.message || err || 'Apps Script call failed'));
-      });
+        reject(new Error(`Apps Script RPC-Aufruf fehlgeschlagen (${rpcName}): ${err?.message || err}`));
+      }
+    };
 
-    const rpcName = (typeof runner.getTimelinePayloadForCharts === 'function')
+    const preferredRpc = (typeof google.script.run.getTimelinePayloadForCharts === 'function')
       ? 'getTimelinePayloadForCharts'
       : 'getTimelinePayload';
 
-    try {
-      runner[rpcName](days, futureDays);
-    } catch (err) {
-      reject(new Error(`Apps Script RPC-Aufruf fehlgeschlagen (${rpcName}): ${err?.message || err}`));
-    }
+    callRpc(preferredRpc, true);
   });
 }
 
