@@ -9000,6 +9000,7 @@ function getTimelinePayload(days, futureDays) {
   // Header separat laden (Performance)
   const headersRaw = sh.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h || "").trim());
   const headersLC  = headersRaw.map(h => h.toLowerCase());
+  const idxIsToday = headersLC.indexOf('is_today');
 
   // date Spalte finden (date/datum/day) – via alias helper
   const idxDate = (function(){
@@ -9175,13 +9176,6 @@ function getTimelinePayload(days, futureDays) {
 
   // Nur date-Spalte lesen (Performance)
   const dateCol = sh.getRange(2, idxDate + 1, lastRow - 1, 1).getValues();
-  const rows = [];
-  for (let i = 0; i < dateCol.length; i++) {
-    const dt = parseSheetDate(dateCol[i][0]);
-    if (!dt) continue;
-    rows.push({ key: fmtKey(dt), rowIndex: i + 2 });
-  }
-
   const dateRows = [];
   for (let i = 0; i < dateCol.length; i++) {
     const dt = parseSheetDate(dateCol[i][0]);
@@ -9201,6 +9195,18 @@ function getTimelinePayload(days, futureDays) {
       rows: [],
       missingHeaders
     };
+  }
+
+  let todayRow = -1;
+  if (idxIsToday !== -1) {
+    const isTodayCol = sh.getRange(2, idxIsToday + 1, lastRow - 1, 1).getValues();
+    for (let i = isTodayCol.length - 1; i >= 0; i--) {
+      const v = Number(String(isTodayCol[i][0]).replace(',', '.'));
+      if (v === 1) {
+        todayRow = i + 2;
+        break;
+      }
+    }
   }
 
   // todayKey bevorzugt aus is_today-Reihe, sonst "heute"
@@ -9278,91 +9284,8 @@ function getTimelinePayload(days, futureDays) {
   const rowsOut = selectedMeta
     .map(r => byRowData.get(r.rowNum))
     .filter(Boolean);
-
-  // Safety-Cap gegen sehr große Payloads
-  const MAX_ROWS_EXPORT = 1200;
-  const mergedFinal = merged.length > MAX_ROWS_EXPORT
-    ? merged.slice(merged.length - MAX_ROWS_EXPORT)
-    : merged;
-
-  // Benötigte Zeilen effizient in Blöcken lesen
-  const selectedRows = mergedFinal.map(x => x.rowIndex).sort((a, b) => a - b);
-  const rowMap = new Map();
-  if (selectedRows.length) {
-    let startRow = selectedRows[0];
-    let prevRow = selectedRows[0];
-
-    const flushBlock = (sRow, eRow) => {
-      const numRows = eRow - sRow + 1;
-      const vals = sh.getRange(sRow, 1, numRows, lastCol).getValues();
-      for (let i = 0; i < vals.length; i++) {
-        rowMap.set(sRow + i, vals[i]);
-      }
-    };
-
-    for (let i = 1; i < selectedRows.length; i++) {
-      const curr = selectedRows[i];
-      if (curr === prevRow + 1) {
-        prevRow = curr;
-        continue;
-      }
-      flushBlock(startRow, prevRow);
-      startRow = curr;
-      prevRow = curr;
-    }
-    flushBlock(startRow, prevRow);
-  }
-
-  const outRows = mergedFinal
-    .map(x => rowMap.get(x.rowIndex))
-    .filter(r => Array.isArray(r));
-
-  const message = merged.length > mergedFinal.length
-    ? `Timeline-Payload auf ${mergedFinal.length} Zeilen begrenzt (von ${merged.length}).`
-    : undefined;
-
-  // Safety-Cap gegen sehr große Payloads
-  const MAX_ROWS_EXPORT = 1200;
-  const mergedFinal = merged.length > MAX_ROWS_EXPORT
-    ? merged.slice(merged.length - MAX_ROWS_EXPORT)
-    : merged;
-
-  // Benötigte Zeilen effizient in Blöcken lesen
-  const selectedRows = mergedFinal.map(x => x.rowIndex).sort((a, b) => a - b);
-  const rowMap = new Map();
-  if (selectedRows.length) {
-    let startRow = selectedRows[0];
-    let prevRow = selectedRows[0];
-
-    const flushBlock = (sRow, eRow) => {
-      const numRows = eRow - sRow + 1;
-      const vals = sh.getRange(sRow, 1, numRows, lastCol).getValues();
-      for (let i = 0; i < vals.length; i++) {
-        rowMap.set(sRow + i, vals[i]);
-      }
-    };
-
-    for (let i = 1; i < selectedRows.length; i++) {
-      const curr = selectedRows[i];
-      if (curr === prevRow + 1) {
-        prevRow = curr;
-        continue;
-      }
-      flushBlock(startRow, prevRow);
-      startRow = curr;
-      prevRow = curr;
-    }
-    flushBlock(startRow, prevRow);
-  }
-
-  const outRows = mergedFinal
-    .map(x => rowMap.get(x.rowIndex))
-    .filter(r => Array.isArray(r));
-  const outRowsSerialized = serializeRows(outRows);
-
-  const message = merged.length > mergedFinal.length
-    ? `Timeline-Payload auf ${mergedFinal.length} Zeilen begrenzt (von ${merged.length}).`
-    : undefined;
+  const outRowsSerialized = serializeRows(rowsOut);
+  const message = truncationMessage || undefined;
 
   return {
     ok: true,
