@@ -1349,13 +1349,15 @@ function fetchTimelineViaGas(days, futureDays){
           // Legacy ebenfalls null: letzter Rettungsversuch mit kleinerem Fenster
           if (payload == null && rpcName === 'getTimelinePayload') {
             const reducedDays = Math.min(30, Number(days) || 30);
-            if (Number(days) > reducedDays) {
-              callRpc('getTimelinePayload', false, reducedDays, futureDays);
+            const originalDays = (days == null || String(days).trim() === '') ? null : Number(days);
+            if (originalDays == null || !Number.isFinite(originalDays) || originalDays > reducedDays) {
+              callRpc('getTimelinePayload', false, reducedDays, futureDaysArg);
               return;
             }
 
             reject(new Error(
               `Apps Script lieferte eine leere Timeline-Antwort (RPC: ${rpcName}). ` +
+              `Retry mit kleinerem Zeitraum fehlgeschlagen. ` +
               `Bitte Deployment prüfen (WebApp ggf. neu deployen) – Rückgabe war null.`
             ));
             return;
