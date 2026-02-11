@@ -1418,22 +1418,7 @@ function fetchTimelineViaGas(days, futureDays){
   });
 }
 
-async function fetchTimeline(days, futureDays) {
-  // In HtmlService-Umgebung ist google.script.run am robustesten (kein CORS/Key-Problem).
-  if (window.google?.script?.run) {
-    try {
-      return await fetchTimelineViaGas(days, futureDays);
-    } catch (gasErr) {
-      const msg = gasErr?.message || String(gasErr || '');
-      // In HtmlService ist HTTP-Fetch häufig durch CORS/302 blockiert.
-      // Daher bei vorhandenem google.script.run keinen HTTP-Fallback erzwingen.
-      if (/timeline payload not ok|payload malformed|sheet|nicht gefunden|not found|leere timeline-antwort|timeout/i.test(msg)) {
-        throw gasErr;
-      }
-      throw gasErr;
-    }
-  }
-
+async function fetchTimelineViaHttp(days, futureDays) {
   const base = getExecBaseUrl(); // MUSS .../exec sein, nicht userCodeAppPanel
   const u = new URL(base);
 
@@ -1466,9 +1451,6 @@ async function fetchTimeline(days, futureDays) {
       headers: { "Accept": "application/json" }
     });
   } catch (err) {
-    if (window.google?.script?.run) {
-      return await fetchTimelineViaGas(days, futureDays);
-    }
     throw new Error(`Fetch-Request fehlgeschlagen (URL: ${u.toString()}): ${err?.message || err}`);
   }
 
@@ -1489,7 +1471,7 @@ async function fetchTimeline(days, futureDays) {
     }
     throw new Error(
       `Timeline liefert kein JSON (content-type: ${ct || "?"}, URL: ${u.toString()}). ` +
-      `Start: ${start}`
+      `Start: ${textBody.slice(0, 200)}`
     );
   }
 
@@ -1502,13 +1484,7 @@ async function fetchTimeline(days, futureDays) {
 
   j = normalizeTimelinePayload(j);
 
-  if (!j || j.error) {
-    const msg = String(j?.message || 'timeline fetch failed');
-    if (/unauthorized/i.test(msg) && window.google?.script?.run) {
-      return await fetchTimelineViaGas(days, futureDays);
-    }
-    throw new Error(msg);
-  }
+  if (!j || j.error) throw new Error(String(j?.message || 'timeline fetch failed'));
   if (j.ok === false) throw new Error(j?.message || "timeline payload not ok");
   if (!Array.isArray(j.headers) || !Array.isArray(j.rows)) {
     throw new Error("timeline payload malformed (headers/rows fehlen)");
