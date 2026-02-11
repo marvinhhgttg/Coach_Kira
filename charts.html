@@ -1346,6 +1346,15 @@ function fetchTimelineViaGas(days, futureDays){
             return;
           }
 
+          // Wenn selbst Legacy null liefert: sauberer, klarer Fehler statt kryptischem sample=null
+          if (payload == null) {
+            reject(new Error(
+              `Apps Script lieferte eine leere Timeline-Antwort (RPC: ${rpcName}). ` +
+              `Mögliche Ursache: Zeitraum zu groß oder Ausführung lief in ein Timeout.`
+            ));
+            return;
+          }
+
           const normalized = normalizeTimelinePayload(payload);
           if (!normalized || normalized.error || normalized.ok === false) {
             const sample = (() => {
@@ -1375,11 +1384,8 @@ function fetchTimelineViaGas(days, futureDays){
       }
     };
 
-    const preferredRpc = (typeof google.script.run.getTimelinePayloadForCharts === 'function')
-      ? 'getTimelinePayloadForCharts'
-      : 'getTimelinePayload';
-
-    callRpc(preferredRpc, true);
+    // Immer zuerst den RPC-sicheren Wrapper probieren; bei älteren Deployments Fallback auf Legacy.
+    callRpc('getTimelinePayloadForCharts', true);
   });
 }
 
@@ -1391,11 +1397,11 @@ async function fetchTimeline(days, futureDays) {
     } catch (gasErr) {
       const msg = gasErr?.message || String(gasErr || '');
       // In HtmlService ist HTTP-Fetch häufig durch CORS/302 blockiert.
-      // Bei funktionalem GAS-Fehler lieber direkt transparent abbrechen statt CORS-Fallback-Lärm.
-      if (/timeline payload not ok|payload malformed|sheet|nicht gefunden|not found/i.test(msg)) {
+      // Daher bei vorhandenem google.script.run keinen HTTP-Fallback erzwingen.
+      if (/timeline payload not ok|payload malformed|sheet|nicht gefunden|not found|leere timeline-antwort|timeout/i.test(msg)) {
         throw gasErr;
       }
-      console.warn('[charts] GAS timeline call fehlgeschlagen, fallback auf HTTP:', msg);
+      throw gasErr;
     }
   }
 
