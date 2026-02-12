@@ -228,15 +228,19 @@
     }
 
     function selectedMetrics(){
-      return [...document.querySelectorAll('#metricGrid input:checked')].map(el => el.value);
+      const nodes = document.querySelectorAll('#metricGrid input:checked');
+      const out = [];
+      for (let i = 0; i < nodes.length; i++) out.push(nodes[i].value);
+      return out;
     }
 
     function parsePayload(payload){
       const headers = (payload && payload.headers) || [];
       const rows = (payload && payload.rows) || [];
-      const idx = Object.fromEntries(headers.map((h, i) => [normalizeKey(h), i]));
+      const idx = {};
+      for (let i = 0; i < headers.length; i++) idx[normalizeKey(headers[i])] = i;
 
-      const dateIdx = idx['date'] ?? idx['datum'] ?? idx['day'];
+      const dateIdx = (idx['date'] != null) ? idx['date'] : ((idx['datum'] != null) ? idx['datum'] : idx['day']);
       return rows.map(r => {
         const rec = { __dateRaw: dateIdx != null ? r[dateIdx] : null };
         METRIC_DEFS.forEach(m => {
@@ -321,7 +325,7 @@
         return;
       }
 
-      const sorted = [...state.rows].sort((a, b) => new Date(a.__dateRaw) - new Date(b.__dateRaw));
+      const sorted = state.rows.slice().sort((a, b) => new Date(a.__dateRaw) - new Date(b.__dateRaw));
       const rows = sorted.slice(-timeframe);
       const labels = labelsFor(rows);
       const { datasets, scales } = buildDatasets(rows, metrics);
@@ -357,7 +361,6 @@
             $('status').textContent = `Fehler beim Laden: ${err && err.message ? err.message : err}`;
           })
           .getTimelinePayloadForCharts();
-          .getTimelineJsonUniversal();
         return;
       }
 
