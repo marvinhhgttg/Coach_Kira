@@ -1053,8 +1053,23 @@ function changeLoad(idx, val) {
 function bindSliderEvents() {
     const tbody = document.getElementById('simBody');
     if (!tbody || tbody.dataset.sliderEventsBound === 'true') return;
-    // Slider-Events laufen direkt über oninput/onchange in renderTable(),
-    // damit Live-Updates auch nach dynamischem Re-Render zuverlässig aktiv bleiben.
+
+    const onSliderEvent = (event) => {
+        const rawTarget = event.target;
+        if (!(rawTarget instanceof Element)) return;
+        const slider = rawTarget.closest('input.sim-slider');
+        if (!(slider instanceof HTMLInputElement)) return;
+
+        const idx = Number(slider.dataset.idx);
+        if (!Number.isFinite(idx)) return;
+
+        keiLiveOverride = true;
+        changeLoad(idx, slider.value);
+    };
+
+    // Delegiert auf tbody: funktioniert für alle Rows stabil, auch nach innerHTML-Rebuild.
+    tbody.addEventListener('input', onSliderEvent);
+    tbody.addEventListener('change', onSliderEvent);
     tbody.dataset.sliderEventsBound = 'true';
 }
 
