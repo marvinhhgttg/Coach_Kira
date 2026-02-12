@@ -1053,15 +1053,23 @@ function changeLoad(idx, val) {
 function bindSliderEvents() {
     const tbody = document.getElementById('simBody');
     if (!tbody || tbody.dataset.sliderEventsBound === 'true') return;
-    tbody.addEventListener('input', (event) => {
-        const target = event.target;
-        if (!(target instanceof HTMLInputElement)) return;
-        if (!target.classList.contains('sim-slider')) return;
-        const idx = Number(target.dataset.idx);
+
+    const onSliderEvent = (event) => {
+        const rawTarget = event.target;
+        if (!(rawTarget instanceof Element)) return;
+        const slider = rawTarget.closest('input.sim-slider');
+        if (!(slider instanceof HTMLInputElement)) return;
+
+        const idx = Number(slider.dataset.idx);
         if (!Number.isFinite(idx)) return;
+
         keiLiveOverride = true;
-        changeLoad(idx, target.value);
-    });
+        changeLoad(idx, slider.value);
+    };
+
+    // Delegiert auf tbody: funktioniert für alle Rows stabil, auch nach innerHTML-Rebuild.
+    tbody.addEventListener('input', onSliderEvent);
+    tbody.addEventListener('change', onSliderEvent);
     tbody.dataset.sliderEventsBound = 'true';
 }
 
@@ -1431,7 +1439,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
                 mono,
                 keiEffective,
                 keiDisplay,
-                is_overkill,
+                is_overkill: isOverkill,
                 historyIndex,
                 historyLength: ctlTimeline.length,
                 history: [...ctlTimeline]
@@ -1470,10 +1478,10 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         }
 
         if (overkillBadgeEl) {
-            overkillBadgeEl.style.display = is_overkill ? 'inline-block' : 'none';
+            overkillBadgeEl.style.display = isOverkill ? 'inline-block' : 'none';
         }
         if (flagEl) {
-            flagEl.innerHTML = is_overkill ? '<span class="flag-overkill" title="Overkill erkannt">🚩</span>' : '';
+            flagEl.innerHTML = isOverkill ? '<span class="flag-overkill" title="Overkill erkannt">🚩</span>' : '';
         }
 
         // --- START V3 STATUS-ICONS (LIVE) ---
