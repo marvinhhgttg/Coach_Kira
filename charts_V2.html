@@ -111,6 +111,17 @@
 
     .metric-option { font-size: 0.85rem; color: var(--text-main); }
     .metric-option input { margin-right: 6px; }
+    .metric-group-title {
+      grid-column: 1 / -1;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      margin-top: 4px;
+      border-top: 1px dashed var(--border-color);
+      padding-top: 6px;
+      font-weight: 700;
+    }
 
     .chart-wrapper {
       position: relative;
@@ -161,23 +172,33 @@
 
   <script>
     const METRIC_DEFS = [
-      { key: 'kcal_in', label: 'kcal_in' },
-      { key: 'kcal_out', label: 'kcal_out' },
-      { key: 'deficit', label: 'deficit' },
-      { key: 'carb_g', label: 'carb_g' },
-      { key: 'protein_g', label: 'protein_g' },
-      { key: 'fat_g', label: 'fat_g' },
-      { key: 'coachE_ESS_day', label: 'coachE_ESS_day' },
-      { key: 'coachE_ATL_forecast', label: 'coachE_ATL_forecast' },
-      { key: 'coachE_CTL_forecast', label: 'coachE_CTL_forecast' },
-      { key: 'coachE_ACWR_forecast', label: 'coachE_ACWR_forecast' },
-      { key: 'fKEI', label: 'fKEI' },
-      { key: 'load_star', label: 'load_star' },
-      { key: 'ctl_star', label: 'ctl_star' },
-      { key: 'coachE_Smart_Gains', label: 'coachE_Smart_Gains (KEI)' },
-      { key: 'Monotony7', label: 'Monotony7' },
-      { key: 'Strain7', label: 'Strain7' },
-      { key: 'TE_Balance_Trend', label: 'TE_Balance_Trend' }
+      // Ernährung
+      { key: 'kcal_in', label: 'kcal_in', group: 'Ernährung', defaultChecked: true },
+      { key: 'kcal_out', label: 'kcal_out', group: 'Ernährung', defaultChecked: true },
+      { key: 'deficit', label: 'deficit', group: 'Ernährung', defaultChecked: true },
+      { key: 'carb_g', label: 'carb_g', group: 'Ernährung', defaultChecked: true },
+      { key: 'protein_g', label: 'protein_g', group: 'Ernährung', defaultChecked: true },
+      { key: 'fat_g', label: 'fat_g', group: 'Ernährung', defaultChecked: false },
+
+      // Health
+      { key: 'sleep_hours', label: 'sleep_hours', group: 'Health', defaultChecked: false },
+      { key: 'sleep_score_0_100', label: 'sleep_score_0_100', group: 'Health', defaultChecked: false },
+      { key: 'rhr_bpm', label: 'rhr_bpm', group: 'Health', defaultChecked: false },
+      { key: 'hrv_status', label: 'hrv_status', group: 'Health', defaultChecked: false },
+      { key: 'Garmin_Training_Readiness', label: 'Garmin_Training_Readiness', group: 'Health', defaultChecked: false },
+
+      // Training
+      { key: 'coachE_ESS_day', label: 'coachE_ESS_day', group: 'Training', defaultChecked: false },
+      { key: 'coachE_ATL_forecast', label: 'coachE_ATL_forecast', group: 'Training', defaultChecked: false },
+      { key: 'coachE_CTL_forecast', label: 'coachE_CTL_forecast', group: 'Training', defaultChecked: false },
+      { key: 'coachE_ACWR_forecast', label: 'coachE_ACWR_forecast', group: 'Training', defaultChecked: false },
+      { key: 'fKEI', label: 'fKEI', group: 'Training', defaultChecked: false },
+      { key: 'load_star', label: 'load_star', group: 'Training', defaultChecked: false },
+      { key: 'ctl_star', label: 'ctl_star', group: 'Training', defaultChecked: false },
+      { key: 'coachE_Smart_Gains', label: 'coachE_Smart_Gains (KEI)', group: 'Training', defaultChecked: false },
+      { key: 'Monotony7', label: 'Monotony7', group: 'Training', defaultChecked: false },
+      { key: 'Strain7', label: 'Strain7', group: 'Training', defaultChecked: false },
+      { key: 'TE_Balance_Trend', label: 'TE_Balance_Trend', group: 'Training', defaultChecked: false }
     ];
 
     const PALETTE = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#22c55e', '#e11d48', '#6366f1'];
@@ -189,7 +210,9 @@
       carb_g: true,
       protein_g: true,
       coachE_ESS_day: true,
-      load_star: true
+      load_star: true,
+      sleep_hours: true,
+      sleep_score_0_100: true
     };
     const state = { rows: [], chart: null };
 
@@ -216,25 +239,32 @@
     }
 
     function categoryForMetric(metric){
-      if (/kcal_|deficit/.test(metric)) return { id: 'energy', label: 'kcal / Deficit' };
-      if (/(carb_g|protein_g|fat_g)/.test(metric)) return { id: 'macros', label: 'Makros (g)' };
-      if (/(ESS_day|load_star|ctl_star|Strain7)/.test(metric)) return { id: 'load', label: 'Load / Strain' };
-      if (/(ATL_forecast|CTL_forecast|fKEI|Smart_Gains)/.test(metric)) return { id: 'fitness', label: 'Fitness / KEI' };
-      if (/ACWR_forecast|Monotony7/.test(metric)) return { id: 'ratio', label: 'Ratio / Monotony' };
-      if (/TE_Balance_Trend/.test(metric)) return { id: 'te', label: 'TE Balance' };
+      if (/(kcal_|deficit|carb_g|protein_g|fat_g)/.test(metric)) return { id: 'nutrition', label: 'Ernährung' };
+      if (/(sleep_hours|sleep_score_0_100|rhr_bpm|hrv_status|Garmin_Training_Readiness)/.test(metric)) return { id: 'health', label: 'Health' };
+      if (/(ESS_day|load_star|ctl_star|Strain7|ATL_forecast|CTL_forecast|fKEI|Smart_Gains|ACWR_forecast|Monotony7|TE_Balance_Trend)/.test(metric)) return { id: 'training', label: 'Training' };
       return { id: metric, label: metric };
     }
 
     function buildMetricControls(){
       const grid = $('metricGrid');
       grid.innerHTML = '';
-      METRIC_DEFS.forEach((m, idx) => {
-        const row = document.createElement('label');
-        row.className = 'metric-option';
-        row.innerHTML = `<input type="checkbox" value="${m.key}" ${idx < 5 ? 'checked' : ''}> ${m.label}`;
-        row.querySelector('input').addEventListener('change', render);
-        grid.appendChild(row);
-      });
+      const groups = ['Ernährung', 'Health', 'Training'];
+
+      for (let g = 0; g < groups.length; g++) {
+        const groupName = groups[g];
+        const title = document.createElement('div');
+        title.className = 'metric-group-title';
+        title.textContent = groupName;
+        grid.appendChild(title);
+
+        METRIC_DEFS.filter(m => m.group === groupName).forEach((m) => {
+          const row = document.createElement('label');
+          row.className = 'metric-option';
+          row.innerHTML = `<input type="checkbox" value="${m.key}" ${m.defaultChecked ? 'checked' : ''}> ${m.label}`;
+          row.querySelector('input').addEventListener('change', render);
+          grid.appendChild(row);
+        });
+      }
     }
 
     function selectedMetrics(){
