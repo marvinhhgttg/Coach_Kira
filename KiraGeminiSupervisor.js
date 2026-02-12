@@ -3149,6 +3149,12 @@ if (e && e.parameter && e.parameter.mode === 'timeline') {
     template = HtmlService.createTemplateFromFile('charts');
     template._debug_loaded = 'charts';
   }
+  // --- NEU: Charts V2 Dashboard ---
+  // Aufruf: .../exec?page=charts_v2
+  else if (page === 'charts_v2') {
+    template = HtmlService.createTemplateFromFile('charts_V2');
+    template._debug_loaded = 'charts_V2';
+  }
   else if (page === 'calc') {
     template = HtmlService.createTemplateFromFile('CalculatorApp');
   }
@@ -9449,6 +9455,15 @@ function getTimelinePayloadForCharts(days, futureDays) {
       message: String((err && err.stack) || (err && err.message) || err || 'getTimelinePayloadForCharts failed')
     };
   }
+}
+
+
+/**
+ * Backward-compatible Apps Script runner endpoint used by charts_V2.
+ * Keeps old frontend calls working and proxies to the hardened payload builder.
+ */
+function getTimelineJsonUniversal(days, futureDays) {
+  return getTimelinePayloadForCharts(days, futureDays);
 }
 
 function _median_(arr) {
