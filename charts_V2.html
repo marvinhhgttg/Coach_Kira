@@ -181,6 +181,16 @@
     ];
 
     const PALETTE = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#22c55e', '#e11d48', '#6366f1'];
+
+    const BAR_METRICS = {
+      kcal_in: true,
+      kcal_out: true,
+      deficit: true,
+      carb_g: true,
+      protein_g: true,
+      coachE_ESS_day: true,
+      load_star: true
+    };
     const state = { rows: [], chart: null };
 
     function $(id){ return document.getElementById(id); }
@@ -284,17 +294,18 @@
         const data = rows.map(r => metric === 'TE_Balance_Trend' ? mapTeBalance(r[metric]) : toNum(r[metric]));
         const color = PALETTE[i % PALETTE.length];
 
+        const asBar = !!BAR_METRICS[metric];
         datasets.push({
           label: metric === 'coachE_Smart_Gains' ? 'coachE_Smart_Gains (KEI)' : metric,
           data,
           yAxisID: axis.id,
           borderColor: color,
-          backgroundColor: color + '33',
-          pointRadius: 0,
-          borderWidth: 2,
-          tension: 0.25,
-          spanGaps: true,
-          type: 'line'
+          backgroundColor: asBar ? (color + '88') : (color + '33'),
+          pointRadius: asBar ? 0 : 0,
+          borderWidth: asBar ? 1 : 2,
+          tension: asBar ? 0 : 0.25,
+          spanGaps: !asBar,
+          type: asBar ? 'bar' : 'line'
         });
       });
 
