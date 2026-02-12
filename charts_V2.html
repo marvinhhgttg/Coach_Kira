@@ -313,11 +313,69 @@
       return null;
     }
 
-    function categoryForMetric(metric){
-      if (/(kcal_|deficit|carb_g|protein_g|fat_g)/.test(metric)) return { id: 'nutrition', label: 'Ernährung' };
-      if (/(sleep_hours|sleep_score_0_100|rhr_bpm|hrv_status|Garmin_Training_Readiness)/.test(metric)) return { id: 'health', label: 'Health' };
-      if (/(ESS_day|load_star|ctl_star|Strain7|ATL_forecast|CTL_forecast|fKEI|Smart_Gains|ACWR_forecast|Monotony7|TE_Balance_Trend)/.test(metric)) return { id: 'training', label: 'Training' };
-      return { id: metric, label: metric };
+    function axisMetaForMetric(metric){
+      const byKey = {
+        kcal_in: { id: 'energy_kcal', label: 'Energy (kcal)' },
+        kcal_out: { id: 'energy_kcal', label: 'Energy (kcal)' },
+        deficit: { id: 'energy_kcal', label: 'Energy (kcal)' },
+
+        carb_g: { id: 'macros_g', label: 'Makros (g)' },
+        protein_g: { id: 'macros_g', label: 'Makros (g)' },
+        fat_g: { id: 'macros_g', label: 'Makros (g)' },
+
+        sleep_hours: { id: 'sleep_h', label: 'Sleep (h)' },
+        sleep_score_0_100: { id: 'score_100', label: 'Score (0-100)' },
+        Garmin_Training_Readiness: { id: 'score_100', label: 'Score (0-100)' },
+
+        rhr_bpm: { id: 'bpm', label: 'RHR (bpm)' },
+        hrv_status: { id: 'hrv', label: 'HRV' },
+
+        coachE_ESS_day: { id: 'load_daily', label: 'Daily Load' },
+        load_star: { id: 'load_daily', label: 'Daily Load' },
+        Strain7: { id: 'load_daily', label: 'Daily Load' },
+
+        coachE_ATL_forecast: { id: 'load_state', label: 'ATL/CTL' },
+        coachE_CTL_forecast: { id: 'load_state', label: 'ATL/CTL' },
+        ctl_star: { id: 'load_state', label: 'ATL/CTL' },
+
+        coachE_ACWR_forecast: { id: 'ratio', label: 'Ratio' },
+        Monotony7: { id: 'ratio', label: 'Ratio' },
+
+        fKEI: { id: 'kei', label: 'KEI' },
+        coachE_Smart_Gains: { id: 'kei', label: 'KEI' },
+
+        TE_Balance_Trend: { id: 'te', label: 'TE Balance' }
+      };
+      return byKey[metric] || { id: metric, label: metric };
+    }
+
+    function applyAutoScale(scaleObj, axisId, axisStats){
+      const st = axisStats[axisId];
+      if (!st || st.count < 1) return;
+
+      if (axisId === 'te') {
+        scaleObj.min = -2;
+        scaleObj.max = 2;
+        scaleObj.ticks.callback = function(v){ return ({ '-2': 'very -', '-1': '-', '0': '0', '1': '+', '2': 'very +' }[String(v)] || v); };
+        return;
+      }
+
+      if (axisId === 'score_100') {
+        scaleObj.min = 0;
+        scaleObj.max = 100;
+        return;
+      }
+
+      const minV = st.min;
+      const maxV = st.max;
+      const span = Math.max(1e-6, maxV - minV);
+      const pad = span * 0.12;
+      scaleObj.min = minV - pad;
+      scaleObj.max = maxV + pad;
+
+      if (axisId === 'ratio') {
+        scaleObj.min = Math.min(0, scaleObj.min);
+      }
     }
 
     function buildMetricControls(){
@@ -381,25 +439,36 @@
 
     function buildDatasets(rows, metrics){
       const axisMap = new Map();
+      const axisStats = {};
       const datasets = [];
       const metricAxisIds = {};
       let axisCount = 0;
 
       metrics.forEach((metric, i) => {
-        const cat = categoryForMetric(metric);
-        if (!axisMap.has(cat.id)) {
+        const axisMeta = axisMetaForMetric(metric);
+        if (!axisMap.has(axisMeta.id)) {
           const axisId = `y${axisCount++}`;
-          axisMap.set(cat.id, {
+          axisMap.set(axisMeta.id, {
             id: axisId,
-            label: cat.label,
+            axisKey: axisMeta.id,
+            label: axisMeta.label,
             position: axisCount % 2 === 0 ? 'right' : 'left'
           });
         }
 
-        const axis = axisMap.get(cat.id);
+        const axis = axisMap.get(axisMeta.id);
         metricAxisIds[metric] = axis.id;
         const data = rows.map(r => metric === 'TE_Balance_Trend' ? mapTeBalance(r[metric]) : toNum(r[metric]));
         const color = PALETTE[i % PALETTE.length];
+
+        if (!axisStats[axis.axisKey]) axisStats[axis.axisKey] = { min: Infinity, max: -Infinity, count: 0 };
+        for (let k = 0; k < data.length; k++) {
+          const v = data[k];
+          if (!Number.isFinite(v)) continue;
+          axisStats[axis.axisKey].min = Math.min(axisStats[axis.axisKey].min, v);
+          axisStats[axis.axisKey].max = Math.max(axisStats[axis.axisKey].max, v);
+          axisStats[axis.axisKey].count += 1;
+        }
 
         const asBar = !!BAR_METRICS[metric];
         datasets.push({
@@ -425,11 +494,7 @@
           ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted') }
         };
         if (a.id !== 'y0') scales[a.id].offset = true;
-        if (a.label === 'TE Balance') {
-          scales[a.id].min = -2;
-          scales[a.id].max = 2;
-          scales[a.id].ticks.callback = (v) => ({ '-2': 'very -', '-1': '-', '0': '0', '1': '+', '2': 'very +' }[String(v)] || v);
-        }
+        applyAutoScale(scales[a.id], a.axisKey, axisStats);
       });
 
       return { datasets, scales, metricAxisIds };
