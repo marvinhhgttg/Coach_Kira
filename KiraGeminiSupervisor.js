@@ -1506,22 +1506,76 @@ const acwrFixDot = acwrFix.replace(',', '.');      // "1.13" (falls du es numeri
 
 
 
-  // --- FIX V179: Zuerst die TE-Balance definieren, bevor sie im Prompt genutzt wird ---
-  let teBalanceHeute = "0,0%";
+  // --- FIX V179: TE-Balance aus HEUTIGER Forecast-Zeile (is_today/date), sonst monotony_varianz ---
+  const fallbackTeBalanceHeute = (monotony_varianz * 100).toFixed(1).replace('.', ',') + "%";
+  let teBalanceHeute = fallbackTeBalanceHeute;
   try {
     const fcSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('AI_DATA_FORECAST');
-    if (fcSheet) {
+    if (fcSheet && fcSheet.getLastRow() > 1) {
       const fcData = fcSheet.getDataRange().getValues();
-      const fcHeaders = fcData[0].map(h => h.toString().trim().toLowerCase());
-      const colIdx = fcHeaders.indexOf('te balance');
-      if (colIdx !== -1 && fcData.length > 1) {
-        // Wir nehmen den Wert 1:1 aus der heutigen Zeile (Index 1)
-        teBalanceHeute = fcData[1][colIdx].toString().replace('.', ',') + "%";
+      const fcHeaders = fcData[0].map(h => h.toString().trim());
+      const fcHeadersLc = fcHeaders.map(h => h.toLowerCase());
+
+      const teIdx = fcHeadersLc.indexOf('te balance') > -1
+        ? fcHeadersLc.indexOf('te balance')
+        : fcHeadersLc.indexOf('te balance (% intensiv)');
+
+      if (teIdx !== -1) {
+        const tz = Session.getScriptTimeZone();
+        const todayKey = Utilities.formatDate(new Date(), tz, "yyyy-MM-dd");
+        let todayRowIdx = -1;
+
+        // 1) Bevorzugt: is_today == 1
+        const isTodayIdx = fcHeadersLc.indexOf('is_today');
+        if (isTodayIdx !== -1) {
+          for (let r = 1; r < fcData.length; r++) {
+            if (parseGermanFloat(fcData[r][isTodayIdx]) === 1) {
+              todayRowIdx = r;
+              break;
+            }
+          }
+        }
+
+        // 2) Fallback: Datum == heute
+        if (todayRowIdx === -1) {
+          const dateIdx = fcHeadersLc.indexOf('datum') > -1
+            ? fcHeadersLc.indexOf('datum')
+            : fcHeadersLc.indexOf('date');
+
+          if (dateIdx !== -1) {
+            for (let r = 1; r < fcData.length; r++) {
+              const rawDate = fcData[r][dateIdx];
+              const dObj = rawDate instanceof Date ? rawDate : new Date(rawDate);
+              if (dObj instanceof Date && !isNaN(dObj.getTime())) {
+                const rowKey = Utilities.formatDate(dObj, tz, "yyyy-MM-dd");
+                if (rowKey === todayKey) {
+                  todayRowIdx = r;
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        if (todayRowIdx !== -1) {
+          let teRaw = fcData[todayRowIdx][teIdx];
+          let teNum = Number.NaN;
+
+          if (typeof teRaw === 'number') {
+            teNum = teRaw;
+          } else {
+            teNum = parseGermanFloat(String(teRaw).replace('%', ''));
+          }
+
+          if (Number.isFinite(teNum)) {
+            if (Math.abs(teNum) <= 1.0 && teNum !== 0) teNum = teNum * 100;
+            teBalanceHeute = teNum.toFixed(1).replace('.', ',') + "%";
+          }
+        }
       }
     }
-  } catch(e) { 
-    // Fallback falls der Forecast-Read fehlschlägt
-    teBalanceHeute = (monotony_varianz * 100).toFixed(1).replace('.', ',') + "%";
+  } catch(e) {
+    teBalanceHeute = fallbackTeBalanceHeute;
   }
 
   // --- 1. DEFINITIONEN & DATUM FIX ---
@@ -1797,7 +1851,7 @@ ${dynamicKnowledge}
 - Aktueller ACWR (Forecast): ${acwrFix}  (WERT IST FIX, genau so verwenden)
 - Heutige Belastung (IST): ${heutigerIstLoad} ESS
 - Heutige Belastung (SOLL laut Plan): ${heutigerSollLoad} ESS
-- TE-Balance (% Intensiv): ${teBalanceHeute} %
+- TE-Balance (% Intensiv): ${teBalanceHeute}
 - Protein-Zufuhr: ${heute['protein_g']}g
 - Energie-Bilanz (Ø 7 Tage): ${nutritionScore.raw_wert} kcal
 - RTP-STATUS (System-Schutz): ${rtp_status}
