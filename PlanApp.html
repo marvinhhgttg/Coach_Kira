@@ -137,7 +137,7 @@
     }
 
     .val-box { font-family: 'Courier New', monospace; font-weight: bold; }
-    .kei-damps { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; justify-content: center; }
+    .kei-damps { display:flex; flex-direction:column; gap:4px; margin-top:4px; align-items:center; }
     .kei-badge {
       font-size: 0.62rem; padding: 2px 6px; border-radius: 999px;
       border: 1px solid currentColor; font-weight: 700; text-transform: uppercase;
@@ -146,7 +146,7 @@
     .kei-badge-warning { color: var(--warning); background: rgba(245, 158, 11, 0.15); }
     .overkill-badge { color: var(--danger); background: rgba(239, 68, 68, 0.18); }
     .kei-overkill-line { margin-top: 4px; }
-    .flag-overkill { color: var(--danger); font-size: 1.1rem; font-weight: 700; }
+    .flag-overkill { display:inline-block; font-size:0.62rem; padding:2px 6px; border-radius:999px; border:1px solid var(--danger); font-weight:700; text-transform:uppercase; color:var(--danger); background:rgba(239, 68, 68, 0.18); }
     .kei-zone {
       border-radius: 6px;
       padding: 6px 4px;
@@ -1299,7 +1299,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
     const v3El0 = document.getElementById('v3_status_0');
     if (v3El0) {
         v3El0.innerHTML = isOverkill0
-            ? '<span title="Overkill: ACWR > 1.30 oder KEI > 30" style="color:var(--danger); font-weight:800;">OVERKILL</span>'
+            ? '<span class="flag-overkill" title="Overkill: ACWR > 1.30 oder KEI > 30">OVERKILL</span>'
             : '<span style="color:var(--success); opacity:0.3; font-size:0.7rem;">OK</span>';
     }
     overkillFlags.push(isOverkill0);
@@ -1418,8 +1418,6 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         // --- KEI EFFICIENCY ---
         const sgEl = document.getElementById('sg_'+i);
         const sgCell = document.getElementById('sg_cell_'+i);
-        const overkillBadgeEl = document.getElementById('overkill_badge_'+i);
-        const flagEl = document.getElementById('flag_'+i);
         const keiBaselineVal = readKeiBaseline(i);
         const keiDisplay = keiLiveOverride ? keiEffective : (keiBaselineVal ?? keiEffective);
         const isOverkill = computeOverkillFlag(acwr, keiDisplay);
@@ -1471,17 +1469,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
                 `<span class="kei-badge kei-badge-muted" title="${dampTooltip}">ACWR ${acwr.toFixed(2)}</span>`,
                 `<span class="kei-badge kei-badge-warning" title="${dampTooltip}">Mono ${mono.toFixed(2)}</span>`
             ];
-            if (isOverkill) {
-                dampBadges.push('<span class="kei-badge kei-badge-warning" title="Overkill: ACWR > 1.30 oder KEI > 30">OVERKILL</span>');
-            }
             dampEl.innerHTML = dampBadges.join('');
-        }
-
-        if (overkillBadgeEl) {
-            overkillBadgeEl.style.display = isOverkill ? 'inline-block' : 'none';
-        }
-        if (flagEl) {
-            flagEl.innerHTML = isOverkill ? '<span class="flag-overkill" title="Overkill erkannt">🚩</span>' : '';
         }
 
         // --- START V3 STATUS-ICONS (LIVE) ---
@@ -1497,7 +1485,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
                 statusHtml += `<span title="Monotonie-Strafe: Einseitiger Reiz" style="color:var(--warning); cursor:help; margin-left:4px;">🔁</span>`;
             }
             if (isOverkill) {
-                statusHtml += `<span title="Overkill: ACWR > 1.30 oder KEI > 30" style="color:var(--danger); margin-left:4px; font-weight:800;">OVERKILL</span>`;
+                statusHtml += `<span class="flag-overkill" title="Overkill: ACWR > 1.30 oder KEI > 30" style="margin-left:4px;">OVERKILL</span>`;
             }
             v3El.innerHTML = statusHtml || '<span style="color:var(--success); opacity:0.3; font-size:0.7rem;">OK</span>';
         }
