@@ -9457,6 +9457,15 @@ function getTimelinePayloadForCharts(days, futureDays) {
   }
 }
 
+
+/**
+ * Backward-compatible Apps Script runner endpoint used by charts_V2.
+ * Keeps old frontend calls working and proxies to the hardened payload builder.
+ */
+function getTimelineJsonUniversal(days, futureDays) {
+  return getTimelinePayloadForCharts(days, futureDays);
+}
+
 function _median_(arr) {
   const a = (arr || []).filter(x => Number.isFinite(x)).slice().sort((x,y)=>x-y);
   if (!a.length) return null;

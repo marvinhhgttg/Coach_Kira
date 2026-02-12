@@ -356,6 +356,7 @@
           .withFailureHandler(err => {
             $('status').textContent = `Fehler beim Laden: ${err && err.message ? err.message : err}`;
           })
+          .getTimelinePayloadForCharts();
           .getTimelineJsonUniversal();
         return;
       }
