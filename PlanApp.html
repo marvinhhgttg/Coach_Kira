@@ -1003,7 +1003,7 @@ const targetLine = `🎯 SG ${targets.targetSG} | ACWR ${targets.targetACWR.toFi
         <i class="fas ${lockIconClass} lock-btn" id="lock_icon_${i}" onclick="toggleLock(${i})"></i>
     </td>
     <td>
-        <input type="range" class="sim-slider" min="0" max="300" step="1" id="slider_${i}" data-idx="${i}" value="${startVal}">
+        <input type="range" class="sim-slider" min="0" max="300" step="1" id="slider_${i}" data-idx="${i}" value="${startVal}" oninput="keiLiveOverride=true;changeLoad(${i}, this.value)" onchange="keiLiveOverride=true;changeLoad(${i}, this.value)">
         <div class="text-center mt-1 small"><span id="val_${i}" style="color:var(--warning); font-weight:bold;">${startVal}</span> ESS</div>
     </td>
     <td><input type="text" class="plan-text-input" id="sport_${i}" value="${simBase.plannedSports[i] || ''}"></td>
