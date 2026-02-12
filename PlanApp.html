@@ -1439,7 +1439,7 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
                 mono,
                 keiEffective,
                 keiDisplay,
-                is_overkill,
+                is_overkill: isOverkill,
                 historyIndex,
                 historyLength: ctlTimeline.length,
                 history: [...ctlTimeline]
@@ -1478,10 +1478,10 @@ const sleepScoreDefault = p(simBase.sleepScoreDefault) || p(cfg.sleep_score_defa
         }
 
         if (overkillBadgeEl) {
-            overkillBadgeEl.style.display = is_overkill ? 'inline-block' : 'none';
+            overkillBadgeEl.style.display = isOverkill ? 'inline-block' : 'none';
         }
         if (flagEl) {
-            flagEl.innerHTML = is_overkill ? '<span class="flag-overkill" title="Overkill erkannt">🚩</span>' : '';
+            flagEl.innerHTML = isOverkill ? '<span class="flag-overkill" title="Overkill erkannt">🚩</span>' : '';
         }
 
         // --- START V3 STATUS-ICONS (LIVE) ---
