@@ -259,6 +259,38 @@
     };
     const state = { rows: [], chart: null };
 
+    const bandBackgroundPlugin = {
+      id: 'bandBackgroundPlugin',
+      beforeDatasetsDraw: function(chart, args, pluginOptions){
+        const bands = pluginOptions && pluginOptions.bands ? pluginOptions.bands : [];
+        if (!bands.length) return;
+
+        const area = chart.chartArea;
+        if (!area) return;
+
+        const ctx = chart.ctx;
+        for (let i = 0; i < bands.length; i++) {
+          const b = bands[i];
+          const yScale = chart.scales[b.yScaleID];
+          if (!yScale) continue;
+
+          const yTop = yScale.getPixelForValue(b.max);
+          const yBottom = yScale.getPixelForValue(b.min);
+          const top = Math.min(yTop, yBottom);
+          const height = Math.abs(yBottom - yTop);
+
+          ctx.save();
+          ctx.fillStyle = b.color || 'rgba(16,185,129,0.12)';
+          ctx.fillRect(area.left, top, area.right - area.left, height);
+          ctx.restore();
+        }
+      }
+    };
+
+    if (typeof Chart !== 'undefined' && Chart.register) {
+      Chart.register(bandBackgroundPlugin);
+    }
+
     function $(id){ return document.getElementById(id); }
 
     function normalizeKey(s){ return String(s || '').trim().toLowerCase(); }
@@ -350,6 +382,7 @@
     function buildDatasets(rows, metrics){
       const axisMap = new Map();
       const datasets = [];
+      const metricAxisIds = {};
       let axisCount = 0;
 
       metrics.forEach((metric, i) => {
@@ -364,6 +397,7 @@
         }
 
         const axis = axisMap.get(cat.id);
+        metricAxisIds[metric] = axis.id;
         const data = rows.map(r => metric === 'TE_Balance_Trend' ? mapTeBalance(r[metric]) : toNum(r[metric]));
         const color = PALETTE[i % PALETTE.length];
 
@@ -398,11 +432,11 @@
         }
       });
 
-      return { datasets, scales };
+      return { datasets, scales, metricAxisIds };
     }
 
 
-    function renderBarAverages(datasets, timeframe){
+    function renderBarAverages(datasets, timeframe, selectedMetrics){
       const box = $('barAvgLegend');
       if (!box) return;
 
@@ -427,6 +461,19 @@
         html += '<div class="avg-item"><span class="avg-label">' + ds.label + '</span><span class="avg-value">Ø ' + val + '</span></div>';
       }
 
+      if (selectedMetrics && selectedMetrics.indexOf('coachE_Smart_Gains') !== -1) {
+        html += '<div class="avg-legend-title" style="margin-top:10px">Efficiency Index (KEI)</div>' +
+          '<div class="avg-item"><span class="avg-label">GRÜN</span><span class="avg-value">High Efficiency (≥ 8)</span></div>' +
+          '<div class="avg-item"><span class="avg-label">BLAU</span><span class="avg-value">Productive (3 bis &lt; 8)</span></div>' +
+          '<div class="avg-item"><span class="avg-label">ORANGE</span><span class="avg-value">Maintenance / Transition (0 bis &lt; 3)</span></div>' +
+          '<div class="avg-item"><span class="avg-label">ROT</span><span class="avg-value">Inefficient / Risk (&lt; 0)</span></div>';
+      }
+
+      if (selectedMetrics && selectedMetrics.indexOf('coachE_ACWR_forecast') !== -1) {
+        html += '<div class="avg-legend-title" style="margin-top:10px">ACWR Sweet Spot</div>' +
+          '<div class="avg-item"><span class="avg-label">GRÜN</span><span class="avg-value">0,8 bis 1,2</span></div>';
+      }
+
       box.innerHTML = html;
     }
 
@@ -443,8 +490,20 @@
       const sorted = state.rows.slice().sort((a, b) => new Date(a.__dateRaw) - new Date(b.__dateRaw));
       const rows = sorted.slice(-timeframe);
       const labels = labelsFor(rows);
-      const { datasets, scales } = buildDatasets(rows, metrics);
-      renderBarAverages(datasets, timeframe);
+      const { datasets, scales, metricAxisIds } = buildDatasets(rows, metrics);
+      renderBarAverages(datasets, timeframe, metrics);
+
+      const bands = [];
+      if (metrics.indexOf('coachE_Smart_Gains') !== -1 && metricAxisIds['coachE_Smart_Gains']) {
+        const yId = metricAxisIds['coachE_Smart_Gains'];
+        bands.push({ yScaleID: yId, min: 8, max: 9999, color: 'rgba(34, 197, 94, 0.10)' });
+        bands.push({ yScaleID: yId, min: 3, max: 8, color: 'rgba(59, 130, 246, 0.10)' });
+        bands.push({ yScaleID: yId, min: 0, max: 3, color: 'rgba(249, 115, 22, 0.12)' });
+        bands.push({ yScaleID: yId, min: -9999, max: 0, color: 'rgba(239, 68, 68, 0.10)' });
+      }
+      if (metrics.indexOf('coachE_ACWR_forecast') !== -1 && metricAxisIds['coachE_ACWR_forecast']) {
+        bands.push({ yScaleID: metricAxisIds['coachE_ACWR_forecast'], min: 0.8, max: 1.2, color: 'rgba(34, 197, 94, 0.12)' });
+      }
 
       if (state.chart) state.chart.destroy();
       state.chart = new Chart($('mainChart').getContext('2d'), {
@@ -456,7 +515,8 @@
           interaction: { mode: 'index', intersect: false },
           plugins: {
             legend: { position: 'top' },
-            tooltip: { mode: 'index', intersect: false }
+            tooltip: { mode: 'index', intersect: false },
+            bandBackgroundPlugin: { bands: bands }
           },
           scales
         }
