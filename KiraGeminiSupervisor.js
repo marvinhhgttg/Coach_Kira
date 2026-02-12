@@ -1139,8 +1139,8 @@ function calculateRollingTEVarianz(allRawData, currentRowIndex, lookbackDays, te
 /**
  * V160-ULTRA-ROBUST: Fix für HRV-Crash & Smart-Gains-Read.
  * FIX 1: HRV Thresholds werden sicher als String behandelt, um .includes() Fehler zu vermeiden.
- * FIX 2: KEI wird direkt aus dem Tabellenblatt AI_DATA_HISTORY gelesen (Spalte N), 
- * statt sich auf fehleranfälliges CSV-Parsing zu verlassen.
+ * FIX 2: KEI priorisiert den heutigen Timeline-Wert (coache/coachE_smart_gains)
+ * und nutzt Forecast nur als datumsvalidierten Fallback.
  */
 function calculateFitnessMetrics(datenPaket) {
   const { heute, baseline, monotony_varianz } = datenPaket;
@@ -1360,28 +1360,101 @@ const displayAcwrSheet = Number.isFinite(acwrValNum) ? acwrValNum.toFixed(2).rep
   scores.push({ metrik: "Protein-Invest", raw_wert: `${proteinRaw}g`, num_score: normalizeProteinScore(proteinRaw/76), ampel: proteinRaw < 10 ? "OFFEN" : getAmpelFromScore(normalizeProteinScore(proteinRaw/76)) });
 
   // --- 11. KEI (UPDATED: AGGRESSIVE SKALA) ---
-  let smartRaw = 0;
-  let smartSource = "Fallback";
+  let smartRaw = NaN;
+  let smartSource = "Timeline";
 
-  try {
-    const fcSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('AI_DATA_FORECAST');
-    if (fcSheet) {
-      const data = fcSheet.getRange(1, 1, 2, fcSheet.getLastColumn()).getValues();
-      const headers = data[0].map(h => h.toString().toLowerCase());
-      const rowData = data[1]; 
-      const colIdx = headers.indexOf('kei forecast') > -1
-        ? headers.indexOf('kei forecast')
-        : headers.indexOf('smart gain forecast');
-      if (colIdx !== -1 && rowData && rowData[colIdx] !== "") {
-        smartRaw = parseGermanFloat(rowData[colIdx]);
-        smartSource = "Forecast";
-      }
+  // Primärquelle: heute / Timeline (robuste Alias-Prüfung)
+  const smartPrimaryCandidates = [
+    heute['coache_smart_gains'],
+    heute['coachE_smart_gains'],
+    heute['coache_smart_gains_v3']
+  ];
+
+  for (let i = 0; i < smartPrimaryCandidates.length; i++) {
+    const parsed = parseGermanFloat(smartPrimaryCandidates[i]);
+    if (Number.isFinite(parsed)) {
+      smartRaw = parsed;
+      break;
     }
-  } catch(e) {}
+  }
 
-  if (smartSource === "Fallback") {
-     smartRaw = parseGermanFloat(heute['coache_smart_gains']) || 
-                parseGermanFloat(heute['smart gain forecast']) || 0;
+  // Sekundärquelle: Forecast nur als Fallback, und nur mit Heute-Validierung
+  if (!Number.isFinite(smartRaw)) {
+    smartSource = "Forecast";
+    try {
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      const fcSheet = ss.getSheetByName('AI_DATA_FORECAST');
+      const kkSheet = ss.getSheetByName(TIMELINE_SHEET_NAME) || ss.getSheetByName(SOURCE_TIMELINE_SHEET);
+
+      const normalizeDateKey = (val) => {
+        if (val == null || val === "") return "";
+        const tz = Session.getScriptTimeZone();
+        const d = (val instanceof Date) ? val : new Date(val);
+        if (!isNaN(d.getTime())) return Utilities.formatDate(d, tz, 'yyyy-MM-dd');
+        const s = String(val).trim();
+        const m = s.match(/^(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{2,4})$/);
+        if (m) {
+          const yyyy = m[3].length === 2 ? `20${m[3]}` : m[3];
+          return `${yyyy}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+        }
+        return s;
+      };
+
+      const todayKey = normalizeDateKey(heute['date']);
+      let forecastTodayKey = "";
+
+      if (fcSheet && fcSheet.getLastRow() > 1 && fcSheet.getLastColumn() > 0) {
+        const fcData = fcSheet.getDataRange().getValues();
+        const fcHeaders = fcData[0].map(h => String(h).trim().toLowerCase());
+        const idxDate = fcHeaders.indexOf('datum') > -1 ? fcHeaders.indexOf('datum') : fcHeaders.indexOf('date');
+        const idxKei = fcHeaders.indexOf('kei forecast') > -1
+          ? fcHeaders.indexOf('kei forecast')
+          : fcHeaders.indexOf('smart gain forecast');
+
+        let todayForecastRow = null;
+        if (idxDate !== -1 && todayKey) {
+          todayForecastRow = fcData.slice(1).find(r => normalizeDateKey(r[idxDate]) === todayKey) || null;
+          if (todayForecastRow) forecastTodayKey = normalizeDateKey(todayForecastRow[idxDate]);
+        }
+
+        if (!todayForecastRow && kkSheet && kkSheet.getLastRow() > 1) {
+          const kkData = kkSheet.getDataRange().getValues();
+          const kkHeaders = kkData[0].map(h => String(h).trim().toLowerCase());
+          const idxIsToday = kkHeaders.indexOf('is_today');
+          const idxKkDate = kkHeaders.indexOf('date') > -1 ? kkHeaders.indexOf('date') : kkHeaders.indexOf('datum');
+          if (idxIsToday !== -1) {
+            const todayRowKk = kkData.slice(1).find(r => Number(r[idxIsToday]) === 1 || String(r[idxIsToday]).trim() === '1');
+            if (todayRowKk && idxKkDate !== -1) {
+              const kkTodayKey = normalizeDateKey(todayRowKk[idxKkDate]);
+              if (idxDate !== -1) {
+                todayForecastRow = fcData.slice(1).find(r => normalizeDateKey(r[idxDate]) === kkTodayKey) || null;
+              }
+              if (todayForecastRow) forecastTodayKey = normalizeDateKey(todayForecastRow[idxDate]);
+            }
+          }
+        }
+
+        if (idxKei !== -1 && todayForecastRow && todayForecastRow[idxKei] !== "") {
+          const parsedFallback = parseGermanFloat(todayForecastRow[idxKei]);
+          if (Number.isFinite(parsedFallback)) {
+            smartRaw = parsedFallback;
+          }
+        }
+      }
+
+      if (!Number.isFinite(smartRaw)) {
+        smartRaw = 0;
+        smartSource = "Fallback0";
+      }
+
+      if (smartSource === "Forecast") {
+        logToSheet('INFO', `[KEI] Forecast-Fallback genutzt (heute=${todayKey || 'n/a'}, forecast=${forecastTodayKey || 'n/a'}).`);
+      }
+    } catch(e) {
+      smartRaw = 0;
+      smartSource = "Fallback0";
+      logToSheet('WARN', `[KEI] Forecast-Fallback fehlgeschlagen: ${e.message}`);
+    }
   }
   
   // --- NEUE BEWERTUNG ---
@@ -1401,7 +1474,8 @@ sgAmpel = keiAssessment.ampel;
       metrik: "KEI", 
       raw_wert: smartText, 
       num_score: sgScore, 
-      ampel: sgAmpel 
+      ampel: sgAmpel,
+      source: smartSource
   });
   
   return scores;
@@ -1564,6 +1638,8 @@ const acwrFixDot = acwrFix.replace(',', '.');      // "1.13" (falls du es numeri
       scoresText += `- ${s.metrik}: ${cleanVal} (Score: ${scoreInfo}, ${s.ampel})\n`; 
   });
   const metricsChecklist = alleScores.map(s => `"${s.metrik}"`).join(', ');
+  const keiMetricFromFitnessScores = fitnessScores.find(s => s && s.metrik === "KEI");
+  const keiPromptValue = keiMetricFromFitnessScores ? String(keiMetricFromFitnessScores.raw_wert || "—") : "—";
 
   // -----------------------------------------------------------
   // 2. RTP INTELLIGENZ: MATRIX-BERECHNUNG
@@ -1798,6 +1874,7 @@ ${dynamicKnowledge}
 - Heutige Belastung (IST): ${heutigerIstLoad} ESS
 - Heutige Belastung (SOLL laut Plan): ${heutigerSollLoad} ESS
 - TE-Balance (% Intensiv): ${teBalanceHeute} %
+- KEI (aus fitnessScores): ${keiPromptValue}
 - Protein-Zufuhr: ${heute['protein_g']}g
 - Energie-Bilanz (Ø 7 Tage): ${nutritionScore.raw_wert} kcal
 - RTP-STATUS (System-Schutz): ${rtp_status}
