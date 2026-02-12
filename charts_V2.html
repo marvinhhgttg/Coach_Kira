@@ -123,6 +123,13 @@
       font-weight: 700;
     }
 
+    .chart-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 260px;
+      gap: 12px;
+      align-items: stretch;
+    }
+
     .chart-wrapper {
       position: relative;
       height: 640px;
@@ -132,6 +139,39 @@
       border-radius: 10px;
       padding: 10px;
       background: var(--card-bg);
+    }
+
+    .avg-legend {
+      margin-top: 8px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 10px;
+      background: var(--card-bg);
+      min-height: 640px;
+    }
+    .avg-legend-title {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .avg-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px dashed var(--border-color);
+      font-size: 0.84rem;
+    }
+    .avg-item:last-child { border-bottom: 0; }
+    .avg-label { color: var(--text-main); }
+    .avg-value { color: var(--text-muted); font-weight: 700; }
+
+    @media (max-width: 1100px) {
+      .chart-layout { grid-template-columns: 1fr; }
+      .avg-legend { min-height: auto; }
     }
 
     .muted { color: var(--text-muted); font-size: 0.85rem; }
@@ -164,8 +204,11 @@
     </div>
 
     <div class="card">
-      <div class="chart-wrapper">
-        <canvas id="mainChart"></canvas>
+      <div class="chart-layout">
+        <div class="chart-wrapper">
+          <canvas id="mainChart"></canvas>
+        </div>
+        <aside class="avg-legend" id="barAvgLegend"></aside>
       </div>
     </div>
   </div>
@@ -358,11 +401,42 @@
       return { datasets, scales };
     }
 
+
+    function renderBarAverages(datasets, timeframe){
+      const box = $('barAvgLegend');
+      if (!box) return;
+
+      const barSets = datasets.filter(ds => ds && ds.type === 'bar');
+      let html = '<div class="avg-legend-title">Balken Ø (' + timeframe + ' Tage)</div>';
+
+      if (!barSets.length) {
+        box.innerHTML = html + '<div class="muted">Keine Balken-Metrik ausgewählt.</div>';
+        return;
+      }
+
+      for (let i = 0; i < barSets.length; i++) {
+        const ds = barSets[i];
+        let sum = 0;
+        let n = 0;
+        for (let k = 0; k < ds.data.length; k++) {
+          const v = ds.data[k];
+          if (Number.isFinite(v)) { sum += v; n++; }
+        }
+        const avg = n ? (sum / n) : null;
+        const val = (avg == null) ? '–' : avg.toFixed(1);
+        html += '<div class="avg-item"><span class="avg-label">' + ds.label + '</span><span class="avg-value">Ø ' + val + '</span></div>';
+      }
+
+      box.innerHTML = html;
+    }
+
     function render(){
       const timeframe = Number($('timeframeSel').value || 30);
       const metrics = selectedMetrics();
       if (!metrics.length) {
         $('status').textContent = 'Bitte mindestens eine Metrik wählen.';
+        const box = $('barAvgLegend');
+        if (box) box.innerHTML = '<div class="avg-legend-title">Balken Ø</div><div class="muted">Keine Metrik ausgewählt.</div>';
         return;
       }
 
@@ -370,6 +444,7 @@
       const rows = sorted.slice(-timeframe);
       const labels = labelsFor(rows);
       const { datasets, scales } = buildDatasets(rows, metrics);
+      renderBarAverages(datasets, timeframe);
 
       if (state.chart) state.chart.destroy();
       state.chart = new Chart($('mainChart').getContext('2d'), {
