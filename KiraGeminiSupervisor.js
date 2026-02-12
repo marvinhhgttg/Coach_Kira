@@ -3149,6 +3149,12 @@ if (e && e.parameter && e.parameter.mode === 'timeline') {
     template = HtmlService.createTemplateFromFile('charts');
     template._debug_loaded = 'charts';
   }
+  // --- NEU: Charts V2 Dashboard ---
+  // Aufruf: .../exec?page=charts_v2
+  else if (page === 'charts_v2') {
+    template = HtmlService.createTemplateFromFile('charts_V2');
+    template._debug_loaded = 'charts_V2';
+  }
   else if (page === 'calc') {
     template = HtmlService.createTemplateFromFile('CalculatorApp');
   }
