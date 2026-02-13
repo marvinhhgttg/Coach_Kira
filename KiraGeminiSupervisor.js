@@ -992,16 +992,39 @@ function normalizeScore(value, optimalValue, badValue) {
 function getBaselineNumber_(baselineObj, aliases) {
   const b = baselineObj || {};
   const keys = Object.keys(b);
-  for (let a = 0; a < aliases.length; a++) {
-    const wanted = String(aliases[a] || '').trim().toLowerCase();
-    for (let i = 0; i < keys.length; i++) {
-      const k = String(keys[i] || '').trim().toLowerCase();
-      if (k === wanted) {
+
+  const norm = (x) => String(x || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .replace(/[^a-z0-9]/g, '');
+
+  const aliasNorm = (aliases || []).map(norm);
+
+  // 1) Exakt über normalisierte Alias-Matches
+  for (let i = 0; i < keys.length; i++) {
+    const kNorm = norm(keys[i]);
+    if (!kNorm) continue;
+    if (aliasNorm.indexOf(kNorm) !== -1) {
+      const n = parseGermanFloat_(b[keys[i]]);
+      if (Number.isFinite(n)) return n;
+    }
+  }
+
+  // 2) Fuzzy Fallback: enthält Alias oder wird vom Alias enthalten
+  for (let i = 0; i < keys.length; i++) {
+    const kNorm = norm(keys[i]);
+    if (!kNorm) continue;
+    for (let a = 0; a < aliasNorm.length; a++) {
+      const wanted = aliasNorm[a];
+      if (!wanted) continue;
+      if (kNorm.indexOf(wanted) !== -1 || wanted.indexOf(kNorm) !== -1) {
         const n = parseGermanFloat_(b[keys[i]]);
         if (Number.isFinite(n)) return n;
       }
     }
   }
+
   return NaN;
 }
 
@@ -1176,8 +1199,11 @@ const SLEEP_HOURS_BAD = SLEEP_H_BAD;
   const rhr_heute = parseGermanFloat_(heute['rhr_bpm']);
 const rhr_default = getBaselineNumber_(baseline, ['RHR_default (bpm)', 'RHR_default(bpm)', 'rhr_default (bpm)', 'rhr_default_bpm', 'rhr_default']);
 
-const rhr_score = (Number.isFinite(rhr_heute) && Number.isFinite(rhr_default))
-  ? normalizeScore(rhr_heute - rhr_default, RHR_OPTIMAL_DELTA, RHR_BAD_DELTA)
+const rhr_delta = (Number.isFinite(rhr_heute) && Number.isFinite(rhr_default))
+  ? (rhr_heute - rhr_default)
+  : 0;
+const rhr_score = Number.isFinite(rhr_heute)
+  ? normalizeScore(rhr_delta, RHR_OPTIMAL_DELTA, RHR_BAD_DELTA)
   : 0;
 
 const rhr_display = Number.isFinite(rhr_heute) ? String(Math.round(rhr_heute)) : "—";
