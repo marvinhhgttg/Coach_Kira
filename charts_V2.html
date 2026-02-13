@@ -241,7 +241,8 @@
       { key: 'coachE_Smart_Gains', label: 'KEI', group: 'Training', defaultChecked: false },
       { key: 'Monotony7', label: 'Monotony', group: 'Training', defaultChecked: false },
       { key: 'Strain7', label: 'Strain', group: 'Training', defaultChecked: false },
-      { key: 'TE_Balance_Trend', label: 'TE Balance', group: 'Training', defaultChecked: false }
+      { key: 'TE_Balance_Trend', label: 'TE Balance', group: 'Training', defaultChecked: false },
+      { key: 'garminEnduranceScore', label: 'Endurance Score', group: 'Training', defaultChecked: false, aliases: ['garmin_endurance_score', 'Garmin_Endurance_Score'] }
     ];
 
     const PALETTE = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#22c55e', '#e11d48', '#6366f1'];
@@ -355,6 +356,7 @@
         sleep_hours: { id: 'sleep_h', label: 'Sleep (h)' },
         sleep_score_0_100: { id: 'score_100', label: 'Score (0-100)' },
         Garmin_Training_Readiness: { id: 'score_100', label: 'Score (0-100)' },
+        garminEnduranceScore: { id: 'score_100', label: 'Score (0-100)' },
 
         rhr_bpm: { id: 'bpm', label: 'RHR (bpm)' },
         hrv_status: { id: 'hrv', label: 'HRV' },
@@ -448,7 +450,12 @@
         const rec = { __dateRaw: dateIdx != null ? r[dateIdx] : null };
         rec.__isToday = (isTodayIdx != null && Number(String(r[isTodayIdx]).replace(',', '.')) === 1);
         METRIC_DEFS.forEach(m => {
-          const ci = idx[normalizeKey(m.key)];
+          const names = [m.key].concat(Array.isArray(m.aliases) ? m.aliases : []);
+          let ci = null;
+          for (let ni = 0; ni < names.length; ni++) {
+            const hit = idx[normalizeKey(names[ni])];
+            if (hit != null) { ci = hit; break; }
+          }
           rec[m.key] = ci == null ? null : r[ci];
         });
         return rec;
