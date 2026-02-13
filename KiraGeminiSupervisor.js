@@ -989,6 +989,23 @@ function normalizeScore(value, optimalValue, badValue) {
 }
 
 
+function getBaselineNumber_(baselineObj, aliases) {
+  const b = baselineObj || {};
+  const keys = Object.keys(b);
+  for (let a = 0; a < aliases.length; a++) {
+    const wanted = String(aliases[a] || '').trim().toLowerCase();
+    for (let i = 0; i < keys.length; i++) {
+      const k = String(keys[i] || '').trim().toLowerCase();
+      if (k === wanted) {
+        const n = parseGermanFloat_(b[keys[i]]);
+        if (Number.isFinite(n)) return n;
+      }
+    }
+  }
+  return NaN;
+}
+
+
 /**
  * NEU (V125): Garmin-Standard-Skala für ALLE Scores (0-100).
  * 95-100: VIOLETT (Prime/Höchstform)
@@ -1157,7 +1174,7 @@ const SLEEP_HOURS_BAD = SLEEP_H_BAD;
 
   // 1. RHR
   const rhr_heute = parseGermanFloat_(heute['rhr_bpm']);
-const rhr_default = parseGermanFloat_(baseline['RHR_default (bpm)']);
+const rhr_default = getBaselineNumber_(baseline, ['RHR_default (bpm)', 'RHR_default(bpm)', 'rhr_default (bpm)', 'rhr_default_bpm', 'rhr_default']);
 
 const rhr_score = (Number.isFinite(rhr_heute) && Number.isFinite(rhr_default))
   ? normalizeScore(rhr_heute - rhr_default, RHR_OPTIMAL_DELTA, RHR_BAD_DELTA)
@@ -1818,7 +1835,7 @@ const acwrFixDot = acwrFix.replace(',', '.');      // "1.13" (falls du es numeri
 const resting_calories_num = parseGermanFloat(resting_calories_raw);
 const resting_calories = Number.isFinite(resting_calories_num) ? resting_calories_num : 0;
 
-  const rhr_default = parseGermanFloat(baseline['RHR_default (bpm)']);
+  const rhr_default = getBaselineNumber_(baseline, ['RHR_default (bpm)', 'RHR_default(bpm)', 'rhr_default (bpm)', 'rhr_default_bpm', 'rhr_default']);
   const vo2max = parseGermanFloat(baseline['VO2max (mg/kg/min)']);
   const ftp_rad = parseGermanFloat(baseline['FTP_Rad (W/kg)']);
   const hill_score = parseGermanFloat(baseline['Hill_Score (0-100)']);
@@ -3148,6 +3165,12 @@ if (e && e.parameter && e.parameter.mode === 'timeline') {
   else if (page === 'charts') {
     template = HtmlService.createTemplateFromFile('charts');
     template._debug_loaded = 'charts';
+  }
+  // --- NEU: Charts V2 Dashboard ---
+  // Aufruf: .../exec?page=charts_v2
+  else if (page === 'charts_v2') {
+    template = HtmlService.createTemplateFromFile('charts_V2');
+    template._debug_loaded = 'charts_V2';
   }
   else if (page === 'calc') {
     template = HtmlService.createTemplateFromFile('CalculatorApp');
@@ -9449,6 +9472,15 @@ function getTimelinePayloadForCharts(days, futureDays) {
       message: String((err && err.stack) || (err && err.message) || err || 'getTimelinePayloadForCharts failed')
     };
   }
+}
+
+
+/**
+ * Backward-compatible Apps Script runner endpoint used by charts_V2.
+ * Keeps old frontend calls working and proxies to the hardened payload builder.
+ */
+function getTimelineJsonUniversal(days, futureDays) {
+  return getTimelinePayloadForCharts(days, futureDays);
 }
 
 function _median_(arr) {
