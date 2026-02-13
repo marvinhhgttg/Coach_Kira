@@ -242,7 +242,7 @@
       { key: 'Monotony7', label: 'Monotony', group: 'Training', defaultChecked: false },
       { key: 'Strain7', label: 'Strain', group: 'Training', defaultChecked: false },
       { key: 'TE_Balance_Trend', label: 'TE Balance', group: 'Training', defaultChecked: false },
-      { key: 'garminEnduranceScore', label: 'Endurance Score', group: 'Training', defaultChecked: false, aliases: ['garmin_endurance_score', 'Garmin_Endurance_Score'] }
+      { key: 'garminEnduranceScore', label: 'Endurance Score', group: 'Training', defaultChecked: false, aliases: ['garmin_endurance_score', 'Garmin_Endurance_Score', 'garmin endurance score', 'endurance_score', 'endurance score'] }
     ];
 
     const PALETTE = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#22c55e', '#e11d48', '#6366f1'];
@@ -324,6 +324,9 @@
     function $(id){ return document.getElementById(id); }
 
     function normalizeKey(s){ return String(s || '').trim().toLowerCase(); }
+    function normalizeLoose(s){
+      return normalizeKey(s).replace(/[^a-z0-9]/g, '');
+    }
     function toNum(v){
       if (v === '' || v == null) return null;
       const n = Number(String(v).replace(',', '.'));
@@ -356,7 +359,7 @@
         sleep_hours: { id: 'sleep_h', label: 'Sleep (h)' },
         sleep_score_0_100: { id: 'score_100', label: 'Score (0-100)' },
         Garmin_Training_Readiness: { id: 'score_100', label: 'Score (0-100)' },
-        garminEnduranceScore: { id: 'score_100', label: 'Score (0-100)' },
+        garminEnduranceScore: { id: 'endurance_raw', label: 'Endurance Score' },
 
         rhr_bpm: { id: 'bpm', label: 'RHR (bpm)' },
         hrv_status: { id: 'hrv', label: 'HRV' },
@@ -452,10 +455,30 @@
         METRIC_DEFS.forEach(m => {
           const names = [m.key].concat(Array.isArray(m.aliases) ? m.aliases : []);
           let ci = null;
+
+          // 1) exact normalized match
           for (let ni = 0; ni < names.length; ni++) {
             const hit = idx[normalizeKey(names[ni])];
             if (hit != null) { ci = hit; break; }
           }
+
+          // 2) loose normalized match (ignore underscores/spaces/symbols)
+          if (ci == null) {
+            const headerKeys = Object.keys(idx);
+            for (let ni = 0; ni < names.length && ci == null; ni++) {
+              const wanted = normalizeLoose(names[ni]);
+              for (let hi = 0; hi < headerKeys.length; hi++) {
+                const hk = headerKeys[hi];
+                const hLoose = normalizeLoose(hk);
+                if (!wanted || !hLoose) continue;
+                if (hLoose === wanted || hLoose.indexOf(wanted) !== -1 || wanted.indexOf(hLoose) !== -1) {
+                  ci = idx[hk];
+                  break;
+                }
+              }
+            }
+          }
+
           rec[m.key] = ci == null ? null : r[ci];
         });
         return rec;
