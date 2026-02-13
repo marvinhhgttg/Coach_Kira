@@ -263,7 +263,7 @@
       id: 'bandBackgroundPlugin',
       beforeDatasetsDraw: function(chart, args, pluginOptions){
         const bands = pluginOptions && pluginOptions.bands ? pluginOptions.bands : [];
-        if (!bands.length) return;
+        const todayIndex = (pluginOptions && Number.isFinite(pluginOptions.todayIndex)) ? pluginOptions.todayIndex : null;
 
         const area = chart.chartArea;
         if (!area) return;
@@ -283,6 +283,35 @@
           ctx.fillStyle = b.color || 'rgba(16,185,129,0.12)';
           ctx.fillRect(area.left, top, area.right - area.left, height);
           ctx.restore();
+        }
+
+        if (todayIndex !== null) {
+          const xScale = chart.scales.x;
+          if (xScale) {
+            const x = xScale.getPixelForValue(todayIndex);
+            if (Number.isFinite(x)) {
+              ctx.save();
+              ctx.strokeStyle = 'rgba(220, 38, 38, 0.9)';
+              ctx.lineWidth = 2;
+              ctx.setLineDash([6, 4]);
+              ctx.beginPath();
+              ctx.moveTo(x, area.top);
+              ctx.lineTo(x, area.bottom);
+              ctx.stroke();
+              ctx.setLineDash([]);
+
+              const label = 'HEUTE';
+              ctx.font = 'bold 11px Inter, sans-serif';
+              const w = ctx.measureText(label).width + 8;
+              const lx = Math.max(area.left + 2, Math.min(x + 6, area.right - w - 2));
+              const ly = area.top + 4;
+              ctx.fillStyle = 'rgba(220, 38, 38, 0.9)';
+              ctx.fillRect(lx, ly, w, 16);
+              ctx.fillStyle = '#fff';
+              ctx.fillText(label, lx + 4, ly + 12);
+              ctx.restore();
+            }
+          }
         }
       }
     };
@@ -414,8 +443,10 @@
       for (let i = 0; i < headers.length; i++) idx[normalizeKey(headers[i])] = i;
 
       const dateIdx = (idx['date'] != null) ? idx['date'] : ((idx['datum'] != null) ? idx['datum'] : idx['day']);
+      const isTodayIdx = idx['is_today'];
       return rows.map(r => {
         const rec = { __dateRaw: dateIdx != null ? r[dateIdx] : null };
+        rec.__isToday = (isTodayIdx != null && Number(String(r[isTodayIdx]).replace(',', '.')) === 1);
         METRIC_DEFS.forEach(m => {
           const ci = idx[normalizeKey(m.key)];
           rec[m.key] = ci == null ? null : r[ci];
@@ -435,6 +466,22 @@
         if (!d) return String(r.__dateRaw).slice(0, 10);
         return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
       });
+    }
+
+    function findTodayIndex(rows){
+      for (let i = 0; i < rows.length; i++) {
+        if (rows[i] && rows[i].__isToday === true) return i;
+      }
+
+      const now = new Date();
+      const todayKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+      for (let i = 0; i < rows.length; i++) {
+        const d = safeDate(rows[i] && rows[i].__dateRaw);
+        if (!d) continue;
+        const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        if (key === todayKey) return i;
+      }
+      return null;
     }
 
     function buildDatasets(rows, metrics){
@@ -555,6 +602,7 @@
       const sorted = state.rows.slice().sort((a, b) => new Date(a.__dateRaw) - new Date(b.__dateRaw));
       const rows = sorted.slice(-timeframe);
       const labels = labelsFor(rows);
+      const todayIndex = findTodayIndex(rows);
       const { datasets, scales, metricAxisIds } = buildDatasets(rows, metrics);
       renderBarAverages(datasets, timeframe, metrics);
 
@@ -581,7 +629,7 @@
           plugins: {
             legend: { position: 'top' },
             tooltip: { mode: 'index', intersect: false },
-            bandBackgroundPlugin: { bands: bands }
+            bandBackgroundPlugin: { bands: bands, todayIndex: todayIndex }
           },
           scales
         }
