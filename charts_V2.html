@@ -98,12 +98,23 @@
       font: inherit;
     }
 
+    .btn-clear {
+      background: var(--card-bg);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
     .metrics-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
       gap: 8px 12px;
-      max-height: 180px;
-      overflow: auto;
+      min-height: 280px;
+      overflow: visible;
       border: 1px solid var(--border-color);
       border-radius: 10px;
       padding: 10px;
@@ -195,6 +206,7 @@
             <option value="180">180 Tage</option>
             <option value="365">365 Tage</option>
           </select>
+          <button class="btn-clear" id="btnClearSelection" title="Alle Metriken abwählen">Auswahl aufheben</button>
         </div>
         <p class="muted" id="status">Lade KK_TIMELINE…</p>
       </div>
@@ -432,6 +444,13 @@
           grid.appendChild(row);
         });
       }
+    }
+
+
+    function clearMetricSelection(){
+      const nodes = document.querySelectorAll('#metricGrid input[type="checkbox"]');
+      for (let i = 0; i < nodes.length; i++) nodes[i].checked = false;
+      render();
     }
 
     function selectedMetrics(){
@@ -700,6 +719,7 @@
     });
 
     $('timeframeSel').addEventListener('change', render);
+    $('btnClearSelection').addEventListener('click', clearMetricSelection);
     buildMetricControls();
     loadTimeline();
   </script>
