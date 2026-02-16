@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html data-theme="light">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coach Kira – Charts V2</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --primary: #2563eb;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #121212;
+      --card-bg: #181818;
+      --text-main: #f0f0f0;
+      --text-muted: #888888;
+      --border-color: #333333;
+      --primary: #55aaff;
+      --shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 15px;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-color);
+      color: var(--text-main);
+    }
+
+    .container { max-width: 1200px; margin: 0 auto; }
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+    }
+    .start-title {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--primary);
+      margin: 0;
+    }
+
+    .theme-switch {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      padding: 8px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      color: var(--text-main);
+      font-size: 0.9rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+      padding: 14px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .field {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+    }
+
+    select {
+      background: var(--card-bg);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 6px 8px;
+      font: inherit;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 8px 12px;
+      max-height: 180px;
+      overflow: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    .metric-option { font-size: 0.85rem; color: var(--text-main); }
+    .metric-option input { margin-right: 6px; }
+    .metric-group-title {
+      grid-column: 1 / -1;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      margin-top: 4px;
+      border-top: 1px dashed var(--border-color);
+      padding-top: 6px;
+      font-weight: 700;
+    }
+
+    .chart-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 260px;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .chart-wrapper {
+      position: relative;
+      height: 640px;
+      width: 100%;
+      margin-top: 8px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 10px;
+      background: var(--card-bg);
+    }
+
+    .avg-legend {
+      margin-top: 8px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 10px;
+      background: var(--card-bg);
+      min-height: 640px;
+    }
+    .avg-legend-title {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .avg-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px dashed var(--border-color);
+      font-size: 0.84rem;
+    }
+    .avg-item:last-child { border-bottom: 0; }
+    .avg-label { color: var(--text-main); }
+    .avg-value { color: var(--text-muted); font-weight: 700; }
+
+    @media (max-width: 1100px) {
+      .chart-layout { grid-template-columns: 1fr; }
+      .avg-legend { min-height: auto; }
+    }
+
+    .muted { color: var(--text-muted); font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-bar">
+      <h1 class="start-title">Coach Kira – Charts V2</h1>
+      <button class="theme-switch" id="themeToggle">🌙 / ☀️ Theme</button>
+    </div>
+
+    <div class="card controls">
+      <div>
+        <div class="field">
+          <label for="timeframeSel"><strong>Zeitraum</strong></label>
+          <select id="timeframeSel">
+            <option value="14">14 Tage</option>
+            <option value="30" selected>30 Tage</option>
+            <option value="90">90 Tage</option>
+            <option value="180">180 Tage</option>
+            <option value="365">365 Tage</option>
+          </select>
+        </div>
+        <p class="muted" id="status">Lade KK_TIMELINE…</p>
+      </div>
+      <div>
+        <div class="metrics-grid" id="metricGrid"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="chart-layout">
+        <div class="chart-wrapper">
+          <canvas id="mainChart"></canvas>
+        </div>
+        <aside class="avg-legend" id="barAvgLegend"></aside>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const METRIC_DEFS = [
+      // Ernährung
+      { key: 'kcal_in', label: 'kcal_in', group: 'Ernährung', defaultChecked: true },
+      { key: 'kcal_out', label: 'kcal_out', group: 'Ernährung', defaultChecked: true },
+      { key: 'deficit', label: 'deficit', group: 'Ernährung', defaultChecked: true },
+      { key: 'carb_g', label: 'carb_g', group: 'Ernährung', defaultChecked: true },
+      { key: 'protein_g', label: 'protein_g', group: 'Ernährung', defaultChecked: true },
+      { key: 'fat_g', label: 'fat_g', group: 'Ernährung', defaultChecked: false },
+
+      // Health
+      { key: 'sleep_hours', label: 'Schlafstunden', group: 'Health', defaultChecked: false },
+      { key: 'sleep_score_0_100', label: 'Schlaf Score', group: 'Health', defaultChecked: false },
+      { key: 'rhr_bpm', label: 'RHR', group: 'Health', defaultChecked: false },
+      { key: 'hrv_status', label: 'HRV Status', group: 'Health', defaultChecked: false },
+      { key: 'Garmin_Training_Readiness', label: 'Garmin Training Readiness', group: 'Health', defaultChecked: false },
+
+      // Training
+      { key: 'coachE_ESS_day', label: 'ESS', group: 'Training', defaultChecked: false },
+      { key: 'coachE_ATL_forecast', label: 'ATL', group: 'Training', defaultChecked: false },
+      { key: 'coachE_CTL_forecast', label: 'CTL', group: 'Training', defaultChecked: false },
+      { key: 'coachE_ACWR_forecast', label: 'ACWR', group: 'Training', defaultChecked: false },
+      { key: 'fKEI', label: 'fKEI', group: 'Training', defaultChecked: false },
+      { key: 'load_star', label: 'ESS*', group: 'Training', defaultChecked: false },
+      { key: 'ctl_star', label: 'CTL*', group: 'Training', defaultChecked: false },
+      { key: 'coachE_Smart_Gains', label: 'KEI', group: 'Training', defaultChecked: false },
+      { key: 'Monotony7', label: 'Monotony', group: 'Training', defaultChecked: false },
+      { key: 'Strain7', label: 'Strain', group: 'Training', defaultChecked: false },
+      { key: 'TE_Balance_Trend', label: 'TE Balance', group: 'Training', defaultChecked: false },
+      { key: 'garminEnduranceScore', label: 'Endurance Score', group: 'Training', defaultChecked: false, aliases: ['garmin_endurance_score', 'Garmin_Endurance_Score', 'garmin endurance score', 'endurance_score', 'endurance score'] }
+    ];
+
+    const PALETTE = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#22c55e', '#e11d48', '#6366f1'];
+
+    const BAR_METRICS = {
+      kcal_in: true,
+      kcal_out: true,
+      deficit: true,
+      carb_g: true,
+      protein_g: true,
+      coachE_ESS_day: true,
+      load_star: true,
+      sleep_hours: true,
+      sleep_score_0_100: true
+    };
+    const state = { rows: [], chart: null };
+
+    const bandBackgroundPlugin = {
+      id: 'bandBackgroundPlugin',
+      beforeDatasetsDraw: function(chart, args, pluginOptions){
+        const bands = pluginOptions && pluginOptions.bands ? pluginOptions.bands : [];
+        const todayIndex = (pluginOptions && Number.isFinite(pluginOptions.todayIndex)) ? pluginOptions.todayIndex : null;
+
+        const area = chart.chartArea;
+        if (!area) return;
+
+        const ctx = chart.ctx;
+        for (let i = 0; i < bands.length; i++) {
+          const b = bands[i];
+          const yScale = chart.scales[b.yScaleID];
+          if (!yScale) continue;
+
+          const yTop = yScale.getPixelForValue(b.max);
+          const yBottom = yScale.getPixelForValue(b.min);
+          const top = Math.min(yTop, yBottom);
+          const height = Math.abs(yBottom - yTop);
+
+          ctx.save();
+          ctx.fillStyle = b.color || 'rgba(16,185,129,0.12)';
+          ctx.fillRect(area.left, top, area.right - area.left, height);
+          ctx.restore();
+        }
+
+        if (todayIndex !== null) {
+          const xScale = chart.scales.x;
+          if (xScale) {
+            const x = xScale.getPixelForValue(todayIndex);
+            if (Number.isFinite(x)) {
+              ctx.save();
+              ctx.strokeStyle = 'rgba(220, 38, 38, 0.9)';
+              ctx.lineWidth = 2;
+              ctx.setLineDash([6, 4]);
+              ctx.beginPath();
+              ctx.moveTo(x, area.top);
+              ctx.lineTo(x, area.bottom);
+              ctx.stroke();
+              ctx.setLineDash([]);
+
+              const label = 'HEUTE';
+              ctx.font = 'bold 11px Inter, sans-serif';
+              const w = ctx.measureText(label).width + 8;
+              const lx = Math.max(area.left + 2, Math.min(x + 6, area.right - w - 2));
+              const ly = area.top + 4;
+              ctx.fillStyle = 'rgba(220, 38, 38, 0.9)';
+              ctx.fillRect(lx, ly, w, 16);
+              ctx.fillStyle = '#fff';
+              ctx.fillText(label, lx + 4, ly + 12);
+              ctx.restore();
+            }
+          }
+        }
+      }
+    };
+
+    if (typeof Chart !== 'undefined' && Chart.register) {
+      Chart.register(bandBackgroundPlugin);
+    }
+
+    function $(id){ return document.getElementById(id); }
+
+    function normalizeKey(s){ return String(s || '').trim().toLowerCase(); }
+    function normalizeLoose(s){
+      return normalizeKey(s).replace(/[^a-z0-9]/g, '');
+    }
+    function toNum(v){
+      if (v === '' || v == null) return null;
+      const n = Number(String(v).replace(',', '.'));
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function mapTeBalance(value){
+      if (value == null || value === '') return null;
+      const n = toNum(value);
+      if (n != null) return n;
+      const s = String(value).toLowerCase();
+      if (s.includes('high positive') || s.includes('sehr positiv')) return 2;
+      if (s.includes('positive') || s.includes('positiv')) return 1;
+      if (s.includes('neutral')) return 0;
+      if (s.includes('negative') || s.includes('negativ')) return -1;
+      if (s.includes('high negative') || s.includes('sehr negativ')) return -2;
+      return null;
+    }
+
+    function axisMetaForMetric(metric){
+      const byKey = {
+        kcal_in: { id: 'energy_kcal', label: 'Energy (kcal)' },
+        kcal_out: { id: 'energy_kcal', label: 'Energy (kcal)' },
+        deficit: { id: 'energy_kcal', label: 'Energy (kcal)' },
+
+        carb_g: { id: 'macros_g', label: 'Makros (g)' },
+        protein_g: { id: 'macros_g', label: 'Makros (g)' },
+        fat_g: { id: 'macros_g', label: 'Makros (g)' },
+
+        sleep_hours: { id: 'sleep_h', label: 'Sleep (h)' },
+        sleep_score_0_100: { id: 'score_100', label: 'Score (0-100)' },
+        Garmin_Training_Readiness: { id: 'score_100', label: 'Score (0-100)' },
+        garminEnduranceScore: { id: 'endurance_raw', label: 'Endurance Score' },
+
+        rhr_bpm: { id: 'bpm', label: 'RHR (bpm)' },
+        hrv_status: { id: 'hrv', label: 'HRV' },
+
+        coachE_ESS_day: { id: 'load_daily', label: 'Daily Load' },
+        load_star: { id: 'load_daily', label: 'Daily Load' },
+        Strain7: { id: 'load_daily', label: 'Daily Load' },
+
+        coachE_ATL_forecast: { id: 'load_state', label: 'ATL/CTL' },
+        coachE_CTL_forecast: { id: 'load_state', label: 'ATL/CTL' },
+        ctl_star: { id: 'load_state', label: 'ATL/CTL' },
+
+        coachE_ACWR_forecast: { id: 'ratio', label: 'Ratio' },
+        Monotony7: { id: 'ratio', label: 'Ratio' },
+
+        fKEI: { id: 'kei', label: 'KEI' },
+        coachE_Smart_Gains: { id: 'kei', label: 'KEI' },
+
+        TE_Balance_Trend: { id: 'te', label: 'TE Balance' }
+      };
+      return byKey[metric] || { id: metric, label: metric };
+    }
+
+    function applyAutoScale(scaleObj, axisId, axisStats){
+      const st = axisStats[axisId];
+      if (!st || st.count < 1) return;
+
+      if (axisId === 'te') {
+        scaleObj.min = -2;
+        scaleObj.max = 2;
+        scaleObj.ticks.callback = function(v){ return ({ '-2': 'very -', '-1': '-', '0': '0', '1': '+', '2': 'very +' }[String(v)] || v); };
+        return;
+      }
+
+      if (axisId === 'score_100') {
+        scaleObj.min = 0;
+        scaleObj.max = 100;
+        return;
+      }
+
+      const minV = st.min;
+      const maxV = st.max;
+      const span = Math.max(1e-6, maxV - minV);
+      const pad = span * 0.12;
+      scaleObj.min = minV - pad;
+      scaleObj.max = maxV + pad;
+
+      if (axisId === 'ratio') {
+        scaleObj.min = Math.min(0, scaleObj.min);
+      }
+    }
+
+    function buildMetricControls(){
+      const grid = $('metricGrid');
+      grid.innerHTML = '';
+      const groups = ['Ernährung', 'Health', 'Training'];
+
+      for (let g = 0; g < groups.length; g++) {
+        const groupName = groups[g];
+        const title = document.createElement('div');
+        title.className = 'metric-group-title';
+        title.textContent = groupName;
+        grid.appendChild(title);
+
+        METRIC_DEFS.filter(m => m.group === groupName).forEach((m) => {
+          const row = document.createElement('label');
+          row.className = 'metric-option';
+          row.innerHTML = `<input type="checkbox" value="${m.key}" ${m.defaultChecked ? 'checked' : ''}> ${m.label}`;
+          row.querySelector('input').addEventListener('change', render);
+          grid.appendChild(row);
+        });
+      }
+    }
+
+    function selectedMetrics(){
+      const nodes = document.querySelectorAll('#metricGrid input:checked');
+      const out = [];
+      for (let i = 0; i < nodes.length; i++) out.push(nodes[i].value);
+      return out;
+    }
+
+    function parsePayload(payload){
+      const headers = (payload && payload.headers) || [];
+      const rows = (payload && payload.rows) || [];
+      const idx = {};
+      for (let i = 0; i < headers.length; i++) idx[normalizeKey(headers[i])] = i;
+
+      const dateIdx = (idx['date'] != null) ? idx['date'] : ((idx['datum'] != null) ? idx['datum'] : idx['day']);
+      const isTodayIdx = idx['is_today'];
+      return rows.map(r => {
+        const rec = { __dateRaw: dateIdx != null ? r[dateIdx] : null };
+        rec.__isToday = (isTodayIdx != null && Number(String(r[isTodayIdx]).replace(',', '.')) === 1);
+        METRIC_DEFS.forEach(m => {
+          const names = [m.key].concat(Array.isArray(m.aliases) ? m.aliases : []);
+          let ci = null;
+
+          // 1) exact normalized match
+          for (let ni = 0; ni < names.length; ni++) {
+            const hit = idx[normalizeKey(names[ni])];
+            if (hit != null) { ci = hit; break; }
+          }
+
+          // 2) loose normalized match (ignore underscores/spaces/symbols)
+          if (ci == null) {
+            const headerKeys = Object.keys(idx);
+            for (let ni = 0; ni < names.length && ci == null; ni++) {
+              const wanted = normalizeLoose(names[ni]);
+              for (let hi = 0; hi < headerKeys.length; hi++) {
+                const hk = headerKeys[hi];
+                const hLoose = normalizeLoose(hk);
+                if (!wanted || !hLoose) continue;
+                if (hLoose === wanted || hLoose.indexOf(wanted) !== -1 || wanted.indexOf(hLoose) !== -1) {
+                  ci = idx[hk];
+                  break;
+                }
+              }
+            }
+          }
+
+          rec[m.key] = ci == null ? null : r[ci];
+        });
+        return rec;
+      }).filter(r => r.__dateRaw != null);
+    }
+
+    function safeDate(v){
+      const d = new Date(v);
+      return Number.isNaN(d.getTime()) ? null : d;
+    }
+
+    function labelsFor(rows){
+      return rows.map(r => {
+        const d = safeDate(r.__dateRaw);
+        if (!d) return String(r.__dateRaw).slice(0, 10);
+        return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+      });
+    }
+
+    function findTodayIndex(rows){
+      for (let i = 0; i < rows.length; i++) {
+        if (rows[i] && rows[i].__isToday === true) return i;
+      }
+
+      const now = new Date();
+      const todayKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+      for (let i = 0; i < rows.length; i++) {
+        const d = safeDate(rows[i] && rows[i].__dateRaw);
+        if (!d) continue;
+        const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        if (key === todayKey) return i;
+      }
+      return null;
+    }
+
+    function buildDatasets(rows, metrics){
+      const axisMap = new Map();
+      const axisStats = {};
+      const datasets = [];
+      const metricAxisIds = {};
+      let axisCount = 0;
+
+      metrics.forEach((metric, i) => {
+        const axisMeta = axisMetaForMetric(metric);
+        if (!axisMap.has(axisMeta.id)) {
+          const axisId = `y${axisCount++}`;
+          axisMap.set(axisMeta.id, {
+            id: axisId,
+            axisKey: axisMeta.id,
+            label: axisMeta.label,
+            position: axisCount % 2 === 0 ? 'right' : 'left'
+          });
+        }
+
+        const axis = axisMap.get(axisMeta.id);
+        metricAxisIds[metric] = axis.id;
+        const data = rows.map(r => metric === 'TE_Balance_Trend' ? mapTeBalance(r[metric]) : toNum(r[metric]));
+        const color = PALETTE[i % PALETTE.length];
+
+        if (!axisStats[axis.axisKey]) axisStats[axis.axisKey] = { min: Infinity, max: -Infinity, count: 0 };
+        for (let k = 0; k < data.length; k++) {
+          const v = data[k];
+          if (!Number.isFinite(v)) continue;
+          axisStats[axis.axisKey].min = Math.min(axisStats[axis.axisKey].min, v);
+          axisStats[axis.axisKey].max = Math.max(axisStats[axis.axisKey].max, v);
+          axisStats[axis.axisKey].count += 1;
+        }
+
+        const asBar = !!BAR_METRICS[metric];
+        datasets.push({
+          label: metric === 'coachE_Smart_Gains' ? 'coachE_Smart_Gains (KEI)' : metric,
+          data,
+          yAxisID: axis.id,
+          borderColor: color,
+          backgroundColor: asBar ? (color + '88') : (color + '33'),
+          pointRadius: asBar ? 0 : 0,
+          borderWidth: asBar ? 1 : 2,
+          tension: asBar ? 0 : 0.25,
+          spanGaps: !asBar,
+          type: asBar ? 'bar' : 'line'
+        });
+      });
+
+      const scales = { x: { ticks: { maxRotation: 0 } } };
+      axisMap.forEach(a => {
+        scales[a.id] = {
+          position: a.position,
+          title: { display: true, text: a.label },
+          grid: { drawOnChartArea: a.position === 'left' },
+          ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted') }
+        };
+        if (a.id !== 'y0') scales[a.id].offset = true;
+        applyAutoScale(scales[a.id], a.axisKey, axisStats);
+      });
+
+      return { datasets, scales, metricAxisIds };
+    }
+
+
+    function renderBarAverages(datasets, timeframe, selectedMetrics){
+      const box = $('barAvgLegend');
+      if (!box) return;
+
+      const barSets = datasets.filter(ds => ds && ds.type === 'bar');
+      let html = '<div class="avg-legend-title">Balken Ø (' + timeframe + ' Tage)</div>';
+
+      if (!barSets.length) {
+        box.innerHTML = html + '<div class="muted">Keine Balken-Metrik ausgewählt.</div>';
+        return;
+      }
+
+      for (let i = 0; i < barSets.length; i++) {
+        const ds = barSets[i];
+        let sum = 0;
+        let n = 0;
+        for (let k = 0; k < ds.data.length; k++) {
+          const v = ds.data[k];
+          if (Number.isFinite(v)) { sum += v; n++; }
+        }
+        const avg = n ? (sum / n) : null;
+        const val = (avg == null) ? '–' : avg.toFixed(1);
+        html += '<div class="avg-item"><span class="avg-label">' + ds.label + '</span><span class="avg-value">Ø ' + val + '</span></div>';
+      }
+
+      if (selectedMetrics && selectedMetrics.indexOf('coachE_Smart_Gains') !== -1) {
+        html += '<div class="avg-legend-title" style="margin-top:10px">Efficiency Index (KEI)</div>' +
+          '<div class="avg-item"><span class="avg-label">GRÜN</span><span class="avg-value">High Efficiency (≥ 8)</span></div>' +
+          '<div class="avg-item"><span class="avg-label">BLAU</span><span class="avg-value">Productive (3 bis &lt; 8)</span></div>' +
+          '<div class="avg-item"><span class="avg-label">ORANGE</span><span class="avg-value">Maintenance / Transition (0 bis &lt; 3)</span></div>' +
+          '<div class="avg-item"><span class="avg-label">ROT</span><span class="avg-value">Inefficient / Risk (&lt; 0)</span></div>';
+      }
+
+      if (selectedMetrics && selectedMetrics.indexOf('coachE_ACWR_forecast') !== -1) {
+        html += '<div class="avg-legend-title" style="margin-top:10px">ACWR Sweet Spot</div>' +
+          '<div class="avg-item"><span class="avg-label">GRÜN</span><span class="avg-value">0,8 bis 1,2</span></div>';
+      }
+
+      box.innerHTML = html;
+    }
+
+    function render(){
+      const timeframe = Number($('timeframeSel').value || 30);
+      const metrics = selectedMetrics();
+      if (!metrics.length) {
+        $('status').textContent = 'Bitte mindestens eine Metrik wählen.';
+        const box = $('barAvgLegend');
+        if (box) box.innerHTML = '<div class="avg-legend-title">Balken Ø</div><div class="muted">Keine Metrik ausgewählt.</div>';
+        return;
+      }
+
+      const sorted = state.rows.slice().sort((a, b) => new Date(a.__dateRaw) - new Date(b.__dateRaw));
+      const rows = sorted.slice(-timeframe);
+      const labels = labelsFor(rows);
+      const todayIndex = findTodayIndex(rows);
+      const { datasets, scales, metricAxisIds } = buildDatasets(rows, metrics);
+      renderBarAverages(datasets, timeframe, metrics);
+
+      const bands = [];
+      if (metrics.indexOf('coachE_Smart_Gains') !== -1 && metricAxisIds['coachE_Smart_Gains']) {
+        const yId = metricAxisIds['coachE_Smart_Gains'];
+        bands.push({ yScaleID: yId, min: 8, max: 9999, color: 'rgba(34, 197, 94, 0.10)' });
+        bands.push({ yScaleID: yId, min: 3, max: 8, color: 'rgba(59, 130, 246, 0.10)' });
+        bands.push({ yScaleID: yId, min: 0, max: 3, color: 'rgba(249, 115, 22, 0.12)' });
+        bands.push({ yScaleID: yId, min: -9999, max: 0, color: 'rgba(239, 68, 68, 0.10)' });
+      }
+      if (metrics.indexOf('coachE_ACWR_forecast') !== -1 && metricAxisIds['coachE_ACWR_forecast']) {
+        bands.push({ yScaleID: metricAxisIds['coachE_ACWR_forecast'], min: 0.8, max: 1.2, color: 'rgba(34, 197, 94, 0.12)' });
+      }
+
+      if (state.chart) state.chart.destroy();
+      state.chart = new Chart($('mainChart').getContext('2d'), {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'top' },
+            tooltip: { mode: 'index', intersect: false },
+            bandBackgroundPlugin: { bands: bands, todayIndex: todayIndex }
+          },
+          scales
+        }
+      });
+
+      $('status').textContent = `${rows.length} Tage, ${metrics.length} Metriken.`;
+    }
+
+    function loadTimeline(){
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(payload => {
+            state.rows = parsePayload(payload || {});
+            $('status').textContent = `KK_TIMELINE geladen: ${state.rows.length} Zeilen.`;
+            render();
+          })
+          .withFailureHandler(err => {
+            $('status').textContent = `Fehler beim Laden: ${err && err.message ? err.message : err}`;
+          })
+          .getTimelinePayloadForCharts();
+        return;
+      }
+
+      const fallback = window.KK_TIMELINE_DATA;
+      if (fallback && fallback.headers && fallback.rows) {
+        state.rows = parsePayload(fallback);
+        $('status').textContent = `Fallback-Daten geladen: ${state.rows.length} Zeilen.`;
+        render();
+      } else {
+        $('status').textContent = 'Keine Datenquelle verfügbar (google.script.run / KK_TIMELINE_DATA).';
+      }
+    }
+
+    $('themeToggle').addEventListener('click', () => {
+      const root = document.documentElement;
+      root.setAttribute('data-theme', root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+      render();
+    });
+
+    $('timeframeSel').addEventListener('change', render);
+    buildMetricControls();
+    loadTimeline();
+  </script>
+</body>
+</html>

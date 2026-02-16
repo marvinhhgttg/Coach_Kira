@@ -21,6 +21,7 @@ The WebApp serves HTML via `HtmlService.createTemplateFromFile('<NAME>')`.
 | `/exec?page=plan` | `PlanApp` | `PlanApp.html` |
 | `/exec?page=planfb` | `PlanAppFB` | `PlanAppFB.html` |
 | `/exec?page=charts` | `charts` | `charts.html` |
+| `/exec?page=charts_v2` | `charts_V2` | `charts_V2.html` |
 | `/exec?page=chat` | `ChatApp` | `ChatApp.html` |
 | `/exec?page=calc` | `CalculatorApp` | `CalculatorApp.html` |
 | `/exec?page=log` | `Tactical_Log` | `Tactical_Log.html` |
