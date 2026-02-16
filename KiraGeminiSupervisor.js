@@ -7623,8 +7623,10 @@ function getSimStartValues() {
     // 1. Config & Sheet laden
     const base = getLabBaselines(); // Deine existierende Config-Funktion
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    let sheet = ss.getSheetByName('KK_TIMELINE'); 
-    if (!sheet) sheet = ss.getSheetByName('timeline'); // Fallback
+    // Wichtig für PlanApp: zuerst SOURCE 'timeline' lesen (enthält frisch gespeicherte Locks),
+    // erst danach KK_TIMELINE als Fallback.
+    let sheet = ss.getSheetByName('timeline');
+    if (!sheet) sheet = ss.getSheetByName('KK_TIMELINE'); // Fallback
 
     const data = sheet.getDataRange().getValues();
     const headers = data[0].map(h => h.toString().trim().toLowerCase());
@@ -7931,8 +7933,9 @@ plannedLoads.push(essVal);
         // LOCK STATUS LESEN
 let isLocked = false;
 if (idx.fix > -1) {
-    let val = data[r][idx.fix];
-    if (val == 1 || val === "1" || val === true || String(val).toLowerCase() === "x") {
+    const rawFix = data[r][idx.fix];
+    const fixStr = String(rawFix == null ? '' : rawFix).trim().toLowerCase();
+    if (rawFix == 1 || rawFix === true || fixStr === "1" || fixStr === "x" || fixStr === "true" || fixStr === "fix") {
         isLocked = true;
     }
 }
@@ -8753,8 +8756,9 @@ function syncToGoogleCalendar() {
       // Lock Check
       let isLocked = false;
       if (idx.fix > -1) {
-         let fixVal = rowData[idx.fix];
-         if (fixVal == 1 || fixVal === true || String(fixVal) === "1") isLocked = true;
+         const fixVal = rowData[idx.fix];
+         const fixStr = String(fixVal == null ? '' : fixVal).trim().toLowerCase();
+         if (fixVal == 1 || fixVal === true || fixStr === "1" || fixStr === "x" || fixStr === "true" || fixStr === "fix") isLocked = true;
       }
 
       // A) CLEANUP: Alte Kira-Events an diesem Tag löschen
