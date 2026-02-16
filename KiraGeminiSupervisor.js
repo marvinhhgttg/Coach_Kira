@@ -8157,7 +8157,8 @@ function saveSimulatedPlan(loads, teAeList, teAnList, sports, zones, locks) {
       teAn: headers.indexOf('target_anaerobic_te'),
       sport: headers.indexOf('sport_x'),
       zone: headers.indexOf('zone'),
-      coachZone: headers.indexOf('coach_zone')
+      coachZone: headers.indexOf('coach_zone'),
+      fix: headers.indexOf('fix')
     };
 
     if (idx.today === -1) throw new Error("Spalte 'is_today' fehlt in timeline.");
@@ -8208,6 +8209,7 @@ function saveSimulatedPlan(loads, teAeList, teAnList, sports, zones, locks) {
     const sportValues = [];
     const zoneValues = [];
     const coachZoneValues = [];
+    const fixValues = [];
 
     for (let i = 0; i < maxWritable; i++) {
       const valLoad = toNum(loads[i], 0);
@@ -8215,6 +8217,7 @@ function saveSimulatedPlan(loads, teAeList, teAnList, sports, zones, locks) {
       const valAn = (Array.isArray(teAnList) && teAnList[i] !== undefined) ? toNum(teAnList[i], 0) : 0;
       const sportVal = (idx.sport > -1 && Array.isArray(sports)) ? (sports[i] !== undefined ? sports[i] : "") : "";
       const zoneVal = Array.isArray(zones) ? (zones[i] !== undefined ? zones[i] : "") : "";
+      const lockVal = (Array.isArray(locks) && locks[i]) ? 'x' : '';
 
       loadValues.push([valLoad]);
       teAeValues.push([valAe]);
@@ -8222,6 +8225,7 @@ function saveSimulatedPlan(loads, teAeList, teAnList, sports, zones, locks) {
       sportValues.push([sportVal]);
       zoneValues.push([zoneVal]);
       coachZoneValues.push([zoneVal]);
+      fixValues.push([lockVal]);
     }
 
     // Batch write only the intended columns (preserve formulas/other data)
@@ -8231,26 +8235,20 @@ function saveSimulatedPlan(loads, teAeList, teAnList, sports, zones, locks) {
     if (idx.sport > -1) sheet.getRange(firstWriteRow1, idx.sport + 1, maxWritable, 1).setValues(sportValues);
     if (idx.zone > -1) sheet.getRange(firstWriteRow1, idx.zone + 1, maxWritable, 1).setValues(zoneValues);
     if (idx.coachZone > -1) sheet.getRange(firstWriteRow1, idx.coachZone + 1, maxWritable, 1).setValues(coachZoneValues);
+    if (idx.fix > -1) sheet.getRange(firstWriteRow1, idx.fix + 1, maxWritable, 1).setValues(fixValues);
 
     // Flush bevor Refresh/Sync
     SpreadsheetApp.flush();
 
-    // 6) Refresh
-    try {
-      if (typeof runDataRefreshOnly === 'function') runDataRefreshOnly();
-    } catch (e) {
-      console.log("Refresh Warning: " + e.message);
-    }
-
-    // 7) Kalender Sync asynchron triggern (UI nicht blockieren)
+    // 6) Schweren Refresh + Kalender-Sync asynchron triggern (UI nicht blockieren)
     let syncMsg = "";
     try {
-      syncMsg = schedulePlanCalendarSync_();
+      syncMsg = schedulePostSaveRefreshAndCalendarSync_();
     } catch (e) {
-      syncMsg = " (Kalender Trigger Fehler: " + e.message + ")";
+      syncMsg = " (Async Trigger Fehler: " + e.message + ")";
     }
 
-    // 8) Snapshot aktualisieren
+    // 7) Snapshot aktualisieren
     try {
       if (typeof refreshPlanAppSnapshot === 'function') refreshPlanAppSnapshot();
     } catch (e) {
@@ -8261,6 +8259,54 @@ function saveSimulatedPlan(loads, teAeList, teAnList, sports, zones, locks) {
 
   } catch (e) {
     return "❌ FEHLER: " + e.message;
+  }
+}
+
+
+/**
+ * Plant den Post-Save-Refresh + Kalender-Sync als einmaligen Trigger ein.
+ * Verhindert WebApp-Timeout in saveSimulatedPlan().
+ */
+function schedulePostSaveRefreshAndCalendarSync_() {
+  const triggerFn = 'runPostSaveRefreshAndCalendarSyncAsync_';
+  const triggers = ScriptApp.getProjectTriggers();
+  for (const t of triggers) {
+    if (t.getHandlerFunction && t.getHandlerFunction() === triggerFn) {
+      ScriptApp.deleteTrigger(t);
+    }
+  }
+
+  ScriptApp.newTrigger(triggerFn)
+    .timeBased()
+    .after(10 * 1000)
+    .create();
+
+  return " (Refresh + Kalendersync asynchron gestartet ⚡🗓️)";
+}
+
+function runPostSaveRefreshAndCalendarSyncAsync_() {
+  try {
+    if (typeof runDataRefreshOnly === 'function') {
+      runDataRefreshOnly();
+    }
+  } catch (e) {
+    logToSheet('WARN', '[PlanApp] Async Refresh Fehler: ' + e.message);
+  }
+
+  try {
+    if (typeof syncToGoogleCalendar === 'function') {
+      syncToGoogleCalendar();
+    }
+  } catch (e) {
+    logToSheet('WARN', '[PlanApp] Async Kalender-Sync Fehler: ' + e.message);
+  } finally {
+    const triggerFn = 'runPostSaveRefreshAndCalendarSyncAsync_';
+    const triggers = ScriptApp.getProjectTriggers();
+    for (const t of triggers) {
+      if (t.getHandlerFunction && t.getHandlerFunction() === triggerFn) {
+        ScriptApp.deleteTrigger(t);
+      }
+    }
   }
 }
 
