@@ -377,10 +377,10 @@
         </div>
 
         <div style="display:flex; align-items:center; gap:8px; border-left: 1px solid var(--border-color); padding-left:20px;">
-            <span style="font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase;">ACWR:</span>
-            <input type="number" id="targetAcwrInput" value="1.0" step="0.1" style="width:50px; padding:4px; border-radius:4px; border:1px solid var(--border-color); text-align:center; font-weight:bold; font-family:'Roboto Condensed'; color:#0ea5e9;">
-            <button class="btn-ai" style="background:#0ea5e9; color:white; font-size:0.7rem; border:none;" onclick="autoLevelACWR()">
-                <i class="fas fa-balance-scale mr-1"></i> SET
+            <span style="font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase;">KEI:</span>
+            <input type="number" id="targetKeiInput" value="8.0" step="0.5" style="width:56px; padding:4px; border-radius:4px; border:1px solid var(--border-color); text-align:center; font-weight:bold; font-family:'Roboto Condensed'; color:#d400ff;">
+            <button class="btn-ai" style="background:#d400ff; color:white; font-size:0.7rem; border:none;" onclick="autoLevelKEIUnlocked()" title="Setzt nur Tage ohne Lock auf Ziel-KEI">
+                <i class="fas fa-chart-line mr-1"></i> SET
             </button>
         </div>
     </div>
@@ -1994,12 +1994,20 @@ function autoLevelLoads() {
 
 
 
-/** 2. LEVELER: ZIEL-ACWR (NEU) */
+/** 2. LEVELER: ZIEL-ACWR (legacy, optional) */
 function autoLevelACWR() {
     if(!simBase) return;
-    const targetACWR = parseFloat(document.getElementById('targetAcwrInput').value) || 1.0;
-    // Logik: Solange ACWR < Ziel, erhöhe Load.
-    runAutoLevel((sg, acwr) => (acwr < targetACWR)); 
+    const targetACWR = parseFloat((document.getElementById('targetAcwrInput') ? document.getElementById('targetAcwrInput').value : null)) || 1.0;
+    runAutoLevel((sg, acwr) => (acwr < targetACWR));
+    updateSimulation();
+}
+
+/** 3. LEVELER: ZIEL-KEI (setzt nur nicht-gelockte Tage) */
+function autoLevelKEIUnlocked() {
+    if(!simBase) return;
+    const targetKEI = parseFloat((document.getElementById('targetKeiInput') ? document.getElementById('targetKeiInput').value : null)) || 8.0;
+    runAutoLevel((sg) => (sg < targetKEI), { targetSG: targetKEI });
+    updateSimulation();
 }
 
 /** GENERISCHE SOLVER FUNKTION (Das Gehirn) */
