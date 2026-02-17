@@ -8288,20 +8288,21 @@ function schedulePostSaveRefreshAndCalendarSync_() {
 }
 
 function runPostSaveRefreshAndCalendarSyncAsync_() {
-  try {
-    if (typeof runDataRefreshOnly === 'function') {
-      runDataRefreshOnly();
-    }
-  } catch (e) {
-    logToSheet('WARN', '[PlanApp] Async Refresh Fehler: ' + e.message);
-  }
-
+  // Wichtig: zuerst Kalender-Sync, damit er nicht vom schweren Refresh "verhungert"
   try {
     if (typeof syncToGoogleCalendar === 'function') {
       syncToGoogleCalendar();
     }
   } catch (e) {
     logToSheet('WARN', '[PlanApp] Async Kalender-Sync Fehler: ' + e.message);
+  }
+
+  try {
+    if (typeof runDataRefreshOnly === 'function') {
+      runDataRefreshOnly();
+    }
+  } catch (e) {
+    logToSheet('WARN', '[PlanApp] Async Refresh Fehler: ' + e.message);
   } finally {
     const triggerFn = 'runPostSaveRefreshAndCalendarSyncAsync_';
     const triggers = ScriptApp.getProjectTriggers();
@@ -8690,8 +8691,9 @@ function syncToGoogleCalendar() {
 
     // 2. Timeline Daten holen
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    let sheet = ss.getSheetByName('KK_TIMELINE');
-    if (!sheet) sheet = ss.getSheetByName('timeline'); 
+    // Frisch gespeicherte Planwerte liegen zuerst in 'timeline'
+    let sheet = ss.getSheetByName('timeline');
+    if (!sheet) sheet = ss.getSheetByName('KK_TIMELINE'); 
 
     const data = sheet.getDataRange().getValues();
     const headers = data[0].map(h => h.toString().trim().toLowerCase());
