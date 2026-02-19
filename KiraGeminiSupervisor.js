@@ -989,6 +989,46 @@ function normalizeScore(value, optimalValue, badValue) {
 }
 
 
+function getBaselineNumber_(baselineObj, aliases) {
+  const b = baselineObj || {};
+  const keys = Object.keys(b);
+
+  const norm = (x) => String(x || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .replace(/[^a-z0-9]/g, '');
+
+  const aliasNorm = (aliases || []).map(norm);
+
+  // 1) Exakt über normalisierte Alias-Matches
+  for (let i = 0; i < keys.length; i++) {
+    const kNorm = norm(keys[i]);
+    if (!kNorm) continue;
+    if (aliasNorm.indexOf(kNorm) !== -1) {
+      const n = parseGermanFloat_(b[keys[i]]);
+      if (Number.isFinite(n)) return n;
+    }
+  }
+
+  // 2) Fuzzy Fallback: enthält Alias oder wird vom Alias enthalten
+  for (let i = 0; i < keys.length; i++) {
+    const kNorm = norm(keys[i]);
+    if (!kNorm) continue;
+    for (let a = 0; a < aliasNorm.length; a++) {
+      const wanted = aliasNorm[a];
+      if (!wanted) continue;
+      if (kNorm.indexOf(wanted) !== -1 || wanted.indexOf(kNorm) !== -1) {
+        const n = parseGermanFloat_(b[keys[i]]);
+        if (Number.isFinite(n)) return n;
+      }
+    }
+  }
+
+  return NaN;
+}
+
+
 /**
  * NEU (V125): Garmin-Standard-Skala für ALLE Scores (0-100).
  * 95-100: VIOLETT (Prime/Höchstform)
@@ -1157,10 +1197,13 @@ const SLEEP_HOURS_BAD = SLEEP_H_BAD;
 
   // 1. RHR
   const rhr_heute = parseGermanFloat_(heute['rhr_bpm']);
-const rhr_default = parseGermanFloat_(baseline['RHR_default (bpm)']);
+const rhr_default = getBaselineNumber_(baseline, ['RHR_default (bpm)', 'RHR_default(bpm)', 'rhr_default (bpm)', 'rhr_default_bpm', 'rhr_default']);
 
-const rhr_score = (Number.isFinite(rhr_heute) && Number.isFinite(rhr_default))
-  ? normalizeScore(rhr_heute - rhr_default, RHR_OPTIMAL_DELTA, RHR_BAD_DELTA)
+const rhr_delta = (Number.isFinite(rhr_heute) && Number.isFinite(rhr_default))
+  ? (rhr_heute - rhr_default)
+  : 0;
+const rhr_score = Number.isFinite(rhr_heute)
+  ? normalizeScore(rhr_delta, RHR_OPTIMAL_DELTA, RHR_BAD_DELTA)
   : 0;
 
 const rhr_display = Number.isFinite(rhr_heute) ? String(Math.round(rhr_heute)) : "—";
@@ -1818,7 +1861,7 @@ const acwrFixDot = acwrFix.replace(',', '.');      // "1.13" (falls du es numeri
 const resting_calories_num = parseGermanFloat(resting_calories_raw);
 const resting_calories = Number.isFinite(resting_calories_num) ? resting_calories_num : 0;
 
-  const rhr_default = parseGermanFloat(baseline['RHR_default (bpm)']);
+  const rhr_default = getBaselineNumber_(baseline, ['RHR_default (bpm)', 'RHR_default(bpm)', 'rhr_default (bpm)', 'rhr_default_bpm', 'rhr_default']);
   const vo2max = parseGermanFloat(baseline['VO2max (mg/kg/min)']);
   const ftp_rad = parseGermanFloat(baseline['FTP_Rad (W/kg)']);
   const hill_score = parseGermanFloat(baseline['Hill_Score (0-100)']);
@@ -3148,6 +3191,12 @@ if (e && e.parameter && e.parameter.mode === 'timeline') {
   else if (page === 'charts') {
     template = HtmlService.createTemplateFromFile('charts');
     template._debug_loaded = 'charts';
+  }
+  // --- NEU: Charts V2 Dashboard ---
+  // Aufruf: .../exec?page=charts_v2
+  else if (page === 'charts_v2') {
+    template = HtmlService.createTemplateFromFile('charts_V2');
+    template._debug_loaded = 'charts_V2';
   }
   else if (page === 'calc') {
     template = HtmlService.createTemplateFromFile('CalculatorApp');
@@ -7574,8 +7623,10 @@ function getSimStartValues() {
     // 1. Config & Sheet laden
     const base = getLabBaselines(); // Deine existierende Config-Funktion
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    let sheet = ss.getSheetByName('KK_TIMELINE'); 
-    if (!sheet) sheet = ss.getSheetByName('timeline'); // Fallback
+    // Wichtig für PlanApp: zuerst SOURCE 'timeline' lesen (enthält frisch gespeicherte Locks),
+    // erst danach KK_TIMELINE als Fallback.
+    let sheet = ss.getSheetByName('timeline');
+    if (!sheet) sheet = ss.getSheetByName('KK_TIMELINE'); // Fallback
 
     const data = sheet.getDataRange().getValues();
     const headers = data[0].map(h => h.toString().trim().toLowerCase());
@@ -7882,8 +7933,9 @@ plannedLoads.push(essVal);
         // LOCK STATUS LESEN
 let isLocked = false;
 if (idx.fix > -1) {
-    let val = data[r][idx.fix];
-    if (val == 1 || val === "1" || val === true || String(val).toLowerCase() === "x") {
+    const rawFix = data[r][idx.fix];
+    const fixStr = String(rawFix == null ? '' : rawFix).trim().toLowerCase();
+    if (rawFix == 1 || rawFix === true || fixStr === "1" || fixStr === "x" || fixStr === "true" || fixStr === "fix") {
         isLocked = true;
     }
 }
@@ -8108,7 +8160,8 @@ function saveSimulatedPlan(loads, teAeList, teAnList, sports, zones, locks) {
       teAn: headers.indexOf('target_anaerobic_te'),
       sport: headers.indexOf('sport_x'),
       zone: headers.indexOf('zone'),
-      coachZone: headers.indexOf('coach_zone')
+      coachZone: headers.indexOf('coach_zone'),
+      fix: headers.indexOf('fix')
     };
 
     if (idx.today === -1) throw new Error("Spalte 'is_today' fehlt in timeline.");
@@ -8159,6 +8212,7 @@ function saveSimulatedPlan(loads, teAeList, teAnList, sports, zones, locks) {
     const sportValues = [];
     const zoneValues = [];
     const coachZoneValues = [];
+    const fixValues = [];
 
     for (let i = 0; i < maxWritable; i++) {
       const valLoad = toNum(loads[i], 0);
@@ -8166,6 +8220,7 @@ function saveSimulatedPlan(loads, teAeList, teAnList, sports, zones, locks) {
       const valAn = (Array.isArray(teAnList) && teAnList[i] !== undefined) ? toNum(teAnList[i], 0) : 0;
       const sportVal = (idx.sport > -1 && Array.isArray(sports)) ? (sports[i] !== undefined ? sports[i] : "") : "";
       const zoneVal = Array.isArray(zones) ? (zones[i] !== undefined ? zones[i] : "") : "";
+      const lockVal = (Array.isArray(locks) && locks[i]) ? 'x' : '';
 
       loadValues.push([valLoad]);
       teAeValues.push([valAe]);
@@ -8173,6 +8228,7 @@ function saveSimulatedPlan(loads, teAeList, teAnList, sports, zones, locks) {
       sportValues.push([sportVal]);
       zoneValues.push([zoneVal]);
       coachZoneValues.push([zoneVal]);
+      fixValues.push([lockVal]);
     }
 
     // Batch write only the intended columns (preserve formulas/other data)
@@ -8182,26 +8238,20 @@ function saveSimulatedPlan(loads, teAeList, teAnList, sports, zones, locks) {
     if (idx.sport > -1) sheet.getRange(firstWriteRow1, idx.sport + 1, maxWritable, 1).setValues(sportValues);
     if (idx.zone > -1) sheet.getRange(firstWriteRow1, idx.zone + 1, maxWritable, 1).setValues(zoneValues);
     if (idx.coachZone > -1) sheet.getRange(firstWriteRow1, idx.coachZone + 1, maxWritable, 1).setValues(coachZoneValues);
+    if (idx.fix > -1) sheet.getRange(firstWriteRow1, idx.fix + 1, maxWritable, 1).setValues(fixValues);
 
     // Flush bevor Refresh/Sync
     SpreadsheetApp.flush();
 
-    // 6) Refresh
-    try {
-      if (typeof runDataRefreshOnly === 'function') runDataRefreshOnly();
-    } catch (e) {
-      console.log("Refresh Warning: " + e.message);
-    }
-
-    // 7) Kalender Sync asynchron triggern (UI nicht blockieren)
+    // 6) Schweren Refresh + Kalender-Sync asynchron triggern (UI nicht blockieren)
     let syncMsg = "";
     try {
-      syncMsg = schedulePlanCalendarSync_();
+      syncMsg = schedulePostSaveRefreshAndCalendarSync_();
     } catch (e) {
-      syncMsg = " (Kalender Trigger Fehler: " + e.message + ")";
+      syncMsg = " (Async Trigger Fehler: " + e.message + ")";
     }
 
-    // 8) Snapshot aktualisieren
+    // 7) Snapshot aktualisieren
     try {
       if (typeof refreshPlanAppSnapshot === 'function') refreshPlanAppSnapshot();
     } catch (e) {
@@ -8212,6 +8262,55 @@ function saveSimulatedPlan(loads, teAeList, teAnList, sports, zones, locks) {
 
   } catch (e) {
     return "❌ FEHLER: " + e.message;
+  }
+}
+
+
+/**
+ * Plant den Post-Save-Refresh + Kalender-Sync als einmaligen Trigger ein.
+ * Verhindert WebApp-Timeout in saveSimulatedPlan().
+ */
+function schedulePostSaveRefreshAndCalendarSync_() {
+  const triggerFn = 'runPostSaveRefreshAndCalendarSyncAsync_';
+  const triggers = ScriptApp.getProjectTriggers();
+  for (const t of triggers) {
+    if (t.getHandlerFunction && t.getHandlerFunction() === triggerFn) {
+      ScriptApp.deleteTrigger(t);
+    }
+  }
+
+  ScriptApp.newTrigger(triggerFn)
+    .timeBased()
+    .after(10 * 1000)
+    .create();
+
+  return " (Refresh + Kalendersync asynchron gestartet ⚡🗓️)";
+}
+
+function runPostSaveRefreshAndCalendarSyncAsync_() {
+  // Wichtig: zuerst Kalender-Sync, damit er nicht vom schweren Refresh "verhungert"
+  try {
+    if (typeof syncToGoogleCalendar === 'function') {
+      syncToGoogleCalendar();
+    }
+  } catch (e) {
+    logToSheet('WARN', '[PlanApp] Async Kalender-Sync Fehler: ' + e.message);
+  }
+
+  try {
+    if (typeof runDataRefreshOnly === 'function') {
+      runDataRefreshOnly();
+    }
+  } catch (e) {
+    logToSheet('WARN', '[PlanApp] Async Refresh Fehler: ' + e.message);
+  } finally {
+    const triggerFn = 'runPostSaveRefreshAndCalendarSyncAsync_';
+    const triggers = ScriptApp.getProjectTriggers();
+    for (const t of triggers) {
+      if (t.getHandlerFunction && t.getHandlerFunction() === triggerFn) {
+        ScriptApp.deleteTrigger(t);
+      }
+    }
   }
 }
 
@@ -8592,8 +8691,9 @@ function syncToGoogleCalendar() {
 
     // 2. Timeline Daten holen
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    let sheet = ss.getSheetByName('KK_TIMELINE');
-    if (!sheet) sheet = ss.getSheetByName('timeline'); 
+    // Frisch gespeicherte Planwerte liegen zuerst in 'timeline'
+    let sheet = ss.getSheetByName('timeline');
+    if (!sheet) sheet = ss.getSheetByName('KK_TIMELINE'); 
 
     const data = sheet.getDataRange().getValues();
     const headers = data[0].map(h => h.toString().trim().toLowerCase());
@@ -8658,8 +8758,9 @@ function syncToGoogleCalendar() {
       // Lock Check
       let isLocked = false;
       if (idx.fix > -1) {
-         let fixVal = rowData[idx.fix];
-         if (fixVal == 1 || fixVal === true || String(fixVal) === "1") isLocked = true;
+         const fixVal = rowData[idx.fix];
+         const fixStr = String(fixVal == null ? '' : fixVal).trim().toLowerCase();
+         if (fixVal == 1 || fixVal === true || fixStr === "1" || fixStr === "x" || fixStr === "true" || fixStr === "fix") isLocked = true;
       }
 
       // A) CLEANUP: Alte Kira-Events an diesem Tag löschen
@@ -9449,6 +9550,15 @@ function getTimelinePayloadForCharts(days, futureDays) {
       message: String((err && err.stack) || (err && err.message) || err || 'getTimelinePayloadForCharts failed')
     };
   }
+}
+
+
+/**
+ * Backward-compatible Apps Script runner endpoint used by charts_V2.
+ * Keeps old frontend calls working and proxies to the hardened payload builder.
+ */
+function getTimelineJsonUniversal(days, futureDays) {
+  return getTimelinePayloadForCharts(days, futureDays);
 }
 
 function _median_(arr) {
