@@ -288,6 +288,7 @@
       id: 'bandBackgroundPlugin',
       beforeDatasetsDraw: function(chart, args, pluginOptions){
         const bands = pluginOptions && pluginOptions.bands ? pluginOptions.bands : [];
+        const phaseRuns = pluginOptions && pluginOptions.phaseRuns ? pluginOptions.phaseRuns : [];
         const todayIndex = (pluginOptions && Number.isFinite(pluginOptions.todayIndex)) ? pluginOptions.todayIndex : null;
 
         const area = chart.chartArea;
@@ -308,6 +309,36 @@
           ctx.fillStyle = b.color || 'rgba(16,185,129,0.12)';
           ctx.fillRect(area.left, top, area.right - area.left, height);
           ctx.restore();
+        }
+
+        const xScale = chart.scales.x;
+        if (xScale && phaseRuns.length) {
+          for (let i = 0; i < phaseRuns.length; i++) {
+            const pr = phaseRuns[i];
+            const xStart = xScale.getPixelForValue(pr.startIndex);
+            const xEnd = xScale.getPixelForValue(pr.endIndex);
+            if (!Number.isFinite(xStart) || !Number.isFinite(xEnd)) continue;
+
+            const left = Math.min(xStart, xEnd) - 6;
+            const width = Math.abs(xEnd - xStart) + 12;
+
+            ctx.save();
+            ctx.fillStyle = pr.color || 'rgba(148, 163, 184, 0.10)';
+            ctx.fillRect(left, area.top, width, area.bottom - area.top);
+
+            const label = pr.phase;
+            if (label) {
+              ctx.font = 'bold 10px Inter, sans-serif';
+              const tw = ctx.measureText(label).width + 8;
+              const tx = Math.max(area.left + 2, Math.min(left + 4, area.right - tw - 2));
+              const ty = area.top + 22;
+              ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+              ctx.fillRect(tx, ty - 12, tw, 14);
+              ctx.fillStyle = '#fff';
+              ctx.fillText(label, tx + 4, ty - 1);
+            }
+            ctx.restore();
+          }
         }
 
         if (todayIndex !== null) {
@@ -480,9 +511,11 @@
 
       const dateIdx = (idx['date'] != null) ? idx['date'] : ((idx['datum'] != null) ? idx['datum'] : idx['day']);
       const isTodayIdx = idx['is_today'];
+      const phaseIdx = (idx['week_phase'] != null) ? idx['week_phase'] : idx['weekphase'];
       return rows.map(r => {
         const rec = { __dateRaw: dateIdx != null ? r[dateIdx] : null };
         rec.__isToday = (isTodayIdx != null && Number(String(r[isTodayIdx]).replace(',', '.')) === 1);
+        rec.__phase = (phaseIdx != null && r[phaseIdx] != null) ? String(r[phaseIdx]).trim() : '';
         METRIC_DEFS.forEach(m => {
           const names = [m.key].concat(Array.isArray(m.aliases) ? m.aliases : []);
           let ci = null;
@@ -543,6 +576,30 @@
         if (key === todayKey) return i;
       }
       return null;
+    }
+
+
+    function buildPhaseRuns(rows){
+      const map = {
+        'E': 'rgba(148, 163, 184, 0.10)',
+        'A1': 'rgba(59, 130, 246, 0.10)',
+        'A2': 'rgba(16, 185, 129, 0.10)',
+        'A3': 'rgba(245, 158, 11, 0.12)'
+      };
+      const runs = [];
+      let current = null;
+      let start = 0;
+      for (let i = 0; i < rows.length; i++) {
+        const phaseRaw = rows[i] && rows[i].__phase ? String(rows[i].__phase).trim().toUpperCase() : '';
+        const phase = phaseRaw || '';
+        if (phase !== current) {
+          if (current) runs.push({ phase: current, startIndex: start, endIndex: i - 1, color: map[current] || 'rgba(148, 163, 184, 0.08)' });
+          current = phase;
+          start = i;
+        }
+      }
+      if (current) runs.push({ phase: current, startIndex: start, endIndex: rows.length - 1, color: map[current] || 'rgba(148, 163, 184, 0.08)' });
+      return runs;
     }
 
     function buildDatasets(rows, metrics){
@@ -664,6 +721,7 @@
       const rows = sorted.slice(-timeframe);
       const labels = labelsFor(rows);
       const todayIndex = findTodayIndex(rows);
+      const phaseRuns = buildPhaseRuns(rows);
       const { datasets, scales, metricAxisIds } = buildDatasets(rows, metrics);
       renderBarAverages(datasets, timeframe, metrics);
 
@@ -690,7 +748,7 @@
           plugins: {
             legend: { position: 'top' },
             tooltip: { mode: 'index', intersect: false },
-            bandBackgroundPlugin: { bands: bands, todayIndex: todayIndex }
+            bandBackgroundPlugin: { bands: bands, todayIndex: todayIndex, phaseRuns: phaseRuns }
           },
           scales
         }
