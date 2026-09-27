@@ -13,7 +13,7 @@ import {
 } from '../lib/api';
 import { fmtDateTime, fmtRelative, fmtTime, fmtNum } from '../lib/format';
 import { proxyRunConsolidatedAnalysis, proxyRunStatusAiAnalysis, proxyRunSupervisor } from '../lib/proxy';
-import { AmpelBig, AmpelChip, AmpelDot } from '../components/Ampel';
+import { AmpelChip, AmpelDot } from '../components/Ampel';
 import { ArcGauge, ErrorBox, Modal, Panel, Skeleton, Spinner, StatPill } from '../components/UI';
 import { RecoveryPanel } from './RecoveryPanel';
 
@@ -471,15 +471,7 @@ export function CommandCenter({
     <div className="space-y-6">
       <RecoveryPanel token={token} toast={toast} proxyAuthenticated={proxy.authenticated} />
       <section className="panel overflow-hidden">
-        <div className="grid gap-0 lg:grid-cols-[1.2fr_2fr]">
-          <div className="p-5 border-b lg:border-b-0 lg:border-r border-border bg-gradient-to-br from-emerald-500/10 via-bg-raised to-bg-panel">
-            <div className="label">Plan Status</div>
-            <div className="mt-2 flex items-end justify-between gap-3">
-              <div className="text-3xl md:text-4xl font-semibold tracking-tight text-emerald-300">
-                {summary?.planStatus || '—'}
-              </div>
-            </div>
-          </div>
+        <div>
           <div className="p-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <ArcGauge label="Gesamt" value={summary?.gesamtScore} sub={summary?.gesamtAmpel || 'Status'} />
             <ArcGauge label="Training" value={summary?.trainingScore} sub="Training Score" />
@@ -514,14 +506,7 @@ export function CommandCenter({
       </section>
 
       {/* Top row: Ampel + Scores */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <div className="md:col-span-1">
-          {statusLoading ? (
-            <Skeleton className="h-[88px]" />
-          ) : (
-            <AmpelBig ampel={summary?.gesamtAmpel} label="Gesamtampel" />
-          )}
-        </div>
+      <div className="grid gap-4 md:grid-cols-3">
         <StatPill
           label="Gesamt-Score"
           value={statusLoading ? <Skeleton className="h-8 w-16" /> : (summary?.gesamtScore ?? '—')}
