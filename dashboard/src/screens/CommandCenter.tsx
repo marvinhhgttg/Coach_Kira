@@ -14,7 +14,7 @@ import {
 import { fmtDateTime, fmtRelative, fmtTime, fmtNum } from '../lib/format';
 import { proxyRunConsolidatedAnalysis, proxyRunStatusAiAnalysis, proxyRunSupervisor } from '../lib/proxy';
 import { AmpelChip, AmpelDot } from '../components/Ampel';
-import { ArcGauge, ErrorBox, Modal, Panel, Skeleton, Spinner, StatPill } from '../components/UI';
+import { ArcGauge, ErrorBox, Modal, Panel, Skeleton, Spinner } from '../components/UI';
 import { RecoveryPanel } from './RecoveryPanel';
 
 type ToastFn = (kind: 'ok' | 'err' | 'info', text: string) => void;
@@ -504,24 +504,6 @@ export function CommandCenter({
           </div>
         </div>
       </section>
-
-      {/* Top row: Ampel + Scores */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <StatPill
-          label="Gesamt-Score"
-          value={statusLoading ? <Skeleton className="h-8 w-16" /> : (summary?.gesamtScore ?? '—')}
-          hint={summary?.planStatus ? <>Plan: <span className="text-ink">{summary.planStatus}</span></> : undefined}
-          emphasize
-        />
-        <StatPill
-          label="Recovery-Score"
-          value={statusLoading ? <Skeleton className="h-8 w-16" /> : (summary?.recoveryScore ?? '—')}
-        />
-        <StatPill
-          label="Training-Score"
-          value={statusLoading ? <Skeleton className="h-8 w-16" /> : (summary?.trainingScore ?? '—')}
-        />
-      </div>
 
       {statusErr && <ErrorBox message={statusErr} onRetry={loadStatus} />}
 
