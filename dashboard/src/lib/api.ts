@@ -379,6 +379,28 @@ export function saveWellbeing(token: string, date: string, value: number, signal
   return getJson<SaveWellbeingResponse>(buildUrl({ action: 'saveWellbeing', token, date, value }), signal);
 }
 
+export type EntryType = 'Morgens' | 'Nach Aktivität' | 'Abends';
+
+export interface SubmitEntryResponse {
+  ok: boolean;
+  timestamp?: string;
+  type?: EntryType;
+  date?: string;
+  row?: number;
+  written?: string[];
+  readback?: Record<string, unknown>;
+  triggersStarted?: boolean;
+  durationMs?: number;
+  error?: string;
+}
+
+export function submitCockpitEntry(token: string, type: EntryType, date: string, values: Record<string, string | number>) {
+  if (!token) return Promise.reject(new ApiError('Token fehlt'));
+  return getJson<SubmitEntryResponse>(
+    buildUrl({ action: 'submitCockpitEntry', token, type, date, values: JSON.stringify(values) }),
+  );
+}
+
 export function fetchStatusAiAnalysis(signal?: AbortSignal) {
   return getJson<StatusAiAnalysisResponse>(buildUrl({ mode: 'statusAiAnalysis' }), signal);
 }

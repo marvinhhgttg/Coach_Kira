@@ -105,6 +105,14 @@ function actionToAppsScriptParams(name, body) {
       locks: JSON.stringify(body.locks || []),
     };
   }
+  if (name === 'submitEntry') {
+    return {
+      action: 'submitCockpitEntry',
+      type: String(body.type || ''),
+      date: String(body.date || ''),
+      values: JSON.stringify(body.values || {}),
+    };
+  }
   if (name === 'saveWellbeing') {
     return { action: 'saveWellbeing', date: String(body.date || ''), value: String(body.value ?? '') };
   }

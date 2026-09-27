@@ -3,16 +3,18 @@ import { CommandCenter } from './screens/CommandCenter';
 import { PlanCockpit } from './screens/PlanCockpit';
 import { ChartDeck } from './screens/ChartDeck';
 import { TacticalLog } from './screens/TacticalLog';
+import { EntryPanel } from './screens/EntryPanel';
 import { Toast } from './components/UI';
 import { Logo } from './components/Logo';
 import { fmtTime } from './lib/format';
 import { getProxyStatus, loginProxy, logoutProxy, setupProxy } from './lib/proxy';
 
-type Tab = 'command' | 'plan' | 'charts' | 'logs';
+type Tab = 'command' | 'entry' | 'plan' | 'charts' | 'logs';
 type ThemeMode = 'dark' | 'garmin';
 
 const TABS: { id: Tab; label: string; sub: string }[] = [
   { id: 'command', label: 'Command Center', sub: 'status · runStatus' },
+  { id: 'entry', label: 'Eingabe', sub: 'morgens · aktivität · abends' },
   { id: 'plan', label: 'Plan Cockpit', sub: 'planJsonV2' },
   { id: 'charts', label: 'Chart Deck', sub: 'chartData' },
   { id: 'logs', label: 'Tactical Log', sub: 'activities' },
@@ -194,6 +196,7 @@ export function App() {
             onProxyLogout={onProxyLogout}
           />
         )}
+        {tab === 'entry' && <EntryPanel token={token} toast={pushToast} proxyAuthenticated={proxy.authenticated} />}
         {tab === 'plan' && <PlanCockpit token={token} toast={pushToast} proxyAuthenticated={proxy.authenticated} />}
         {tab === 'charts' && <ChartDeck />}
         {tab === 'logs' && <TacticalLog />}

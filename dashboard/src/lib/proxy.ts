@@ -1,4 +1,4 @@
-import { ApiError, type SaveWellbeingResponse, type ConsolidatedAnalysisResponse, type PlanBriefingResponse, type SaveSimulationResponse, type StatusAiAnalysisResponse, type SupervisorResponse } from './api';
+import { ApiError, type EntryType, type SubmitEntryResponse, type SaveWellbeingResponse, type ConsolidatedAnalysisResponse, type PlanBriefingResponse, type SaveSimulationResponse, type StatusAiAnalysisResponse, type SupervisorResponse } from './api';
 
 export interface ProxyAuthStatus {
   ok: boolean;
@@ -86,5 +86,12 @@ export function proxySaveWellbeing(date: string, value: number) {
   return proxyJson<SaveWellbeingResponse>(apiUrl('action/saveWellbeing'), {
     method: 'POST',
     body: JSON.stringify({ date, value }),
+  });
+}
+
+export function proxySubmitEntry(type: EntryType, date: string, values: Record<string, string | number>) {
+  return proxyJson<SubmitEntryResponse>(apiUrl('action/submitEntry'), {
+    method: 'POST',
+    body: JSON.stringify({ type, date, values }),
   });
 }
