@@ -52,7 +52,28 @@ export function withTimeout<T>(
     .finally(() => clearTimeout(timer));
 }
 
+/**
+ * Lesende Anfragen (mode=…) werden bei HTTP 404/5xx oder Netzwerkfehler einmal wiederholt.
+ * Hintergrund: Apps Script liefert bei ausgelastetem Sheet sporadisch eine 404-Seite
+ * ("unable to open the file at this time"). Schreibende Aktionen (action=…) werden nie wiederholt.
+ */
 async function getJson<T>(url: string, signal?: AbortSignal): Promise<T> {
+  const isRead = /[?&]mode=/.test(url) && !/[?&]action=/.test(url);
+  try {
+    return await getJsonOnce<T>(url, signal);
+  } catch (err) {
+    const retryable =
+      isRead &&
+      !signal?.aborted &&
+      err instanceof ApiError &&
+      (err.status == null || err.status === 404 || err.status >= 500);
+    if (!retryable) throw err;
+    await new Promise((r) => setTimeout(r, 1500));
+    return getJsonOnce<T>(url.replace(/([?&]cb=)\d+/, `$1${Date.now()}`), signal);
+  }
+}
+
+async function getJsonOnce<T>(url: string, signal?: AbortSignal): Promise<T> {
   let res: Response;
   try {
     res = await fetch(url, {

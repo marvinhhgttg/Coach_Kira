@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   Area,
   Bar,
@@ -468,7 +468,7 @@ function WellbeingInput({ todayIso, yesterdayIso, todayValue, yesterdayValue, on
   const current = target === 'today' ? todayValue : yesterdayValue;
   return (
     <div className="border-t border-border pt-3">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="label">Befinden · Wie trainierbar fühle ich mich?</div>
         <div className="inline-flex bg-bg rounded border border-border p-0.5">
           {(['today', 'yesterday'] as const).map((t) => (
@@ -530,7 +530,7 @@ function TodayCard({
 }) {
   if (!today || !today.hasMorningData) {
     return (
-      <div className="panel-raised p-4 h-full space-y-3">
+      <div className="panel-raised p-3 sm:p-4 h-full min-w-0 space-y-3">
         <div className="label">Heute · Recovery Brief</div>
         <p className="text-sm text-ink-muted">
           Für heute liegen noch keine Morgenwerte vor. Sobald <span className="font-mono">garmin-morgens</span> gelaufen ist,
@@ -600,7 +600,7 @@ function TodayCard({
   ];
 
   return (
-    <div className={`panel-raised p-4 h-full border ${lvl === 'rot' ? 'border-ampel-rot/40' : lvl === 'gelb' ? 'border-ampel-gelb/40' : 'border-ampel-gruen/40'}`}>
+    <div className={`panel-raised p-3 sm:p-4 h-full min-w-0 border ${lvl === 'rot' ? 'border-ampel-rot/40' : lvl === 'gelb' ? 'border-ampel-gelb/40' : 'border-ampel-gruen/40'}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="label">Heute · Recovery Brief</div>
@@ -613,14 +613,14 @@ function TodayCard({
 
       <dl className="mt-4 space-y-2 text-sm">
         {rows.map((r) => (
-          <div key={r.label} className="grid grid-cols-[88px_1fr] gap-2 items-baseline">
+          <div key={r.label} className="grid grid-cols-[84px_minmax(0,1fr)] gap-2 items-baseline">
             <dt className="flex items-center gap-2 text-ink-muted">
               <Dot level={r.level} />
               {r.label}
             </dt>
             <dd>
               <span className="tnum font-semibold">{r.value}</span>
-              {r.hint && <span className="ml-2 text-2xs text-ink-dim tnum">{r.hint}</span>}
+              {r.hint && <span className="block sm:inline sm:ml-2 text-2xs text-ink-dim tnum">{r.hint}</span>}
             </dd>
           </div>
         ))}
@@ -679,12 +679,19 @@ function RecoveryStrip({ days, todayIso }: { days: RecoveryDay[]; todayIso: stri
     { label: 'Befinden', render: (d) => ({ text: d.befinden != null ? `${d.befinden}/5` : '—', level: d.levels.befinden }) },
   ];
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    // Auf schmalen Bildschirmen mit "Heute" (rechts) beginnen
+    const el = scrollRef.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, [days.length]);
+
   return (
-    <div className="panel-raised overflow-x-auto">
+    <div ref={scrollRef} className="panel-raised overflow-x-auto">
       <table className="w-full text-xs min-w-[640px]">
         <thead>
           <tr className="border-b border-border">
-            <th className="label text-left px-3 py-2">Metrik</th>
+            <th className="label text-left px-3 py-2 sticky left-0 z-10 bg-bg-raised">Metrik</th>
             {days.map((d) => (
               <th key={d.date} className="label text-center px-2 py-2 tnum">
                 {d.date === todayIso ? 'Heute' : fmtDateShort(d.date).slice(0, 6)}
@@ -695,11 +702,11 @@ function RecoveryStrip({ days, todayIso }: { days: RecoveryDay[]; todayIso: stri
         <tbody className="divide-y divide-border">
           {rows.map((row) => (
             <tr key={row.label}>
-              <td className="px-3 py-2 text-ink-muted whitespace-nowrap">{row.label}</td>
+              <td className="px-3 py-2 text-ink-muted whitespace-nowrap sticky left-0 z-10 bg-bg-raised">{row.label}</td>
               {days.map((d) => {
                 const { text, level } = row.render(d);
                 return (
-                  <td key={d.date} className={`px-2 py-2 text-center ${LEVEL_CELL[level]}`}>
+                  <td key={d.date} className={`px-2 py-2 text-center whitespace-nowrap ${LEVEL_CELL[level]}`}>
                     <span className="inline-flex items-center gap-1.5 tnum font-medium">
                       <Dot level={level} />
                       {text}
@@ -710,7 +717,7 @@ function RecoveryStrip({ days, todayIso }: { days: RecoveryDay[]; todayIso: stri
             </tr>
           ))}
           <tr>
-            <td className="px-3 py-2 text-ink-muted whitespace-nowrap font-semibold">Tagesvotum</td>
+            <td className="px-3 py-2 text-ink-muted whitespace-nowrap font-semibold sticky left-0 z-10 bg-bg-raised">Tagesvotum</td>
             {days.map((d) => (
               <td key={d.date} className="px-2 py-2 text-center">
                 <VoteChip vote={d.vote} />
@@ -747,9 +754,9 @@ function Lane({
 }) {
   return (
     <div>
-      <div className="flex items-baseline justify-between px-1">
-        <span className="text-xs font-semibold">{title}</span>
-        {hint && <span className="text-2xs text-ink-dim">{hint}</span>}
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 px-1">
+        <span className="text-xs font-semibold whitespace-nowrap">{title}</span>
+        {hint && <span className="text-2xs text-ink-dim text-right">{hint}</span>}
       </div>
       <div style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
@@ -939,7 +946,7 @@ export function RecoveryPanel({
               <button
                 key={n}
                 onClick={() => setSpan(n as 14 | 28)}
-                className={`px-2.5 py-1 text-xs rounded tnum ${span === n ? 'bg-bg-subtle text-ink' : 'text-ink-muted hover:text-ink'}`}
+                className={`px-2.5 py-1 text-xs rounded tnum whitespace-nowrap ${span === n ? 'bg-bg-subtle text-ink' : 'text-ink-muted hover:text-ink'}`}
               >
                 {n} T
               </button>
@@ -954,13 +961,13 @@ export function RecoveryPanel({
       {err ? (
         <ErrorBox message={err} onRetry={load} />
       ) : busy && !raw ? (
-        <div className="grid gap-4 lg:grid-cols-[minmax(300px,1fr)_2fr]">
+        <div className="grid gap-4 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(300px,1fr)_minmax(0,2fr)]">
           <Skeleton className="h-72" />
           <Skeleton className="h-72" />
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="grid gap-4 lg:grid-cols-[minmax(300px,1fr)_2fr]">
+          <div className="grid gap-4 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(300px,1fr)_minmax(0,2fr)]">
             <TodayCard
               today={today}
               yesterday={yesterday}
@@ -973,7 +980,7 @@ export function RecoveryPanel({
                 onSave: handleSaveWellbeing,
               }}
             />
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-0">
               <div className="label">Letzte 7 Tage</div>
               <RecoveryStrip days={stripDays} todayIso={todayIso} />
               <p className="text-2xs text-ink-dim">
