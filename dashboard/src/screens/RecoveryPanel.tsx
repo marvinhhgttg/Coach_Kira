@@ -41,6 +41,10 @@ const RECOVERY_FETCH_METRICS = [
   'Target_Aerobic_TE',
   'Target_Anaerobic_TE',
   'activity_done',
+  'coachE_ATL_forecast',
+  'coachE_CTL_forecast',
+  'Aerobic_TE',
+  'Anaerobic_TE',
 ] as const;
 
 const MONOTONY_WARN = 1.6;
@@ -121,7 +125,12 @@ type RecoveryDay = {
   monotony: number | null;
   acwr: number | null;
   activityDone: boolean;
-  actual: { load: number | null; sport: string; zone: string };
+  actual: { load: number | null; sport: string; zone: string; teAe: number | null; teAn: number | null };
+  essDay: number | null;
+  atlPost: number | null;
+  ctlPost: number | null;
+  monotonyPost: number | null;
+  acwrPost: number | null;
   befinden: number | null;
   hasMorningData: boolean;
   levels: { readiness: Level; rhr: Level; sleep: Level; hrv: Level; befinden: Level };
@@ -310,7 +319,14 @@ function buildDays(raw: any[]): RecoveryDay[] {
       monotony: idx > 0 ? toNum(rows[idx - 1].Monotony7) : null,
       acwr: idx > 0 ? toNum(rows[idx - 1].fbACWR_obs) ?? toNum(rows[idx - 1].coachE_ACWR_forecast) : null,
       activityDone: String(r.activity_done || '').trim().toLowerCase() === 'x',
+      essDay: toNum(r.coachE_ESS_day),
+      atlPost: toNum(r.coachE_ATL_forecast),
+      ctlPost: toNum(r.coachE_CTL_forecast),
+      monotonyPost: toNum(r.Monotony7),
+      acwrPost: toNum(r.fbACWR_obs) ?? toNum(r.coachE_ACWR_forecast),
       actual: {
+        teAe: toNum(r.Aerobic_TE),
+        teAn: toNum(r.Anaerobic_TE),
         load: toNum(r.coachE_ESS_day),
         sport: String(r.Sport_x || ''),
         zone: String(r.Zone || ''),
@@ -348,7 +364,8 @@ function plannedDemand(p: PlannedSession): Vote {
   const zone = (p.zone || '').toUpperCase();
   const sport = (p.sport || '').toLowerCase();
   if (p.load <= 0 || sport === 'off' || zone === 'OFF') return 'REST';
-  if (p.teAn >= 1 || p.teAe >= 4 || /Z4|Z5/.test(zone) || p.load >= 200) return 'QUALITY';
+  // Quality = spürbar intensiv: anaerober Reiz, hohe Zonen, sehr hoher aerober Effekt oder sehr hohe Last
+  if (p.teAn >= 1 || p.teAe >= 4.5 || /Z4|Z5/.test(zone) || p.load >= 200) return 'QUALITY';
   if (p.teAe >= 3 || /Z3/.test(zone) || p.load >= 120) return 'TRAIN';
   return 'EASY';
 }
@@ -404,6 +421,194 @@ function PlanCheck({ plan, today }: { plan: PlannedSession | null | 'loading'; t
             : ''}
           .
         </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Wochenbilanz & Ausblick
+// ---------------------------------------------------------------------------
+type PlanDaySim = PlannedSession & { day: string };
+
+const ATL_REC = { a: -8.819849, b: 0.83645661, c: 1.24059231 };
+const CTL_REC = { a: -3.95042, b: 0.97283824, c: 0.2336734 };
+
+/** Monotonie wie im Sheet: Ø / Standardabweichung (Population) der letzten 7 Tageslasten. */
+function monotony7(loads: number[]): number | null {
+  const w = loads.slice(-7);
+  if (w.length < 7) return null;
+  const m = w.reduce((a, b) => a + b, 0) / w.length;
+  const sd = Math.sqrt(w.reduce((a, b) => a + (b - m) ** 2, 0) / w.length);
+  return sd > 0 ? m / sd : null;
+}
+
+function demandOf(load: number | null, sport: string, zone: string, teAe: number | null, teAn: number | null): Vote {
+  return plannedDemand({
+    date: '',
+    load: load ?? 0,
+    sport,
+    zone,
+    teAe: teAe ?? 0,
+    teAn: teAn ?? 0,
+    locked: false,
+  });
+}
+
+function WeekSummary({ days }: { days: RecoveryDay[] }) {
+  const w = days.slice(-7);
+  const avg = (xs: (number | null)[]) => {
+    const v = xs.filter((x): x is number => x != null);
+    return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+  };
+  const readinessAvg = avg(w.map((d) => d.readiness));
+  const sleepVals = w.map((d) => d.sleepH).filter((x): x is number => x != null);
+  const sleepBalance = sleepVals.length ? sleepVals.reduce((a, b) => a + (b - SLEEP_GOAL_H), 0) : null;
+  const weekLoad = w.reduce((a, d) => a + (d.essDay ?? 0), 0);
+  const votes = VOTE_ORDER.slice()
+    .reverse()
+    .map((v) => ({ v, n: w.filter((d) => d.vote === v).length }))
+    .filter((x) => x.n > 0);
+
+  // Einhaltung: absolvierte Einheit (IST) vs. Votum des Tages – heute nur, wenn schon absolviert
+  const checked = w.filter((d) => d.vote && d.essDay != null && (d.activityDone || d.essDay === 0));
+  const misses = checked.filter((d) => {
+    const dem = demandOf(d.essDay, d.actual.sport, d.actual.zone, d.actual.teAe, d.actual.teAn);
+    return VOTE_ORDER.indexOf(dem) > VOTE_ORDER.indexOf(d.vote!);
+  });
+  const ok = checked.length - misses.length;
+
+  return (
+    <div className="panel-raised p-3 min-w-0">
+      <div className="flex items-baseline justify-between gap-2">
+        <div className="label">Wochenbilanz · 7 Tage</div>
+        <span className="text-2xs text-ink-dim tnum">
+          {w.length ? `${fmtDateShort(w[0].date).slice(0, 6)}–${fmtDateShort(w[w.length - 1].date).slice(0, 6)}` : ''}
+        </span>
+      </div>
+      <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+        <div>
+          <dt className="text-2xs text-ink-dim">Ø Readiness</dt>
+          <dd className={`tnum font-semibold ${LEVEL_TEXT[levelReadiness(readinessAvg)]}`}>{readinessAvg != null ? fmtNum(readinessAvg) : '—'}</dd>
+        </div>
+        <div>
+          <dt className="text-2xs text-ink-dim">Schlaf ggü. Ziel</dt>
+          <dd className={`tnum font-semibold ${sleepBalance == null ? '' : sleepBalance >= 0 ? 'text-green-300' : sleepBalance > -2 ? 'text-yellow-300' : 'text-orange-300'}`}>
+            {sleepBalance != null ? `${sleepBalance >= 0 ? '+' : ''}${fmtHm(sleepBalance)} h` : '—'}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-2xs text-ink-dim">Wochenlast</dt>
+          <dd className="tnum font-semibold">{fmtNum(weekLoad)} ESS</dd>
+        </div>
+        <div>
+          <dt className="text-2xs text-ink-dim">Voten</dt>
+          <dd className="flex flex-wrap gap-1 mt-0.5">
+            {votes.map(({ v, n }) => (
+              <span key={v} className={`chip border text-2xs ${LEVEL_CELL[VOTE_LEVEL[v]]} ${LEVEL_TEXT[VOTE_LEVEL[v]]} border-border`}>
+                {n}× {VOTE_LABEL[v]}
+              </span>
+            ))}
+          </dd>
+        </div>
+      </dl>
+      <div className="mt-3 border-t border-border pt-2 text-xs">
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="text-ink-muted">Einheiten passend zum Votum</span>
+          <span className={`tnum font-semibold ${misses.length === 0 ? 'text-green-300' : 'text-orange-300'}`}>
+            {checked.length ? `${ok} / ${checked.length}` : '—'}
+          </span>
+        </div>
+        {misses.length > 0 && (
+          <ul className="mt-1 space-y-0.5 text-2xs text-ink-dim">
+            {misses.map((d) => (
+              <li key={d.date} className="tnum">
+                {fmtDateShort(d.date).slice(0, 6)}: {fmtNum(d.essDay)} ESS {d.actual.sport} {d.actual.zone} (
+                {VOTE_LABEL[demandOf(d.essDay, d.actual.sport, d.actual.zone, d.actual.teAe, d.actual.teAn)]}) bei Votum{' '}
+                {VOTE_LABEL[d.vote!]}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Outlook({ days, plan }: { days: RecoveryDay[]; plan: PlanDaySim[] | null | 'loading' }) {
+  const todayIso = localIsoDate();
+  const today = days.find((d) => d.date === todayIso) || null;
+
+  const rows = useMemo(() => {
+    if (!Array.isArray(plan) || !today) return [];
+    const future = plan.filter((p) => p.date > todayIso).slice(0, 3);
+    if (!future.length || today.atlPost == null || today.ctlPost == null) return [];
+    // Ausgangslage = Stand Ende heute (Timeline-Anker), danach Rekursion wie im Plan Cockpit
+    let atl = today.atlPost;
+    let ctl = today.ctlPost;
+    let preAcwr = today.acwrPost ?? (ctl > 0 ? atl / ctl : null);
+    let preMono = today.monotonyPost;
+    const loads = days.filter((d) => d.date <= todayIso).map((d) => d.essDay ?? 0);
+    return future.map((p) => {
+      const demand = plannedDemand(p);
+      const warnHigh = (preAcwr != null && preAcwr > ACWR_HIGH) || (preMono != null && preMono > MONOTONY_HIGH);
+      const warn = (preAcwr != null && preAcwr > ACWR_WARN) || (preMono != null && preMono > MONOTONY_WARN);
+      const cap: Vote | null = warnHigh ? 'EASY' : warn ? 'TRAIN' : null;
+      const conflict = cap != null && VOTE_ORDER.indexOf(demand) > VOTE_ORDER.indexOf(cap);
+      const row = { p, demand, preAcwr, preMono, cap, conflict };
+      atl = ATL_REC.a + ATL_REC.b * atl + ATL_REC.c * p.load;
+      ctl = CTL_REC.a + CTL_REC.b * ctl + CTL_REC.c * p.load;
+      loads.push(p.load);
+      preAcwr = ctl > 0 ? atl / ctl : null;
+      preMono = monotony7(loads);
+      return row;
+    });
+  }, [plan, days, today, todayIso]);
+
+  return (
+    <div className="panel-raised p-3 min-w-0">
+      <div className="flex items-baseline justify-between gap-2">
+        <div className="label">Ausblick · 3 Tage</div>
+        <span className="text-2xs text-ink-dim">Belastung = Prognose Stand Vortag</span>
+      </div>
+      {plan === 'loading' ? (
+        <p className="mt-3 text-xs text-ink-dim">Plan wird geladen…</p>
+      ) : !rows.length ? (
+        <p className="mt-3 text-xs text-ink-dim">Keine Plandaten für die nächsten Tage.</p>
+      ) : (
+        <ul className="mt-2 divide-y divide-border">
+          {rows.map(({ p, demand, preAcwr, preMono, cap, conflict }) => {
+            const lvl: Level = conflict ? 'orange' : cap ? 'gelb' : 'gruen';
+            return (
+              <li key={p.date} className="py-2 first:pt-1">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-sm font-semibold tnum">
+                    {p.day} {fmtDateShort(p.date).slice(0, 6)}
+                  </span>
+                  <span className={`chip border text-2xs ${LEVEL_CELL[VOTE_LEVEL[demand]]} ${LEVEL_TEXT[VOTE_LEVEL[demand]]} border-border`}>
+                    {demand === 'REST' ? 'Ruhe' : VOTE_LABEL[demand]}
+                  </span>
+                </div>
+                <div className="text-xs text-ink-muted tnum">
+                  {p.load <= 0 || p.sport.toLowerCase() === 'off'
+                    ? 'Ruhetag'
+                    : `${fmtNum(p.load)} ESS ${p.sport}${p.zone ? ` ${p.zone}` : ''}`}
+                </div>
+                <div className="mt-0.5 flex items-center gap-1.5 text-2xs tnum">
+                  <Dot level={lvl} />
+                  <span className="text-ink-dim">
+                    ACWR {preAcwr != null ? fmtNum(preAcwr, 2) : '—'} · Monotonie {preMono != null ? fmtNum(preMono, 2) : '—'}
+                  </span>
+                </div>
+                {conflict && (
+                  <div className="mt-0.5 text-2xs text-orange-300">
+                    {VOTE_LABEL[demand]} geplant, Belastung erlaubt max. {VOTE_LABEL[cap!]} → Einheit entschärfen oder verschieben.
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
       )}
     </div>
   );
@@ -862,12 +1067,28 @@ export function RecoveryPanel({
   const [busy, setBusy] = useState(true);
   const [span, setSpan] = useState<14 | 28>(14);
   const [planToday, setPlanToday] = useState<PlannedSession | null | 'loading'>('loading');
+  const [planDays, setPlanDays] = useState<PlanDaySim[] | null | 'loading'>('loading');
 
   async function loadPlan() {
     setPlanToday('loading');
+    setPlanDays('loading');
     try {
       const sim: any = await fetchPlanSimulationWithTimeout(45000);
       const iso = localIsoDate();
+      setPlanDays(
+        sim?.ok
+          ? (sim.days || []).map((x: any) => ({
+              date: String(x.date).slice(0, 10),
+              day: String(x.day || ''),
+              load: toNum(x.load) ?? 0,
+              sport: String(x.sport || ''),
+              zone: String(x.zone || ''),
+              teAe: toNum(x.te_ae) ?? 0,
+              teAn: toNum(x.te_an) ?? 0,
+              locked: !!x.locked,
+            }))
+          : null,
+      );
       const d = sim?.ok ? (sim.days || []).find((x: any) => String(x.date).slice(0, 10) === iso) : null;
       setPlanToday(
         d
@@ -884,6 +1105,7 @@ export function RecoveryPanel({
       );
     } catch {
       setPlanToday(null);
+      setPlanDays(null);
     }
   }
 
@@ -988,6 +1210,10 @@ export function RecoveryPanel({
                 unter Baseline werden grau (atypisch) statt grün markiert. Belastung (ACWR, Monotonie) jeweils Stand Vortag:
                 über {fmtNum(ACWR_WARN, 1)} / {fmtNum(MONOTONY_WARN, 1)} keine Qualität, über {fmtNum(ACWR_HIGH, 1)} / {fmtNum(MONOTONY_HIGH, 1)} max. Easy.
               </p>
+              <div className="grid gap-3 sm:grid-cols-2 pt-1">
+                <WeekSummary days={days} />
+                <Outlook days={days} plan={planDays} />
+              </div>
             </div>
           </div>
           <div className="panel-raised p-3">
