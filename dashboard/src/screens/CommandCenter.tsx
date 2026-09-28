@@ -445,7 +445,6 @@ export function CommandCenter({
 
   const summary = status?.summary;
   const hb = status?.heartbeat;
-  const lastQueued = runStatus?.lastQueued;
   const items = summary?.items || [];
   const findMetric = (needle: string) =>
     items.find((x) => (x.metrik || '').toLowerCase().includes(needle.toLowerCase()));
@@ -494,53 +493,6 @@ export function CommandCenter({
       </section>
 
       {statusErr && <ErrorBox message={statusErr} onRetry={loadStatus} />}
-
-      {/* Middle row: Heartbeat / RunStatus */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Panel title="Heartbeat">
-          {statusLoading ? (
-            <Skeleton className="h-20" />
-          ) : hb ? (
-            <dl className="grid grid-cols-[100px_1fr] gap-y-2 text-sm">
-              <dt className="text-ink-muted">Stage</dt>
-              <dd className="tnum flex items-center gap-2">
-                <AmpelDot ampel="BLAU" size={6} />
-                {hb.stage || '—'}
-              </dd>
-              <dt className="text-ink-muted">RunId</dt>
-              <dd className="tnum text-ink-muted">{hb.runId || '—'}</dd>
-              <dt className="text-ink-muted">Zeit</dt>
-              <dd className="tnum">
-                {fmtTime(hb.timestamp)}
-                <span className="text-ink-dim ml-2">{fmtRelative(hb.timestamp)}</span>
-              </dd>
-            </dl>
-          ) : (
-            <p className="text-sm text-ink-muted">Kein Heartbeat.</p>
-          )}
-        </Panel>
-
-        <Panel title="Letzter Queue">
-          {runErr ? (
-            <ErrorBox message={runErr} onRetry={loadRunStatus} />
-          ) : lastQueued ? (
-            <dl className="grid grid-cols-[100px_1fr] gap-y-2 text-sm">
-              <dt className="text-ink-muted">Funktion</dt>
-              <dd className="tnum">{lastQueued.functionName || '—'}</dd>
-              <dt className="text-ink-muted">RunId</dt>
-              <dd className="tnum text-ink-muted">{lastQueued.runId || '—'}</dd>
-              <dt className="text-ink-muted">Queued</dt>
-              <dd className="tnum">
-                {fmtTime(lastQueued.queuedAt)}
-                <span className="text-ink-dim ml-2">{fmtRelative(lastQueued.queuedAt)}</span>
-              </dd>
-            </dl>
-          ) : (
-            <p className="text-sm text-ink-muted">Keine Queue-Einträge.</p>
-          )}
-        </Panel>
-
-      </div>
 
       {/* Status items, if present */}
       {summary?.items && summary.items.length > 0 && (
@@ -605,6 +557,42 @@ export function CommandCenter({
       {summary?.items && summary.items.length > 0 && (
         <StatusRadarSection items={summary.items} />
       )}
+
+      {/* Letzter Lauf (ganz unten) */}
+      <Panel title="Letzter Lauf · Heartbeat">
+        {statusLoading ? (
+          <Skeleton className="h-16" />
+        ) : (
+          <dl className="grid gap-x-8 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <dt className="label">Letzter KI-Report</dt>
+              <dd className="tnum mt-1 flex items-center gap-2">
+                {summary?.gesamtAmpel && <AmpelDot ampel={summary.gesamtAmpel as any} size={7} />}
+                {summary?.gesamtScore != null ? `Score ${summary.gesamtScore}` : '—'}
+                {summary?.gesamtAmpel && <span className="text-ink-muted">({summary.gesamtAmpel})</span>}
+              </dd>
+            </div>
+            <div>
+              <dt className="label">Zeit</dt>
+              <dd className="tnum mt-1">
+                {hb?.timestamp ? fmtDateTime(hb.timestamp) : '—'}
+                {hb?.timestamp && <span className="text-ink-dim ml-2">{fmtRelative(hb.timestamp)}</span>}
+              </dd>
+            </div>
+            <div>
+              <dt className="label">Stage</dt>
+              <dd className="tnum mt-1 flex items-center gap-2">
+                <AmpelDot ampel="BLAU" size={6} />
+                {hb?.stage || '—'}
+              </dd>
+            </div>
+            <div>
+              <dt className="label">RunId</dt>
+              <dd className="tnum mt-1 text-ink-muted">{hb?.runId || '—'}</dd>
+            </div>
+          </dl>
+        )}
+      </Panel>
 
       <p className="text-2xs text-ink-dim tnum">
         Zuletzt aktualisiert {status?.timestamp ? fmtDateTime(status.timestamp) : '—'}
