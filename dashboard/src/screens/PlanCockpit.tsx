@@ -622,10 +622,6 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
   }
 
   async function saveToTimeline() {
-    if (!token.trim() && !proxyAuthenticated) {
-      toast('err', 'Bitte zuerst Action-Token im Command Center eingeben.');
-      return;
-    }
     setSaving(true);
     try {
       const payload = {
@@ -649,10 +645,6 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
   }
 
   async function onGenerateBriefing() {
-    if (!token.trim() && !proxyAuthenticated) {
-      toast('err', 'Bitte zuerst Action-Token im Command Center eingeben.');
-      return;
-    }
     setBriefingBusy(true);
     try {
       const res = proxyAuthenticated

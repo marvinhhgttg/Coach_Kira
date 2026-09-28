@@ -206,8 +206,7 @@ export function App() {
         <div className="max-w-[1400px] mx-auto px-5 py-3 flex flex-wrap items-center justify-between gap-2 text-2xs text-ink-dim tnum">
           <span>Coach Kira pptx.app · MVP-Prototyp · Live-Daten via Apps-Script-Endpunkte</span>
           <span>
-            Proxy: {proxy.available ? (proxy.authenticated ? 'aktiv' : proxy.configured ? 'bereit' : 'Setup nötig') : 'nicht verfügbar'} ·
-            Token: {token ? 'gesetzt (Session)' : 'nicht gesetzt'}
+            Aktionen ohne Token (Schutz deaktiviert)
           </span>
         </div>
       </footer>

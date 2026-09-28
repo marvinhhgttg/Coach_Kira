@@ -1133,10 +1133,6 @@ export function RecoveryPanel({
   const yesterdayIso = localIsoDate(yDate);
 
   async function handleSaveWellbeing(date: string, value: number) {
-    if (!proxyAuthenticated && !token.trim()) {
-      toast('err', 'Zum Speichern bitte mit PIN anmelden oder Token eingeben.');
-      return;
-    }
     try {
       const res = proxyAuthenticated ? await proxySaveWellbeing(date, value) : await saveWellbeing(token.trim(), date, value);
       if (!res.ok) throw new ApiError(res.error || 'Speichern fehlgeschlagen');

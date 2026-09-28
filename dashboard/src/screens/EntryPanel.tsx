@@ -163,7 +163,6 @@ export function EntryPanel({
   }, [type, dayOffset]);
   const errors = validate(fields, v);
   const payload = buildPayload(fields, v);
-  const canAuth = proxyAuthenticated || !!token.trim();
 
   function set(key: string, val: string) {
     setConfirming(false);
@@ -186,10 +185,6 @@ export function EntryPanel({
   }
 
   async function submit() {
-    if (!canAuth) {
-      toast('err', 'Zum Senden bitte mit PIN anmelden oder Token eingeben (Command Center).');
-      return;
-    }
     setBusy(true);
     setResult(null);
     try {
@@ -326,7 +321,6 @@ export function EntryPanel({
               </button>
             </>
           )}
-          {!canAuth && <span className="text-2xs text-ink-dim">Zum Senden mit PIN anmelden oder Token eingeben.</span>}
         </div>
 
         {result && (

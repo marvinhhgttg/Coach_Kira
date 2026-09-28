@@ -380,10 +380,6 @@ export function CommandCenter({
   }, [supervisorCooldown]);
 
   async function onSupervisor() {
-    if (!token.trim() && !proxy.authenticated) {
-      toast('err', 'Bitte zuerst Action-Token eingeben.');
-      return;
-    }
     setSupervisorBusy(true);
     try {
       const res = proxy.authenticated ? await proxyRunSupervisor() : await runSupervisor(token.trim());
@@ -412,10 +408,6 @@ export function CommandCenter({
   }
 
   async function onAiAnalysis() {
-    if (!token.trim() && !proxy.authenticated) {
-      toast('err', 'Bitte zuerst Action-Token eingeben.');
-      return;
-    }
     setAnalysisBusy(true);
     try {
       const res = proxy.authenticated ? await proxyRunStatusAiAnalysis() : await runStatusAiAnalysis(token.trim());
@@ -434,10 +426,6 @@ export function CommandCenter({
   }
 
   async function onConsolidatedAnalysis() {
-    if (!token.trim() && !proxy.authenticated) {
-      toast('err', 'Bitte zuerst Action-Token eingeben.');
-      return;
-    }
     setConsolidatedBusy(true);
     try {
       const res = proxy.authenticated ? await proxyRunConsolidatedAnalysis() : await runConsolidatedAnalysis(token.trim());
@@ -507,8 +495,8 @@ export function CommandCenter({
 
       {statusErr && <ErrorBox message={statusErr} onRetry={loadStatus} />}
 
-      {/* Middle row: Heartbeat / RunStatus / Token */}
-      <div className="grid gap-4 lg:grid-cols-3">
+      {/* Middle row: Heartbeat / RunStatus */}
+      <div className="grid gap-4 lg:grid-cols-2">
         <Panel title="Heartbeat">
           {statusLoading ? (
             <Skeleton className="h-20" />
@@ -552,44 +540,6 @@ export function CommandCenter({
           )}
         </Panel>
 
-        <Panel title="Privater Proxy">
-          <div className="flex items-center justify-between gap-2 mb-3">
-            <span className="label">DASHBOARD_ACTION_TOKEN</span>
-            <span className={`chip border ${proxy.authenticated ? 'border-ampel-gruen/40 bg-ampel-gruen/10 text-green-300' : proxy.available ? 'border-ampel-gelb/40 bg-ampel-gelb/10 text-yellow-300' : 'border-ampel-grau/40 bg-ampel-grau/10 text-gray-300'}`}>
-              {proxy.authenticated ? 'Proxy aktiv' : proxy.available ? (proxy.configured ? 'Login nötig' : 'Setup') : 'statisch'}
-            </span>
-          </div>
-          <input
-            id="dashboard-action-token"
-            name="dashboard-action-token"
-            type="password"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            className="input w-full font-mono"
-            placeholder="Token einmalig für Proxy-Setup oder Session"
-            autoComplete="current-password"
-            spellCheck={false}
-          />
-          <p className="text-2xs text-ink-dim mt-2 leading-relaxed">
-            Mit Backend: Token wird serverseitig in SQLite gespeichert und Aktionen laufen über eine PIN-Session.
-            Ohne Backend: Fallback über dieses Feld.
-          </p>
-          {proxy.available && !proxy.configured && (
-            <div className="mt-3 flex gap-2">
-              <input className="input flex-1" type="password" value={setupPin} onChange={(e) => setSetupPin(e.target.value)} placeholder="Neue PIN (min. 6 Zeichen)" />
-              <button className="btn btn-primary text-xs px-2" onClick={onProxySetup}>Proxy einrichten</button>
-            </div>
-          )}
-          {proxy.available && proxy.configured && !proxy.authenticated && (
-            <div className="mt-3 flex gap-2">
-              <input className="input flex-1" type="password" value={pin} onChange={(e) => setPin(e.target.value)} placeholder="PIN eingeben" />
-              <button className="btn btn-primary text-xs px-2" onClick={onProxyLogin}>Login</button>
-            </div>
-          )}
-          {proxy.authenticated && (
-            <button className="btn btn-ghost text-xs px-2 py-1 mt-3" onClick={onProxyLogout}>Proxy-Session beenden</button>
-          )}
-        </Panel>
       </div>
 
       {/* Action row */}

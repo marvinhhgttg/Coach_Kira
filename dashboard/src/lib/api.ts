@@ -338,9 +338,6 @@ export function fetchChartData(
 
 // Action — token stays in caller scope
 export function runSupervisor(token: string, signal?: AbortSignal) {
-  if (!token) {
-    return Promise.reject(new ApiError('Token fehlt'));
-  }
   return getJson<SupervisorResponse>(
     buildUrl({ action: 'runSupervisor', token }),
     signal
@@ -368,9 +365,6 @@ export function savePlanSimulation(
   },
   signal?: AbortSignal
 ) {
-  if (!token) {
-    return Promise.reject(new ApiError('Token fehlt'));
-  }
   return getJson<SaveSimulationResponse>(
     buildUrl({
       action: 'saveSimulatedPlan',
@@ -396,7 +390,6 @@ export interface SaveWellbeingResponse {
 }
 
 export function saveWellbeing(token: string, date: string, value: number, signal?: AbortSignal) {
-  if (!token) return Promise.reject(new ApiError('Token fehlt'));
   return getJson<SaveWellbeingResponse>(buildUrl({ action: 'saveWellbeing', token, date, value }), signal);
 }
 
@@ -416,7 +409,6 @@ export interface SubmitEntryResponse {
 }
 
 export function submitCockpitEntry(token: string, type: EntryType, date: string, values: Record<string, string | number>) {
-  if (!token) return Promise.reject(new ApiError('Token fehlt'));
   return getJson<SubmitEntryResponse>(
     buildUrl({ action: 'submitCockpitEntry', token, type, date, values: JSON.stringify(values) }),
   );
@@ -427,9 +419,6 @@ export function fetchStatusAiAnalysis(signal?: AbortSignal) {
 }
 
 export function runStatusAiAnalysis(token: string, signal?: AbortSignal) {
-  if (!token) {
-    return Promise.reject(new ApiError('Token fehlt'));
-  }
   return getJson<StatusAiAnalysisResponse>(
     buildUrl({ action: 'runStatusAiAnalysis', token }),
     signal
@@ -441,9 +430,6 @@ export function fetchConsolidatedAnalysis(signal?: AbortSignal) {
 }
 
 export function runConsolidatedAnalysis(token: string, signal?: AbortSignal) {
-  if (!token) {
-    return Promise.reject(new ApiError('Token fehlt'));
-  }
   return getJson<ConsolidatedAnalysisResponse>(
     buildUrl({ action: 'runConsolidatedAnalysis', token }),
     signal
@@ -455,9 +441,6 @@ export function fetchPlanBriefing(signal?: AbortSignal) {
 }
 
 export function generatePlanBriefing(token: string, signal?: AbortSignal) {
-  if (!token) {
-    return Promise.reject(new ApiError('Token fehlt'));
-  }
   return getJson<PlanBriefingResponse>(
     buildUrl({ action: 'generatePlanBriefing', token }),
     signal
