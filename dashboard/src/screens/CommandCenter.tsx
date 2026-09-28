@@ -542,44 +542,6 @@ export function CommandCenter({
 
       </div>
 
-      {/* Action row */}
-      <Panel
-        title="Aktionen"
-        right={
-          <span className="text-2xs text-ink-dim tnum">
-            {status?.timestamp && <>Status · {fmtTime(status.timestamp)}</>}
-          </span>
-        }
-      >
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-          <button
-            onClick={onSupervisor}
-            disabled={supervisorBusy || supervisorCooldown > 0}
-            className="btn btn-primary justify-between text-left"
-            data-testid="button-supervisor"
-          >
-            <span className="flex items-center gap-2">
-              {supervisorBusy && <Spinner />}
-              Supervisor starten
-            </span>
-            <span className="text-2xs text-ink-muted tnum">
-              {supervisorCooldown > 0 ? `${supervisorCooldown}s` : 'runSupervisor'}
-            </span>
-          </button>
-          {GARMIN_ROUTINES.map((r) => (
-            <button
-              key={r.skill}
-              onClick={() => setActiveRoutine(r)}
-              className="btn justify-between text-left"
-              data-testid={`button-routine-${r.skill}`}
-            >
-              <span>{r.label}</span>
-              <span className="text-2xs text-ink-muted tnum">Agent</span>
-            </button>
-          ))}
-        </div>
-      </Panel>
-
       {/* Status items, if present */}
       {summary?.items && summary.items.length > 0 && (
         <Panel title="Status-Items">
