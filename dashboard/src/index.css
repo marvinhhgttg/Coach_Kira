@@ -1,0 +1,257 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: 'cv11', 'ss01', 'ss03', 'cv02';
+  }
+  @supports (font-variation-settings: normal) {
+    :root {
+      font-family: 'Inter var', 'Inter', ui-sans-serif, system-ui, sans-serif;
+    }
+  }
+  html, body, #root {
+    height: 100%;
+    background-color: #0a0d12;
+  }
+  body {
+    color: #e6ebf2;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1, 'cv11' 1;
+  }
+  ::selection {
+    background-color: rgba(56, 189, 248, 0.25);
+  }
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: #0a0d12; }
+  ::-webkit-scrollbar-thumb { background: #1f2731; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #2a3340; }
+}
+
+@layer components {
+  .panel {
+    @apply bg-bg-panel border border-border rounded-md;
+  }
+  .panel-raised {
+    @apply bg-bg-raised border border-border rounded-md;
+  }
+  .label {
+    @apply text-2xs uppercase tracking-[0.12em] text-ink-dim font-medium;
+  }
+  .kpi-num {
+    @apply tnum text-xl font-semibold text-ink;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded
+      border border-border bg-bg-raised text-ink
+      hover:bg-bg-subtle hover:border-border-strong
+      active:bg-bg-panel
+      disabled:opacity-50 disabled:cursor-not-allowed
+      transition-colors;
+  }
+  .btn-primary {
+    @apply bg-accent-strong/15 border-accent-strong/40 text-accent
+      hover:bg-accent-strong/25 hover:border-accent-strong/60;
+  }
+  .btn-ghost {
+    @apply border-transparent bg-transparent text-ink-muted hover:text-ink hover:bg-bg-subtle;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-2xs font-medium uppercase tracking-wider;
+  }
+  .input {
+    @apply bg-bg border border-border rounded px-2.5 py-1.5 text-sm text-ink
+      placeholder:text-ink-dim focus:outline-none focus:border-accent-strong/60
+      tnum;
+  }
+  .grid-bg {
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+}
+
+/* Recharts dark overrides */
+.recharts-cartesian-axis-tick-value {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px;
+  fill: #5b6678;
+}
+.recharts-cartesian-grid line {
+  stroke: #1f2731;
+}
+.recharts-tooltip-wrapper {
+  outline: none;
+}
+.recharts-default-tooltip {
+  background-color: #0f1319 !important;
+  border: 1px solid #2a3340 !important;
+  border-radius: 6px !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 12px !important;
+}
+.recharts-tooltip-label {
+  color: #8a96a8 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+.recharts-tooltip-item {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Garmin Mode — bright Garmin-Connect-inspired companion theme */
+.garmin-mode {
+  min-height: 100%;
+  background:
+    radial-gradient(circle at top left, rgba(0, 150, 136, 0.08), transparent 34rem),
+    linear-gradient(180deg, #f7f8fa 0%, #eef2f5 100%);
+  color: #1f2933;
+}
+.garmin-mode header,
+.garmin-mode footer {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: #d8dee6 !important;
+  box-shadow: 0 1px 8px rgba(22, 34, 51, 0.06);
+}
+.garmin-mode main {
+  color: #1f2933;
+}
+.garmin-mode .panel,
+.garmin-mode .panel-raised {
+  background: #ffffff !important;
+  border-color: #dfe5ec !important;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 8px 24px rgba(16, 24, 40, 0.05);
+}
+.garmin-mode .panel-raised {
+  background: #fbfcfd !important;
+}
+.garmin-mode .bg-gradient-to-br {
+  background: linear-gradient(135deg, #e8f7f4 0%, #ffffff 48%, #f7fbff 100%) !important;
+}
+.garmin-mode .text-ink,
+.garmin-mode .text-white {
+  color: #1f2933 !important;
+}
+.garmin-mode .text-ink-muted {
+  color: #5f6f7d !important;
+}
+.garmin-mode .text-ink-dim {
+  color: #8a99a8 !important;
+}
+.garmin-mode .text-accent {
+  color: #007cc3 !important;
+}
+.garmin-mode .text-emerald-300,
+.garmin-mode .text-green-300 {
+  color: #15935f !important;
+}
+.garmin-mode .text-orange-300 {
+  color: #ef7d00 !important;
+}
+.garmin-mode .text-purple-300,
+.garmin-mode .text-fuchsia-300 {
+  color: #7d4ed8 !important;
+}
+.garmin-mode .bg-bg,
+.garmin-mode .bg-bg-raised,
+.garmin-mode .bg-bg-panel,
+.garmin-mode .bg-bg-subtle,
+.garmin-mode .bg-bg-raised\/70,
+.garmin-mode .bg-bg-subtle\/50,
+.garmin-mode .bg-bg-subtle\/60,
+.garmin-mode .bg-bg-subtle\/40 {
+  background-color: #ffffff !important;
+}
+.garmin-mode .border-border,
+.garmin-mode .border-border\/70,
+.garmin-mode .border-border-strong,
+.garmin-mode .border-t,
+.garmin-mode .border-b,
+.garmin-mode .border-r {
+  border-color: #dfe5ec !important;
+}
+.garmin-mode .label {
+  color: #8291a2 !important;
+  letter-spacing: 0.11em;
+}
+.garmin-mode .btn {
+  background: #ffffff !important;
+  border-color: #d6dee8 !important;
+  color: #263543 !important;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+}
+.garmin-mode .btn:hover {
+  background: #f1f7fb !important;
+  border-color: #b7c8d8 !important;
+}
+.garmin-mode .btn-primary {
+  background: #e6f5fb !important;
+  border-color: #7fc8e7 !important;
+  color: #0077b6 !important;
+}
+.garmin-mode .btn-ghost {
+  background: transparent !important;
+  color: #607284 !important;
+  box-shadow: none;
+}
+.garmin-mode .theme-switch {
+  background: #eef4f8 !important;
+  border-color: #cbd7e3 !important;
+}
+.garmin-mode .theme-switch-option {
+  color: #607284 !important;
+}
+.garmin-mode .theme-switch-option[aria-pressed="true"] {
+  background: #ffffff !important;
+  color: #0077b6 !important;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.12);
+}
+.garmin-mode .input {
+  background: #ffffff !important;
+  border-color: #cfd9e4 !important;
+  color: #1f2933 !important;
+}
+.garmin-mode .chip {
+  background: #f2f6fa;
+  color: #3e5061;
+}
+.garmin-mode .grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(2, 132, 199, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(2, 132, 199, 0.06) 1px, transparent 1px);
+}
+.garmin-mode .recharts-cartesian-axis-tick-value {
+  fill: #778899;
+}
+.garmin-mode .recharts-cartesian-grid line {
+  stroke: #e2e8f0;
+}
+.garmin-mode .recharts-default-tooltip {
+  background-color: #ffffff !important;
+  border: 1px solid #d7e0ea !important;
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.12) !important;
+}
+.garmin-mode .recharts-tooltip-label {
+  color: #5f6f7d !important;
+}
+.garmin-mode ::-webkit-scrollbar-track { background: #eef2f5; }
+.garmin-mode ::-webkit-scrollbar-thumb { background: #c5d0dc; }
+
+/* Garmin Mode — Ampel-Textfarben mit ausreichendem Kontrast auf Weiß */
+.garmin-mode .text-yellow-300,
+.garmin-mode .text-yellow-200 {
+  color: #a16207 !important;
+}
+.garmin-mode .text-red-300 {
+  color: #c62828 !important;
+}
+.garmin-mode .text-gray-300 {
+  color: #5f6f7d !important;
+}
