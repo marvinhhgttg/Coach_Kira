@@ -382,44 +382,97 @@ function planVerdict(p: PlannedSession, vote: Vote): { ok: boolean; text: string
   return { ok: false, text: 'Intensität rausnehmen: ähnliche Dauer in Z2, Intervalle auf einen besseren Tag schieben.' };
 }
 
+/** Heute schon trainiert? activity_done = x in der Timeline oder Plantag gesperrt (Ist-Wert übernommen). */
+function isDoneToday(today: RecoveryDay, plan: PlannedSession | null | 'loading'): boolean {
+  return today.activityDone || (!!plan && plan !== 'loading' && plan.locked);
+}
+
+/** Absolvierte Einheit als Session (für Anspruch-Einstufung). */
+function actualSession(today: RecoveryDay): PlannedSession | null {
+  const a = today.actual;
+  if (a.load == null) return null;
+  return {
+    date: today.date,
+    load: a.load,
+    sport: a.sport,
+    zone: a.zone,
+    teAe: a.teAe ?? 0,
+    teAn: a.teAn ?? 0,
+    locked: true,
+  };
+}
+
+function sessionText(p: PlannedSession): string {
+  return p.load <= 0 || p.sport.toLowerCase() === 'off'
+    ? 'Ruhetag'
+    : `${fmtNum(p.load)} ESS ${p.sport || 'Training'}${p.zone ? ` ${p.zone}` : ''}${
+        p.teAe || p.teAn ? ` · TE ${fmtNum(p.teAe, 1)}/${fmtNum(p.teAn, 1)}` : ''
+      }`;
+}
+
+/** Rückblick: lag die absolvierte Einheit im Rahmen des Votums? */
+function doneVerdict(today: RecoveryDay): { ok: boolean; demand: Vote } | null {
+  const act = actualSession(today);
+  if (!act || !today.vote) return null;
+  const demand = plannedDemand(act);
+  return { ok: VOTE_ORDER.indexOf(demand) <= VOTE_ORDER.indexOf(today.vote), demand };
+}
+
 function PlanCheck({ plan, today }: { plan: PlannedSession | null | 'loading'; today: RecoveryDay }) {
+  const done = isDoneToday(today, plan);
+  const act = actualSession(today);
+
+  // --- Rückblick: Training ist bereits gelaufen ---
+  if (done && act) {
+    const dv = doneVerdict(today);
+    const lvl: Level = !dv ? 'leer' : dv.ok ? 'gruen' : 'orange';
+    const planObj = plan && plan !== 'loading' ? plan : null;
+    const planDiffers =
+      planObj && !planObj.locked && (Math.abs(planObj.load - act.load) >= 10 || plannedDemand(planObj) !== dv?.demand);
+    return (
+      <div className={`rounded border px-3 py-2 ${dv ? (dv.ok ? 'border-ampel-gruen/40' : 'border-ampel-orange/50') : 'border-border'} ${LEVEL_CELL[lvl]}`}>
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="label">Training heute · absolviert</span>
+          <span className="text-2xs text-ink-dim">
+            {dv ? (dv.demand === 'REST' ? 'Ruhe' : `Anspruch ${VOTE_LABEL[dv.demand]}`) : ''}
+          </span>
+        </div>
+        <div className="mt-0.5 text-sm font-semibold tnum">✓ {sessionText(act)}</div>
+        {dv && today.vote && (
+          <div className={`mt-1 text-xs ${dv.ok ? 'text-green-300' : 'text-orange-300'}`}>
+            {dv.ok
+              ? `Im Rahmen des Votums (${VOTE_LABEL[dv.demand]} ≤ ${VOTE_LABEL[today.vote]}).`
+              : `Intensiver als das Votum (${VOTE_LABEL[dv.demand]} statt ${VOTE_LABEL[today.vote]}) – Erholung heute priorisieren.`}
+          </div>
+        )}
+        {planDiffers && planObj && (
+          <div className="mt-1 text-2xs text-ink-dim tnum">Geplant war: {sessionText(planObj)}.</div>
+        )}
+      </div>
+    );
+  }
+
   if (plan === 'loading') {
     return <div className="text-2xs text-ink-dim">Plan für heute wird geladen…</div>;
   }
   if (!plan) {
     return <div className="text-2xs text-ink-dim">Kein Plan für heute gefunden (Plan Cockpit / PlanApp).</div>;
   }
-  const planText =
-    plan.load <= 0 || plan.sport.toLowerCase() === 'off'
-      ? 'Ruhetag'
-      : `${fmtNum(plan.load)} ESS ${plan.sport || 'Training'}${plan.zone ? ` ${plan.zone}` : ''}${
-          plan.teAe || plan.teAn ? ` · TE ${fmtNum(plan.teAe, 1)}/${fmtNum(plan.teAn, 1)}` : ''
-        }`;
-  const done = today.activityDone || plan.locked;
   const verdict = today.vote ? planVerdict(plan, today.vote) : null;
   const lvl: Level = !verdict ? 'leer' : verdict.ok ? 'gruen' : 'orange';
   return (
     <div className={`rounded border px-3 py-2 ${verdict ? (verdict.ok ? 'border-ampel-gruen/40' : 'border-ampel-orange/50') : 'border-border'} ${LEVEL_CELL[lvl]}`}>
       <div className="flex items-baseline justify-between gap-2">
-        <span className="label">Plan heute</span>
+        <span className="label">Plan heute · offen</span>
         <span className="text-2xs text-ink-dim">
           {plannedDemand(plan) === 'REST' ? 'Ruhe' : `Anspruch ${VOTE_LABEL[plannedDemand(plan)]}`}
         </span>
       </div>
-      <div className="mt-0.5 text-sm font-semibold tnum">{planText}</div>
+      <div className="mt-0.5 text-sm font-semibold tnum">{sessionText(plan)}</div>
       {verdict && (
         <div className={`mt-1 text-xs ${verdict.ok ? 'text-green-300' : 'text-orange-300'}`}>
           {verdict.ok ? '' : `Votum ${VOTE_LABEL[today.vote!]} → `}
           {verdict.text}
-        </div>
-      )}
-      {done && (
-        <div className="mt-1 text-2xs text-ink-dim tnum">
-          Bereits absolviert
-          {today.actual.load != null
-            ? `: ${fmtNum(today.actual.load)} ESS ${today.actual.sport}${today.actual.zone ? ` ${today.actual.zone}` : ''}`
-            : ''}
-          .
         </div>
       )}
     </div>
@@ -746,6 +799,13 @@ function TodayCard({
     );
   }
   const vote = today.vote;
+  // Nach dem Training: Empfehlung auf Erholung/Morgen umstellen
+  const dv = isDoneToday(today, plan) ? doneVerdict(today) : null;
+  const doneAdvice = dv
+    ? dv.ok
+      ? 'Training für heute erledigt. Rest des Tages: Essen, Trinken, Schlaf ab 7:30 h – morgen früh neu bewerten.'
+      : 'Einheit war intensiver als empfohlen. Heute nichts mehr nachlegen, früh schlafen; morgen eher locker einplanen.'
+    : null;
   const lvl = vote ? VOTE_LEVEL[vote] : 'leer';
   const readinessDiff = today.readiness != null && yesterday?.readiness != null ? today.readiness - yesterday.readiness : null;
   const sleepGap = today.sleepH != null ? today.sleepH - SLEEP_GOAL_H : null;
@@ -851,7 +911,7 @@ function TodayCard({
         {vote && (
           <div>
             <div className="label mb-1">Empfehlung</div>
-            <p className="text-sm">{VOTE_ADVICE[vote]}</p>
+            <p className="text-sm">{doneAdvice ?? VOTE_ADVICE[vote]}</p>
           </div>
         )}
         <p className="text-2xs text-ink-dim">
