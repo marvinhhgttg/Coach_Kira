@@ -255,3 +255,12 @@
 .garmin-mode .text-gray-300 {
   color: #5f6f7d !important;
 }
+
+/* Befinden 1–5: gewählte Taste auch im Garmin-Modus deutlich markieren */
+.garmin-mode .btn.befinden-on { font-weight: 700; box-shadow: 0 0 0 1px currentColor inset; }
+.garmin-mode .btn.befinden-on[data-lvl="gruen"]  { background: #e2f4ea !important; border-color: #15935f !important; color: #0f7a4e !important; }
+.garmin-mode .btn.befinden-on[data-lvl="gelb"]   { background: #fdf3d6 !important; border-color: #c99a06 !important; color: #8a6a00 !important; }
+.garmin-mode .btn.befinden-on[data-lvl="orange"] { background: #fdeadb !important; border-color: #ef7d00 !important; color: #b85a00 !important; }
+.garmin-mode .btn.befinden-on[data-lvl="rot"]    { background: #fde4e4 !important; border-color: #d64545 !important; color: #b42318 !important; }
+.garmin-mode .btn.befinden-on[data-lvl="grau"],
+.garmin-mode .btn.befinden-on[data-lvl="leer"]   { background: #e6f5fb !important; border-color: #0077b6 !important; color: #0077b6 !important; }

@@ -758,7 +758,8 @@ function WellbeingInput({ todayIso, yesterdayIso, todayValue, yesterdayValue, on
                   setSaving(null);
                 }
               }}
-              className={`btn py-1.5 text-sm tnum font-semibold ${active ? `${LEVEL_CELL[lvl]} ${LEVEL_TEXT[lvl]} ring-1 ring-current` : ''}`}
+              className={`btn py-1.5 text-sm tnum font-semibold ${active ? `befinden-on ${LEVEL_CELL[lvl]} ${LEVEL_TEXT[lvl]} ring-1 ring-current` : ''}`}
+              data-lvl={active ? lvl : undefined}
               data-testid={`befinden-${v}`}
             >
               {saving === v ? '…' : v}
