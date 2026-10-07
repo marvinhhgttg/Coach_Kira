@@ -508,6 +508,61 @@ function demandOf(load: number | null, sport: string, zone: string, teAe: number
   });
 }
 
+/** Mini-Balken: Wochenlasten (rollierende 7-Tage-Blöcke bis heute) der letzten 10 Wochen. */
+function WeekLoadBars({ days }: { days: RecoveryDay[] }) {
+  const weeks: { end: string; start: string; load: number }[] = [];
+  for (let k = 0; k < 10; k++) {
+    const endIdx = days.length - 1 - k * 7;
+    const startIdx = endIdx - 6;
+    if (startIdx < 0) break;
+    const blk = days.slice(startIdx, endIdx + 1);
+    weeks.unshift({ start: blk[0].date, end: blk[blk.length - 1].date, load: blk.reduce((a, d) => a + (d.essDay ?? 0), 0) });
+  }
+  if (weeks.length < 2) return null;
+  const max = Math.max(...weeks.map((w) => w.load), 1);
+  const prev = weeks.slice(0, -1);
+  const avgPrev = prev.reduce((a, w) => a + w.load, 0) / prev.length;
+  const H = 44;
+  const avgY = H - (avgPrev / max) * H;
+  const last = weeks[weeks.length - 1];
+  const diffPct = avgPrev > 0 ? Math.round(((last.load - avgPrev) / avgPrev) * 100) : null;
+  return (
+    <div className="mt-3 border-t border-border pt-2">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-2xs text-ink-dim whitespace-nowrap">Wochenlast · {weeks.length} Wochen</span>
+        <span className="text-2xs text-ink-dim tnum whitespace-nowrap">
+          Ø {fmtNum(avgPrev)} ESS
+          {diffPct != null && (
+            <span className={`ml-1 ${Math.abs(diffPct) <= 15 ? 'text-ink-muted' : diffPct > 0 ? 'text-orange-300' : 'text-accent'}`}>
+              · jetzt {diffPct > 0 ? '+' : ''}{diffPct} %
+            </span>
+          )}
+        </span>
+      </div>
+      <div className="relative mt-1.5" style={{ height: H }}>
+        <div className="absolute inset-0 flex items-end gap-1">
+          {weeks.map((w, i) => {
+            const isLast = i === weeks.length - 1;
+            return (
+              <div
+                key={w.end}
+                className={`flex-1 rounded-sm ${isLast ? 'wk-bar-last bg-accent' : 'wk-bar bg-accent/35'}`}
+                style={{ height: `${Math.max(2, (w.load / max) * 100)}%` }}
+                title={`${fmtDateShort(w.start).slice(0, 6)}–${fmtDateShort(w.end).slice(0, 6)}: ${fmtNum(w.load)} ESS`}
+              />
+            );
+          })}
+        </div>
+        <div className="absolute left-0 right-0 border-t border-dashed border-ink-dim/60 pointer-events-none" style={{ top: avgY }} />
+      </div>
+      <div className="mt-1 flex justify-between text-2xs text-ink-dim tnum">
+        <span>{fmtDateShort(weeks[0].end).slice(0, 6)}</span>
+        <span>heute</span>
+      </div>
+    </div>
+  );
+}
+
 function WeekSummary({ days }: { days: RecoveryDay[] }) {
   const w = days.slice(-7);
   const avg = (xs: (number | null)[]) => {
@@ -584,6 +639,7 @@ function WeekSummary({ days }: { days: RecoveryDay[] }) {
           </ul>
         )}
       </div>
+      <WeekLoadBars days={days} />
     </div>
   );
 }
@@ -1175,7 +1231,7 @@ export function RecoveryPanel({
     setErr(null);
     loadPlan();
     try {
-      const res = await fetchChartData('60d', RECOVERY_FETCH_METRICS);
+      const res = await fetchChartData('90d', RECOVERY_FETCH_METRICS);
       setRaw(res.data as any[]);
     } catch (e) {
       setErr(e instanceof ApiError ? e.message : String(e));

@@ -264,3 +264,7 @@
 .garmin-mode .btn.befinden-on[data-lvl="rot"]    { background: #fde4e4 !important; border-color: #d64545 !important; color: #b42318 !important; }
 .garmin-mode .btn.befinden-on[data-lvl="grau"],
 .garmin-mode .btn.befinden-on[data-lvl="leer"]   { background: #e6f5fb !important; border-color: #0077b6 !important; color: #0077b6 !important; }
+
+/* Wochenlast-Minibalken im Garmin-Modus */
+.garmin-mode .wk-bar { background: rgba(0, 119, 182, 0.28) !important; }
+.garmin-mode .wk-bar-last { background: #0077b6 !important; }
