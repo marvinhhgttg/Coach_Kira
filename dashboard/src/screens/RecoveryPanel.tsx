@@ -20,7 +20,7 @@ import { CorrelationPanel } from './CorrelationPanel';
 // ---------------------------------------------------------------------------
 // Konfiguration
 // ---------------------------------------------------------------------------
-const SLEEP_GOAL_H = 7.5;
+export const SLEEP_GOAL_H = 7.5;
 const RHR_BASELINE_DAYS = 28;
 const RHR_BASELINE_MIN_VALUES = 7;
 
@@ -34,7 +34,7 @@ function rangeForSpan(n: Span): Range {
   return '360d';
 }
 
-const RECOVERY_FETCH_METRICS = [
+export const RECOVERY_FETCH_METRICS = [
   'Garmin_Training_Readiness',
   'rhr_bpm',
   'sleep_hours',
@@ -63,17 +63,17 @@ const MONOTONY_HIGH = 2.0;
 const ACWR_WARN = 1.3;
 const ACWR_HIGH = 1.5;
 
-type Level = 'gruen' | 'gelb' | 'orange' | 'rot' | 'grau' | 'leer';
-type Vote = 'QUALITY' | 'TRAIN' | 'EASY' | 'REST';
+export type Level = 'gruen' | 'gelb' | 'orange' | 'rot' | 'grau' | 'leer';
+export type Vote = 'QUALITY' | 'TRAIN' | 'EASY' | 'REST';
 
-const VOTE_ORDER: Vote[] = ['REST', 'EASY', 'TRAIN', 'QUALITY'];
-const VOTE_LABEL: Record<Vote, string> = {
+export const VOTE_ORDER: Vote[] = ['REST', 'EASY', 'TRAIN', 'QUALITY'];
+export const VOTE_LABEL: Record<Vote, string> = {
   QUALITY: 'Quality',
   TRAIN: 'Train',
   EASY: 'Easy',
   REST: 'Rest',
 };
-const VOTE_LEVEL: Record<Vote, Level> = {
+export const VOTE_LEVEL: Record<Vote, Level> = {
   QUALITY: 'gruen',
   TRAIN: 'gruen',
   EASY: 'gelb',
@@ -100,7 +100,7 @@ const LEVEL_DOT: Record<Level, string> = {
   grau: 'bg-ampel-grau',
   leer: 'bg-transparent border border-border-strong',
 };
-const LEVEL_CELL: Record<Level, string> = {
+export const LEVEL_CELL: Record<Level, string> = {
   gruen: 'bg-ampel-gruen/10',
   gelb: 'bg-ampel-gelb/10',
   orange: 'bg-ampel-orange/10',
@@ -108,7 +108,7 @@ const LEVEL_CELL: Record<Level, string> = {
   grau: 'bg-ampel-grau/10',
   leer: '',
 };
-const LEVEL_TEXT: Record<Level, string> = {
+export const LEVEL_TEXT: Record<Level, string> = {
   gruen: 'text-green-300',
   gelb: 'text-yellow-300',
   orange: 'text-orange-300',
@@ -120,7 +120,7 @@ const LEVEL_TEXT: Record<Level, string> = {
 // ---------------------------------------------------------------------------
 // Datenmodell
 // ---------------------------------------------------------------------------
-type RecoveryDay = {
+export type RecoveryDay = {
   date: string;
   readiness: number | null;
   rhr: number | null;
@@ -149,7 +149,7 @@ type RecoveryDay = {
   reasons: string[];
 };
 
-function localIsoDate(d = new Date()) {
+export function localIsoDate(d = new Date()) {
   // yyyy-mm-dd in lokaler Zeitzone (Europe/Berlin im Browser)
   return d.toLocaleDateString('sv-SE');
 }
@@ -285,7 +285,7 @@ function decideVote(d: Omit<RecoveryDay, 'vote' | 'reasons'>): { vote: Vote | nu
   return { vote, reasons };
 }
 
-function buildDays(raw: any[]): RecoveryDay[] {
+export function buildDays(raw: any[]): RecoveryDay[] {
   const rows = dedupeByDateKeepLast(
     raw.filter((r) => r && typeof r.date === 'string').map((r) => ({ ...r, date: String(r.date).slice(0, 10) })),
   ).sort((a: any, b: any) => (a.date < b.date ? -1 : 1));
@@ -509,7 +509,7 @@ function monotony7(loads: number[]): number | null {
   return sd > 0 ? m / sd : null;
 }
 
-function demandOf(load: number | null, sport: string, zone: string, teAe: number | null, teAn: number | null): Vote {
+export function demandOf(load: number | null, sport: string, zone: string, teAe: number | null, teAn: number | null): Vote {
   return plannedDemand({
     date: '',
     load: load ?? 0,
@@ -739,7 +739,7 @@ function Outlook({ days, plan }: { days: RecoveryDay[]; plan: PlanDaySim[] | nul
 // ---------------------------------------------------------------------------
 // Formatierung
 // ---------------------------------------------------------------------------
-function fmtHm(h: number | null) {
+export function fmtHm(h: number | null) {
   if (h == null || !Number.isFinite(h)) return '—';
   const sign = h < 0 ? '−' : '';
   const abs = Math.abs(h);

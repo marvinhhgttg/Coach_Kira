@@ -1,3 +1,4 @@
+import { MonthReport } from './MonthReport';
 import { useEffect, useRef, useState } from 'react';
 import {
   fetchStatus,
@@ -457,6 +458,7 @@ export function CommandCenter({
   return (
     <div className="space-y-6">
       <RecoveryPanel token={token} toast={toast} proxyAuthenticated={proxy.authenticated} />
+      <MonthReport />
       <section className="panel overflow-hidden">
         <div>
           <div className="p-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

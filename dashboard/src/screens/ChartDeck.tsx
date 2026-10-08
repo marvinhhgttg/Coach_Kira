@@ -1,3 +1,4 @@
+import { TrainingControl } from './TrainingControl';
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   CartesianGrid,
@@ -507,13 +508,13 @@ export function ChartDeck() {
       <Panel
         title="Chart Deck"
         right={
-          <div className="flex items-center gap-2">
-            <div className="inline-flex bg-bg rounded border border-border p-0.5" role="tablist">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex flex-wrap bg-bg rounded border border-border p-0.5" role="tablist">
               {RANGES.map((r) => (
                 <button
                   key={r}
                   onClick={() => setRange(r)}
-                  className={`px-2.5 py-1 text-xs rounded tnum ${
+                  className={`px-1.5 sm:px-2.5 py-1 text-xs rounded tnum ${
                     range === r
                       ? 'bg-bg-subtle text-ink'
                       : 'text-ink-muted hover:text-ink'
@@ -597,6 +598,8 @@ export function ChartDeck() {
           )}
         </div>
       </Panel>
+
+      <TrainingControl />
 
       {fullscreenSection && (
         <FullscreenChart
