@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { ApiError, dedupeByDateKeepLast, fetchChartData, fetchPlanSimulationWithTimeout, saveWellbeing, toNum } from '../lib/api';
+import { ApiError, dedupeByDateKeepLast, fetchChartData, fetchPlanSimulationWithTimeout, saveWellbeing, toNum, type Range } from '../lib/api';
 import { proxySaveWellbeing } from '../lib/proxy';
 import { fmtDateShort, fmtNum } from '../lib/format';
 import { ErrorBox, Panel, Skeleton } from '../components/UI';
@@ -22,6 +22,16 @@ import { ErrorBox, Panel, Skeleton } from '../components/UI';
 const SLEEP_GOAL_H = 7.5;
 const RHR_BASELINE_DAYS = 28;
 const RHR_BASELINE_MIN_VALUES = 7;
+
+type Span = 14 | 28 | 60 | 120 | 360;
+const SPANS: Span[] = [14, 28, 60, 120, 360];
+const RANGE_DAYS: Record<string, number> = { '7d': 7, '14d': 14, '28d': 28, '60d': 60, '90d': 90, '180d': 180, '360d': 360 };
+/** Datenfenster je Ansicht: +28 Tage Vorlauf für RHR-Baseline (360 T: max. Range der API). */
+function rangeForSpan(n: Span): Range {
+  if (n <= 60) return '90d';
+  if (n <= 120) return '180d';
+  return '360d';
+}
 
 const RECOVERY_FETCH_METRICS = [
   'Garmin_Training_Readiness',
@@ -284,7 +294,9 @@ function buildDays(raw: any[]): RecoveryDay[] {
     const rhr = toNum(r.rhr_bpm);
     const sleepH = toNum(r.sleep_hours);
     const sleepScore = toNum(r.sleep_score_0_100);
-    const hrv = toNum(r.hrv_status);
+    const hrvRaw = toNum(r.hrv_status);
+    // Plausibilität: offensichtliche Tippfehler (z. B. 334 statt 34) nicht anzeigen/werten
+    const hrv = hrvRaw != null && hrvRaw >= 10 && hrvRaw <= 200 ? hrvRaw : null;
     const [hrvLow, hrvHigh] = parseThresholds(r.hrv_threshholds);
 
     const prior = rows
@@ -1137,12 +1149,12 @@ function FourLanes({ days }: { days: RecoveryDay[] }) {
         <Line type="monotone" dataKey="Schlaf Ø7" stroke="#0ea5e9" strokeWidth={1.6} dot={false} connectNulls isAnimationActive={false} />
       </Lane>
       <Lane title="HRV" hint="Nachtwert · gestrichelt = untere Normalgrenze" data={data}>
-        <Line type="monotone" dataKey="HRV" stroke="#22c55e" strokeWidth={1.8} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
+        <Line type="monotone" dataKey="HRV" stroke="#22c55e" strokeWidth={1.8} dot={days.length > 60 ? false : { r: 2 }} connectNulls isAnimationActive={false} />
         <Line type="stepAfter" dataKey="HRV unten" stroke="#f97316" strokeDasharray="4 4" strokeWidth={1.2} dot={false} connectNulls isAnimationActive={false} />
       </Lane>
       <Lane title="Befinden" hint="1–5 · eigene Eingabe · gestrichelt = 3" data={data} yDomain={[1, 5]} showX height={130}>
         <ReferenceLine y={3} stroke="#eab308" strokeDasharray="3 3" />
-        <Line type="linear" dataKey="Befinden" stroke="#f472b6" strokeWidth={1.6} dot={{ r: 3.5, fill: '#f472b6' }} connectNulls isAnimationActive={false} />
+        <Line type="linear" dataKey="Befinden" stroke="#f472b6" strokeWidth={1.6} dot={days.length > 60 ? { r: 1.5, fill: '#f472b6' } : { r: 3.5, fill: '#f472b6' }} connectNulls isAnimationActive={false} />
       </Lane>
 
       {/* Status-Spur */}
@@ -1182,7 +1194,8 @@ export function RecoveryPanel({
   const [raw, setRaw] = useState<any[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(true);
-  const [span, setSpan] = useState<14 | 28>(14);
+  const [span, setSpan] = useState<Span>(14);
+  const [loadedRange, setLoadedRange] = useState<Range | null>(null);
   const [planToday, setPlanToday] = useState<PlannedSession | null | 'loading'>('loading');
   const [planDays, setPlanDays] = useState<PlanDaySim[] | null | 'loading'>('loading');
 
@@ -1226,17 +1239,22 @@ export function RecoveryPanel({
     }
   }
 
-  async function load() {
+  const reqSeq = useRef(0);
+  async function load(range: Range = rangeForSpan(span), withPlan = true) {
+    const my = ++reqSeq.current;
     setBusy(true);
     setErr(null);
-    loadPlan();
+    if (withPlan) loadPlan();
     try {
-      const res = await fetchChartData('90d', RECOVERY_FETCH_METRICS);
+      const res = await fetchChartData(range, RECOVERY_FETCH_METRICS);
+      if (my !== reqSeq.current) return; // veraltete Antwort verwerfen
       setRaw(res.data as any[]);
+      setLoadedRange(range);
     } catch (e) {
+      if (my !== reqSeq.current) return;
       setErr(e instanceof ApiError ? e.message : String(e));
     } finally {
-      setBusy(false);
+      if (my === reqSeq.current) setBusy(false);
     }
   }
 
@@ -1277,17 +1295,21 @@ export function RecoveryPanel({
       right={
         <div className="flex items-center gap-2">
           <div className="inline-flex bg-bg rounded border border-border p-0.5">
-            {[14, 28].map((n) => (
+            {SPANS.map((n) => (
               <button
                 key={n}
-                onClick={() => setSpan(n as 14 | 28)}
+                onClick={() => {
+                  setSpan(n);
+                  const need = rangeForSpan(n);
+                  if (RANGE_DAYS[need] > RANGE_DAYS[loadedRange || '90d'] || (!loadedRange && need !== '90d')) load(need, false);
+                }}
                 className={`px-2.5 py-1 text-xs rounded tnum whitespace-nowrap ${span === n ? 'bg-bg-subtle text-ink' : 'text-ink-muted hover:text-ink'}`}
               >
                 {n} T
               </button>
             ))}
           </div>
-          <button onClick={load} className="btn btn-ghost text-xs px-2 py-1" disabled={busy}>
+          <button onClick={() => load()} className="btn btn-ghost text-xs px-2 py-1" disabled={busy}>
             {busy ? 'Lade…' : 'Aktualisieren'}
           </button>
         </div>
