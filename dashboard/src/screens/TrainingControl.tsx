@@ -454,8 +454,8 @@ function FitnessCard({ days }: { days: Day[] }) {
                   <YAxis width={40} tickLine={false} tick={{ fontSize: 9 }} unit="%" />
                   <ReferenceLine y={0} stroke="#475569" />
                   <ReferenceLine y={5} stroke="#eab308" strokeDasharray="3 3" />
-                  <Tooltip formatter={(v: any) => [`${fmtNum(v, 1)} %`, 'Rampe']} />
-                  <Bar dataKey="Rampe" isAnimationActive={false}>
+                  <Tooltip formatter={(v: any) => [`${fmtNum(v, 1)} %`, 'CTL-Rampe']} />
+                  <Bar dataKey="Rampe" fill="#94a3b8" isAnimationActive={false}>
                     {ramps.map((r) => (
                       <Cell key={r.label} fill={r.Rampe == null ? C.unk : r.Rampe > 8 ? '#f97316' : r.Rampe > 5 ? '#eab308' : r.Rampe < 0 ? '#38bdf8' : '#22c55e'} fillOpacity={0.7} />
                     ))}
