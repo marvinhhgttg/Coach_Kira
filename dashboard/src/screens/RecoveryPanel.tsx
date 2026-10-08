@@ -15,6 +15,7 @@ import { ApiError, dedupeByDateKeepLast, fetchChartData, fetchPlanSimulationWith
 import { proxySaveWellbeing } from '../lib/proxy';
 import { fmtDateShort, fmtNum } from '../lib/format';
 import { ErrorBox, Panel, Skeleton } from '../components/UI';
+import { CorrelationPanel } from './CorrelationPanel';
 
 // ---------------------------------------------------------------------------
 // Konfiguration
@@ -1293,7 +1294,7 @@ export function RecoveryPanel({
     <Panel
       title="Recovery · Tagesentscheid"
       right={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="inline-flex bg-bg rounded border border-border p-0.5">
             {SPANS.map((n) => (
               <button
@@ -1303,7 +1304,7 @@ export function RecoveryPanel({
                   const need = rangeForSpan(n);
                   if (RANGE_DAYS[need] > RANGE_DAYS[loadedRange || '90d'] || (!loadedRange && need !== '90d')) load(need, false);
                 }}
-                className={`px-2.5 py-1 text-xs rounded tnum whitespace-nowrap ${span === n ? 'bg-bg-subtle text-ink' : 'text-ink-muted hover:text-ink'}`}
+                className={`px-1.5 sm:px-2.5 py-1 text-xs rounded tnum whitespace-nowrap ${span === n ? 'bg-bg-subtle text-ink' : 'text-ink-muted hover:text-ink'}`}
               >
                 {n} T
               </button>
@@ -1354,6 +1355,7 @@ export function RecoveryPanel({
           <div className="panel-raised p-3">
             <FourLanes days={laneDays} />
           </div>
+          <CorrelationPanel days={laneDays} spanLabel={`${span} Tage`} />
         </div>
       )}
     </Panel>

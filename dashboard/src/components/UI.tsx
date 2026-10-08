@@ -14,7 +14,7 @@ export function Panel({
   return (
     <section className={`panel ${className}`}>
       {(title || right) && (
-        <header className="flex items-center justify-between px-4 py-2.5 border-b border-border">
+        <header className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 border-b border-border">
           {title && <h2 className="label">{title}</h2>}
           {right}
         </header>
