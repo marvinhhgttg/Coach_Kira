@@ -188,7 +188,7 @@ function conclusions(cur: MonthStats, prev: MonthStats | null): string[] {
   return out;
 }
 
-export function MonthReport() {
+export function MonthReport({ days: given }: { days?: RecoveryDay[] } = {}) {
   const [raw, setRaw] = useState<any[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [sel, setSel] = useState<string>(localIsoDate().slice(0, 7));
@@ -206,13 +206,13 @@ export function MonthReport() {
   }, [visible]);
 
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || given) return;
     fetchChartData('360d', RECOVERY_FETCH_METRICS)
       .then((r) => setRaw(r.data as any[]))
       .catch((e) => setErr(e instanceof ApiError ? e.message : String(e)));
   }, [visible]);
 
-  const all = useMemo(() => (raw ? buildDays(raw) : []), [raw]);
+  const all = useMemo(() => given ?? (raw ? buildDays(raw) : []), [raw, given]);
   const months = useMemo(() => {
     const ks = [...new Set(all.map((d) => d.date.slice(0, 7)))].sort();
     return ks.slice(-6);

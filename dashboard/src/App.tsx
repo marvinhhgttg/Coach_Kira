@@ -4,7 +4,7 @@ import { PlanCockpit } from './screens/PlanCockpit';
 import { ChartDeck } from './screens/ChartDeck';
 import { TacticalLog } from './screens/TacticalLog';
 import { EntryPanel } from './screens/EntryPanel';
-import { MonthReport } from './screens/MonthReport';
+import { Reports } from './screens/Reports';
 import { Toast } from './components/UI';
 import { Logo } from './components/Logo';
 import { fmtTime } from './lib/format';
@@ -18,7 +18,7 @@ const TABS: { id: Tab; label: string; sub: string }[] = [
   { id: 'entry', label: 'Eingabe', sub: 'morgens · aktivität · abends' },
   { id: 'plan', label: 'Plan', sub: 'Plan Cockpit' },
   { id: 'charts', label: 'Analyse', sub: 'Steuerung · Verlauf' },
-  { id: 'reports', label: 'Berichte', sub: 'Monatsbericht' },
+  { id: 'reports', label: 'Berichte', sub: 'Monat · Woche · Jahr' },
   { id: 'logs', label: 'Log', sub: 'Aktivitäten' },
 ];
 
@@ -201,7 +201,7 @@ export function App() {
         {tab === 'entry' && <EntryPanel token={token} toast={pushToast} proxyAuthenticated={proxy.authenticated} />}
         {tab === 'plan' && <PlanCockpit token={token} toast={pushToast} proxyAuthenticated={proxy.authenticated} />}
         {tab === 'charts' && <ChartDeck />}
-        {tab === 'reports' && <MonthReport />}
+        {tab === 'reports' && <Reports />}
         {tab === 'logs' && <TacticalLog />}
       </main>
 
