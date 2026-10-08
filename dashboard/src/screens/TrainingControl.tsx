@@ -34,7 +34,6 @@ const TC_METRICS = [
   'fbCTL_obs',
   'activity_done',
 ] as const;
-const PLAN_METRICS = ['plan_load', 'plan_sport', 'plan_zone'] as const;
 
 const GRID = '#1f2731';
 const C = {
@@ -46,8 +45,6 @@ const C = {
   atl: '#f97316',
   mono: '#a855f7',
   strain: '#7dd3fc',
-  plan: '#94a3b8',
-  ist: '#7dd3fc',
 };
 
 type Day = {
@@ -62,9 +59,6 @@ type Day = {
   atl: number | null;
   ctl: number | null;
   done: boolean;
-  planLoad: number | null;
-  planSport: string;
-  planZone: string;
 };
 
 type Win = 90 | 180 | 360;
@@ -478,67 +472,6 @@ function FitnessCard({ days }: { days: Day[] }) {
 }
 
 // ---------------------------------------------------------------------------
-// 4) Plan vs. Ist
-// ---------------------------------------------------------------------------
-function PlanActualCard({ days, available }: { days: Day[]; available: boolean }) {
-  const withPlan = days.filter((d) => d.planLoad != null && d.date < localIso());
-  const weeks = useMemo(() => {
-    const map = new Map<string, { label: string; monday: string; Plan: number; Ist: number; hit: number; n: number }>();
-    for (const d of withPlan) {
-      const w = isoWeek(d.date);
-      if (!map.has(w.key)) map.set(w.key, { label: `KW ${w.kw}`, monday: w.monday, Plan: 0, Ist: 0, hit: 0, n: 0 });
-      const o = map.get(w.key)!;
-      o.Plan += d.planLoad!;
-      o.Ist += d.ess;
-      o.n++;
-      const p = d.planLoad!;
-      if ((p === 0 && d.ess === 0) || (p > 0 && Math.abs(d.ess - p) / p <= 0.15)) o.hit++;
-    }
-    return [...map.values()];
-  }, [withPlan]);
-  const n = withPlan.length;
-  const hit = withPlan.filter((d) => (d.planLoad === 0 && d.ess === 0) || (d.planLoad! > 0 && Math.abs(d.ess - d.planLoad!) / d.planLoad! <= 0.15)).length;
-  const sumP = withPlan.reduce((a, d) => a + d.planLoad!, 0);
-  const sumI = withPlan.reduce((a, d) => a + d.ess, 0);
-  const bias = sumP > 0 ? ((sumI - sumP) / sumP) * 100 : null;
-  return (
-    <Card title="Plan vs. Ist" hint="Geplante Last (Stand Tagesbeginn) gegen absolvierte Last · Treffer = ±15 % oder geplanter Ruhetag eingehalten">
-      {(h) =>
-        !available || n === 0 ? (
-          <div className="px-3 py-6 text-sm text-ink-muted leading-relaxed" style={{ minHeight: 160 }}>
-            Noch keine Plan-Historie vorhanden. Die Timeline überschreibt die geplante Last mit dem Ist-Wert, sobald eine Einheit
-            eingetragen ist – deshalb wird ab sofort jeden Morgen beim Tageswechsel der Plan des Tages festgehalten
-            (Spalten <code>plan_load</code>, <code>plan_sport</code>, <code>plan_zone</code>). Die Auswertung füllt sich danach Tag für Tag.
-          </div>
-        ) : (
-          <>
-            <div className="px-2 grid grid-cols-2 sm:grid-cols-4 gap-3 mb-2">
-              <Stat label="Tage mit Plan" value={n} />
-              <Stat label="Treffer" value={`${hit} / ${n}`} sub={`${Math.round((hit / n) * 100)} %`} tone={hit / n >= 0.7 ? 'text-green-300' : 'text-yellow-300'} />
-              <Stat label="Σ Plan / Ist" value={`${fmtNum(sumP)} / ${fmtNum(sumI)}`} />
-              <Stat label="Abweichung" value={bias != null ? `${bias > 0 ? '+' : ''}${fmtNum(bias, 0)} %` : '—'} tone={bias != null && Math.abs(bias) > 15 ? 'text-orange-300' : ''} />
-            </div>
-            <div style={{ height: h }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={weeks} margin={{ top: 6, right: 8, left: 0, bottom: 0 }}>
-                  <CartesianGrid stroke={GRID} vertical={false} />
-                  <XAxis dataKey="label" tickLine={false} tick={{ fontSize: 10 }} />
-                  <YAxis width={40} tickLine={false} tick={{ fontSize: 10 }} />
-                  <Tooltip formatter={(v: any, nm: string) => [`${fmtNum(v)} ESS`, nm]} />
-                  <Legend wrapperStyle={{ fontSize: 10 }} />
-                  <Bar dataKey="Plan" fill={C.plan} fillOpacity={0.5} isAnimationActive={false} />
-                  <Bar dataKey="Ist" fill={C.ist} fillOpacity={0.8} isAnimationActive={false} />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </div>
-          </>
-        )
-      }
-    </Card>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Container
 // ---------------------------------------------------------------------------
 const RANGE_OF: Record<Win, Range> = { 90: '90d', 180: '180d', 360: '360d' };
@@ -546,7 +479,6 @@ const RANGE_OF: Record<Win, Range> = { 90: '90d', 180: '180d', 360: '360d' };
 export function TrainingControl() {
   const [win, setWin] = useState<Win>(180);
   const [raw, setRaw] = useState<any[] | null>(null);
-  const [planRaw, setPlanRaw] = useState<any[] | null>(null);
   const [plan, setPlan] = useState<PlanDay[] | null | 'loading'>('loading');
   const [busy, setBusy] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -559,10 +491,6 @@ export function TrainingControl() {
       .then((r) => alive && setRaw(r.data as any[]))
       .catch((e) => alive && setErr(e instanceof ApiError ? e.message : String(e)))
       .finally(() => alive && setBusy(false));
-    // Plan-Historie: Spalten existieren evtl. noch nicht → still ignorieren
-    fetchChartData('360d', PLAN_METRICS as any)
-      .then((r) => alive && setPlanRaw((r.data as any[]) || []))
-      .catch(() => alive && setPlanRaw([]));
     fetchPlanSimulationWithTimeout(45000)
       .then((sim: any) => {
         if (!alive) return;
@@ -581,14 +509,10 @@ export function TrainingControl() {
   const allDays: Day[] = useMemo(() => {
     if (!raw) return [];
     const today = localIso();
-    const pmap = new Map<string, any>();
-    for (const r of planRaw || []) pmap.set(String(r.date).slice(0, 10), r);
     return dedupeByDateKeepLast(raw.filter((r) => r && typeof r.date === 'string').map((r) => ({ ...r, date: String(r.date).slice(0, 10) })))
       .sort((a: any, b: any) => (a.date < b.date ? -1 : 1))
       .filter((r: any) => r.date <= today)
       .map((r: any) => {
-        const p = pmap.get(r.date);
-        const pl = p ? toNum(p.plan_load) : null;
         return {
           date: r.date,
           ess: toNum(r.coachE_ESS_day) ?? 0,
@@ -601,14 +525,10 @@ export function TrainingControl() {
           atl: toNum(r.fbATL_obs),
           ctl: toNum(r.fbCTL_obs),
           done: String(r.activity_done || '').trim().toLowerCase() === 'x',
-          planLoad: pl,
-          planSport: p ? String(p.plan_sport || '') : '',
-          planZone: p ? String(p.plan_zone || '') : '',
         };
       });
-  }, [raw, planRaw]);
+  }, [raw]);
   const days = allDays.slice(-win);
-  const planAvailable = (planRaw || []).some((r) => toNum(r.plan_load) != null);
 
   return (
     <Panel
@@ -639,8 +559,9 @@ export function TrainingControl() {
         <div className="grid gap-4 grid-cols-[minmax(0,1fr)] lg:grid-cols-2">
           <MonotonyCard days={days} plan={plan} />
           <IntensityCard days={days} />
-          <FitnessCard days={days} />
-          <PlanActualCard days={days} available={planAvailable} />
+          <div className="lg:col-span-2 min-w-0">
+            <FitnessCard days={days} />
+          </div>
         </div>
       )}
     </Panel>
