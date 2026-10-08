@@ -1,3 +1,4 @@
+import { RecoveryPanel } from './RecoveryPanel';
 import { TrainingControl } from './TrainingControl';
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import {
@@ -371,9 +372,10 @@ export function ChartDeck() {
     setBusy(false);
   }, [range]);
 
+  const [rawOpen, setRawOpen] = useState(false);
   useEffect(() => {
-    load_();
-  }, [load_]);
+    if (rawOpen) load_();
+  }, [load_, rawOpen]);
 
   const loadRows = useMemo(
     () => (load ? normaliseData(load.data, LOAD_METRICS) : []),
@@ -505,10 +507,16 @@ export function ChartDeck() {
 
   return (
     <div className="space-y-5">
+      <TrainingControl />
+      <RecoveryPanel mode="history" />
       <Panel
-        title="Chart Deck"
+        title="Einzelmetriken"
         right={
           <div className="flex flex-wrap items-center gap-2">
+            <button className="btn btn-ghost text-xs px-2 py-1" onClick={() => setRawOpen((o) => !o)} data-testid="toggle-raw">
+              {rawOpen ? '▴ Einklappen' : '▾ Ausklappen'}
+            </button>
+            {rawOpen && <>
             <div className="inline-flex flex-wrap bg-bg rounded border border-border p-0.5" role="tablist">
               {RANGES.map((r) => (
                 <button
@@ -528,9 +536,16 @@ export function ChartDeck() {
             <button onClick={load_} className="btn btn-ghost text-xs px-2 py-1" disabled={busy}>
               {busy ? 'Lade…' : 'Aktualisieren'}
             </button>
+            </>}
           </div>
         }
       >
+        {!rawOpen ? (
+          <button className="w-full text-left text-xs text-ink-muted hover:text-ink" onClick={() => setRawOpen(true)}>
+            Load, ATL/CTL, ACWR/KEI, Schlaf, RHR und Readiness als frei wählbare Einzeldiagramme (7–360 Tage) – zum Öffnen klicken.
+          </button>
+        ) : (
+        <>
         <div className="text-2xs text-ink-dim tnum mb-3">
           Load · {load?.timestamp ? fmtTime(load.timestamp) : '—'} &nbsp;·&nbsp; Recovery ·{' '}
           {recovery?.timestamp ? fmtTime(recovery.timestamp) : '—'}
@@ -597,9 +612,9 @@ export function ChartDeck() {
               ))
           )}
         </div>
+        </>
+        )}
       </Panel>
-
-      <TrainingControl />
 
       {fullscreenSection && (
         <FullscreenChart

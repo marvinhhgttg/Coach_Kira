@@ -1,4 +1,3 @@
-import { MonthReport } from './MonthReport';
 import { useEffect, useRef, useState } from 'react';
 import {
   fetchStatus,
@@ -444,6 +443,7 @@ export function CommandCenter({
     }
   }
 
+  const [kiOpen, setKiOpen] = useState(false);
   const summary = status?.summary;
   const hb = status?.heartbeat;
   const items = summary?.items || [];
@@ -458,7 +458,6 @@ export function CommandCenter({
   return (
     <div className="space-y-6">
       <RecoveryPanel token={token} toast={toast} proxyAuthenticated={proxy.authenticated} />
-      <MonthReport />
       <section className="panel overflow-hidden">
         <div>
           <div className="p-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -498,7 +497,21 @@ export function CommandCenter({
 
       {/* Status items, if present */}
       {summary?.items && summary.items.length > 0 && (
-        <Panel title="Status-Items">
+        <Panel
+          title="KI-Lage · Analysen & Detailwerte"
+          right={
+            <button className="btn btn-ghost text-xs px-2 py-1" onClick={() => setKiOpen((o) => !o)} data-testid="toggle-ki">
+              {kiOpen ? '▴ Einklappen' : '▾ Ausklappen'}
+            </button>
+          }
+        >
+          {!kiOpen ? (
+            <button className="w-full text-left text-xs text-ink-muted hover:text-ink" onClick={() => setKiOpen(true)}>
+              Konsolidierte Analyse {consolidatedTs ? `· Stand ${fmtDateTime(consolidatedTs)}` : '· noch keine'} · KI-Analyse{' '}
+              {analysisTs ? `· Stand ${fmtDateTime(analysisTs)}` : '· noch keine'} · {summary.items.length} Detailwerte & Radar – zum Öffnen klicken.
+            </button>
+          ) : (
+          <>
           <div className="mb-4 panel-raised p-4 border-ampel-lila/25">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -553,11 +566,12 @@ export function CommandCenter({
             )}
           </div>
           <DetailScores items={summary.items} />
+          <div className="mt-4">
+            <StatusRadarSection items={summary.items} />
+          </div>
+          </>
+          )}
         </Panel>
-      )}
-
-      {summary?.items && summary.items.length > 0 && (
-        <StatusRadarSection items={summary.items} />
       )}
 
       {/* Letzter Lauf (ganz unten) */}

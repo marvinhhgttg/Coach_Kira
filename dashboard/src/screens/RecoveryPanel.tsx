@@ -1184,14 +1184,18 @@ function FourLanes({ days }: { days: RecoveryDay[] }) {
 type ToastFn = (kind: 'ok' | 'err' | 'info', text: string) => void;
 
 export function RecoveryPanel({
-  token,
-  toast,
-  proxyAuthenticated,
+  token = '',
+  toast = () => {},
+  proxyAuthenticated = false,
+  mode = 'today',
 }: {
-  token: string;
-  toast: ToastFn;
-  proxyAuthenticated: boolean;
+  token?: string;
+  toast?: ToastFn;
+  proxyAuthenticated?: boolean;
+  /** today = Tagesentscheid (Heute-Seite) · history = Verlauf + Korrelationen (Analyse-Seite) */
+  mode?: 'today' | 'history';
 }) {
+  const isToday = mode === 'today';
   const [raw, setRaw] = useState<any[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(true);
@@ -1260,7 +1264,7 @@ export function RecoveryPanel({
   }
 
   useEffect(() => {
-    load();
+    load(rangeForSpan(span), isToday);
   }, []);
 
   const todayIso = localIsoDate();
@@ -1292,10 +1296,10 @@ export function RecoveryPanel({
 
   return (
     <Panel
-      title="Recovery · Tagesentscheid"
+      title={isToday ? 'Heute · Tagesentscheid' : 'Erholungsverlauf & Korrelationen'}
       right={
         <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex bg-bg rounded border border-border p-0.5">
+          {!isToday && <div className="inline-flex bg-bg rounded border border-border p-0.5">
             {SPANS.map((n) => (
               <button
                 key={n}
@@ -1309,15 +1313,15 @@ export function RecoveryPanel({
                 {n} T
               </button>
             ))}
-          </div>
-          <button onClick={() => load()} className="btn btn-ghost text-xs px-2 py-1" disabled={busy}>
+          </div>}
+          <button onClick={() => load(rangeForSpan(span), isToday)} className="btn btn-ghost text-xs px-2 py-1" disabled={busy}>
             {busy ? 'Lade…' : 'Aktualisieren'}
           </button>
         </div>
       }
     >
       {err ? (
-        <ErrorBox message={err} onRetry={load} />
+        <ErrorBox message={err} onRetry={() => load(rangeForSpan(span), isToday)} />
       ) : busy && !raw ? (
         <div className="grid gap-4 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(300px,1fr)_minmax(0,2fr)]">
           <Skeleton className="h-72" />
@@ -1325,7 +1329,7 @@ export function RecoveryPanel({
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="grid gap-4 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(300px,1fr)_minmax(0,2fr)]">
+          {isToday && <div className="grid gap-4 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(300px,1fr)_minmax(0,2fr)]">
             <TodayCard
               today={today}
               yesterday={yesterday}
@@ -1351,11 +1355,15 @@ export function RecoveryPanel({
                 <Outlook days={days} plan={planDays} />
               </div>
             </div>
-          </div>
-          <div className="panel-raised p-3">
-            <FourLanes days={laneDays} />
-          </div>
-          <CorrelationPanel days={laneDays} spanLabel={`${span} Tage`} />
+          </div>}
+          {!isToday && (
+            <>
+              <div className="panel-raised p-3">
+                <FourLanes days={laneDays} />
+              </div>
+              <CorrelationPanel days={laneDays} spanLabel={`${span} Tage`} />
+            </>
+          )}
         </div>
       )}
     </Panel>
