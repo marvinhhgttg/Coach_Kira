@@ -862,7 +862,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
               <table className="min-w-[1180px] text-xs">
                 <thead className="sticky top-0 bg-bg-panel z-10">
                   <tr className="text-left border-b border-border">
-                    {['Datum', 'Phase', 'Last (ESS)', 'Sport', 'Zone', 'TE AE/AN', 'ATL', 'CTL', 'ACWR', 'KI', 'SG', 'Flag', 'Prüfung'].map((h) => (
+                    {['Datum', 'Last (ESS)', 'Sport', 'Zone', 'TE AE/AN', 'ATL', 'CTL', 'ACWR', 'KI', 'SG', 'Flag', 'Prüfung'].map((h) => (
                       <th key={h} className="label px-2 py-2">{h}</th>
                     ))}
                   </tr>
@@ -877,7 +877,6 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
                           <div key={e.id} className="text-2xs text-accent">★ {e.label}</div>
                         ))}
                       </td>
-                      <td className="px-2 py-3"><span className="chip border border-border-strong bg-bg-subtle">{d.phase}</span></td>
                       <td className="px-2 py-3 w-64">
                         <div className="flex items-center gap-3">
                           <input
