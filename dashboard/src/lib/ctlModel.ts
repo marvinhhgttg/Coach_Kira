@@ -28,3 +28,14 @@ export function windowMean(series: number[], win = CTL_MODEL.win) {
   const w = series.slice(-win);
   return w.length ? w.reduce((a, b) => a + b, 0) / w.length : 0;
 }
+
+/**
+ * Näherung Garmin-Ausdauerwert (garminEnduranceScore), gefittet auf KK_TIMELINE
+ * (Tage ab 24.12.2025): O_t = 155,91 + 0,96845·O_{t-1} + 0,1537·Load_t + 0,2993·Ø56(Load).
+ * Fehler mit echten Lasten: 7 T ±133, 28 T ±206, 56 T ±220 (Bias ≈ 0). Lange Touren erzeugt
+ * Garmin-Sprünge (bis ±380), die die Formel nicht abbildet.
+ */
+export const ES_MODEL = { a: 155.91432, b: 0.96845, c: 0.1537, d: 0.2993, win: 56 };
+export function esStep(es: number, load: number, mean56: number) {
+  return ES_MODEL.a + ES_MODEL.b * es + ES_MODEL.c * load + ES_MODEL.d * mean56;
+}

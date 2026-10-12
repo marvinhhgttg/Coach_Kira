@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StrategyPanel, planChecks, useEvents } from './StrategyPanel';
-import { atlStep, ctlStep, windowMean } from '../lib/ctlModel';
+import { atlStep, ctlStep, windowMean, esStep, ES_MODEL } from '../lib/ctlModel';
 import {
   ApiError,
   LOAD_METRICS,
@@ -120,6 +120,7 @@ const CURRENT_SIM_PATTERN: Array<{ load: number; sport: string; zone: string; t1
 const DAY_NAMES = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 const PLAN_ANCHOR_METRICS = [
   'coachE_ESS_day',
+  'garminEnduranceScore',
   'coachE_ATL_forecast',
   'coachE_CTL_forecast',
   'coachE_ACWR_forecast',
@@ -259,6 +260,17 @@ function rollingMonotonyWithSeed(loadHistorySeed: number[], loads: number[], idx
   return mean / sd;
 }
 
+/** Letzter vorhandener Garmin-Ausdauerwert bis einschließlich firstDate. */
+function lastEs(rows: any[], firstDate?: string): { date: string; value: number } | null {
+  for (let i = rows.length - 1; i >= 0; i--) {
+    const r = rows[i];
+    if (typeof r?.date !== 'string' || (firstDate && r.date > firstDate)) continue;
+    const v = toNum(r.garminEnduranceScore);
+    if (v != null && v > 1000) return { date: r.date, value: v };
+  }
+  return null;
+}
+
 function simulate(
   base: PlanDay[],
   loads: number[],
@@ -374,6 +386,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
   const [startCtl, setStartCtl] = useState(949);
   const [ctlHistory, setCtlHistory] = useState<number[]>([]);
   const [loadHistory, setLoadHistory] = useState<number[]>([]);
+  const [esAnchor, setEsAnchor] = useState<{ date: string; value: number } | null>(null);
   const [simConfig, setSimConfig] = useState<Record<string, any> | null>(null);
   const [maxEss, setMaxEss] = useState(300);
   const [source, setSource] = useState<'PlanApp' | 'Fallback'>('Fallback');
@@ -441,7 +454,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
         const firstDate = sim.days[0]?.date;
         const loadSeed = anchorRows
           .filter((row) => typeof row.date === 'string' && (!firstDate || row.date <= firstDate))
-          .slice(-28)
+          .slice(-56)
           .map((row) => toNum(row.coachE_ESS_day) ?? 0);
         const normalized: PlanDay[] = sim.days.map((d: any) => ({
           index: d.index,
@@ -486,6 +499,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
         setStartCtl(Number(sim.base?.ctl || 949));
         setCtlHistory(sim.base?.ctlHistory || []);
         setLoadHistory(loadSeed);
+        setEsAnchor(lastEs(anchorRows, firstDate));
         setSimConfig(sim.base?.config || null);
         setSource('PlanApp');
         setSourceReason(null);
@@ -575,10 +589,11 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
       setStartCtl(toNum(anchorBefore?.coachE_CTL_forecast) ?? 949);
       const loadSeed = anchorRows
         .filter((row) => typeof row.date === 'string' && (!firstDate || row.date <= firstDate))
-        .slice(-28)
+        .slice(-56)
         .map((row) => toNum(row.coachE_ESS_day) ?? 0);
       setCtlHistory([]);
       setLoadHistory(loadSeed);
+      setEsAnchor(lastEs(anchorRows, firstDate));
       setSimConfig(null);
       setSource('Fallback');
       setSourceReason(simReason);
@@ -612,6 +627,20 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
     [plan, startAtl, startCtl, sports, zones, teAe, teAn, locks, ctlHistory, loadHistory, simConfig],
   );
   const checks = useMemo(() => planChecks(sim, recGap), [sim, recGap]);
+  // Ausdauerwert-Simulation: Tag 1 = letzter Garmin-Wert, danach Formel (src/lib/ctlModel.ts)
+  const esSeries = useMemo(() => {
+    if (!esAnchor || !sim.length) return [] as number[];
+    let es = esAnchor.value;
+    const series = [...loadHistory];
+    return sim.map((d, i) => {
+      if (i > 0) {
+        const l = Math.max(0, d.sim_load ?? 0);
+        series.push(l);
+        es = esStep(es, l, windowMean(series, ES_MODEL.win));
+      }
+      return es;
+    });
+  }, [esAnchor, sim, loadHistory]);
   const applyLoadsFromStrategy = (l: number[], msg: string) => {
     userEditedRef.current = true;
     setLoads(l);
@@ -862,7 +891,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
               <table className="min-w-[1180px] text-xs">
                 <thead className="sticky top-0 bg-bg-panel z-10">
                   <tr className="text-left border-b border-border">
-                    {['Datum', 'Last (ESS)', 'Sport', 'Zone', 'TE AE/AN', 'ATL', 'CTL', 'ACWR', 'KI', 'SG', 'Flag', 'Prüfung'].map((h) => (
+                    {['Datum', 'Last (ESS)', 'Sport', 'Zone', 'TE AE/AN', 'ATL', 'CTL', 'Ausdauer', 'ACWR', 'KI', 'SG', 'Flag', 'Prüfung'].map((h) => (
                       <th key={h} className="label px-2 py-2">{h}</th>
                     ))}
                   </tr>
@@ -938,6 +967,14 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
                       </td>
                       <td className="px-2 py-3 tnum">{fmtNum(d.atl)}</td>
                       <td className="px-2 py-3 tnum">{fmtNum(d.ctl)}</td>
+                      <td className="px-2 py-3 tnum" title={i === 0 && esAnchor ? `Garmin-Wert vom ${esAnchor.date}` : 'Simulation (Näherungsformel)'}>
+                        {esSeries[i] != null ? fmtNum(esSeries[i]) : '–'}
+                        {i > 0 && esSeries[i] != null && esSeries[0] != null && (
+                          <div className={`text-2xs ${esSeries[i] - esSeries[0] >= 0 ? 'text-green-300' : 'text-orange-300'}`}>
+                            {esSeries[i] - esSeries[0] >= 0 ? '+' : ''}{fmtNum(esSeries[i] - esSeries[0])}
+                          </div>
+                        )}
+                      </td>
                       <td className="px-2 py-3">
                         <div className="flex flex-col gap-1">
                           <span className={`chip border ${d.acwr > 1.3 ? 'border-ampel-orange/40 bg-ampel-orange/10 text-orange-300' : 'border-ampel-gruen/40 bg-ampel-gruen/10 text-green-300'}`}>
