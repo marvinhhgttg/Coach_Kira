@@ -16,6 +16,7 @@ import { proxySaveWellbeing } from '../lib/proxy';
 import { fmtDateShort, fmtNum } from '../lib/format';
 import { ErrorBox, Panel, Skeleton } from '../components/UI';
 import { CorrelationPanel } from './CorrelationPanel';
+import { atlStep, ctlStep, windowMean } from '../lib/ctlModel';
 
 // ---------------------------------------------------------------------------
 // Konfiguration
@@ -497,8 +498,6 @@ function PlanCheck({ plan, today }: { plan: PlannedSession | null | 'loading'; t
 // ---------------------------------------------------------------------------
 type PlanDaySim = PlannedSession & { day: string };
 
-const ATL_REC = { a: -8.819849, b: 0.83645661, c: 1.24059231 };
-const CTL_REC = { a: -3.95042, b: 0.97283824, c: 0.2336734 };
 
 /** Monotonie wie im Sheet: Ø / Standardabweichung (Population) der letzten 7 Tageslasten. */
 function monotony7(loads: number[]): number | null {
@@ -678,9 +677,9 @@ function Outlook({ days, plan }: { days: RecoveryDay[]; plan: PlanDaySim[] | nul
       const cap: Vote | null = warnHigh ? 'EASY' : warn ? 'TRAIN' : null;
       const conflict = cap != null && VOTE_ORDER.indexOf(demand) > VOTE_ORDER.indexOf(cap);
       const row = { p, demand, preAcwr, preMono, cap, conflict };
-      atl = ATL_REC.a + ATL_REC.b * atl + ATL_REC.c * p.load;
-      ctl = CTL_REC.a + CTL_REC.b * ctl + CTL_REC.c * p.load;
       loads.push(p.load);
+      atl = atlStep(atl, p.load);
+      ctl = ctlStep(ctl, p.load, windowMean(loads));
       preAcwr = ctl > 0 ? atl / ctl : null;
       preMono = monotony7(loads);
       return row;

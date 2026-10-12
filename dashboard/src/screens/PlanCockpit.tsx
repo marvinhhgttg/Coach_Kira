@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StrategyPanel, planChecks, useEvents } from './StrategyPanel';
+import { atlStep, ctlStep, windowMean } from '../lib/ctlModel';
 import {
   ApiError,
   LOAD_METRICS,
@@ -289,11 +290,12 @@ function simulate(
       atl = hasTimelineAnchor ? Number(d.timeline_atl) : startAtl;
       ctl = hasTimelineAnchor ? Number(d.timeline_ctl) : startCtl;
     } else {
-      // Rekursive Post-Load-Fortschreibung, geschätzt aus historischen KK_TIMELINE-Werten:
-      // ATL_t = -8.819849 + 0.83645661 * ATL_{t-1} + 1.24059231 * Load_t
-      // CTL_t = -3.950420 + 0.97283824 * CTL_{t-1} + 0.23367340 * Load_t
-      atl = -8.819849 + 0.83645661 * atl + 1.24059231 * load;
-      ctl = -3.950420 + 0.97283824 * ctl + 0.23367340 * load;
+      // Post-Load-Fortschreibung (siehe src/lib/ctlModel.ts):
+      // ATL_t = -8,819849 + 0,83645661·ATL_{t-1} + 1,24059231·Load_t
+      // CTL_t = 0,7·(-3,95042 + 0,97283824·CTL_{t-1} + 0,2336734·Load_t) + 0,3·7,1·Ø28(Load)
+      const series28 = loadHistorySeed.concat(loads.slice(1, idx + 1).map((v) => Math.max(0, v ?? 0)));
+      atl = atlStep(atl, load);
+      ctl = ctlStep(ctl, load, windowMean(series28));
     }
 
     const acwr = typeof d.timeline_acwr === 'number' && (idx === 0 || hasTimelineAnchor)
@@ -439,7 +441,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
         const firstDate = sim.days[0]?.date;
         const loadSeed = anchorRows
           .filter((row) => typeof row.date === 'string' && (!firstDate || row.date <= firstDate))
-          .slice(-6)
+          .slice(-28)
           .map((row) => toNum(row.coachE_ESS_day) ?? 0);
         const normalized: PlanDay[] = sim.days.map((d: any) => ({
           index: d.index,
@@ -573,7 +575,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
       setStartCtl(toNum(anchorBefore?.coachE_CTL_forecast) ?? 949);
       const loadSeed = anchorRows
         .filter((row) => typeof row.date === 'string' && (!firstDate || row.date <= firstDate))
-        .slice(-6)
+        .slice(-28)
         .map((row) => toNum(row.coachE_ESS_day) ?? 0);
       setCtlHistory([]);
       setLoadHistory(loadSeed);

@@ -15,6 +15,7 @@ import { fetchChartData } from '../lib/api';
 import { fmtDateShort, fmtNum } from '../lib/format';
 import { Panel } from '../components/UI';
 import { buildDays, demandOf, RECOVERY_FETCH_METRICS, VOTE_LABEL, VOTE_ORDER, localIsoDate } from './RecoveryPanel';
+import { atlStep, ctlStep, windowMean } from '../lib/ctlModel';
 
 // ---------------------------------------------------------------------------
 // Strategische Planung für das Plan Cockpit (alles lokal, deterministisch):
@@ -40,12 +41,11 @@ export type PlanRow = {
 export type PlanState = { loads: number[]; sports: string[]; zones: string[]; teAe: number[]; teAn: number[] };
 export type PlanEvent = { id: string; date: string; label: string };
 
-// Rekursion wie im Plan Cockpit (geschätzt aus KK_TIMELINE)
-const ATL = { a: -8.819849, b: 0.83645661, c: 1.24059231 };
-const CTL = { a: -3.95042, b: 0.97283824, c: 0.2336734 };
-const step = (atl: number, ctl: number, load: number) => ({
-  atl: ATL.a + ATL.b * atl + ATL.c * load,
-  ctl: CTL.a + CTL.b * ctl + CTL.c * load,
+// Fortschreibung wie im Plan Cockpit (src/lib/ctlModel.ts)
+/** series: Lastreihe inkl. heutigem Load (für das 28-Tage-Mittel der CTL). */
+const step = (atl: number, ctl: number, load: number, series: number[]) => ({
+  atl: atlStep(atl, load),
+  ctl: ctlStep(ctl, load, windowMean(series)),
 });
 
 // Belastungsregeln wie im Tagesentscheid (Stand Vortag)
@@ -157,8 +157,8 @@ function project(anchor: PlanRow, seed: number[], loads: number[]) {
   let ctl = anchor.ctl;
   const series = [...seed];
   return loads.map((l, i) => {
-    if (i > 0) ({ atl, ctl } = step(atl, ctl, l));
     if (i > 0) series.push(l);
+    if (i > 0) ({ atl, ctl } = step(atl, ctl, l, series));
     return { i, load: l, atl, ctl, acwr: ctl > 0 ? atl / ctl : 0, mono: monoOf(series), form: formPct(atl, ctl) };
   });
 }
@@ -279,22 +279,34 @@ export function StrategyPanel({
   const goal = useMemo(() => {
     if (!anchor) return null;
     const n = Math.max(1, diffDays(anchor.date, goalDate));
-    const bn = Math.pow(CTL.b, n);
-    const L = ((goalCtl - bn * anchor.ctl) * (1 - CTL.b)) / (1 - bn) / 1 - CTL.a;
-    const daily = L / CTL.c;
-    let atl = anchor.atl;
-    let ctl = anchor.ctl;
-    let maxAcwr = 0;
-    let ctl7 = anchor.ctl;
-    for (let k = 1; k <= n; k++) {
-      ({ atl, ctl } = step(atl, ctl, Math.max(0, daily)));
-      maxAcwr = Math.max(maxAcwr, ctl > 0 ? atl / ctl : 0);
-      if (k === 7) ctl7 = ctl;
+    // Gleichmäßige Tageslast per Bisektion so wählen, dass die CTL am Zieldatum passt
+    const run = (daily: number) => {
+      let atl = anchor.atl;
+      let ctl = anchor.ctl;
+      let maxAcwr = 0;
+      let ctl7 = anchor.ctl;
+      const series = [...loadSeed];
+      for (let k = 1; k <= n; k++) {
+        series.push(daily);
+        ({ atl, ctl } = step(atl, ctl, daily, series));
+        maxAcwr = Math.max(maxAcwr, ctl > 0 ? atl / ctl : 0);
+        if (k === 7) ctl7 = ctl;
+      }
+      return { atl, ctl, maxAcwr, ctl7 };
+    };
+    let lo = 0;
+    let hi = 600;
+    for (let it = 0; it < 40; it++) {
+      const mid = (lo + hi) / 2;
+      if (run(mid).ctl < goalCtl) lo = mid;
+      else hi = mid;
     }
+    const daily = (lo + hi) / 2;
+    const { atl, ctl, maxAcwr, ctl7 } = run(daily);
     const ramp = ((Math.pow(goalCtl / anchor.ctl, 7 / n) - 1) * 100);
     const lvl: 'ok' | 'warn' | 'bad' = daily < 0 ? 'ok' : ramp > 8 || maxAcwr > 1.5 ? 'bad' : ramp > 5 || maxAcwr > 1.3 ? 'warn' : 'ok';
     return { n, daily, weekly: daily * 7, ramp, maxAcwr, ctl7, formEnd: formPct(atl, ctl), lvl };
-  }, [anchor, goalCtl, goalDate]);
+  }, [anchor, goalCtl, goalDate, loadSeed]);
 
   // ---------- 3) Szenarien ----------
   type Scen = PlanState & { name: 'A' | 'B' | 'C'; savedAt: string; startDate: string };
