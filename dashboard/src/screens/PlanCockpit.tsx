@@ -891,7 +891,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
               <table className="min-w-[1180px] text-xs">
                 <thead className="sticky top-0 bg-bg-panel z-10">
                   <tr className="text-left border-b border-border">
-                    {['Datum', 'Last (ESS)', 'Sport', 'Zone', 'TE AE/AN', 'ATL', 'CTL', 'Ausdauer', 'ACWR', 'KI', 'SG', 'Flag', 'Prüfung'].map((h) => (
+                    {['Datum', 'Fix', 'Last (ESS)', 'Sport', 'Zone', 'TE AE/AN', 'ATL', 'CTL', 'Ausdauer', 'ACWR', 'KI', 'SG', 'Flag', 'Prüfung'].map((h) => (
                       <th key={h} className="label px-2 py-2">{h}</th>
                     ))}
                   </tr>
@@ -905,6 +905,24 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
                         {events.filter((e) => e.date === d.date).map((e) => (
                           <div key={e.id} className="text-2xs text-accent">★ {e.label}</div>
                         ))}
+                      </td>
+                      <td className="px-2 py-3">
+                        <button
+                          type="button"
+                          aria-pressed={!!locks[i]}
+                          title={locks[i] ? 'Tag ist fixiert – Klick löst die Sperre' : 'Tag fixieren (Last, Sport, Zone, TE gesperrt)'}
+                          onClick={() => {
+                            userEditedRef.current = true;
+                            setLocks((cur) => {
+                              const next = sim.map((_, k) => !!cur[k]);
+                              next[i] = !next[i];
+                              return next;
+                            });
+                          }}
+                          className={`chip border text-2xs ${locks[i] ? 'border-accent bg-accent/15 text-accent font-semibold fix-on' : 'border-border-strong bg-bg-subtle text-ink-muted'}`}
+                        >
+                          {locks[i] ? 'fix' : 'frei'}
+                        </button>
                       </td>
                       <td className="px-2 py-3 w-64">
                         <div className="flex items-center gap-3">
