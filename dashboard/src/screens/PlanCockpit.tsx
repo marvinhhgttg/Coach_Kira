@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { StrategyPanel, planChecks, useEvents } from './StrategyPanel';
 import {
   ApiError,
   LOAD_METRICS,
@@ -380,6 +381,8 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
   const [briefingTs, setBriefingTs] = useState<string | null>(null);
   const [briefingRecommendations, setBriefingRecommendations] = useState<BriefingRecommendation[] | null>(null);
   const [briefingBusy, setBriefingBusy] = useState(false);
+  const [recGap, setRecGap] = useState(2);
+  const [events] = useEvents();
 
   // Nachladen der PlanApp-Simulation nach Timeout: nur übernehmen, wenn der Nutzer
   // seit dem Laden nichts verändert hat und kein neuerer Ladevorgang läuft.
@@ -601,6 +604,27 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
     }
     return rows;
   }, [plan, loads, startAtl, startCtl, sports, zones, teAe, teAn, locks, ctlHistory, loadHistory, simConfig, briefingRecommendations]);
+
+  const simulateWith = useCallback(
+    (l: number[]) => simulate(plan?.plan || [], l, startAtl, startCtl, sports, zones, teAe, teAn, locks, ctlHistory, loadHistory, simConfig),
+    [plan, startAtl, startCtl, sports, zones, teAe, teAn, locks, ctlHistory, loadHistory, simConfig],
+  );
+  const checks = useMemo(() => planChecks(sim, recGap), [sim, recGap]);
+  const applyLoadsFromStrategy = (l: number[], msg: string) => {
+    userEditedRef.current = true;
+    setLoads(l);
+    toast('info', msg);
+  };
+  const applyStateFromStrategy = (st: { loads: number[]; sports: string[]; zones: string[]; teAe: number[]; teAn: number[] }, msg: string) => {
+    userEditedRef.current = true;
+    const keep = <T,>(cur: T[], nxt: T[]) => cur.map((v, i) => (locks[i] || i === 0 ? v : nxt[i] ?? v));
+    setLoads((c) => keep(c, st.loads));
+    setSports((c) => keep(c, st.sports));
+    setZones((c) => keep(c, st.zones));
+    setTeAe((c) => keep(c, st.teAe));
+    setTeAn((c) => keep(c, st.teAn));
+    toast('info', msg);
+  };
 
   const keiAvg = sim.length ? sim.reduce((a, b) => a + b.kei, 0) / sim.length : 0;
   const maxAcwr = sim.length ? Math.max(...sim.map((d) => d.acwr)) : 0;
@@ -836,7 +860,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
               <table className="min-w-[1180px] text-xs">
                 <thead className="sticky top-0 bg-bg-panel z-10">
                   <tr className="text-left border-b border-border">
-                    {['Datum', 'Phase', 'Last (ESS)', 'Sport', 'Zone', 'TE AE/AN', 'ATL', 'CTL', 'ACWR', 'KI', 'SG', 'Flag'].map((h) => (
+                    {['Datum', 'Phase', 'Last (ESS)', 'Sport', 'Zone', 'TE AE/AN', 'ATL', 'CTL', 'ACWR', 'KI', 'SG', 'Flag', 'Prüfung'].map((h) => (
                       <th key={h} className="label px-2 py-2">{h}</th>
                     ))}
                   </tr>
@@ -847,6 +871,9 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
                       <td className="px-2 py-3">
                         <div className="tnum font-medium">{d.day} {fmtDateShort(d.date)}</div>
                         <div className="text-2xs text-ink-dim">Tag {i + 1}</div>
+                        {events.filter((e) => e.date === d.date).map((e) => (
+                          <div key={e.id} className="text-2xs text-accent">★ {e.label}</div>
+                        ))}
                       </td>
                       <td className="px-2 py-3"><span className="chip border border-border-strong bg-bg-subtle">{d.phase}</span></td>
                       <td className="px-2 py-3 w-64">
@@ -950,6 +977,16 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
                           {d.flag}
                         </span>
                       </td>
+                      <td className="px-2 py-3 max-w-[220px]">
+                        {checks[i]?.issues.length ? (
+                          <span className={`text-2xs ${checks[i].level === 'bad' ? 'text-orange-300' : 'text-yellow-300'}`} title={checks[i].issues.join(' · ')}>
+                            {checks[i].issues[0]}
+                            {checks[i].issues.length > 1 ? ` (+${checks[i].issues.length - 1})` : ''}
+                          </span>
+                        ) : (
+                          <span className="text-2xs text-green-300">✓</span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -977,6 +1014,18 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
           </div>
         )}
       </Panel>
+      {!loading && !err && sim.length > 0 && (
+        <StrategyPanel
+          sim={sim}
+          state={{ loads, sports, zones, teAe, teAn }}
+          loadSeed={loadHistory}
+          simulateWith={simulateWith}
+          applyLoads={applyLoadsFromStrategy}
+          applyState={applyStateFromStrategy}
+          recGap={recGap}
+          setRecGap={setRecGap}
+        />
+      )}
     </div>
   );
 }
