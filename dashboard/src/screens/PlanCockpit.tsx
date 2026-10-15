@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StrategyPanel, planChecks, useEvents } from './StrategyPanel';
+import { PlanKpis } from './PlanKpis';
 import { atlStep, ctlStep, windowMean, esStep, ES_MODEL } from '../lib/ctlModel';
 import {
   ApiError,
@@ -318,10 +319,10 @@ function simulate(
       : rollingMonotonyWithSeed(loadHistorySeed, loads, idx);
     const ctl7dAgo = history[0] ?? startCtl;
     // GSheet-Analog: coachE_Smart_Gains / KEI
-    // = ((coachE_CTL_forecast - CTL_vor_7_Tagen) * 10) / (ACWR * (1 + Monotony7)) * 0.1
+    // = ((CTL - CTL_vor_7_Tagen) * 10) / (MAX(ACWR; 0,8) * (1 + Monotony7)) * 0.1
     const kei = typeof d.timeline_kei === 'number' && (idx === 0 || hasTimelineAnchor)
       ? Number(d.timeline_kei)
-      : acwr > 0 && monotony > -1 ? ((ctl - ctl7dAgo) * 10) / (acwr * (1 + monotony)) * 0.1 : 0;
+      : acwr > 0 && monotony > -1 ? ((ctl - ctl7dAgo) * 10) / (Math.max(acwr, 0.8) * (1 + monotony)) * 0.1 : 0;
     // Base CTL history already includes the anchor day. Shift only after simulated future rows.
     if (idx > 0) {
       history.push(ctl);
@@ -1070,6 +1071,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
           </div>
         )}
       </Panel>
+      {!loading && !err && sim.length > 0 && <PlanKpis sim={sim} />}
       {!loading && !err && sim.length > 0 && (
         <StrategyPanel
           sim={sim}
