@@ -428,6 +428,84 @@ export function PlanKpis({ sim }: { sim: Array<{ date: string; sim_load: number;
           </>
         )}
       </div>
+
+      <details className="mt-3 panel-raised p-3 text-xs">
+        <summary className="cursor-pointer label">So liest du die Kennzahlen</summary>
+        <div className="mt-2 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div className="min-w-0">
+            <div className="font-semibold text-ink">Form %</div>
+            <p className="mt-1 text-ink-muted">
+              Form = (CTL − ATL) / CTL. Zeigt, wie frisch du im Verhältnis zu deiner Fitness bist.
+            </p>
+            <ul className="mt-1 list-disc pl-4 text-ink-muted space-y-0.5">
+              <li>Negativ = Ermüdung überwiegt, positiv = frisch.</li>
+              <li>Grün ab +5 %, gelb −5 bis +5 %, orange −15 bis −5 %, rot unter −15 %.</li>
+              <li>„Risiko Readiness &lt; 40 morgen“ = Anteil der Tage in deiner Historie, an denen nach einer Form in dieser Klasse die Garmin-Readiness am Folgetag unter 40 lag.</li>
+              <li>„Plan: tiefste Form“ zeigt den ermüdendsten geplanten Tag.</li>
+              <li>Nutzung: Vor harten Einheiten Form möglichst über −15 %; vor Wettkampf/Formspitze +5 bis +15 %.</li>
+            </ul>
+          </div>
+          <div className="min-w-0">
+            <div className="font-semibold text-ink">ACWR-Ampel</div>
+            <p className="mt-1 text-ink-muted">
+              ACWR = akute Last (ATL) / chronische Last (CTL).
+            </p>
+            <ul className="mt-1 list-disc pl-4 text-ink-muted space-y-0.5">
+              <li>Grün 0,9–1,1, gelb 1,1–1,3, orange darunter oder darüber.</li>
+              <li>Unter 0,9 = Entlastung (gut für Erholung, baut aber kaum auf).</li>
+              <li>Über 1,3 steigt bei dir das Risiko einer schlechten Readiness deutlich (Klassentabelle in der Karte, Werte aus deiner Historie).</li>
+              <li>„Plan: max. ACWR“ = kritischster geplanter Tag.</li>
+            </ul>
+          </div>
+          <div className="min-w-0">
+            <div className="font-semibold text-ink">CTL-Rampe / Woche</div>
+            <p className="mt-1 text-ink-muted">
+              Veränderung der CTL in 7 Tagen in Prozent.
+            </p>
+            <ul className="mt-1 list-disc pl-4 text-ink-muted space-y-0.5">
+              <li>Ziel 3–5 % pro Woche (grün), 0–3 % oder 5–8 % gelb, unter 0 % oder über 8 % orange.</li>
+              <li>Plan W1/W2 = Rampe der nächsten zwei Planwochen.</li>
+              <li>Die Referenzliste zeigt, bei welcher Rampe Garmin bei dir im Schnitt „Formaufbau“, „Formerhalt“, „Unproduktiv“ oder „Ermüdet“ gemeldet hat.</li>
+              <li>Die Rampe ist bei dir der beste Frühindikator für den Ausdauerwert in rund 8 Wochen.</li>
+            </ul>
+          </div>
+          <div className="min-w-0">
+            <div className="font-semibold text-ink">Konstanz (28 T)</div>
+            <p className="mt-1 text-ink-muted">
+              Anzahl Ruhetage (Last &lt; 1) und langer Tage (≥ 200 ESS) in den letzten 28 Tagen, heute und am Planende.
+            </p>
+            <ul className="mt-1 list-disc pl-4 text-ink-muted space-y-0.5">
+              <li>Die Tabelle zeigt, wie sich dein Ausdauerwert in deiner Historie über 28 Tage verändert hat, je nachdem wie viele Ruhetage im Zeitraum lagen.</li>
+              <li>Wenige Ruhetage und regelmäßige lange Tage gehen bei dir mit steigendem Ausdauerwert einher; Ruhetage bleiben trotzdem für die Erholung nötig.</li>
+              <li>Das sind Zusammenhänge, keine bewiesene Ursache.</li>
+            </ul>
+          </div>
+          <div className="min-w-0">
+            <div className="font-semibold text-ink">Erholungs-Index (0–100)</div>
+            <p className="mt-1 text-ink-muted">
+              Mittel aus vier Teilwerten: HRV im Vergleich zum Schnitt der 28 Vortage, Ruhepuls im Vergleich zum Schnitt der 28 Vortage (höher = schlechter), Schlafscore und Garmin-Readiness.
+            </p>
+            <ul className="mt-1 list-disc pl-4 text-ink-muted space-y-0.5">
+              <li>Ab 70 gut erholt (grün), 50–69 normal (gelb), unter 50 belastet (orange).</li>
+              <li>Die Balken zeigen die letzten 14 Tage.</li>
+              <li>Er ist unabhängig von der Planlast und dient als Gegenprobe: Wenn Plan-Kennzahlen grün sind, der Erholungs-Index aber mehrere Tage unter 50 liegt, lieber Last reduzieren.</li>
+            </ul>
+          </div>
+          <div className="min-w-0">
+            <div className="font-semibold text-ink">KEI (Spalte KI in der Plantabelle)</div>
+            <p className="mt-1 text-ink-muted">
+              KEI = CTL-Zuwachs der letzten 7 Tage geteilt durch (ACWR, mindestens 0,8) × (1 + Monotonie).
+            </p>
+            <ul className="mt-1 list-disc pl-4 text-ink-muted space-y-0.5">
+              <li>Hoch = viel Fitnesszuwachs bei vertretbarer Belastung, negativ = Fitness sinkt (z. B. Pause, Entlastung).</li>
+              <li>Seit 15.10.2026 wird ACWR mit mindestens 0,8 angesetzt, damit nach Ruhephasen keine extremen Ausreißer entstehen.</li>
+            </ul>
+          </div>
+        </div>
+        <p className="mt-3 text-2xs text-ink-dim">
+          Alle Vergleichswerte stammen aus deinen eigenen Daten der letzten 360 Tage und aktualisieren sich automatisch. Sie beschreiben Zusammenhänge, keine Garantie. Die Kennzahlen ersetzen nicht dein Körpergefühl (Befinden).
+        </p>
+      </details>
     </Panel>
   );
 }
