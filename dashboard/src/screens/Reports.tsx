@@ -12,6 +12,7 @@ import {
   YAxis,
 } from 'recharts';
 import { ApiError, fetchChartData, toNum } from '../lib/api';
+import { WINDOWS, ALL_RANGE, winLabel, winTitle, sliceWin, rangeFor, rangeDays, type WinKey } from '../lib/windows';
 import { fmtDateShort, fmtNum } from '../lib/format';
 import { ErrorBox, Panel, Skeleton } from '../components/UI';
 import {
@@ -932,20 +933,19 @@ function OutageReport({ days }: { days: D[] }) {
 // ---------------------------------------------------------------------------
 // Container
 // ---------------------------------------------------------------------------
-type Win = 90 | 180 | 360;
 
 export function Reports() {
   const [sub, setSub] = useState<Sub>('month');
-  const [win, setWin] = useState<Win>(360);
+  const [win, setWin] = useState<WinKey>(360);
   const [raw, setRaw] = useState<any[] | null>(null);
   const [extra, setExtra] = useState<any[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchChartData('360d', RECOVERY_FETCH_METRICS)
+    fetchChartData(ALL_RANGE, RECOVERY_FETCH_METRICS)
       .then((r) => setRaw(r.data as any[]))
       .catch((e) => setErr(e instanceof ApiError ? e.message : String(e)));
-    fetchChartData('360d', EXTRA_METRICS)
+    fetchChartData(ALL_RANGE, EXTRA_METRICS)
       .then((r) => setExtra(r.data as any[]))
       .catch(() => setExtra([]));
   }, []);
@@ -974,19 +974,19 @@ export function Reports() {
         };
       });
   }, [raw, extra]);
-  const winDays = all.slice(-win);
+  const winDays = sliceWin(all, win);
   const needsWin = sub === 'recovery' || sub === 'sleep' || sub === 'nutrition' || sub === 'outage';
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Chips items={SUBS.map((s) => s.id)} value={sub} onChange={setSub} fmt={(id) => SUBS.find((s) => s.id === id)!.label} />
-        {needsWin && <Chips items={[90, 180, 360] as Win[]} value={win} onChange={setWin} fmt={(v) => `${v} T`} />}
+        {needsWin && <Chips items={WINDOWS} value={win} onChange={setWin} fmt={winLabel} />}
       </div>
       {sub === 'month' ? (
         all.length ? <MonthReport days={all} /> : err ? <ErrorBox message={err} /> : <Skeleton className="h-64" />
       ) : (
-        <Panel title={`${TITLES[sub]}${needsWin ? ` · ${win} Tage` : ''}`}>
+        <Panel title={`${TITLES[sub]}${needsWin ? ` · ${winTitle(win)}` : ''}`}>
           {err ? (
             <ErrorBox message={err} />
           ) : !all.length ? (

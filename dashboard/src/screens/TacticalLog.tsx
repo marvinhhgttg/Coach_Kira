@@ -15,14 +15,13 @@ import {
   VOTE_ORDER,
   type RecoveryDay,
 } from './RecoveryPanel';
+import { WINDOWS, ALL_RANGE, winLabel, winTitle, sliceWin, rangeFor, rangeDays, type WinKey } from '../lib/windows';
 
 // ---------------------------------------------------------------------------
 // Log: Aktivitäten mit Kontext, Kalender, Filter, Serien, Bestenliste, Ertrag.
 // Regelbasiert aus der Timeline.
 // ---------------------------------------------------------------------------
 
-type Win = 28 | 60 | 90 | 180 | 360;
-const WINS: Win[] = [28, 60, 90, 180, 360];
 const WD = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 const SPORT_COLORS: Record<string, string> = { Bike: '#38bdf8', Run: '#f97316', 'Hike/Walk': '#22c55e', Ski: '#a855f7', Sonstige: '#94a3b8' };
@@ -265,7 +264,7 @@ const SORTS: { k: SortKey; l: string }[] = [
 export function TacticalLog() {
   const [raw, setRaw] = useState<any[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [win, setWin] = useState<Win>(90);
+  const [win, setWin] = useState<WinKey>(60);
   const [view, setView] = useState<'Tabelle' | 'Kalender'>('Tabelle');
   const [fSport, setFSport] = useState('Alle');
   const [fZone, setFZone] = useState('Alle');
@@ -278,7 +277,7 @@ export function TacticalLog() {
   const load = () => {
     setErr(null);
     setRaw(null);
-    fetchChartData('360d', RECOVERY_FETCH_METRICS)
+    fetchChartData(ALL_RANGE, RECOVERY_FETCH_METRICS)
       .then((r) => setRaw(r.data as any[]))
       .catch((e) => setErr(e instanceof ApiError ? e.message : String(e)));
   };
@@ -286,7 +285,7 @@ export function TacticalLog() {
 
   const all = useMemo(() => (raw ? buildDays(raw).filter((d) => d.date <= localIsoDate()) : []), [raw]);
   const allActs = useMemo(() => buildActs(all), [all]);
-  const days = all.slice(-win);
+  const days = sliceWin(all, win);
   const from = days[0]?.date ?? '';
   const acts = allActs.filter((a) => a.d.date >= from);
   const actMap = useMemo(() => new Map(acts.map((a) => [a.d.date, a])), [acts]);
@@ -367,7 +366,7 @@ export function TacticalLog() {
         right={
           <div className="flex flex-wrap items-center gap-2">
             <Chips items={['Tabelle', 'Kalender'] as const as any} value={view as any} onChange={(v: any) => setView(v)} />
-            <Chips items={WINS} value={win} onChange={setWin} fmt={(v) => `${v} T`} />
+            <Chips items={WINDOWS} value={win} onChange={setWin} fmt={winLabel} />
             <button className="btn btn-ghost text-xs px-2 py-1" onClick={load} disabled={!raw && !err}>
               {!raw && !err ? 'Lade…' : 'Aktualisieren'}
             </button>
@@ -391,7 +390,7 @@ export function TacticalLog() {
               <Kpi label="Seit letzter Quality" value={streaks.sinceQ != null ? `${streaks.sinceQ} T` : '—'} sub={streaks.lastQ ? fmtDateShort(streaks.lastQ.d.date).slice(0, 6) : undefined} />
               <Kpi label="Harte Tage am Stück" value={streaks.hardRun} tone={streaks.hardRun >= 2 ? 'text-orange-300' : ''} sub={`max. ${streaks.bestHard} im Zeitraum`} />
               <Kpi label="Längste Serie" value={`${streaks.best} T`} sub={streaks.bestEnd ? `bis ${fmtDateShort(streaks.bestEnd).slice(0, 6)}` : undefined} />
-              <Kpi label="Aktivitäten" value={totals.n} sub={`${win} Tage`} />
+              <Kpi label="Aktivitäten" value={totals.n} sub={winTitle(win)} />
               <Kpi label="Gesamtlast" value={`${fmtNum(totals.sum)} ESS`} sub={`Ø ${fmtNum(totals.n ? totals.sum / totals.n : null)} / Einheit`} />
               <Kpi label="Härter als Votum" value={`${totals.miss} / ${totals.checked}`} tone={totals.checked && totals.miss / totals.checked > 0.4 ? 'text-orange-300' : ''} />
             </div>
@@ -493,7 +492,7 @@ export function TacticalLog() {
       {raw && !err && (
         <div className="grid gap-4 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
           {/* 5) Bestenliste */}
-          <Panel title={`Bestenliste je Sport · ${win} Tage`}>
+          <Panel title={`Bestenliste je Sport · ${winTitle(win)}`}>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[620px] text-xs tnum">
                 <thead>

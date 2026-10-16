@@ -17,6 +17,7 @@ import { fmtDateShort, fmtNum } from '../lib/format';
 import { ErrorBox, Panel, Skeleton } from '../components/UI';
 import { CorrelationPanel } from './CorrelationPanel';
 import { atlStep, ctlStep, windowMean } from '../lib/ctlModel';
+import { WINDOWS, ALL_RANGE, winLabel, winTitle, sliceWin, rangeFor, rangeDays, type WinKey } from '../lib/windows';
 
 // ---------------------------------------------------------------------------
 // Konfiguration
@@ -25,14 +26,11 @@ export const SLEEP_GOAL_H = 7.5;
 const RHR_BASELINE_DAYS = 28;
 const RHR_BASELINE_MIN_VALUES = 7;
 
-type Span = 14 | 28 | 60 | 120 | 360;
-const SPANS: Span[] = [14, 28, 60, 120, 360];
-const RANGE_DAYS: Record<string, number> = { '7d': 7, '14d': 14, '28d': 28, '60d': 60, '90d': 90, '180d': 180, '360d': 360 };
-/** Datenfenster je Ansicht: +28 Tage Vorlauf für RHR-Baseline (360 T: max. Range der API). */
+type Span = WinKey;
+const SPANS: Span[] = WINDOWS;
+/** Datenfenster je Ansicht: +28 Tage Vorlauf für RHR-Baseline, mindestens 90 Tage (Wochenbalken). */
 function rangeForSpan(n: Span): Range {
-  if (n <= 60) return '90d';
-  if (n <= 120) return '180d';
-  return '360d';
+  return rangeFor(n, 28, 90);
 }
 
 export const RECOVERY_FETCH_METRICS = [
@@ -1291,25 +1289,25 @@ export function RecoveryPanel({
   const today = days.length && days[days.length - 1].date === todayIso ? days[days.length - 1] : null;
   const yesterday = today ? days[days.length - 2] || null : days[days.length - 1] || null;
   const stripDays = days.slice(-7);
-  const laneDays = days.slice(-span);
+  const laneDays = sliceWin(days, span);
 
   return (
     <Panel
       title={isToday ? 'Heute · Tagesentscheid' : 'Erholungsverlauf & Korrelationen'}
       right={
         <div className="flex flex-wrap items-center gap-2">
-          {!isToday && <div className="inline-flex bg-bg rounded border border-border p-0.5">
+          {!isToday && <div className="inline-flex bg-bg rounded border border-border p-0.5 flex-wrap">
             {SPANS.map((n) => (
               <button
                 key={n}
                 onClick={() => {
                   setSpan(n);
                   const need = rangeForSpan(n);
-                  if (RANGE_DAYS[need] > RANGE_DAYS[loadedRange || '90d'] || (!loadedRange && need !== '90d')) load(need, false);
+                  if (rangeDays(need) > rangeDays(loadedRange || '90d') || (!loadedRange && need !== '90d')) load(need, false);
                 }}
                 className={`px-1.5 sm:px-2.5 py-1 text-xs rounded tnum whitespace-nowrap ${span === n ? 'bg-bg-subtle text-ink' : 'text-ink-muted hover:text-ink'}`}
               >
-                {n} T
+                {winLabel(n)}
               </button>
             ))}
           </div>}
@@ -1360,7 +1358,7 @@ export function RecoveryPanel({
               <div className="panel-raised p-3">
                 <FourLanes days={laneDays} />
               </div>
-              <CorrelationPanel days={laneDays} spanLabel={`${span} Tage`} />
+              <CorrelationPanel days={laneDays} spanLabel={winTitle(span)} />
             </>
           )}
         </div>

@@ -20,12 +20,19 @@ import {
   LOAD_METRICS,
   RECOVERY_METRICS,
   type ChartDataResponse,
-  type Range,
 } from '../lib/api';
+import {
+  WINDOWS,
+  ALL_RANGE,
+  winLabel,
+  winTitle,
+  sliceWin,
+  rangeFor,
+  rangeDays,
+  type WinKey,
+} from '../lib/windows';
 import { fmtDateShort, fmtTime } from '../lib/format';
 import { ErrorBox, Panel, Skeleton } from '../components/UI';
-
-const RANGES: Range[] = ['7d', '14d', '28d', '60d', '90d', '180d', '360d'];
 
 const METRIC_COLORS: Record<string, string> = {
   load_fb_day: '#7dd3fc',
@@ -341,7 +348,8 @@ function FullscreenChart({
 }
 
 export function ChartDeck() {
-  const [range, setRange] = useState<Range>('28d');
+  const [win, setWin] = useState<WinKey>(30);
+  const range = rangeFor(win);
   const [load, setLoad] = useState<ChartDataResponse | null>(null);
   const [recovery, setRecovery] = useState<ChartDataResponse | null>(null);
   const [loadErr, setLoadErr] = useState<string | null>(null);
@@ -518,18 +526,18 @@ export function ChartDeck() {
             </button>
             {rawOpen && <>
             <div className="inline-flex flex-wrap bg-bg rounded border border-border p-0.5" role="tablist">
-              {RANGES.map((r) => (
+              {WINDOWS.map((w) => (
                 <button
-                  key={r}
-                  onClick={() => setRange(r)}
+                  key={w}
+                  onClick={() => setWin(w)}
                   className={`px-1.5 sm:px-2.5 py-1 text-xs rounded tnum ${
-                    range === r
+                    win === w
                       ? 'bg-bg-subtle text-ink'
                       : 'text-ink-muted hover:text-ink'
                   }`}
-                  data-testid={`range-${r}`}
+                  data-testid={`range-${w}`}
                 >
-                  {r}
+                  {winLabel(w)}
                 </button>
               ))}
             </div>

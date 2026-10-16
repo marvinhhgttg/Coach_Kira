@@ -323,7 +323,7 @@ export const ACTIVITY_METRICS = [
   'activity_done',
 ] as const;
 
-export type Range = '7d' | '14d' | '28d' | '60d' | '90d' | '180d' | '360d';
+export type Range = '7d' | '14d' | '28d' | '30d' | '60d' | '90d' | '120d' | '180d' | '240d' | '360d' | '9999d';
 
 export function fetchChartData(
   range: Range,

@@ -16,6 +16,7 @@ import {
 import { ApiError, dedupeByDateKeepLast, fetchChartData, fetchPlanSimulationWithTimeout, toNum, type Range } from '../lib/api';
 import { fmtDateShort, fmtNum } from '../lib/format';
 import { ErrorBox, Panel, Skeleton } from '../components/UI';
+import { WINDOWS, ALL_RANGE, winLabel, winTitle, sliceWin, rangeFor, rangeDays, type WinKey } from '../lib/windows';
 
 // ---------------------------------------------------------------------------
 // Trainingssteuerung (Chart Deck): Monotonie/Strain, Intensitätsverteilung,
@@ -60,9 +61,6 @@ type Day = {
   ctl: number | null;
   done: boolean;
 };
-
-type Win = 90 | 180 | 360;
-const WINS: Win[] = [90, 180, 360];
 
 function localIso(d = new Date()) {
   const y = d.getFullYear();
@@ -474,10 +472,9 @@ function FitnessCard({ days }: { days: Day[] }) {
 // ---------------------------------------------------------------------------
 // Container
 // ---------------------------------------------------------------------------
-const RANGE_OF: Record<Win, Range> = { 90: '90d', 180: '180d', 360: '360d' };
 
 export function TrainingControl() {
-  const [win, setWin] = useState<Win>(180);
+  const [win, setWin] = useState<WinKey>(120);
   const [raw, setRaw] = useState<any[] | null>(null);
   const [plan, setPlan] = useState<PlanDay[] | null | 'loading'>('loading');
   const [busy, setBusy] = useState(true);
@@ -487,7 +484,7 @@ export function TrainingControl() {
     let alive = true;
     setBusy(true);
     setErr(null);
-    fetchChartData('360d', TC_METRICS)
+    fetchChartData(ALL_RANGE, TC_METRICS)
       .then((r) => alive && setRaw(r.data as any[]))
       .catch((e) => alive && setErr(e instanceof ApiError ? e.message : String(e)))
       .finally(() => alive && setBusy(false));
@@ -528,21 +525,21 @@ export function TrainingControl() {
         };
       });
   }, [raw]);
-  const days = allDays.slice(-win);
+  const days = sliceWin(allDays, win);
 
   return (
     <Panel
       title="Trainingssteuerung"
       right={
-        <div className="inline-flex bg-bg rounded border border-border p-0.5">
-          {WINS.map((w) => (
+        <div className="inline-flex bg-bg rounded border border-border p-0.5 flex-wrap">
+          {WINDOWS.map((w) => (
             <button
               key={w}
               onClick={() => setWin(w)}
               className={`px-2 py-1 text-xs rounded tnum ${win === w ? 'bg-bg-subtle text-ink' : 'text-ink-muted hover:text-ink'}`}
               data-testid={`tc-win-${w}`}
             >
-              {w} T
+              {winLabel(w)}
             </button>
           ))}
         </div>
