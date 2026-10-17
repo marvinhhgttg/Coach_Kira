@@ -16,6 +16,7 @@ import { proxyRunConsolidatedAnalysis, proxyRunStatusAiAnalysis, proxyRunSupervi
 import { AmpelChip, AmpelDot } from '../components/Ampel';
 import { ArcGauge, ErrorBox, Modal, Panel, Skeleton, Spinner } from '../components/UI';
 import { RecoveryPanel } from './RecoveryPanel';
+import { KiraChat } from './KiraChat';
 
 type ToastFn = (kind: 'ok' | 'err' | 'info', text: string) => void;
 type StatusItemLike = NonNullable<StatusResponse['summary']>['items'] extends Array<infer T> ? T : never;
@@ -573,6 +574,8 @@ export function CommandCenter({
           )}
         </Panel>
       )}
+
+      <KiraChat />
 
       {/* Letzter Lauf (ganz unten) */}
       <Panel title="Letzter Lauf · Heartbeat">
