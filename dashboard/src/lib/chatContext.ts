@@ -171,14 +171,23 @@ export const KIRA_SYSTEM = [
 export async function pingLocal(): Promise<{ ok: boolean; hasModel: boolean; models: string[]; error?: string }> {
   try {
     const ctl = new AbortController();
-    const t = setTimeout(() => ctl.abort(), 2500);
-    const res = await fetch(`${OLLAMA_URL}/api/tags`, { signal: ctl.signal });
+    // großzügig, damit eine Browser-Freigabe (lokales Netzwerk) beantwortet werden kann
+    const t = setTimeout(() => ctl.abort(), 15000);
+    const res = await fetch(`${OLLAMA_URL}/api/tags`, { signal: ctl.signal, cache: 'no-store' });
     clearTimeout(t);
     const j = await res.json();
     const models: string[] = (j.models || []).map((m: any) => String(m.name || m.model || ''));
     return { ok: true, hasModel: models.some((m) => m === LOCAL_MODEL || m.startsWith(LOCAL_MODEL + ':')), models };
   } catch (e) {
-    return { ok: false, hasModel: false, models: [], error: e instanceof Error ? e.message : String(e) };
+    const name = e instanceof Error ? e.name : '';
+    const msg = e instanceof Error ? e.message : String(e);
+    const error =
+      name === 'AbortError'
+        ? 'keine Antwort in 15 s – vermutlich wartet der Browser auf die Freigabe „Lokales Netzwerk“'
+        : /Failed to fetch|NetworkError|Load failed/i.test(msg)
+          ? 'vom Browser blockiert (Freigabe „Lokales Netzwerk“ oder CORS/OLLAMA_ORIGINS)'
+          : msg;
+    return { ok: false, hasModel: false, models: [], error };
   }
 }
 

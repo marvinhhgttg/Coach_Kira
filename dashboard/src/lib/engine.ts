@@ -80,5 +80,5 @@ export function localStatusText(s: LocalStatus): { text: string; tone: 'ok' | 'w
   if (!s) return { text: 'prüfe…', tone: 'wait' };
   if (s.ok && s.hasModel) return { text: 'Lokal bereit (coach-kira)', tone: 'ok' };
   if (s.ok) return { text: 'Ollama läuft, aber das Modell coach-kira fehlt', tone: 'warn' };
-  return { text: 'Lokales Modell nicht erreichbar – nur am Mac mit laufendem Ollama', tone: 'warn' };
+  return { text: `Lokales Modell nicht erreichbar${s.error ? ' – ' + s.error : ''}`, tone: 'warn' };
 }
