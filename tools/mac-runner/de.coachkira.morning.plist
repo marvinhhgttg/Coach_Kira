@@ -9,7 +9,7 @@
     <string>/Users/marc/coach-kira-runner/kira_runner.py</string>
     <string>tick</string>
   </array>
-  <key>StartInterval</key><integer>900</integer>
+  <key>StartInterval</key><integer>300</integer>
   <key>RunAtLoad</key><true/>
   <key>StandardOutPath</key><string>/Users/marc/coach-kira-runner/logs/launchd.out.log</string>
   <key>StandardErrorPath</key><string>/Users/marc/coach-kira-runner/logs/launchd.err.log</string>

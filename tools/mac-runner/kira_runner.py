@@ -42,6 +42,7 @@ ROUTES: dict[str, str] = {
     "status": "coach-kira",
     "plan": "coach-kira",
     "consolidated": "coach-kira",
+    "supervisor": "coach-kira",
 }
 FALLBACK_MODEL = "coach-kira"
 
@@ -97,6 +98,8 @@ def http_post_json(url: str, obj: object, timeout: int = 120) -> dict:
     Apps Script antwortet auf POST mit 302 auf eine andere URL, die per GET
     geholt werden muss. urllib macht das bei 302 automatisch (POST -> GET
     ohne Body) – so lassen. Antwort json.loads.
+
+    timeout: Sekunden bis zum Schließen der Verbindung (default 120).
     """
     data = json.dumps(obj, ensure_ascii=False).encode("utf-8")
     req = Request(
@@ -533,6 +536,58 @@ def cmd_backfill(days: int, dry: bool) -> None:
 # ---------------------------------------------------------------------------
 
 
+def cmd_supervisor() -> None:
+    """Supervisor-Auftrag vom Apps Script abholen und lokal mit Ollama rechnen."""
+    st = load_state()
+    try:
+        j = http_get_json(SCRIPT_URL + "?mode=supervisorJob", timeout=60)
+    except RuntimeError:
+        return  # kein JSON = Patch fehlt, still beenden
+    job = j.get("job")
+    if not job:
+        return  # still beenden
+    if job["id"] in st.get("sup_done", []):
+        return  # schon erledigt
+    fails = st.get("sup_fail", {})
+    if fails.get(job["id"], 0) >= 2:
+        return  # zu oft gescheitert
+    model = ROUTES["supervisor"]
+    if not ollama_ready(model):
+        log("Supervisor: Ollama/coach-kira nicht erreichbar – später erneut")
+        return
+    log(f"Supervisor: Auftrag {job['id']} übernommen (Prompt {len(job.get('prompt', ''))} Zeichen)")
+    messages = [
+        {"role": "system", "content": job.get("system") or ""},
+        {"role": "user", "content": job["prompt"]},
+    ]
+    try:
+        t0 = time.time()
+        text, tok = ollama_chat(model, messages, 32768, fmt=job.get("schema") or "json", timeout=1800)
+        if tok is not None:
+            log(f"  Supervisor: {model} {time.time() - t0:.0f} s, {tok:.0f} tok/s")
+        else:
+            log(f"  Supervisor: {model} {time.time() - t0:.0f} s")
+        json.loads(text)  # muss gültiges JSON sein, sonst Exception
+        saved = http_post_json(
+            SCRIPT_URL + "?mode=saveSupervisor",
+            {"kind": "saveSupervisor", "id": job["id"], "content": text, "model": model},
+            timeout=600,
+        )
+        if not saved.get("ok"):
+            raise RuntimeError(saved.get("error") or "saveSupervisor fehlgeschlagen")
+        st["sup_done"] = (st.get("sup_done", []) + [job["id"]])[-30:]
+        save_state(st)
+        log(f"Supervisor: Auftrag {job['id']} lokal erledigt und gespeichert")
+        notify("Coach Kira", "KI-Report lokal erstellt (coach-kira).")
+    except Exception as e:
+        fails[job["id"]] = fails.get(job["id"], 0) + 1
+        st["sup_fail"] = fails
+        save_state(st)
+        log(f"Supervisor: FEHLER {e}")
+        if fails[job["id"]] >= 2:
+            notify("Coach Kira", "KI-Report lokal fehlgeschlagen – siehe runner.log")
+
+
 def cmd_tick() -> None:
     try:
         cmd_morning()
@@ -542,6 +597,10 @@ def cmd_tick() -> None:
         cmd_activity()
     except Exception as e:
         log(f"activity: FEHLER {e}")
+    try:
+        cmd_supervisor()
+    except Exception as e:
+        log(f"supervisor: FEHLER {e}")
 
 
 # ---------------------------------------------------------------------------
@@ -806,6 +865,8 @@ def main() -> None:
     backfill.add_argument("--days", type=int, default=14, help="Anzahl der zurückliegenden Tage (default 14)")
     backfill.add_argument("--dry", action="store_true", help="Nur anzeigen, nichts speichern")
 
+    supervisor = sub.add_parser("supervisor", help="Supervisor-Auftrag abholen und lokal rechnen")
+
     args = ap.parse_args()
     if args.command == "check":
         today = datetime.now(TZ).strftime("%Y-%m-%d")
@@ -828,6 +889,14 @@ def main() -> None:
                 print(f"  {date}: activity=True  load={ist_load(row)}  Sport_x={row.get('Sport_x')}")
             else:
                 print(f"  {date}: activity=False  load={ist_load(row)}  Sport_x={row.get('Sport_x')}")
+        # Supervisor-Patch prüfen
+        try:
+            sj = http_get_json(SCRIPT_URL + "?mode=supervisorJob")
+            engine = sj.get("engine")
+            job = sj.get("job")
+            print(f"Supervisor-Patch: engine={engine!r}, job vorhanden={bool(job)}, job id={job.get('id') if job else None}, prompt Länge={len(job.get('prompt','')) if job else 0}")
+        except Exception as e:
+            print(f"Supervisor-Patch: {e}")
         return
     if args.command == "morning":
         try:
@@ -857,6 +926,12 @@ def main() -> None:
             cmd_backfill(days=args.days, dry=args.dry)
         except Exception as e:
             log(f"backfill: FEHLER {e}")
+    elif args.command == "supervisor":
+        try:
+            cmd_supervisor()
+        except Exception as e:
+            log(f"supervisor: FEHLER {e}")
+            sys.exit(1)
     else:
         ap.print_help()
         sys.exit(1)

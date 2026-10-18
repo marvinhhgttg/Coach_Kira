@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StrategyPanel, planChecks, useEvents } from './StrategyPanel';
 import { PlanKpis } from './PlanKpis';
+import { PlanLoopPanel } from './PlanLoopPanel';
 import { useEngine } from '../lib/engine';
 import { runLocalBriefing, fetchBriefingSources, type BriefingSource } from '../lib/briefingLocal';
 import { EngineSwitch, SourceBadge } from '../components/EngineSwitch';
@@ -636,6 +637,15 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
     (l: number[]) => simulate(plan?.plan || [], l, startAtl, startCtl, sports, zones, teAe, teAn, locks, ctlHistory, loadHistory, simConfig),
     [plan, startAtl, startCtl, sports, zones, teAe, teAn, locks, ctlHistory, loadHistory, simConfig],
   );
+  // Für die Kira-Prüfschleife: Zonen aus dem Vorschlag, TE bei geänderter Last neu schätzen (NaN = Schätzung)
+  const simulateLoop = useCallback(
+    (l: number[], z: string[]) =>
+      simulate(plan?.plan || [], l, startAtl, startCtl, sports, z,
+        teAe.map((v, i) => (l[i] === loads[i] && z[i] === zones[i] ? v : NaN)),
+        teAn.map((v, i) => (l[i] === loads[i] && z[i] === zones[i] ? v : NaN)),
+        locks, ctlHistory, loadHistory, simConfig),
+    [plan, startAtl, startCtl, sports, teAe, teAn, loads, zones, locks, ctlHistory, loadHistory, simConfig],
+  );
   const checks = useMemo(() => planChecks(sim, recGap), [sim, recGap]);
   // Ausdauerwert-Simulation: Tag 1 = letzter Garmin-Wert, danach Formel (src/lib/ctlModel.ts)
   const esSeries = useMemo(() => {
@@ -1116,6 +1126,25 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
           applyState={applyStateFromStrategy}
           recGap={recGap}
           setRecGap={setRecGap}
+        />
+      )}
+      {!loading && !err && sim.length > 0 && (
+        <PlanLoopPanel
+          sim={sim}
+          loads={loads}
+          zones={zones}
+          sports={sports}
+          locks={locks}
+          simulateWith={simulateLoop}
+          recGap={recGap}
+          onApply={(l, z) => {
+            // TE für geänderte Tage aus der neuen Last schätzen (wie in der Simulation)
+            setTeAe((old) => old.map((v, i) => (l[i] === loads[i] && z[i] === zones[i] ? v : estimateTe(l[i], sports[i] ?? '').ae)));
+            setTeAn((old) => old.map((v, i) => (l[i] === loads[i] && z[i] === zones[i] ? v : estimateTe(l[i], sports[i] ?? '').an)));
+            setLoads(l);
+            setZones(z);
+            toast('info', 'Kira-Plan in die Simulation übernommen. Noch nicht gespeichert.');
+          }}
         />
       )}
     </div>

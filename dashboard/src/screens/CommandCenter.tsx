@@ -16,6 +16,7 @@ import { proxyRunConsolidatedAnalysis, proxyRunStatusAiAnalysis, proxyRunSupervi
 import { AmpelChip, AmpelDot } from '../components/Ampel';
 import { ArcGauge, ErrorBox, Modal, Panel, Skeleton, Spinner } from '../components/UI';
 import { RecoveryPanel } from './RecoveryPanel';
+import { AnomalyPanel } from './AnomalyPanel';
 import { KiraChat } from './KiraChat';
 import { useEngine } from '../lib/engine';
 import { runLocalBriefing, fetchBriefingSources, type BriefingSource } from '../lib/briefingLocal';
@@ -631,6 +632,7 @@ export function CommandCenter({
         </Panel>
       )}
 
+      <AnomalyPanel />
       <KiraChat />
 
       {/* Letzter Lauf (ganz unten) */}

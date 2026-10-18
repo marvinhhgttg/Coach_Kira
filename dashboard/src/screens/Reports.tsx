@@ -15,6 +15,7 @@ import { ApiError, fetchChartData, toNum } from '../lib/api';
 import { WINDOWS, ALL_RANGE, winLabel, winTitle, sliceWin, rangeFor, rangeDays, type WinKey } from '../lib/windows';
 import { fmtDateShort, fmtNum } from '../lib/format';
 import { ErrorBox, Panel, Skeleton } from '../components/UI';
+import { KiraFazit } from '../components/KiraFazit';
 import {
   buildDays,
   demandOf,
@@ -145,7 +146,7 @@ function Chips<T extends string | number>({ items, value, onChange, fmt }: { ite
     </div>
   );
 }
-function Facts({ items }: { items: string[] }) {
+function Facts({ items, title, data }: { items: string[]; title?: string; data?: unknown }) {
   if (!items.length) return null;
   return (
     <div className="rounded border border-border px-3 py-2">
@@ -156,6 +157,7 @@ function Facts({ items }: { items: string[] }) {
         ))}
       </ul>
       <p className="mt-1 text-2xs text-ink-dim">Regelbasiert aus der Timeline, keine KI-Bewertung.</p>
+      {title && <KiraFazit title={title} facts={items} data={data} />}
     </div>
   );
 }
@@ -301,7 +303,7 @@ function WeekReport({ days }: { days: D[] }) {
           </dl>
         </Box>
       </div>
-      <Facts items={facts} />
+      <Facts items={facts} title={'Wochenbericht KW ' + cur.kw + '/' + cur.year} data={{ ess: cur.ess, sessions: cur.sessions, readiness: cur.readiness, sleepH: cur.sleepH, nightsGoal: cur.nightsGoal, nights: cur.nights, hrv: cur.hrv, rhr: cur.rhr, mono: cur.mono, ctlEnd: cur.ctlEnd, ok: cur.ok, checked: cur.checked, prevEss: prev ? prev.ess : null }} />
       <Box title="Archiv · letzte 12 Wochen" right={<span className="text-2xs text-ink-dim">Klick = Woche öffnen</span>}>
         <div className="overflow-x-auto">
           <table className="w-full text-xs tnum">
@@ -453,7 +455,7 @@ function RecoveryAfterHard({ days }: { days: D[] }) {
           </div>
         </Box>
       </div>
-      <Facts items={facts} />
+      <Facts items={facts} title="Erholung nach harten Einheiten" />
       <Box title="Letzte harte Einheiten">
         <div className="overflow-x-auto">
           <table className="w-full text-xs tnum">
@@ -730,7 +732,7 @@ function SleepReport({ days }: { days: D[] }) {
           </table>
         </div>
       </Box>
-      <Facts items={facts} />
+      <Facts items={facts} title="Schlafbericht" />
     </div>
   );
 }
@@ -831,7 +833,7 @@ function NutritionReport({ days }: { days: D[] }) {
           </tbody>
         </table>
       </Box>
-      <Facts items={facts} />
+      <Facts items={facts} title="Ernährungsbericht" />
     </div>
   );
 }
@@ -925,7 +927,7 @@ function OutageReport({ days }: { days: D[] }) {
           </div>
         )}
       </Box>
-      <Facts items={facts} />
+      <Facts items={facts} title="Ausfälle und Pausen" />
     </div>
   );
 }

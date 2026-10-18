@@ -221,7 +221,7 @@ export function KiraChat() {
   }
 
   function handleClear() {
-    if (!window.confirm('Chat-Verlauf im Browser löschen? Der Eintrag in AI_CHAT_LOG bleibt.')) return;
+    if (!window.confirm('Chat-Verlauf im Browser löschen? Der Eintrag in AI_CHAT_LOG bleibt.')) return;
     setMsgs([]);
     setUsed(null);
     setLimit(null);
@@ -246,7 +246,7 @@ export function KiraChat() {
         className="btn btn-ghost text-xs px-2 py-1"
         onClick={() => setOpen((o) => !o)}
       >
-        {open ? 'Schließen' : 'Öffnen'}
+        {open ? 'Schließen' : 'Öffnen'}
       </button>
     }>
       {!open ? (
