@@ -30,9 +30,16 @@ export async function buildChatContext(): Promise<ChatContext> {
   // Serien
   const loads = days.map((d) => d.essDay ?? d.load ?? 0);
   const ctlSer = days.map((d) => toNum(byDate.get(d.date)?.fbCTL_obs));
-  const atlT = toNum(rowT?.fbATL_obs);
-  const ctlT = toNum(rowT?.fbCTL_obs);
-  const ctl7 = ctlSer.length >= 8 ? ctlSer[ctlSer.length - 8] : null;
+  // Letzter Tag mit ATL/CTL (morgens vor dem Training ist der heutige Wert oft noch leer)
+  let li = days.length - 1;
+  while (li > 0 && (toNum(byDate.get(days[li].date)?.fbCTL_obs) == null || toNum(byDate.get(days[li].date)?.fbATL_obs) == null)) li--;
+  const rowL = li >= 0 && days[li] ? byDate.get(days[li].date) : null;
+  const lastLoadDate = li >= 0 && days[li] ? days[li].date : null;
+  const atlT = toNum(rowL?.fbATL_obs);
+  const ctlT = toNum(rowL?.fbCTL_obs);
+  const ctl7 = li >= 7 ? ctlSer[li - 7] : null;
+  let esLast: number | null = null;
+  for (let k = days.length - 1; k >= 0 && esLast == null; k--) esLast = toNum(byDate.get(days[k].date)?.garminEnduranceScore);
   const last28 = loads.slice(-28);
 
   // Erholungs-Index (wie Planungs-Kennzahlen)
@@ -48,11 +55,11 @@ export async function buildChatContext(): Promise<ChatContext> {
   const recIdx = parts.length >= 2 ? Math.round(parts.reduce((a, b) => a + b, 0) / parts.length) : null;
 
   // Plan + Prognose (Formeln wie Plan Cockpit)
-  const planDays = (sim && sim.ok ? sim.days || [] : []).filter((x: any) => String(x.date).slice(0, 10) > today).slice(0, 7);
+  const planDays = (sim && sim.ok ? sim.days || [] : []).filter((x: any) => String(x.date).slice(0, 10) > (lastLoadDate ?? today)).slice(0, 8);
   let atl = atlT ?? 0;
   let ctl = ctlT ?? 0;
-  let es = toNum(rowT?.garminEnduranceScore) ?? null;
-  const ser = [...loads];
+  let es = esLast;
+  const ser = loads.slice(0, li + 1);
   const plan = planDays.map((x: any) => {
     const load = toNum(x.load) ?? 0;
     ser.push(load);
@@ -89,10 +96,11 @@ export async function buildChatContext(): Promise<ChatContext> {
           ruhepuls_abweichung_bpm: r1(t.rhrDelta),
           befinden_1_5: t.befinden,
           trainingszustand_garmin: rowT?.Trainingszustand || null,
-          ausdauerwert_garmin: toNum(rowT?.garminEnduranceScore),
+          ausdauerwert_garmin: esLast,
         }
       : null,
     kennzahlen: {
+      stand_belastung: lastLoadDate,
       atl: atlT,
       ctl: ctlT,
       acwr: r1(atlT != null && ctlT ? atlT / ctlT : null, 2),
@@ -118,7 +126,7 @@ export async function buildChatContext(): Promise<ChatContext> {
       ruhepuls: d.rhr,
       befinden: d.befinden,
     })),
-    plan_naechste_7_tage: plan,
+    plan_naechste_7_tage: plan, // ab dem Tag nach dem letzten Belastungsstand (heute inkl., falls noch offen)
   };
 }
 
@@ -141,4 +149,97 @@ export async function sendChat(messages: ChatMsg[], context: ChatContext, source
   if (json && json.status && json.ok === undefined) throw new Error('Der Chat-Patch ist im Apps Script noch nicht aktiv (doPost kennt mode=chat nicht).');
   if (!json.ok) throw new Error(json.error || 'Chat-Fehler');
   return json as { ok: true; answer: string; citations: string[]; used: number; limit: number; model: string };
+}
+
+// ---------------------------------------------------------------------------
+// Lokal: Ollama auf dem Mac (nur erreichbar, wenn das Cockpit auf diesem Mac läuft)
+// ---------------------------------------------------------------------------
+export const OLLAMA_URL = 'http://localhost:11434';
+export const LOCAL_MODEL = 'coach-kira';
+
+export const KIRA_SYSTEM = [
+  'Du bist Kira, Sportwissenschaftlerin und persönliche Ausdauer-Trainerin von Marc (Jahrgang 1975; Rennrad, Gravel, Laufen, Bergsport).',
+  'Sprich Marc per Du an, antworte auf Deutsch, klar und konkret, ohne Emojis.',
+  'Stütze dich zuerst auf die mitgelieferten Cockpit-Daten (JSON unten). Nenne die Zahlen, auf die du dich beziehst.',
+  'Erfinde keine Werte. Wenn Daten fehlen oder unklar sind, sag das offen.',
+  'Halte dich an die Regeln aus dem Feld "regeln" (Tagesentscheid, Zielbereiche).',
+  'Gib am Ende eine klare Empfehlung (z. B. Einheit, Dauer, Zone oder Pause).',
+  'Bei Schmerzen, Krankheit oder medizinischen Fragen: auf Arzt bzw. Physiotherapie verweisen.',
+].join('\n');
+
+/** Prüft, ob Ollama erreichbar ist und das Modell coach-kira existiert. */
+export async function pingLocal(): Promise<{ ok: boolean; hasModel: boolean; models: string[]; error?: string }> {
+  try {
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), 2500);
+    const res = await fetch(`${OLLAMA_URL}/api/tags`, { signal: ctl.signal });
+    clearTimeout(t);
+    const j = await res.json();
+    const models: string[] = (j.models || []).map((m: any) => String(m.name || m.model || ''));
+    return { ok: true, hasModel: models.some((m) => m === LOCAL_MODEL || m.startsWith(LOCAL_MODEL + ':')), models };
+  } catch (e) {
+    return { ok: false, hasModel: false, models: [], error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+/** Lokale Antwort mit Streaming. onToken erhält den bisher gesammelten Text. */
+export async function sendChatLocal(
+  messages: ChatMsg[],
+  context: ChatContext,
+  onToken: (textSoFar: string) => void,
+  model = LOCAL_MODEL,
+): Promise<{ answer: string; model: string; tokPerS: number | null }> {
+  const sys = KIRA_SYSTEM + '\n\nCOCKPIT-DATEN:\n' + JSON.stringify(context);
+  const res = await fetch(`${OLLAMA_URL}/api/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model,
+      stream: true,
+      think: false,
+      keep_alive: '30m',
+      options: { temperature: 0.3, num_ctx: 16384 },
+      messages: [{ role: 'system', content: sys }, ...messages.slice(-12).map(({ role, content }) => ({ role, content }))],
+    }),
+  });
+  if (!res.ok || !res.body) throw new Error(`Ollama HTTP ${res.status}`);
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '';
+  let answer = '';
+  let tokPerS: number | null = null;
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let nl: number;
+    while ((nl = buf.indexOf('\n')) >= 0) {
+      const line = buf.slice(0, nl).trim();
+      buf = buf.slice(nl + 1);
+      if (!line) continue;
+      const j = JSON.parse(line);
+      if (j.error) throw new Error(j.error);
+      const piece = j.message?.content || '';
+      if (piece) {
+        answer += piece;
+        onToken(answer);
+      }
+      if (j.done && j.eval_count && j.eval_duration) tokPerS = Math.round((j.eval_count / (j.eval_duration / 1e9)) * 10) / 10;
+    }
+  }
+  return { answer, model, tokPerS };
+}
+
+/** Lokale Frage/Antwort in AI_CHAT_LOG protokollieren (zählt nicht gegen das Tageslimit). */
+export async function logLocalChat(question: string, answer: string, model: string) {
+  try {
+    await fetch(`${BASE_URL}?mode=chatLog&cb=${Date.now()}`, {
+      method: 'POST',
+      redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ kind: 'chatLog', question, answer, model }),
+    });
+  } catch {
+    // Protokoll ist optional
+  }
 }

@@ -1,6 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Panel } from '../components/UI';
-import { buildChatContext, sendChat, type ChatContext, type ChatMsg } from '../lib/chatContext';
+import {
+  buildChatContext,
+  sendChat,
+  pingLocal,
+  sendChatLocal,
+  logLocalChat,
+  LOCAL_MODEL,
+  type ChatContext,
+  type ChatMsg,
+} from '../lib/chatContext';
 
 const STORAGE_KEY = 'ck_kira_chat_v1';
 const MAX_MSGS = 40;
@@ -25,6 +34,8 @@ function writeHistory(msgs: ChatMsg[]) {
     // localStorage blockiert – nichts tun.
   }
 }
+
+type ExtendedMsg = ChatMsg & { engine?: 'pplx' | 'local'; model?: string; tokPerS?: number | null; pending?: boolean };
 
 function fmtTs(ts?: string): string {
   if (!ts) return '';
@@ -104,7 +115,7 @@ function renderAssistantContent(content: string, citations?: string[]): React.Re
 
 export function KiraChat() {
   const [open, setOpen] = useState(false);
-  const [msgs, setMsgs] = useState<ChatMsg[]>(readHistory);
+  const [msgs, setMsgs] = useState<ExtendedMsg[]>(readHistory as () => ExtendedMsg[]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -114,6 +125,37 @@ export function KiraChat() {
   const [ctx, setCtx] = useState<ChatContext | null>(null);
   const [ctxTs, setCtxTs] = useState<string | null>(null);
   const ctxRef = useRef<{ ctx: ChatContext | null; ts: number | null }>({ ctx: null, ts: null });
+
+  type Engine = 'pplx' | 'local';
+  const ENGINE_KEY = 'ck_kira_engine';
+  function readEngine(): Engine {
+    try {
+      const v = localStorage.getItem(ENGINE_KEY);
+      if (v === 'local') return 'local';
+    } catch {
+      // ignore
+    }
+    return 'pplx';
+  }
+  function writeEngine(e: Engine) {
+    try {
+      localStorage.setItem(ENGINE_KEY, e);
+    } catch {
+      // ignore
+    }
+  }
+  const [engine, setEngine] = useState<Engine>(readEngine);
+  type LocalStatus = null | { ok: boolean; hasModel: boolean; error?: string };
+  const [localStatus, setLocalStatus] = useState<LocalStatus>(null);
+
+  async function checkLocal() {
+    const st = await pingLocal();
+    setLocalStatus(st);
+  }
+  useEffect(() => {
+    if (!open || engine !== 'local') return;
+    checkLocal();
+  }, [open, engine]);
 
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -142,35 +184,55 @@ export function KiraChat() {
     return fresh;
   }
 
-  async function handleSend() {
-    const text = input.trim();
+  const updatePending = (fn: (m: ExtendedMsg) => ExtendedMsg) =>
+    setMsgs((prev) => {
+      const i = prev.length - 1;
+      if (i < 0 || !prev[i].pending) return prev;
+      return [...prev.slice(0, i), fn(prev[i])];
+    });
+
+  async function send(textRaw: string) {
+    const text = textRaw.trim();
     if (!text || sending) return;
-    const userMsg: ChatMsg = { role: 'user', content: text, ts: new Date().toISOString() };
-    const next = [...msgs, userMsg];
-    setMsgs(next);
+    const userMsg: ExtendedMsg = { role: 'user', content: text, ts: new Date().toISOString() };
+    // Nur echte Nachrichten (keine leeren/abgebrochenen Platzhalter) an das Modell schicken
+    const next = [...msgs.filter((m) => !m.pending && m.content.trim() !== ''), userMsg];
+    setMsgs((prev) => [...prev.filter((m) => !m.pending), userMsg]);
     setInput('');
     setSending(true);
     setError(null);
-    setUsed(null);
-    setLimit(null);
     try {
       const context = await ensureContext();
-      const res = await sendChat(next, context, sources);
-      const assistantMsg: ChatMsg = {
-        role: 'assistant',
-        content: res.answer,
-        citations: res.citations,
-        ts: new Date().toISOString(),
-      };
-      setMsgs((prev) => [...prev, assistantMsg]);
-      setUsed(res.used);
-      setLimit(res.limit);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      setError(msg);
+      const plain = next.map(({ role, content }) => ({ role, content }));
+      if (engine === 'local') {
+        const st = await pingLocal();
+        setLocalStatus(st);
+        if (!st.ok || !st.hasModel) {
+          setError('Lokales Modell nicht erreichbar. Starte Ollama auf dem Mac oder wechsle zu Perplexity.');
+          return;
+        }
+        setMsgs((prev) => [...prev, { role: 'assistant', content: '', engine: 'local', model: LOCAL_MODEL, ts: new Date().toISOString(), pending: true }]);
+        const res = await sendChatLocal(plain, context, (t) => updatePending((m) => ({ ...m, content: t })));
+        updatePending((m) => ({ ...m, content: res.answer, tokPerS: res.tokPerS, pending: false }));
+        logLocalChat(text, res.answer, LOCAL_MODEL).catch(() => {});
+      } else {
+        setUsed(null);
+        setLimit(null);
+        const res = await sendChat(plain, context, sources);
+        setMsgs((prev) => [...prev, { role: 'assistant', content: res.answer, citations: res.citations, ts: new Date().toISOString(), engine: 'pplx' }]);
+        setUsed(res.used);
+        setLimit(res.limit);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setMsgs((prev) => prev.filter((m) => !(m.pending && m.content === '')).map((m) => (m.pending ? { ...m, pending: false } : m)));
     } finally {
       setSending(false);
     }
+  }
+
+  function handleSend() {
+    send(input);
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -181,34 +243,7 @@ export function KiraChat() {
   }
 
   function handleChip(text: string) {
-    if (sending) return;
-    const userMsg: ChatMsg = { role: 'user', content: text, ts: new Date().toISOString() };
-    const next = [...msgs, userMsg];
-    setMsgs(next);
-    setSending(true);
-    setError(null);
-    setUsed(null);
-    setLimit(null);
-    (async () => {
-      try {
-        const context = await ensureContext();
-        const res = await sendChat(next, context, sources);
-        const assistantMsg: ChatMsg = {
-          role: 'assistant',
-          content: res.answer,
-          citations: res.citations,
-          ts: new Date().toISOString(),
-        };
-        setMsgs((prev) => [...prev, assistantMsg]);
-        setUsed(res.used);
-        setLimit(res.limit);
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        setError(msg);
-      } finally {
-        setSending(false);
-      }
-    })();
+    send(text);
   }
 
   function handleClear() {
@@ -226,10 +261,52 @@ export function KiraChat() {
     'Kann ich morgen hart trainieren?',
     'Warum lautet der Tagesentscheid so?',
     'Wie sieht meine Belastung diese Woche aus?',
-    'Was sollte ich heute für die Erholung tun?',
+    'Was sollte ich heute für die Erholung tun?',
   ];
 
   const ctxLabel = ctxTs ? `Daten Stand ${fmtTs(ctxTs)}` : '';
+
+  const engineButtons = (
+    <div className="inline-flex bg-bg rounded border border-border p-0.5">
+      <button
+        className={`px-2.5 py-1 text-xs rounded ${engine === 'pplx' ? 'bg-bg-subtle text-ink' : 'text-ink-muted hover:text-ink'}`}
+        onClick={() => { setEngine('pplx'); writeEngine('pplx'); }}
+      >
+        Perplexity
+      </button>
+      <button
+        className={`px-2.5 py-1 text-xs rounded ${engine === 'local' ? 'bg-bg-subtle text-ink' : 'text-ink-muted hover:text-ink'}`}
+        onClick={() => { setEngine('local'); writeEngine('local'); }}
+      >
+        Lokal (Mac)
+      </button>
+    </div>
+  );
+
+  const localStatusRow = engine === 'local' ? (
+    <div className="inline-flex items-center gap-2 text-2xs">
+      {localStatus === null ? (
+        <span className="text-ink-dim">prüfe…</span>
+      ) : (
+        <>
+          <span className={`inline-block w-2 h-2 rounded-full ${localStatus.ok && localStatus.hasModel ? 'bg-green-400' : 'bg-orange-400'}`} />
+          <span className="text-ink-dim">
+            {localStatus.ok && localStatus.hasModel
+              ? `Lokal bereit (${LOCAL_MODEL})`
+              : localStatus.ok && !localStatus.hasModel
+              ? `Ollama läuft, aber das Modell ${LOCAL_MODEL} fehlt`
+              : `Lokales Modell nicht erreichbar – nur am Mac mit laufendem Ollama`}
+          </span>
+          <button
+            className="text-2xs text-ink-dim hover:text-ink underline"
+            onClick={checkLocal}
+          >
+            Erneut prüfen
+          </button>
+        </>
+      )}
+    </div>
+  ) : null;
 
   return (
     <Panel title="Frag Kira · Sportwissenschaftlerin" right={
@@ -242,11 +319,15 @@ export function KiraChat() {
     }>
       {!open ? (
         <div className="text-xs text-ink-dim">
-          Fragen zu Training, Erholung und Plan – Kira antwortet mit deinen Cockpit-Daten (Perplexity sonar-pro).
+          Fragen zu Training, Erholung und Plan – Kira antwortet mit deinen Cockpit-Daten (Perplexity sonar-pro oder lokal auf deinem Mac).
         </div>
       ) : (
         <div className="space-y-3">
           {ctxLabel && <div className="text-2xs text-ink-dim">{ctxLabel}</div>}
+          <div className="flex flex-wrap items-center gap-2">
+            {engineButtons}
+            {localStatusRow}
+          </div>
           {msgs.length === 0 && (
             <div className="flex flex-wrap gap-2">
               {chips.map((c) => (
@@ -262,10 +343,14 @@ export function KiraChat() {
             </div>
           )}
           <div ref={listRef} className="max-h-[28rem] overflow-y-auto space-y-3 pr-1">
-            {msgs.map((m, i) => (
+            {msgs.filter((m) => !(m.pending && m.content === '')).map((m, i) => (
               <div key={i} className={m.role === 'user' ? 'ml-auto max-w-[85%]' : 'mr-auto max-w-[92%]'}>
                 {m.role === 'assistant' && (
-                  <div className="text-2xs text-ink-dim mb-1">Kira</div>
+                  <div className="text-2xs text-ink-dim mb-1">
+                    {m.engine === 'local'
+                      ? `Kira · lokal (${m.model || LOCAL_MODEL})${m.tokPerS != null ? ` · ${m.tokPerS} Tok/s` : ''}`
+                      : 'Kira · Perplexity'}
+                  </div>
                 )}
                 <div
                   className={
@@ -280,7 +365,7 @@ export function KiraChat() {
                 </div>
               </div>
             ))}
-            {sending && (
+            {sending && (engine !== 'local' || !msgs.length || (msgs[msgs.length - 1].pending && msgs[msgs.length - 1].content === '')) && (
               <div className="mr-auto max-w-[92%]">
                 <div className="rounded-lg bg-bg-subtle border border-border px-3 py-2 text-xs text-ink-dim animate-pulse">
                   Kira denkt nach…
@@ -315,7 +400,8 @@ export function KiraChat() {
                   className="mr-1"
                   checked={sources}
                   onChange={(e) => setSources(e.target.checked)}
-                  disabled={sending}
+                  disabled={sending || engine === 'local'}
+                  title={engine === 'local' ? 'nur mit Perplexity' : undefined}
                 />
                 Mit Fachquellen (wissenschaftliche Suche)
               </label>
@@ -333,11 +419,13 @@ export function KiraChat() {
               className="text-2xs text-ink-dim hover:text-ink underline"
               onClick={handleClear}
             >
-              Verlauf löschen
+              Verlauf löschen
             </button>
           </div>
           <div className="text-2xs text-ink-dim">
-            Kira berät nur – Plan und Sheet ändert sie nicht. Verlauf: dieser Browser + AI_CHAT_LOG.
+            {engine === 'local'
+              ? 'Kira (lokal) läuft auf deinem Mac – keine Cloud, kein Tageslimit. Verlauf: dieser Browser + AI_CHAT_LOG.'
+              : 'Kira berät nur – Plan und Sheet ändert sie nicht. Verlauf: dieser Browser + AI_CHAT_LOG.'}
           </div>
         </div>
       )}
