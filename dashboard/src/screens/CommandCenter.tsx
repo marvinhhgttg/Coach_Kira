@@ -17,6 +17,9 @@ import { AmpelChip, AmpelDot } from '../components/Ampel';
 import { ArcGauge, ErrorBox, Modal, Panel, Skeleton, Spinner } from '../components/UI';
 import { RecoveryPanel } from './RecoveryPanel';
 import { KiraChat } from './KiraChat';
+import { useEngine } from '../lib/engine';
+import { runLocalBriefing, fetchBriefingSources, type BriefingSource } from '../lib/briefingLocal';
+import { EngineSwitch, SourceBadge } from '../components/EngineSwitch';
 
 type ToastFn = (kind: 'ok' | 'err' | 'info', text: string) => void;
 type StatusItemLike = NonNullable<StatusResponse['summary']>['items'] extends Array<infer T> ? T : never;
@@ -408,13 +411,40 @@ export function CommandCenter({
     }
   }
 
+  const [engine] = useEngine();
+  const [sources, setSources] = useState<Record<string, BriefingSource | null>>({});
+  const [analysisLive, setAnalysisLive] = useState<string | null>(null);
+  const [consolidatedLive, setConsolidatedLive] = useState<string | null>(null);
+  useEffect(() => {
+    fetchBriefingSources().then((s) => setSources(s || {}));
+  }, []);
+  const markSource = (k: 'status' | 'consolidated', local: boolean) =>
+    setSources((s) => ({ ...s, [k]: { engine: local ? 'local' : 'cloud', model: local ? 'coach-kira' : 'sonar', timestamp: new Date().toISOString() } }));
+
   async function onAiAnalysis() {
     setAnalysisBusy(true);
+    if (engine === 'local') {
+      try {
+        setAnalysisLive('');
+        const res = await runLocalBriefing('status', (t) => setAnalysisLive(t));
+        setAnalysis(res.analysis || null);
+        setAnalysisTs(res.timestamp || new Date().toISOString());
+        markSource('status', true);
+        toast('ok', 'KI-Statusanalyse lokal erstellt und gespeichert.');
+      } catch (e) {
+        toast('err', e instanceof Error ? e.message : String(e));
+      } finally {
+        setAnalysisLive(null);
+        setAnalysisBusy(false);
+      }
+      return;
+    }
     try {
       const res = proxy.authenticated ? await proxyRunStatusAiAnalysis() : await runStatusAiAnalysis(token.trim());
       if (res.ok) {
         setAnalysis(res.analysis || null);
         setAnalysisTs(res.timestamp || null);
+        markSource('status', false);
         toast('ok', 'KI-Statusanalyse aktualisiert.');
       } else {
         toast('err', res.error || 'KI-Analyse fehlgeschlagen.');
@@ -428,11 +458,28 @@ export function CommandCenter({
 
   async function onConsolidatedAnalysis() {
     setConsolidatedBusy(true);
+    if (engine === 'local') {
+      try {
+        setConsolidatedLive('');
+        const res = await runLocalBriefing('consolidated', (t) => setConsolidatedLive(t));
+        setConsolidated(res.analysis || null);
+        setConsolidatedTs(res.timestamp || new Date().toISOString());
+        markSource('consolidated', true);
+        toast('ok', 'Konsolidierte Analyse lokal erstellt und gespeichert.');
+      } catch (e) {
+        toast('err', e instanceof Error ? e.message : String(e));
+      } finally {
+        setConsolidatedLive(null);
+        setConsolidatedBusy(false);
+      }
+      return;
+    }
     try {
       const res = proxy.authenticated ? await proxyRunConsolidatedAnalysis() : await runConsolidatedAnalysis(token.trim());
       if (res.ok) {
         setConsolidated(res.analysis || null);
         setConsolidatedTs(res.analysisTimestamp || res.timestamp || null);
+        markSource('consolidated', false);
         toast('ok', 'Konsolidierte Analyse aktualisiert.');
       } else {
         toast('err', res.error || 'Konsolidierte Analyse fehlgeschlagen.');
@@ -513,10 +560,14 @@ export function CommandCenter({
             </button>
           ) : (
           <>
+          <div className="mb-3">
+            <EngineSwitch />
+          </div>
           <div className="mb-4 panel-raised p-4 border-ampel-lila/25">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="label">Coach-Kira konsolidierte Analyse</div>
+                <div className="mt-1"><SourceBadge source={sources.consolidated} /></div>
                 <p className="text-2xs text-ink-dim tnum mt-1">
                   {consolidatedTs ? `Stand · ${fmtDateTime(consolidatedTs)}` : 'Noch keine konsolidierte Analyse gespeichert.'}
                 </p>
@@ -527,10 +578,12 @@ export function CommandCenter({
                 className="btn btn-primary text-xs px-2 py-1 shrink-0"
                 data-testid="button-consolidated-analysis"
               >
-                {consolidatedBusy ? 'Analysiere…' : 'Konsolidierte Analyse erstellen'}
+                {consolidatedBusy ? (engine === 'local' ? 'Kira (lokal) schreibt…' : 'Analysiere…') : 'Konsolidierte Analyse erstellen'}
               </button>
             </div>
-            {consolidated ? (
+            {consolidatedLive !== null ? (
+              <div className="mt-3 whitespace-pre-wrap text-sm text-ink-muted">{consolidatedLive || 'Kira (lokal) liest die Daten…'}</div>
+            ) : consolidated ? (
               <BriefingMarkdown text={consolidated} />
             ) : (
               <p className="mt-3 text-sm text-ink-muted">
@@ -544,8 +597,9 @@ export function CommandCenter({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="label">Coach-Kira KI-Analyse</div>
+                <div className="mt-1"><SourceBadge source={sources.status} /></div>
                 <p className="text-2xs text-ink-dim tnum mt-1">
-                  {analysisTs ? `Stand · ${fmtDateTime(analysisTs)}` : 'Noch keine Perplexity-Analyse gespeichert.'}
+                  {analysisTs ? `Stand · ${fmtDateTime(analysisTs)}` : 'Noch keine KI-Analyse gespeichert.'}
                 </p>
               </div>
               <button
@@ -554,14 +608,16 @@ export function CommandCenter({
                 className="btn btn-primary text-xs px-2 py-1 shrink-0"
                 data-testid="button-ai-analysis"
               >
-                {analysisBusy ? 'Analysiere…' : 'KI-Analyse aktualisieren'}
+                {analysisBusy ? (engine === 'local' ? 'Kira (lokal) schreibt…' : 'Analysiere…') : 'KI-Analyse aktualisieren'}
               </button>
             </div>
-            {analysis ? (
+            {analysisLive !== null ? (
+              <div className="mt-3 whitespace-pre-wrap text-sm text-ink-muted">{analysisLive || 'Kira (lokal) liest die Daten…'}</div>
+            ) : analysis ? (
               <AiAnalysisText text={analysis} />
             ) : (
               <p className="mt-3 text-sm text-ink-muted">
-                Nutzt Perplexity serverseitig über Apps Script und speichert das Ergebnis in
+                Lokal mit coach-kira auf deinem Mac oder in der Cloud über Perplexity – gespeichert wird in
                 <span className="tnum text-ink"> AI_STATUS_ANALYSIS</span>.
               </p>
             )}

@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StrategyPanel, planChecks, useEvents } from './StrategyPanel';
 import { PlanKpis } from './PlanKpis';
+import { useEngine } from '../lib/engine';
+import { runLocalBriefing, fetchBriefingSources, type BriefingSource } from '../lib/briefingLocal';
+import { EngineSwitch, SourceBadge } from '../components/EngineSwitch';
 import { atlStep, ctlStep, windowMean, esStep, ES_MODEL } from '../lib/ctlModel';
 import {
   ApiError,
@@ -397,6 +400,12 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
   const [briefingTs, setBriefingTs] = useState<string | null>(null);
   const [briefingRecommendations, setBriefingRecommendations] = useState<BriefingRecommendation[] | null>(null);
   const [briefingBusy, setBriefingBusy] = useState(false);
+  const [engine] = useEngine();
+  const [briefingSource, setBriefingSource] = useState<BriefingSource | null>(null);
+  const [briefingLive, setBriefingLive] = useState<string | null>(null);
+  useEffect(() => {
+    fetchBriefingSources().then((s) => setBriefingSource((s && s.plan) || null));
+  }, []);
   const [recGap, setRecGap] = useState(2);
   const [events] = useEvents();
 
@@ -702,6 +711,24 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
 
   async function onGenerateBriefing() {
     setBriefingBusy(true);
+    if (engine === 'local') {
+      try {
+        setBriefingLive('');
+        const res = await runLocalBriefing('plan', (t) => setBriefingLive(t));
+        const normalized = normalizeBriefingPayload(res.briefing, res.recommendations || null);
+        setBriefing(normalized.briefing);
+        setBriefingTs(res.timestamp || new Date().toISOString());
+        setBriefingRecommendations(normalized.recommendations);
+        setBriefingSource({ engine: 'local', model: 'coach-kira', timestamp: new Date().toISOString() });
+        toast('ok', 'Plan-Briefing lokal erstellt und gespeichert.');
+      } catch (e) {
+        toast('err', e instanceof Error ? e.message : String(e));
+      } finally {
+        setBriefingLive(null);
+        setBriefingBusy(false);
+      }
+      return;
+    }
     try {
       const res = proxyAuthenticated
         ? await proxyGeneratePlanBriefing()
@@ -711,6 +738,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
         setBriefing(normalized.briefing);
         setBriefingTs(res.briefingTimestamp || res.timestamp || null);
         setBriefingRecommendations(normalized.recommendations);
+        setBriefingSource({ engine: 'cloud', model: 'sonar', timestamp: new Date().toISOString() });
         toast('ok', 'Plan-Briefing erstellt und gespeichert.');
       } else {
         toast('err', res.error || 'Plan-Briefing fehlgeschlagen.');
@@ -800,10 +828,14 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
             <div className="panel-raised p-4 border-accent-strong/20">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <div className="label">Perplexity Sportwissenschaftlerin · Coach Kira Briefing</div>
+                  <div className="label">Coach Kira · Plan-Briefing</div>
                   <p className="text-2xs text-ink-dim tnum mt-1">
                     {briefingTs ? `Gespeichert · ${fmtTime(briefingTs)}` : 'Noch kein persistentes Plan-Briefing gespeichert.'}
                   </p>
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <SourceBadge source={briefingSource} />
+                    <EngineSwitch compact />
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {briefingRecommendations?.length ? (
@@ -816,11 +848,13 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
                     disabled={briefingBusy}
                     className="btn btn-primary text-xs px-2 py-1"
                   >
-                    {briefingBusy ? 'Erstelle Briefing…' : 'Briefing erstellen'}
+                    {briefingBusy ? (engine === 'local' ? 'Kira (lokal) schreibt…' : 'Erstelle Briefing…') : 'Briefing erstellen'}
                   </button>
                 </div>
               </div>
-              {briefing ? (
+              {briefingLive !== null ? (
+                <div className="mt-3 whitespace-pre-wrap text-xs text-ink-dim font-mono max-h-64 overflow-y-auto">{briefingLive || 'Kira (lokal) liest Plan und Status…'}</div>
+              ) : briefing ? (
                 <div className="mt-3 whitespace-pre-wrap text-sm text-ink-muted leading-relaxed">{briefing}</div>
               ) : (
                 <p className="mt-3 text-sm text-ink-muted leading-relaxed">

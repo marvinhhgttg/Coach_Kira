@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Panel } from '../components/UI';
+import { EngineSwitch } from '../components/EngineSwitch';
+import { useEngine } from '../lib/engine';
 import {
   buildChatContext,
   sendChat,
@@ -126,36 +128,8 @@ export function KiraChat() {
   const [ctxTs, setCtxTs] = useState<string | null>(null);
   const ctxRef = useRef<{ ctx: ChatContext | null; ts: number | null }>({ ctx: null, ts: null });
 
-  type Engine = 'pplx' | 'local';
-  const ENGINE_KEY = 'ck_kira_engine';
-  function readEngine(): Engine {
-    try {
-      const v = localStorage.getItem(ENGINE_KEY);
-      if (v === 'local') return 'local';
-    } catch {
-      // ignore
-    }
-    return 'pplx';
-  }
-  function writeEngine(e: Engine) {
-    try {
-      localStorage.setItem(ENGINE_KEY, e);
-    } catch {
-      // ignore
-    }
-  }
-  const [engine, setEngine] = useState<Engine>(readEngine);
-  type LocalStatus = null | { ok: boolean; hasModel: boolean; error?: string };
-  const [localStatus, setLocalStatus] = useState<LocalStatus>(null);
-
-  async function checkLocal() {
-    const st = await pingLocal();
-    setLocalStatus(st);
-  }
-  useEffect(() => {
-    if (!open || engine !== 'local') return;
-    checkLocal();
-  }, [open, engine]);
+  const [engine] = useEngine();
+  const [, setLocalStatus] = useState<{ ok: boolean; hasModel: boolean; error?: string } | null>(null);
 
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -266,48 +240,6 @@ export function KiraChat() {
 
   const ctxLabel = ctxTs ? `Daten Stand ${fmtTs(ctxTs)}` : '';
 
-  const engineButtons = (
-    <div className="inline-flex bg-bg rounded border border-border p-0.5">
-      <button
-        className={`px-2.5 py-1 text-xs rounded ${engine === 'pplx' ? 'bg-bg-subtle text-ink' : 'text-ink-muted hover:text-ink'}`}
-        onClick={() => { setEngine('pplx'); writeEngine('pplx'); }}
-      >
-        Perplexity
-      </button>
-      <button
-        className={`px-2.5 py-1 text-xs rounded ${engine === 'local' ? 'bg-bg-subtle text-ink' : 'text-ink-muted hover:text-ink'}`}
-        onClick={() => { setEngine('local'); writeEngine('local'); }}
-      >
-        Lokal (Mac)
-      </button>
-    </div>
-  );
-
-  const localStatusRow = engine === 'local' ? (
-    <div className="inline-flex items-center gap-2 text-2xs">
-      {localStatus === null ? (
-        <span className="text-ink-dim">prüfe…</span>
-      ) : (
-        <>
-          <span className={`inline-block w-2 h-2 rounded-full ${localStatus.ok && localStatus.hasModel ? 'bg-green-400' : 'bg-orange-400'}`} />
-          <span className="text-ink-dim">
-            {localStatus.ok && localStatus.hasModel
-              ? `Lokal bereit (${LOCAL_MODEL})`
-              : localStatus.ok && !localStatus.hasModel
-              ? `Ollama läuft, aber das Modell ${LOCAL_MODEL} fehlt`
-              : `Lokales Modell nicht erreichbar – nur am Mac mit laufendem Ollama`}
-          </span>
-          <button
-            className="text-2xs text-ink-dim hover:text-ink underline"
-            onClick={checkLocal}
-          >
-            Erneut prüfen
-          </button>
-        </>
-      )}
-    </div>
-  ) : null;
-
   return (
     <Panel title="Frag Kira · Sportwissenschaftlerin" right={
       <button
@@ -324,10 +256,7 @@ export function KiraChat() {
       ) : (
         <div className="space-y-3">
           {ctxLabel && <div className="text-2xs text-ink-dim">{ctxLabel}</div>}
-          <div className="flex flex-wrap items-center gap-2">
-            {engineButtons}
-            {localStatusRow}
-          </div>
+          <EngineSwitch />
           {msgs.length === 0 && (
             <div className="flex flex-wrap gap-2">
               {chips.map((c) => (
