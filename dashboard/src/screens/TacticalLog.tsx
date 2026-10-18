@@ -1,5 +1,7 @@
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ApiError, fetchChartData } from '../lib/api';
+import { fetchActivityReviews, type ActivityReview } from '../lib/activityReviews';
+import { SourceBadge } from '../components/EngineSwitch';
 import { fmtDateShort, fmtNum } from '../lib/format';
 import { ErrorBox, Panel, Skeleton } from '../components/UI';
 import {
@@ -128,7 +130,7 @@ const tone = (v: number | null, goodHigh = true, t = 3) => (v == null ? '' : (go
 // ---------------------------------------------------------------------------
 // 1) Detail / Nachbetrachtung
 // ---------------------------------------------------------------------------
-function Detail({ a }: { a: Act }) {
+function Detail({ a, review }: { a: Act; review?: ActivityReview | null }) {
   const d = a.d;
   const n = a.next;
   const dr = n?.readiness != null && a.base.r != null ? n.readiness - a.base.r : null;
@@ -180,6 +182,10 @@ function Detail({ a }: { a: Act }) {
           <Row k="CTL / ATL" v={`${fmtNum(d.ctlPost)} / ${fmtNum(d.atlPost)}`} />
           <Row k="Ertrag" v={a.ertrag != null ? `${fmtNum(a.ertrag, 2)} TE/100 ESS` : '—'} />
         </dl>
+      </div>
+      <div className="md:col-span-4 border-t border-border pt-3">
+        <div className="flex items-center gap-2 mb-1"><div className="label">Kira-Kommentar</div>{review && <SourceBadge source={{ engine: review.engine, model: review.model }} />}</div>
+        {review ? <p className="text-sm text-ink-muted leading-relaxed whitespace-pre-wrap">{review.text}</p> : <p className="text-2xs text-ink-dim">Noch kein Kira-Kommentar. Der Mac-Dienst kommentiert neue Einheiten automatisch.</p>}
       </div>
     </div>
   );
@@ -273,6 +279,7 @@ export function TacticalLog() {
   const [sort, setSort] = useState<SortKey>('date');
   const [open, setOpen] = useState<string | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
+  const [reviews, setReviews] = useState<Map<string, ActivityReview>>(new Map());
 
   const load = () => {
     setErr(null);
@@ -280,6 +287,7 @@ export function TacticalLog() {
     fetchChartData(ALL_RANGE, RECOVERY_FETCH_METRICS)
       .then((r) => setRaw(r.data as any[]))
       .catch((e) => setErr(e instanceof ApiError ? e.message : String(e)));
+    fetchActivityReviews().then(setReviews);
   };
   useEffect(load, []);
 
@@ -414,7 +422,7 @@ export function TacticalLog() {
                       </span>
                       <button className="btn btn-ghost text-2xs px-2 py-0.5" onClick={() => setPicked(null)}>× schließen</button>
                     </div>
-                    {pickedAct ? <Detail a={pickedAct} /> : <p className="text-xs text-ink-dim">Kein Training an diesem Tag.</p>}
+                    {pickedAct ? <Detail a={pickedAct} review={reviews.get(pickedAct.d.date)} /> : <p className="text-xs text-ink-dim">Kein Training an diesem Tag.</p>}
                   </div>
                 )}
                 <Calendar days={days} acts={actMap} onPick={setPicked} picked={picked} />
@@ -469,7 +477,7 @@ export function TacticalLog() {
                             {isOpen && (
                               <tr className="bg-bg-subtle/40">
                                 <td colSpan={9} className="px-3 py-3">
-                                  <Detail a={a} />
+                                  <Detail a={a} review={reviews.get(a.d.date)} />
                                 </td>
                               </tr>
                             )}
