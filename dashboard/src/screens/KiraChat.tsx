@@ -294,10 +294,10 @@ export function KiraChat() {
                 </div>
               </div>
             ))}
-            {sending && (engine !== 'local' || !msgs.length || (msgs[msgs.length - 1].pending && msgs[msgs.length - 1].content === '')) && (
+            {sending && !(msgs.length && msgs[msgs.length - 1].pending && msgs[msgs.length - 1].content !== '') && (
               <div className="mr-auto max-w-[92%]">
                 <div className="rounded-lg bg-bg-subtle border border-border px-3 py-2 text-xs text-ink-dim animate-pulse">
-                  Kira denkt nach…
+                  {engine === 'local' ? 'Kira (lokal) denkt nach… beim ersten Mal lädt der Mac das Modell, das kann bis zu einer Minute dauern.' : 'Kira denkt nach…'}
                 </div>
               </div>
             )}
