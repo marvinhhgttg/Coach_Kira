@@ -16,14 +16,17 @@ import {
   fetchPlanBriefing,
   fetchPlanSimulation,
   fetchPlanSimulationWithTimeout,
+  fetchRunStatus,
   generatePlanBriefing,
+  runSupervisor,
   savePlanSimulation,
   toNum,
   type PlanDay,
   type PlanResponse,
 } from '../lib/api';
 import { fmtDateShort, fmtNum, fmtSigned, fmtTime } from '../lib/format';
-import { proxyGeneratePlanBriefing, proxySavePlanSimulation } from '../lib/proxy';
+import { proxyGeneratePlanBriefing, proxyRunSupervisor, proxySavePlanSimulation } from '../lib/proxy';
+import { SupervisorPlanTile } from '../components/SupervisorPlanTile';
 import { ErrorBox, Panel, Skeleton } from '../components/UI';
 import {
   Bar,
@@ -400,6 +403,24 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
   const [briefing, setBriefing] = useState<string | null>(null);
   const [briefingTs, setBriefingTs] = useState<string | null>(null);
   const [briefingRecommendations, setBriefingRecommendations] = useState<BriefingRecommendation[] | null>(null);
+  // Wochenplan aus dem KI-Report (Supervisor, AI_REPORT_PLAN) – ersetzt das Plan-Briefing
+  const [supPlan, setSupPlan] = useState<PlanDay[]>([]);
+  const [supBusy, setSupBusy] = useState(false);
+  const [supStatus, setSupStatus] = useState<string | null>(null);
+  const applySupPlan = (days: PlanDay[]) => {
+    const today = new Date().toLocaleDateString('sv-SE');
+    const list = (days || []).filter((d) => d.date && d.date >= today);
+    setSupPlan(list);
+    setBriefingRecommendations(
+      list.map((d) => ({
+        date: d.date,
+        day: d.day,
+        recommended_load_ess: Number(d.recommended_load_ess ?? 0),
+        recommended_zone: d.recommended_zone || '',
+        rationale: d.projected_effect || '',
+      })),
+    );
+  };
   const [briefingBusy, setBriefingBusy] = useState(false);
   const [engine] = useEngine();
   const [briefingSource, setBriefingSource] = useState<BriefingSource | null>(null);
@@ -423,7 +444,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
       // Alle Requests parallel: planBriefing blockiert nicht mehr,
       // planSimulationJson bekommt einen harten 8s-Timeout (Apps Script antwortet
       // aktuell mit HTTP 404 nach ~60s, was den Fallback früher ausslösen würde).
-      const briefingP = fetchPlanBriefing().catch((): null => null);
+      const briefingP = fetchPlan().catch((): null => null);
       const anchorP = fetchChartData('360d', PLAN_ANCHOR_METRICS as any).catch(
         (e): { data: any[]; timestamp?: string; _err?: unknown } => ({
           data: [],
@@ -446,15 +467,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
       const [briefingRes, anchorRes, simRes] = await Promise.all([briefingP, anchorP, simP]);
 
       if (briefingRes && (briefingRes as any).ok) {
-        const normalized = normalizeBriefingPayload(
-          (briefingRes as any).briefing,
-          (briefingRes as any).recommendations || null,
-        );
-        setBriefing(normalized.briefing);
-        setBriefingTs(
-          (briefingRes as any).briefingTimestamp || (briefingRes as any).timestamp || null,
-        );
-        setBriefingRecommendations(normalized.recommendations);
+        applySupPlan(((briefingRes as any).plan || []) as PlanDay[]);
       }
 
       const anchorRows = dedupeByDateKeepLast((anchorRes.data as any[]) || []);
@@ -760,12 +773,53 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
     }
   }
 
+  async function onRunSupervisor() {
+    setSupBusy(true);
+    setSupStatus('Startet…');
+    const t0 = Date.now();
+    const label: Record<string, string> = {
+      START: 'Startet…',
+      INIT: 'Sammelt Daten…',
+      AI_WAIT_LOCAL: 'Wartet auf Mac (coach-kira)',
+      AI_CALL: 'Fragt GPT-4o…',
+      AI_OK: 'Antwort da',
+      WRITE: 'Speichert…',
+    };
+    try {
+      const res = proxyAuthenticated ? await proxyRunSupervisor() : await runSupervisor(token.trim());
+      if (!(res as any)?.ok) throw new Error((res as any)?.error || 'KI-Report konnte nicht gestartet werden.');
+      toast('info', 'KI-Report gestartet – lokal dauert das einige Minuten.');
+      for (let i = 0; i < 80; i++) {
+        await new Promise((r) => setTimeout(r, 15000));
+        const st = await fetchRunStatus().catch(() => null);
+        const hb = (st as any)?.heartbeat || {};
+        const ts = hb.timestamp ? Date.parse(hb.timestamp) : 0;
+        if (ts < t0 - 5000) continue;
+        const stage = String(hb.stage || '');
+        if (stage === 'END_OK') {
+          const p = await fetchPlan().catch(() => null);
+          if (p && (p as any).ok) applySupPlan(((p as any).plan || []) as PlanDay[]);
+          toast('ok', 'Neuer Wochenplan aus dem KI-Report geladen.');
+          return;
+        }
+        if (stage === 'END_ERROR') throw new Error('KI-Report fehlgeschlagen: ' + String(hb.extra || ''));
+        setSupStatus(label[stage] || stage || 'läuft…');
+      }
+      toast('info', 'KI-Report läuft noch – der Plan erscheint beim nächsten Laden.');
+    } catch (e) {
+      toast('err', e instanceof Error ? e.message : String(e));
+    } finally {
+      setSupBusy(false);
+      setSupStatus(null);
+    }
+  }
+
   function applyBriefingLoads() {
     if (!briefingRecommendations?.length || !plan?.plan?.length) return;
     const byDate = new Map(briefingRecommendations.map((r) => [r.date, r]));
-    setLoads((old) => old.map((v, i) => byDate.get(plan.plan[i]?.date)?.recommended_load_ess ?? v));
-    setZones((old) => old.map((v, i) => byDate.get(plan.plan[i]?.date)?.recommended_zone ?? v));
-    toast('info', 'ESS-/Zonen-Empfehlungen aus dem Briefing lokal übernommen. Noch nicht gespeichert.');
+    setLoads((old) => old.map((v, i) => (locks[i] ? v : byDate.get(plan.plan[i]?.date)?.recommended_load_ess ?? v)));
+    setZones((old) => old.map((v, i) => (locks[i] ? v : byDate.get(plan.plan[i]?.date)?.recommended_zone || v)));
+    toast('info', 'Wochenplan aus dem KI-Report übernommen (gesperrte Tage unverändert). Noch nicht gespeichert.');
   }
 
   return (
@@ -835,56 +889,14 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
               </div>
             </div>
 
-            <div className="panel-raised p-4 border-accent-strong/20">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <div className="label">Coach Kira · Plan-Briefing</div>
-                  <p className="text-2xs text-ink-dim tnum mt-1">
-                    {briefingTs ? `Gespeichert · ${fmtTime(briefingTs)}` : 'Noch kein persistentes Plan-Briefing gespeichert.'}
-                  </p>
-                  <div className="mt-1 flex flex-wrap items-center gap-2">
-                    <SourceBadge source={briefingSource} />
-                    <EngineSwitch compact />
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {briefingRecommendations?.length ? (
-                    <button onClick={applyBriefingLoads} className="btn btn-ghost text-xs px-2 py-1">
-                      ESS übernehmen
-                    </button>
-                  ) : null}
-                  <button
-                    onClick={onGenerateBriefing}
-                    disabled={briefingBusy}
-                    className="btn btn-primary text-xs px-2 py-1"
-                  >
-                    {briefingBusy ? (engine === 'local' ? 'Kira (lokal) schreibt…' : 'Erstelle Briefing…') : 'Briefing erstellen'}
-                  </button>
-                </div>
-              </div>
-              {briefingLive !== null ? (
-                <div className="mt-3 whitespace-pre-wrap text-xs text-ink-dim font-mono max-h-64 overflow-y-auto">{briefingLive || 'Kira (lokal) liest Plan und Status…'}</div>
-              ) : briefing ? (
-                <div className="mt-3 whitespace-pre-wrap text-sm text-ink-muted leading-relaxed">{briefing}</div>
-              ) : (
-                <p className="mt-3 text-sm text-ink-muted leading-relaxed">
-                  Erstellt auf Knopfdruck eine persistente Empfehlung aus Command-Center-Status,
-                  Garmin-/Coach-Kira-Werten und sichtbarem 14-Tage-Plan. Die ESS-Empfehlungen können
-                  danach lokal in die Slider übernommen und anschließend explizit in die timeline gespeichert werden.
-                </p>
-              )}
-              {briefingRecommendations?.length ? (
-                <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
-                  {briefingRecommendations.slice(0, 14).map((r) => (
-                    <div key={r.date} className="rounded border border-border bg-bg-subtle/50 p-2">
-                      <div className="tnum text-xs text-ink">{r.day || ''} {r.date}</div>
-                      <div className="tnum text-lg font-semibold text-accent">{fmtNum(r.recommended_load_ess)} ESS</div>
-                      <div className="text-2xs text-ink-muted">{r.recommended_zone || 'Zone offen'}</div>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-            </div>
+            <SupervisorPlanTile
+              days={supPlan}
+              lockedDates={new Set((plan?.plan || []).filter((_, i) => locks[i]).map((d) => d.date))}
+              status={supStatus}
+              busy={supBusy}
+              onApply={applyBriefingLoads}
+              onRefresh={onRunSupervisor}
+            />
 
             <div className="panel-raised p-3">
               <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
