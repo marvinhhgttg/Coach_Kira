@@ -201,6 +201,7 @@ export function StrategyPanel({
   applyState,
   recGap,
   setRecGap,
+  kiPlan,
 }: {
   sim: PlanRow[];
   state: PlanState;
@@ -210,6 +211,8 @@ export function StrategyPanel({
   applyState: (s: PlanState, msg: string) => void;
   recGap: number;
   setRecGap: (n: number) => void;
+  /** Wochenplan aus dem KI-Report, auf die 14 Plantage gelegt (Rest = aktueller Plan) */
+  kiPlan?: { state: PlanState; days: number } | null;
 }) {
   const [events, setEvents] = useEvents();
   const checks = useMemo(() => planChecks(sim, recGap), [sim, recGap]);
@@ -323,7 +326,11 @@ export function StrategyPanel({
     writeLS(SC_KEY, next);
   };
   const scenRows = useMemo(() => {
-    const all = [{ name: 'Aktuell', st: state }, ...scens.map((s) => ({ name: s.name, st: s as PlanState }))];
+    const all = [
+      { name: 'Aktuell', st: state },
+      ...(kiPlan ? [{ name: 'Kira', st: kiPlan.state }] : []),
+      ...scens.map((s) => ({ name: s.name, st: s as PlanState })),
+    ];
     return all.map((x) => {
       const loads = dates.map((_, i) => (sim[i]?.locked ? state.loads[i] : x.st.loads[i] ?? 0));
       const rows = simulateWith(loads);
@@ -340,8 +347,8 @@ export function StrategyPanel({
         conf: ch.filter((c) => c.issues.length).length,
       };
     });
-  }, [scens, state, sim, dates, simulateWith, recGap]);
-  const SC_COL: Record<string, string> = { Aktuell: '#94a3b8', A: '#38bdf8', B: '#f97316', C: '#a855f7' };
+  }, [scens, state, sim, dates, simulateWith, recGap, kiPlan]);
+  const SC_COL: Record<string, string> = { Aktuell: '#94a3b8', Kira: '#facc15', A: '#38bdf8', B: '#f97316', C: '#a855f7' };
   const scenChart = dates.map((d, i) => {
     const o: any = { d: `${wdOf(d)} ${fmtDateShort(d).slice(0, 6)}` };
     for (const s of scenRows) o[s.name] = Math.round(s.rows[i]?.ctl ?? 0);
@@ -636,7 +643,10 @@ export function StrategyPanel({
                       <td className="py-1 pr-2">{s.formEnd > 0 ? '+' : ''}{fmtNum(s.formEnd, 1)} %</td>
                       <td className={`py-1 pr-2 ${s.conf ? 'text-orange-300' : 'text-green-300'}`}>{s.conf}</td>
                       <td className="py-1 whitespace-nowrap">
-                        {s.name !== 'Aktuell' && (
+                        {s.name === 'Kira' && (
+                          <button className="text-accent hover:underline" onClick={() => applyState(s.st, 'Kira-Wochenplan geladen (noch nicht gespeichert).')}>laden</button>
+                        )}
+                        {s.name !== 'Aktuell' && s.name !== 'Kira' && (
                           <>
                             <button className="text-accent hover:underline mr-2" onClick={() => applyState(s.st, `Szenario ${s.name} geladen (noch nicht gespeichert).`)}>laden</button>
                             <button className="text-ink-dim hover:text-red-300" onClick={() => delScen(s.name)}>×</button>
@@ -647,6 +657,11 @@ export function StrategyPanel({
                   ))}
                 </tbody>
               </table>
+              {kiPlan && (
+                <p className="mt-2 text-2xs text-ink-dim">
+                  Kira = Wochenplan aus dem KI-Report ({kiPlan.days} Tage); gesperrte Tage und die übrigen Tage wie aktueller Plan.
+                </p>
+              )}
               {!scens.length && <p className="mt-2 text-2xs text-ink-dim">Noch keine Szenarien gemerkt.</p>}
             </div>
             <div style={{ height: 200 }}>

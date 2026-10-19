@@ -773,6 +773,32 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
     }
   }
 
+  // Kira-Wochenplan als Szenario: KI-Werte auf freien Tagen, sonst aktueller Plan
+  const kiScenario = useMemo(() => {
+    if (!supPlan.length || !plan?.plan?.length) return null;
+    const byDate = new Map(supPlan.map((d) => [d.date, d]));
+    let hits = 0;
+    const st = {
+      loads: loads.map((v, i) => {
+        const k = byDate.get(plan.plan[i]?.date);
+        if (!k || locks[i]) return v;
+        hits++;
+        return Number(k.recommended_load_ess ?? v);
+      }),
+      sports: sports.map((v, i) => {
+        const k = byDate.get(plan.plan[i]?.date);
+        return k && !locks[i] && k.training_1 ? k.training_1 : v;
+      }),
+      zones: zones.map((v, i) => {
+        const k = byDate.get(plan.plan[i]?.date);
+        return k && !locks[i] && k.recommended_zone ? k.recommended_zone : v;
+      }),
+      teAe: teAe.slice(),
+      teAn: teAn.slice(),
+    };
+    return hits ? { state: st, days: supPlan.length } : null;
+  }, [supPlan, plan, loads, sports, zones, teAe, teAn, locks]);
+
   async function onRunSupervisor() {
     setSupBusy(true);
     setSupStatus('Startet…');
@@ -1138,6 +1164,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
           applyState={applyStateFromStrategy}
           recGap={recGap}
           setRecGap={setRecGap}
+          kiPlan={kiScenario}
         />
       )}
       {!loading && !err && sim.length > 0 && (
