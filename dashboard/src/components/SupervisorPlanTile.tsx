@@ -63,7 +63,8 @@ export function SupervisorPlanTile({
             const locked = lockedDates.has(d.date);
             const diff =
               typeof d.recommended_load_ess === 'number' &&
-              typeof d.original_load_ess === 'number'
+              typeof d.original_load_ess === 'number' &&
+                  d.recommended_load_ess !== d.original_load_ess
                 ? d.recommended_load_ess - d.original_load_ess
                 : null;
             return (
