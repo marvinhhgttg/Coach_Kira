@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { localStatusText, useEngine, useLocalStatus } from '../lib/engine';
 
 /** Gemeinsamer Wahlschalter Lokal (Mac) / Cloud mit Statuspunkt. Gilt für Chat und alle Briefings. */
@@ -43,5 +44,48 @@ export function SourceBadge({ source }: { source: { engine: 'local' | 'cloud'; m
     <span className={`chip border text-2xs ${local ? 'border-green-400/40 text-green-300' : 'border-border-strong text-ink-muted'}`}>
       {local ? `lokal · ${source.model || 'coach-kira'}` : `Cloud · ${source.model || 'Perplexity'}`}
     </span>
+  );
+}
+
+/** Kompakter globaler Schalter für die Kopfzeile: Lokal/Cloud mit Statuspunkt, prüft alle 60 s. */
+export function HeaderEngineSwitch() {
+  const [engine, setEngine] = useEngine();
+  const [status, recheck] = useLocalStatus(engine === 'local');
+  const st = localStatusText(status);
+  useEffect(() => {
+    if (engine !== 'local') return;
+    const id = window.setInterval(recheck, 60000);
+    return () => window.clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [engine]);
+  const dot = engine !== 'local' ? 'bg-sky-400' : st.tone === 'ok' ? 'bg-green-400' : st.tone === 'warn' ? 'bg-orange-400' : 'bg-ink-dim';
+  const title =
+    engine === 'local'
+      ? `KI-Modell: lokal auf dem Mac · ${st.text}${st.tone !== 'ok' ? ' (Klick auf den Punkt prüft erneut)' : ''}`
+      : 'KI-Modell: Cloud (Perplexity über Apps Script)';
+  const btn = (active: boolean) =>
+    `px-2.5 py-1 text-xs rounded transition-colors ${active ? 'bg-bg-subtle text-ink' : 'text-ink-muted hover:text-ink'}`;
+  return (
+    <div
+      className="inline-flex items-center gap-1.5 rounded-md border border-border bg-bg-panel p-0.5 pl-2 shadow-sm"
+      role="group"
+      aria-label="KI-Modell wählen (gilt für Chat und Briefings)"
+      title={title}
+      data-testid="engine-switch-header"
+    >
+      <button
+        type="button"
+        onClick={recheck}
+        className={`inline-block w-2 h-2 rounded-full ${dot}`}
+        aria-label={title}
+      />
+      <span className="hidden lg:inline text-2xs text-ink-dim">KI</span>
+      <button type="button" className={btn(engine === 'local')} onClick={() => setEngine('local')} aria-pressed={engine === 'local'}>
+        Lokal
+      </button>
+      <button type="button" className={btn(engine === 'pplx')} onClick={() => setEngine('pplx')} aria-pressed={engine === 'pplx'}>
+        Cloud
+      </button>
+    </div>
   );
 }

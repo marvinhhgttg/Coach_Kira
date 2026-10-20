@@ -9,6 +9,7 @@ import { Toast } from './components/UI';
 import { Logo } from './components/Logo';
 import { fmtTime } from './lib/format';
 import { getProxyStatus, loginProxy, logoutProxy, setupProxy } from './lib/proxy';
+import { HeaderEngineSwitch } from './components/EngineSwitch';
 
 type Tab = 'command' | 'entry' | 'plan' | 'charts' | 'reports' | 'logs';
 type ThemeMode = 'dark' | 'garmin';
@@ -126,6 +127,7 @@ export function App() {
           </nav>
 
           <div className="ml-auto flex items-center gap-3 text-2xs tnum text-ink-dim">
+            <HeaderEngineSwitch />
             <div
               className="theme-switch inline-flex items-center rounded-md border border-border bg-bg-panel p-0.5 shadow-sm"
               role="group"
