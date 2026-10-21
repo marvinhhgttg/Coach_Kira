@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
-import { ApiError, submitCockpitEntry, type EntryType, type SubmitEntryResponse } from '../lib/api';
+import { useMemo, useRef, useState } from 'react';
+import { plausiCheck, PLAUSI_FELDER, FELD_LABEL, type Befund } from '../lib/plausi';
+import { ApiError, fetchChartData, submitCockpitEntry, type EntryType, type SubmitEntryResponse } from '../lib/api';
 import { proxySubmitEntry } from '../lib/proxy';
 import { fmtDateShort } from '../lib/format';
 import { Panel } from '../components/UI';
@@ -153,6 +154,33 @@ export function EntryPanel({
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [result, setResult] = useState<SubmitEntryResponse | null>(null);
+  const [befunde, setBefunde] = useState<Befund[]>([]);
+  const histRef = useRef<Record<string, unknown>[] | null>(null);
+
+  async function review() {
+    // Plausibilitäts-Check gegen die letzten 30 Tage, dann Bestätigung zeigen
+    let hist = histRef.current;
+    if (!hist) {
+      try {
+        const r: any = await fetchChartData('30d', PLAUSI_FELDER);
+        hist = ((r && (r.data || r.rows)) || []) as Record<string, unknown>[];
+      } catch {
+        hist = [];
+      }
+      histRef.current = hist;
+    }
+    const before = hist.filter((x) => String(x.date || '') < date);
+    const row: Record<string, unknown> = {};
+    Object.entries(payload).forEach(([k, val]) => {
+      if (val !== '' && val !== undefined && val !== null) row[k] = val;
+    });
+    try {
+      setBefunde(plausiCheck(row, before));
+    } catch {
+      setBefunde([]);
+    }
+    setConfirming(true);
+  }
 
   const fields = FIELDS[type];
   const v = values[type];
@@ -166,6 +194,7 @@ export function EntryPanel({
 
   function set(key: string, val: string) {
     setConfirming(false);
+    setBefunde([]);
     setValues((s) => ({ ...s, [type]: { ...s[type], [key]: val } }));
   }
 
@@ -195,6 +224,8 @@ export function EntryPanel({
       if (!res.ok) throw new ApiError(res.error || 'Senden fehlgeschlagen');
       toast('ok', `${type} für ${fmtDateShort(date)} übertragen (Zeile ${res.row}).`);
       setValues((s) => ({ ...s, [type]: {} }));
+      setBefunde([]);
+      histRef.current = null;
     } catch (e) {
       toast('err', `${type} nicht übertragen: ${e instanceof ApiError ? e.message : String(e)}`);
     } finally {
@@ -298,13 +329,27 @@ export function EntryPanel({
             <button
               className="btn btn-primary px-4 py-1.5 text-sm"
               disabled={busy || errors.length > 0}
-              onClick={() => setConfirming(true)}
+              onClick={review}
               data-testid="entry-review"
             >
               Prüfen &amp; senden
             </button>
           ) : (
             <>
+              {befunde.length > 0 && (
+                <div className="w-full rounded border border-orange-400/40 bg-orange-400/10 p-3 text-xs" data-testid="plausi-box">
+                  <div className="font-semibold text-ink mb-1">Bitte kurz prüfen</div>
+                  <ul className="flex flex-col gap-0.5">
+                    {befunde.map((b, i) => (
+                      <li key={i} className={b.schwere === 'warnung' ? 'text-orange-300' : 'text-ink-muted'}>
+                        {FELD_LABEL[b.feld] || b.feld}: {b.wert} – {b.grund}
+                        {b.erwartet ? ` (erwartet ${b.erwartet})` : ''}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-1 text-2xs text-ink-dim">Stimmt alles, kannst du trotzdem übertragen; sonst Wert korrigieren.</div>
+                </div>
+              )}
               <span className="text-xs text-ink-muted">
                 {type} · {fmtDateShort(date)} ·{' '}
                 <span className="tnum">
@@ -314,10 +359,10 @@ export function EntryPanel({
                 </span>
               </span>
               <button className="btn btn-primary px-4 py-1.5 text-sm" disabled={busy} onClick={submit} data-testid="entry-submit">
-                {busy ? 'Wird übertragen…' : 'Jetzt übertragen'}
+                {busy ? 'Wird übertragen…' : befunde.length ? 'Trotzdem übertragen' : 'Jetzt übertragen'}
               </button>
-              <button className="btn btn-ghost px-3 py-1.5 text-sm" disabled={busy} onClick={() => setConfirming(false)}>
-                Abbrechen
+              <button className="btn btn-ghost px-3 py-1.5 text-sm" disabled={busy} onClick={() => { setConfirming(false); setBefunde([]); }}>
+                {befunde.length ? 'Korrigieren' : 'Abbrechen'}
               </button>
             </>
           )}

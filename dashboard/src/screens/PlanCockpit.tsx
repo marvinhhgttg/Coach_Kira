@@ -27,6 +27,7 @@ import {
 import { fmtDateShort, fmtNum, fmtSigned, fmtTime } from '../lib/format';
 import { proxyGeneratePlanBriefing, proxyRunSupervisor, proxySavePlanSimulation } from '../lib/proxy';
 import { SupervisorPlanTile } from '../components/SupervisorPlanTile';
+import { AlltagCheckTile, type AlltagSwap } from '../components/AlltagCheckTile';
 import { ErrorBox, Panel, Skeleton } from '../components/UI';
 import {
   Bar,
@@ -799,6 +800,33 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
     return hits ? { state: st, days: supPlan.length } : null;
   }, [supPlan, plan, loads, sports, zones, teAe, teAn, locks]);
 
+  // Alltag-Check: Tage tauschen (Last, Sport, Zone, TE) – gesperrte Tage nie
+  function applyAlltagSwaps(swaps: AlltagSwap[]) {
+    const ds = (plan?.plan || []).map((d) => d.date);
+    const pairs = swaps
+      .map((s) => [ds.indexOf(s.a), ds.indexOf(s.b)] as const)
+      .filter(([a, b]) => a >= 0 && b >= 0 && a !== b && !locks[a] && !locks[b]);
+    if (!pairs.length) {
+      toast('info', 'Kein Tausch möglich (gesperrte oder unbekannte Tage).');
+      return;
+    }
+    const sw = <T,>(arr: T[]) => {
+      const n = arr.slice();
+      pairs.forEach(([a, b]) => {
+        const t = n[a];
+        n[a] = n[b];
+        n[b] = t;
+      });
+      return n;
+    };
+    setLoads(sw);
+    setSports(sw);
+    setZones(sw);
+    setTeAe(sw);
+    setTeAn(sw);
+    toast('info', `${pairs.length} Tausch${pairs.length === 1 ? '' : 'e'} übernommen. Noch nicht gespeichert.`);
+  }
+
   async function onRunSupervisor() {
     setSupBusy(true);
     setSupStatus('Startet…');
@@ -922,6 +950,15 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
               busy={supBusy}
               onApply={applyBriefingLoads}
               onRefresh={onRunSupervisor}
+            />
+
+            <AlltagCheckTile
+              dates={(plan?.plan || []).map((d) => d.date)}
+              loads={loads}
+              sports={sports}
+              zones={zones}
+              locks={locks}
+              onApply={applyAlltagSwaps}
             />
 
             <div className="panel-raised p-3">

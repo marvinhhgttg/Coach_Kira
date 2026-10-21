@@ -33,6 +33,7 @@ import {
 } from '../lib/windows';
 import { fmtDateShort, fmtTime } from '../lib/format';
 import { ErrorBox, Panel, Skeleton } from '../components/UI';
+import { KiraExtrasPanel } from '../components/KiraExtrasPanel';
 
 const METRIC_COLORS: Record<string, string> = {
   load_fb_day: '#7dd3fc',
@@ -516,6 +517,7 @@ export function ChartDeck() {
   return (
     <div className="space-y-5">
       <TrainingControl />
+      <KiraExtrasPanel />
       <RecoveryPanel mode="history" />
       <Panel
         title="Einzelmetriken"

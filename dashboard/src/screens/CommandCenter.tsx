@@ -21,6 +21,7 @@ import { KiraChat } from './KiraChat';
 import { useEngine } from '../lib/engine';
 import { runLocalBriefing, fetchBriefingSources, type BriefingSource } from '../lib/briefingLocal';
 import { EngineSwitch, SourceBadge } from '../components/EngineSwitch';
+import { NutritionTile } from '../components/NutritionTile';
 
 type ToastFn = (kind: 'ok' | 'err' | 'info', text: string) => void;
 type StatusItemLike = NonNullable<StatusResponse['summary']>['items'] extends Array<infer T> ? T : never;
@@ -633,6 +634,7 @@ export function CommandCenter({
       )}
 
       <AnomalyPanel />
+      <NutritionTile />
       <KiraChat />
 
       {/* Letzter Lauf (ganz unten) */}

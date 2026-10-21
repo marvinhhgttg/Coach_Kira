@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import type { PlanDay } from '../lib/api';
+import { WorkoutPanel } from './WorkoutPanel';
 import { fmtNum, fmtDateShort } from '../lib/format';
 
 export function SupervisorPlanTile({
@@ -17,6 +19,8 @@ export function SupervisorPlanTile({
   onRefresh: () => void;
 }) {
   const hasDays = days.length > 0;
+  const [openDate, setOpenDate] = useState<string | null>(null);
+  const openDay = days.find((d) => d.date === openDate) || null;
 
   return (
     <div className="panel-raised p-4 border-accent-strong/20">
@@ -124,11 +128,19 @@ export function SupervisorPlanTile({
                     Wetter: {d.weather_recommendation}
                   </p>
                 )}
+                <button
+                  className="mt-1 text-2xs text-accent hover:underline self-start"
+                  onClick={() => setOpenDate(openDate === d.date ? null : d.date)}
+                >
+                  {openDate === d.date ? 'Workout schließen' : 'Workout'}
+                </button>
               </div>
             );
           })}
         </div>
       )}
+
+      {openDay && <WorkoutPanel key={openDay.date} day={openDay} onClose={() => setOpenDate(null)} />}
 
       {hasDays && (
         <p className="mt-3 text-2xs text-ink-dim">
