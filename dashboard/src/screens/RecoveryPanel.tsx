@@ -18,6 +18,7 @@ import { ErrorBox, Panel, Skeleton } from '../components/UI';
 import { CorrelationPanel } from './CorrelationPanel';
 import { atlStep, ctlStep, windowMean } from '../lib/ctlModel';
 import { WINDOWS, ALL_RANGE, winLabel, winTitle, sliceWin, rangeFor, rangeDays, type WinKey } from '../lib/windows';
+import { assessMonotony, monoStufe, type MonoAssessment } from '../lib/monotony';
 
 // ---------------------------------------------------------------------------
 // Konfiguration
@@ -57,8 +58,6 @@ export const RECOVERY_FETCH_METRICS = [
   'Anaerobic_TE',
 ] as const;
 
-const MONOTONY_WARN = 1.6;
-const MONOTONY_HIGH = 2.0;
 const ACWR_WARN = 1.3;
 const ACWR_HIGH = 1.5;
 
@@ -133,6 +132,10 @@ export type RecoveryDay = {
   hrvHigh: number | null;
   load: number | null;
   monotony: number | null;
+  /** Ist-Lasten und Monotonie-Verlauf bis gestern (für die Monotonie-Regel) */
+  monoLoads: number[];
+  monoHist: (number | null)[];
+  monoAssess: MonoAssessment | null;
   acwr: number | null;
   activityDone: boolean;
   actual: { load: number | null; sport: string; zone: string; teAe: number | null; teAn: number | null };
@@ -218,7 +221,9 @@ function capVote(vote: Vote, max: Vote): Vote {
  * 5. Zwei oder mehr Warnsignale (orange/rot) → max. Easy
  * 6. ΔRHR ≥ +5 bpm und Readiness < 55 → Rest
  * 7. Befinden 3 → max. Train · 2 → max. Easy · 1 → Rest
- * 8. Belastung: Monotony7 > 1,6 oder ACWR > 1,3 → max. Train · Monotony7 > 2,0 oder ACWR > 1,5 → max. Easy
+ * 8. Belastung: ACWR > 1,3 → max. Train · ACWR > 1,5 → max. Easy
+ *    Monotonie (Verlauf, lib/monotony.ts): > 2,0 nach 4–5 fordernden Tagen → Easy · bleibt > 2,5 → Easy + Ruhetag binnen 48 h ·
+ *    > 3,0 → Easy + Entlastungstag · > 2,0 mit schlechter Erholung → keine Qualität · 5+ Tage ohne Entlastung → Easy
  */
 function decideVote(d: Omit<RecoveryDay, 'vote' | 'reasons'>): { vote: Vote | null; reasons: string[] } {
   if (d.readiness == null) return { vote: null, reasons: ['Readiness fehlt (Morgenwerte noch nicht erfasst).'] };
@@ -251,22 +256,24 @@ function decideVote(d: Omit<RecoveryDay, 'vote' | 'reasons'>): { vote: Vote | nu
     vote = 'REST';
     reasons.push('RHR ≥ +5 bpm bei niedriger Readiness → Rest.');
   }
-  if ((d.monotony != null && d.monotony > MONOTONY_HIGH) || (d.acwr != null && d.acwr > ACWR_HIGH)) {
+  // 8a. Belastung über ACWR
+  if (d.acwr != null && d.acwr > ACWR_HIGH) {
     const before = vote;
     vote = capVote(vote, 'EASY');
-    const why = [
-      d.monotony != null && d.monotony > MONOTONY_HIGH ? `Monotonie ${fmtNum(d.monotony, 2)} > ${fmtNum(MONOTONY_HIGH, 1)}` : '',
-      d.acwr != null && d.acwr > ACWR_HIGH ? `ACWR ${fmtNum(d.acwr, 2)} > ${fmtNum(ACWR_HIGH, 1)}` : '',
-    ].filter(Boolean).join(' und ');
-    if (vote !== before) reasons.push(`${why} → maximal Easy.`);
-  } else if ((d.monotony != null && d.monotony > MONOTONY_WARN) || (d.acwr != null && d.acwr > ACWR_WARN)) {
+    if (vote !== before) reasons.push(`ACWR ${fmtNum(d.acwr, 2)} > ${fmtNum(ACWR_HIGH, 1)} → maximal Easy.`);
+  } else if (d.acwr != null && d.acwr > ACWR_WARN) {
     const before = vote;
     vote = capVote(vote, 'TRAIN');
-    const why = [
-      d.monotony != null && d.monotony > MONOTONY_WARN ? `Monotonie ${fmtNum(d.monotony, 2)} > ${fmtNum(MONOTONY_WARN, 1)}` : '',
-      d.acwr != null && d.acwr > ACWR_WARN ? `ACWR ${fmtNum(d.acwr, 2)} > ${fmtNum(ACWR_WARN, 1)}` : '',
-    ].filter(Boolean).join(' und ');
-    if (vote !== before) reasons.push(`${why} → keine Qualitätseinheit.`);
+    if (vote !== before) reasons.push(`ACWR ${fmtNum(d.acwr, 2)} > ${fmtNum(ACWR_WARN, 1)} → keine Qualitätseinheit.`);
+  }
+  // 8b. Monotonie-Regel: Verlaufssignal statt Einzelwert
+  const ma = d.monoAssess;
+  if (ma && ma.cap) {
+    const before = vote;
+    vote = capVote(vote, ma.cap);
+    if (vote !== before || ma.restWithin48h) reasons.push(ma.text);
+  } else if (ma && ma.text && ma.stufe && ma.stufe !== 'gut' && ma.stufe !== 'normal') {
+    reasons.push(ma.text);
   }
   if (d.befinden != null) {
     if (d.befinden <= 1) {
@@ -329,6 +336,9 @@ export function buildDays(raw: any[]): RecoveryDay[] {
       load: toNum(r.load_fb_day),
       // Belastung bis GESTERN (heutige Zeile enthält bereits die heutige Einheit)
       monotony: idx > 0 ? toNum(rows[idx - 1].Monotony7) : null,
+      monoLoads: rows.slice(Math.max(0, idx - 28), idx).map((p: any) => toNum(p.load_fb_day) ?? toNum(p.coachE_ESS_day) ?? 0),
+      monoHist: rows.slice(Math.max(0, idx - 8), Math.max(0, idx - 1)).map((p: any) => toNum(p.Monotony7)),
+      monoAssess: null as MonoAssessment | null,
       acwr: idx > 0 ? toNum(rows[idx - 1].fbACWR_obs) ?? toNum(rows[idx - 1].coachE_ACWR_forecast) : null,
       activityDone: String(r.activity_done || '').trim().toLowerCase() === 'x',
       essDay: toNum(r.coachE_ESS_day),
@@ -353,6 +363,10 @@ export function buildDays(raw: any[]): RecoveryDay[] {
         befinden: levelBefinden(befinden),
       },
     };
+    const recoveryBad =
+      [base.levels.rhr, base.levels.sleep, base.levels.hrv].some((l) => l === 'orange' || l === 'rot') ||
+      (base.befinden != null && base.befinden <= 2);
+    base.monoAssess = assessMonotony({ mono: base.monotony, loads: base.monoLoads, monoHistory: base.monoHist, recoveryBad });
     const { vote, reasons } = decideVote(base);
     return { ...base, vote, reasons };
   });
@@ -668,11 +682,14 @@ function Outlook({ days, plan }: { days: RecoveryDay[]; plan: PlanDaySim[] | nul
     let preAcwr = today.acwrPost ?? (ctl > 0 ? atl / ctl : null);
     let preMono = today.monotonyPost;
     const loads = days.filter((d) => d.date <= todayIso).map((d) => d.essDay ?? 0);
+    const monoHist: (number | null)[] = days.filter((d) => d.date < todayIso).slice(-7).map((d) => d.monotonyPost);
     return future.map((p) => {
       const demand = plannedDemand(p);
-      const warnHigh = (preAcwr != null && preAcwr > ACWR_HIGH) || (preMono != null && preMono > MONOTONY_HIGH);
-      const warn = (preAcwr != null && preAcwr > ACWR_WARN) || (preMono != null && preMono > MONOTONY_WARN);
-      const cap: Vote | null = warnHigh ? 'EASY' : warn ? 'TRAIN' : null;
+      const ma = assessMonotony({ mono: preMono, loads, monoHistory: monoHist });
+      const acwrCap: Vote | null = preAcwr != null && preAcwr > ACWR_HIGH ? 'EASY' : preAcwr != null && preAcwr > ACWR_WARN ? 'TRAIN' : null;
+      const caps = [acwrCap, ma.cap].filter(Boolean) as Vote[];
+      const cap: Vote | null = caps.length ? caps.reduce((a, b) => (VOTE_ORDER.indexOf(a) < VOTE_ORDER.indexOf(b) ? a : b)) : null;
+      monoHist.push(preMono);
       const conflict = cap != null && VOTE_ORDER.indexOf(demand) > VOTE_ORDER.indexOf(cap);
       const row = { p, demand, preAcwr, preMono, cap, conflict };
       loads.push(p.load);
@@ -913,11 +930,14 @@ function TodayCard({
     {
       label: 'Belastung',
       value: today.acwr != null ? `ACWR ${fmtNum(today.acwr, 2)}` : '—',
-      hint: today.monotony != null ? `Monotonie ${fmtNum(today.monotony, 2)} · Stand gestern` : '',
+      hint:
+        today.monotony != null
+          ? `Monotonie ${fmtNum(today.monotony, 2)} · ${today.monoAssess?.streakNoRelief ?? 0} Tage ohne Entlastung · Stand gestern`
+          : '',
       level:
-        (today.monotony != null && today.monotony > MONOTONY_HIGH) || (today.acwr != null && today.acwr > ACWR_HIGH)
+        today.monoAssess?.cap === 'EASY' || (today.acwr != null && today.acwr > ACWR_HIGH)
           ? 'orange'
-          : (today.monotony != null && today.monotony > MONOTONY_WARN) || (today.acwr != null && today.acwr > ACWR_WARN)
+          : today.monoAssess?.cap === 'TRAIN' || monoStufe(today.monotony) === 'aufmerksam' || (today.acwr != null && today.acwr > ACWR_WARN)
           ? 'gelb'
           : today.acwr == null && today.monotony == null
           ? 'leer'
@@ -1005,7 +1025,7 @@ function RecoveryStrip({ days, todayIso }: { days: RecoveryDay[]; todayIso: stri
       label: 'Monotonie (Vortag)',
       render: (d) => ({
         text: d.monotony != null ? fmtNum(d.monotony, 2) : '—',
-        level: d.monotony == null ? 'leer' : d.monotony > MONOTONY_HIGH ? 'orange' : d.monotony > MONOTONY_WARN ? 'gelb' : 'gruen',
+        level: d.monotony == null ? 'leer' : d.monoAssess?.cap === 'EASY' ? 'orange' : d.monoAssess?.cap === 'TRAIN' || monoStufe(d.monotony) === 'aufmerksam' ? 'gelb' : 'gruen',
       }),
     },
     { label: 'Befinden', render: (d) => ({ text: d.befinden != null ? `${d.befinden}/5` : '—', level: d.levels.befinden }) },
@@ -1344,8 +1364,9 @@ export function RecoveryPanel({
               <RecoveryStrip days={stripDays} todayIso={todayIso} />
               <p className="text-2xs text-ink-dim">
                 RHR-Baseline = Ø der vorherigen {RHR_BASELINE_DAYS} Tage · Schlafziel {fmtHm(SLEEP_GOAL_H)} h · Werte ≥ 5 bpm
-                unter Baseline werden grau (atypisch) statt grün markiert. Belastung (ACWR, Monotonie) jeweils Stand Vortag:
-                über {fmtNum(ACWR_WARN, 1)} / {fmtNum(MONOTONY_WARN, 1)} keine Qualität, über {fmtNum(ACWR_HIGH, 1)} / {fmtNum(MONOTONY_HIGH, 1)} max. Easy.
+                unter Baseline werden grau (atypisch) statt grün markiert. Belastung jeweils Stand Vortag: ACWR über {fmtNum(ACWR_WARN, 1)} keine
+                Qualität, über {fmtNum(ACWR_HIGH, 1)} max. Easy. Monotonie zählt als Verlauf: über 2,0 nach 4–5 fordernden Tagen sehr locker oder frei,
+                bleibt sie über 2,5 Ruhetag binnen 24–48 h, über 3,0 echter Entlastungstag; ein einzelner hoher Wert schränkt nicht ein.
               </p>
               <div className="grid gap-3 sm:grid-cols-2 pt-1">
                 <WeekSummary days={days} />

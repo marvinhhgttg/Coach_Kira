@@ -10,6 +10,7 @@ import datetime
 import json
 import os
 import sys
+import time
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
@@ -101,22 +102,33 @@ def fetch_rows(days: int, metrics: list[str]) -> list[dict]:
 
 
 def save_extra(typ: str, datum: str, text: str, data: object, quelle: str) -> bool:
-    """http_post_json(SCRIPT_URL, {'kind':'saveExtra',...}); ok-Feld prüfen."""
-    result = http_post_json(
-        SCRIPT_URL,
-        {
-            "kind": "saveExtra",
-            "typ": typ,
-            "datum": datum,
-            "text": text,
-            "data": data,
-            "quelle": quelle,
-        },
-    )
-    if not result.get("ok"):
-        log(f"save_extra({typ},{datum}): FEHLER – {result.get('error', '')}")
-        return False
-    return True
+    """Ergebnis in AI_KIRA_EXTRAS speichern; ein zweiter Versuch bei Fehlern, nie eine Ausnahme."""
+    body = {"kind": "saveExtra", "typ": typ, "datum": datum, "text": text, "data": data, "quelle": quelle}
+    for versuch in (1, 2):
+        try:
+            result = http_post_json(SCRIPT_URL + "?mode=saveExtra", body)
+            if result.get("ok"):
+                return True
+            log(f"save_extra({typ},{datum}): FEHLER – {result.get('error', '')}")
+        except Exception as e:
+            log(f"save_extra({typ},{datum}): Versuch {versuch} – {str(e)[:120]}")
+        time.sleep(3)
+    return False
+
+
+def parse_loose(text: str):
+    """JSON aus Modell-Antwort lesen (ohne erzwungenes Format): Codeblöcke entfernen, erstes {...} nehmen."""
+    import re
+    t = (text or "").strip()
+    t = re.sub(r"^```(?:json)?\s*|\s*```$", "", t, flags=re.S).strip()
+    try:
+        return json.loads(t)
+    except Exception:
+        pass
+    a, b = t.find("{"), t.rfind("}")
+    if a >= 0 and b > a:
+        return json.loads(t[a:b + 1])
+    raise ValueError("keine JSON-Antwort: " + (t[:80] or "leer"))
 
 
 def f(v: object) -> float | None:
@@ -518,9 +530,9 @@ def cmd_selbsttest(force: bool = False) -> None:
         ]
         try:
             t0 = datetime.datetime.now(tz_local).timestamp()
-            text_out, tps = ollama_chat(MODEL, messages, num_ctx=8192, fmt="json", timeout=300)
+            text_out, tps = ollama_chat(MODEL, messages, num_ctx=8192, timeout=300)
             sekunden = datetime.datetime.now(tz_local).timestamp() - t0
-            data = json.loads(text_out)
+            data = parse_loose(text_out)
             antwort_tage = data.get("tage", [])
             ok = True
             detail = ""
@@ -557,9 +569,9 @@ def cmd_selbsttest(force: bool = False) -> None:
         ]
         try:
             t0 = datetime.datetime.now(tz_local).timestamp()
-            text_out, tps = ollama_chat(MODEL, messages, num_ctx=8192, fmt="json", timeout=300)
+            text_out, tps = ollama_chat(MODEL, messages, num_ctx=8192, timeout=300)
             sekunden = datetime.datetime.now(tz_local).timestamp() - t0
-            data = json.loads(text_out)
+            data = parse_loose(text_out)
             antwort_tage = data.get("tage", [])
             ok = True
             detail = ""
@@ -603,9 +615,9 @@ def cmd_selbsttest(force: bool = False) -> None:
         ]
         try:
             t0 = datetime.datetime.now(tz_local).timestamp()
-            text_out, tps = ollama_chat(MODEL, messages, num_ctx=8192, fmt="json", timeout=300)
+            text_out, tps = ollama_chat(MODEL, messages, num_ctx=8192, timeout=300)
             sekunden = datetime.datetime.now(tz_local).timestamp() - t0
-            data = json.loads(text_out)
+            data = parse_loose(text_out)
             s_val = data.get("summe")
             mw_val = data.get("mittelwert")
             ok = True
@@ -636,9 +648,9 @@ def cmd_selbsttest(force: bool = False) -> None:
         ]
         try:
             t0 = datetime.datetime.now(tz_local).timestamp()
-            text_out, tps = ollama_chat(MODEL, messages, num_ctx=8192, fmt="json", timeout=300)
+            text_out, tps = ollama_chat(MODEL, messages, num_ctx=8192, timeout=300)
             sekunden = datetime.datetime.now(tz_local).timestamp() - t0
-            data = json.loads(text_out)
+            data = parse_loose(text_out)
             ok = True
             detail = ""
 
@@ -687,9 +699,9 @@ def cmd_selbsttest(force: bool = False) -> None:
         ]
         try:
             t0 = datetime.datetime.now(tz_local).timestamp()
-            text_out, tps = ollama_chat(MODEL, messages, num_ctx=8192, fmt="json", timeout=300)
+            text_out, tps = ollama_chat(MODEL, messages, num_ctx=8192, timeout=300)
             sekunden = datetime.datetime.now(tz_local).timestamp() - t0
-            data = json.loads(text_out)
+            data = parse_loose(text_out)
             antwort_tage = data.get("tage", [])
             ok = True
             detail = ""
@@ -720,9 +732,9 @@ def cmd_selbsttest(force: bool = False) -> None:
         ]
         try:
             t0 = datetime.datetime.now(tz_local).timestamp()
-            text_out, tps = ollama_chat(MODEL, messages, num_ctx=8192, fmt="json", timeout=300)
+            text_out, tps = ollama_chat(MODEL, messages, num_ctx=8192, timeout=300)
             sekunden = datetime.datetime.now(tz_local).timestamp() - t0
-            data = json.loads(text_out)
+            data = parse_loose(text_out)
             ok = True
             detail = ""
 
@@ -1029,6 +1041,7 @@ def cmd_treffer(backfill_file: str | None = None) -> None:
                 treffer_done.append(datum)
             st["treffer_done"] = treffer_done[-200:]
             neu += 1
+            save_x(st)
 
     save_x(st)
     if neu:
@@ -1062,7 +1075,7 @@ def cmd_treffer_woche(force: bool = False) -> None:
     werte = []
     for d_str, t in treffer_dict.items():
         try:
-            dt = datetime.datetime.strptime(d_str, "%Y-%m-%d")
+            dt = datetime.datetime.strptime(d_str, "%Y-%m-%d").replace(tzinfo=jetzt.tzinfo)
         except (ValueError, TypeError):
             continue
         if (jetzt - dt).days <= 28:
@@ -1282,8 +1295,8 @@ def cmd_ernaehrung(force: bool = False) -> None:
     ]
 
     try:
-        llm_out, _ = ollama_chat(MODEL, msgs, fmt="json", num_ctx=8192, timeout=600)
-        llm_data = json.loads(llm_out)
+        llm_out, _ = ollama_chat(MODEL, msgs, num_ctx=8192, timeout=600)
+        llm_data = parse_loose(llm_out)
         kurz = llm_data.get("kurz", "")
         mahlzeiten = llm_data.get("mahlzeiten", [])
         tipp = llm_data.get("tipp", "")

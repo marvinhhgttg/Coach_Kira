@@ -4,6 +4,7 @@
  * Rückmeldung zurück an Kira – höchstens MAX_ROUNDS Runden. Gerechnet wird lokal.
  */
 import { localChat, parseJsonLoose, type LlmMsg } from './localLLM';
+import { MONOTONIE_REGEL_TEXT, monotonyPlanViolations } from './monotony';
 
 export type LoopDay = { date: string; day?: string; load: number; zone: string; sport: string; locked: boolean };
 export type LoopSimRow = { sim_load: number; acwr: number; monotony: number; kei?: number; ctl: number; atl: number };
@@ -14,7 +15,6 @@ export const MAX_ROUNDS = 3;
 const ACWR_MAX = 1.3;
 const ACWR_MIN = 0.8;
 const CTL_MAX_LOSS = 0.05; // höchstens 5 % CTL-Verlust bis Tag 14 gegenüber heute
-const MONO_MAX = 2.0;
 const MIN_REST = 2;
 
 const f = (v: number, d = 2) => v.toLocaleString('de-DE', { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -34,9 +34,13 @@ export function evaluate(
     const tag = `${days[i].day ? days[i].day + ' ' : ''}${days[i].date}`;
     if (r.acwr > ACWR_MAX) v.push(`${tag}: ACWR ${f(r.acwr)} > ${f(ACWR_MAX, 1)}`);
     if (i >= 2 && r.acwr < ACWR_MIN) v.push(`${tag}: ACWR ${f(r.acwr)} < ${f(ACWR_MIN, 1)} (Formverlust)`);
-    if (r.monotony > MONO_MAX) v.push(`${tag}: Monotonie ${f(r.monotony)} > ${f(MONO_MAX, 1)}`);
     for (const iss of checks[i]?.issues || []) if (!iss.startsWith('ACWR')) v.push(`${tag}: ${iss}`);
   });
+  // Monotonie-Regel: Verlauf statt Einzelwert (lib/monotony.ts)
+  for (const m of monotonyPlanViolations(
+    rows.map((r, i) => ({ label: `${days[i].day ? days[i].day + ' ' : ''}${days[i].date}`, load: loads[i], mono: i === 0 ? null : r.monotony, locked: days[i].locked || i === 0 })),
+  ))
+    v.push(m);
   const restDays = loads.slice(1).filter((x) => x <= 0).length;
   if (restDays < MIN_REST) v.push(`Nur ${restDays} Ruhetag(e) mit 0 ESS in 13 Tagen (mindestens ${MIN_REST})`);
   const maxAcwr = Math.max(...rows.slice(1).map((r) => r.acwr));
@@ -68,9 +72,10 @@ export async function runPlanLoop(args: {
   const rules =
     `REGELN (werden nach deinem Vorschlag automatisch nachgerechnet):\n` +
     `- Tage mit FEST nicht verändern (gleiche ESS und Zone).\n` +
-    `- ACWR an jedem Tag zwischen ${f(ACWR_MIN, 1)} und ${f(ACWR_MAX, 1)}, Monotonie höchstens ${f(MONO_MAX, 1)}.\n` +
+    `- ACWR an jedem Tag zwischen ${f(ACWR_MIN, 1)} und ${f(ACWR_MAX, 1)}.\n` +
+    `- ${MONOTONIE_REGEL_TEXT.replace(/\n/g, '\n- ')}\n` +
+    `- Geprüft wird: höchstens 4 Tage in Folge ohne deutliche Entlastung (≤ 40 ESS); nach Monotonie > 2,0 und 4 fordernden Tagen folgt ein sehr lockerer oder freier Tag; bleibt die Monotonie 2 Tage über 2,5 oder steigt über 3,0, kommt innerhalb von 48 h ein Ruhetag.\n` +
     `- CTL am Tag 14 höchstens ${CTL_MAX_LOSS * 100} % unter der heutigen CTL.\n` +
-    `- Monotonie senkst du durch Wechsel von harten und leichten Tagen, nicht durch weniger Gesamtlast.\n` +
     `- Mindestens ${MIN_REST} Ruhetage mit 0 ESS (Zone Off).\n` +
     `- Anspruch einer Einheit: REST = 0 ESS/Off; EASY = unter 120 ESS und nur Z1/Z2; TRAIN = 120–199 ESS oder Z3; QUALITY = ab 200 ESS oder Z4/Z5.\n` +
     `- Steht bei einem Tag "erlaubt max. X", darf die Einheit dort höchstens Anspruch X haben (die Grenze ergibt sich aus Monotonie/ACWR des Vortags).\n` +

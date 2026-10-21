@@ -122,7 +122,7 @@ export function PlanLoopPanel({
     <Panel title="Kira-Plan mit Prüfschleife">
       <p className="text-2xs text-ink-dim leading-relaxed">
         Kira schlägt einen 14-Tage-Plan vor, deine Simulation rechnet ATL, CTL, ACWR und
-        Monotonie nach und prüft die Regeln (ACWR 0,8–1,3, Monotonie ≤ 2,0, CTL-Verlust höchstens 5 %, mindestens 2
+        Monotonie nach und prüft die Regeln (ACWR 0,8–1,3, Monotonie als Verlauf (max. 4 Tage ohne Entlastung, Ruhetag nach anhaltend über 2,5), CTL-Verlust höchstens 5 %, mindestens 2
         Ruhetage, Abstand harter Einheiten, feste Tage bleiben). Bei Verstößen korrigiert
         Kira – höchstens 3 Runden. Läuft lokal auf deinem Mac.
       </p>

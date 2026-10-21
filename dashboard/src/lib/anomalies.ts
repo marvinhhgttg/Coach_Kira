@@ -66,10 +66,20 @@ export function detectAnomalies(days: RecoveryDay[]): { date: string | null; ite
     out.push({ key: 'acwr', label: 'ACWR', value: f(d.acwr, 2), baseline: 'Zielbereich 0,8–1,3', z: null, level: d.acwr > 1.5 ? 'bad' : 'warn', hint: 'Akute Belastung deutlich über der chronischen – Verletzungs- und Überlastungsrisiko steigt.' });
   if (d.acwr != null && d.acwr < 0.8)
     out.push({ key: 'acwrLow', label: 'ACWR', value: f(d.acwr, 2), baseline: 'Zielbereich 0,8–1,3', z: null, level: 'warn', hint: 'Belastung unter dem Erhaltungsbereich – Form kann abbauen.' });
-  if (d.monotony != null && d.monotony > 2)
-    out.push({ key: 'mono', label: 'Monotonie', value: f(d.monotony, 2), baseline: 'Warnung ab 1,6, kritisch ab 2,0', z: null, level: 'bad', hint: 'Sehr gleichförmige Belastung – mehr Wechsel zwischen leichten und harten Tagen.' });
-  else if (d.monotony != null && d.monotony > 1.6)
-    out.push({ key: 'mono', label: 'Monotonie', value: f(d.monotony, 2), baseline: 'Warnung ab 1,6', z: null, level: 'warn', hint: 'Belastung wird gleichförmig.' });
+  // Monotonie nur als Verlaufssignal melden (Einzelwert allein ist meist unkritisch)
+  const ma = d.monoAssess;
+  if (d.monotony != null && ma && ma.cap)
+    out.push({
+      key: 'mono',
+      label: 'Monotonie',
+      value: f(d.monotony, 2),
+      baseline: `${ma.streakNoRelief} Tage ohne Entlastung, davon ${ma.demandingInStreak} fordernd · Zonen: < 1,5 gut, > 2,0 aufmerksam, > 2,5 ungünstig, > 3,0 Warnzone`,
+      z: null,
+      level: ma.cap === 'EASY' ? 'bad' : 'warn',
+      hint: ma.text,
+    });
+  else if (ma && ma.streakNoRelief >= 3 && ma.demandingInStreak >= 3)
+    out.push({ key: 'mono', label: 'Fordernde Tage', value: `${ma.demandingInStreak} in Folge`, baseline: '3–4 ähnliche, fordernde Tage: beobachten', z: null, level: 'warn', hint: 'Achte auf Schlaf, HRV, Ruhepuls, Beine und Motivation – verschlechtern sie sich, Belastung reduzieren.' });
   if (d.befinden != null && d.befinden <= 2)
     out.push({ key: 'befinden', label: 'Befinden', value: `${d.befinden} / 5`, baseline: 'deine Selbsteinschätzung', z: null, level: d.befinden <= 1 ? 'bad' : 'warn', hint: 'Dein Gefühl ist ein wichtiges Signal, auch wenn die Messwerte gut aussehen.' });
 

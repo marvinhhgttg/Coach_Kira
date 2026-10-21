@@ -31,6 +31,7 @@ import {
   type RecoveryDay,
 } from './RecoveryPanel';
 import { MonthReport } from './MonthReport';
+import { monoTone } from '../lib/monotony';
 
 // ---------------------------------------------------------------------------
 // Berichte: Monat · Woche · Erholung · Jahr · Schlaf · Ernährung · Ausfälle
@@ -225,7 +226,17 @@ function WeekReport({ days }: { days: D[] }) {
   const facts: string[] = [];
   if (prev && prev.ess > 0) facts.push(`Last ${sgn(((cur.ess - prev.ess) / prev.ess) * 100, 0, ' %')} ggü. Vorwoche (${fmtNum(prev.ess)} → ${fmtNum(cur.ess)} ESS)${cur.n < 7 ? ' – Woche läuft noch' : ''}.`);
   if (cur.checked) facts.push(`${cur.ok} von ${cur.checked} Tagen passten zum Votum.`);
-  if (cur.mono != null && cur.mono > 2) facts.push(`Monotonie zum Wochenende ${fmtNum(cur.mono, 2)} – zu gleichförmig.`);
+  if (cur.mono != null && cur.mono > 2) {
+    const hoch = prev != null && prev.ess > 0 && cur.ess >= 1.1 * prev.ess;
+    const vorher = prev?.mono != null && prev.mono > 2.5;
+    facts.push(
+      cur.mono > 3
+        ? `Monotonie zum Wochenende ${fmtNum(cur.mono, 2)} – Warnzone: echten Entlastungstag oder deutliche Reduktion einplanen.`
+        : cur.mono > 2.5
+          ? `Monotonie zum Wochenende ${fmtNum(cur.mono, 2)} – ungünstig${vorher ? ', schon die zweite Woche in Folge: Ruhetag binnen 48 h' : ', wenn es anhält'}.`
+          : `Monotonie zum Wochenende ${fmtNum(cur.mono, 2)} – aufmerksam${hoch ? ' bei gestiegener Wochenlast (Strain beachten)' : ', bei normaler Wochenlast meist unkritisch'}.`,
+    );
+  }
   if (cur.sleepH != null && cur.sleepH < SLEEP_GOAL_H - 0.25) facts.push(`Schlaf Ø ${fmtHm(cur.sleepH)} h, nur ${cur.nightsGoal}/${cur.nights} Nächte ≥ 7:30 h.`);
   return (
     <div className="space-y-4">
@@ -249,7 +260,7 @@ function WeekReport({ days }: { days: D[] }) {
         <Kpi label="Ø Schlaf" value={`${fmtHm(cur.sleepH)} h`} sub={`${cur.nightsGoal}/${cur.nights} ≥ 7:30`} />
         <Kpi label="Ø HRV" value={`${fmtNum(cur.hrv)} ms`} />
         <Kpi label="Ø RHR" value={`${fmtNum(cur.rhr, 1)} bpm`} />
-        <Kpi label="Monotonie (Ende)" value={fmtNum(cur.mono, 2)} tone={cur.mono != null && cur.mono > 2 ? 'text-orange-300' : cur.mono != null && cur.mono > 1.6 ? 'text-yellow-300' : ''} />
+        <Kpi label="Monotonie (Ende)" value={fmtNum(cur.mono, 2)} tone={monoTone(cur.mono)} />
         <Kpi label="CTL (Ende)" value={fmtNum(cur.ctlEnd)} sub={prev?.ctlEnd ? sgn(cur.ctlEnd != null ? cur.ctlEnd - prev.ctlEnd : null) : undefined} />
       </div>
       <div className="grid gap-4 grid-cols-[minmax(0,1fr)] lg:grid-cols-3">
@@ -326,7 +337,7 @@ function WeekReport({ days }: { days: D[] }) {
                   <td className="py-1 pr-2 text-right">{w.sessions}</td>
                   <td className="py-1 pr-2 text-right">{fmtNum(w.readiness)}</td>
                   <td className="py-1 pr-2 text-right">{fmtHm(w.sleepH)}</td>
-                  <td className={`py-1 pr-2 text-right ${w.mono != null && w.mono > 2 ? 'text-orange-300' : ''}`}>{fmtNum(w.mono, 2)}</td>
+                  <td className={`py-1 pr-2 text-right ${monoTone(w.mono)}`}>{fmtNum(w.mono, 2)}</td>
                   <td className="py-1 text-right">{w.checked ? `${w.ok}/${w.checked}` : '—'}</td>
                 </tr>
               ))}

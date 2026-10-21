@@ -17,6 +17,7 @@ import { ApiError, dedupeByDateKeepLast, fetchChartData, fetchPlanSimulationWith
 import { fmtDateShort, fmtNum } from '../lib/format';
 import { ErrorBox, Panel, Skeleton } from '../components/UI';
 import { WINDOWS, ALL_RANGE, winLabel, winTitle, sliceWin, rangeFor, rangeDays, type WinKey } from '../lib/windows';
+import { monoTone } from '../lib/monotony';
 
 // ---------------------------------------------------------------------------
 // Trainingssteuerung (Chart Deck): Monotonie/Strain, Intensitätsverteilung,
@@ -225,9 +226,9 @@ function MonotonyCard({ days, plan }: { days: Day[]; plan: PlanDay[] | null | 'l
   const avgMono = mean(days.map((d) => d.mono).filter((x): x is number => x != null));
   const above = days.filter((d) => (d.mono ?? 0) > 2.0).length;
   const lever = useMemo(() => (plan === 'loading' ? null : monotonyLever(days, plan)), [days, plan]);
-  const tone = (m: number | null | undefined) => (m == null ? '' : m > 2 ? 'text-orange-300' : m > 1.6 ? 'text-yellow-300' : 'text-green-300');
+  const tone = (m: number | null | undefined) => (m == null ? '' : monoTone(m) || 'text-green-300');
   return (
-    <Card title="Monotonie & Strain" hint="Monotonie = Ø/σ der letzten 7 Tageslasten · Strain = Wochenlast × Monotonie (Sheet)">
+    <Card title="Monotonie & Strain" hint="Monotonie = Ø/σ der letzten 7 Tageslasten · Strain = Wochenlast × Monotonie (Sheet) · Zonen: < 1,5 gut, 1,5–2,0 normal, > 2,0 aufmerksam, > 2,5 ungünstig wenn anhaltend, > 3,0 Warnzone · ein Einzelwert ist meist unkritisch">
       {(h) => (
         <>
           <div className="px-2 grid grid-cols-2 sm:grid-cols-4 gap-3 mb-2">
@@ -257,8 +258,8 @@ function MonotonyCard({ days, plan }: { days: Day[]; plan: PlanDay[] | null | 'l
               <span className="text-ink-dim">Plan wird geladen…</span>
             ) : !lever ? (
               <span className="text-ink-dim">Kein Plan für die nächsten Tage gefunden.</span>
-            ) : lever.peak <= 1.6 ? (
-              <span className="text-green-300">Laut Plan bleibt die Monotonie im grünen Bereich (Spitze {f1(lever.peak)}).</span>
+            ) : lever.peak <= 2.0 ? (
+              <span className="text-green-300">Laut Plan bleibt die Monotonie unkritisch (Spitze {f1(lever.peak)}; unter 1,5 gut, bis 2,0 normal).</span>
             ) : lever.best && lever.best.mx < lever.peak - 0.05 ? (
               <span>
                 Spitze laut Plan <b className={tone(lever.peak)}>{f1(lever.peak)}</b>

@@ -17,6 +17,22 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+import socket
+
+# IPv4 bevorzugen: über IPv6 hängen Anfragen an Google hier 30-50 s (IPv4: ~2,5 s)
+_orig_getaddrinfo = socket.getaddrinfo
+
+
+def _gai_v4(host, port, family=0, *args, **kwargs):
+    if family in (0, socket.AF_UNSPEC):
+        try:
+            return _orig_getaddrinfo(host, port, socket.AF_INET, *args, **kwargs)
+        except socket.gaierror:
+            pass
+    return _orig_getaddrinfo(host, port, family, *args, **kwargs)
+
+
+socket.getaddrinfo = _gai_v4
 from zoneinfo import ZoneInfo
 
 # ---------------------------------------------------------------------------

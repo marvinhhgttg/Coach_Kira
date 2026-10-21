@@ -18,6 +18,7 @@ import {
   type RecoveryDay,
 } from './RecoveryPanel';
 import { WINDOWS, ALL_RANGE, winLabel, winTitle, sliceWin, rangeFor, rangeDays, type WinKey } from '../lib/windows';
+import { monoTone } from '../lib/monotony';
 
 // ---------------------------------------------------------------------------
 // Log: Aktivitäten mit Kontext, Kalender, Filter, Serien, Bestenliste, Ertrag.
@@ -178,7 +179,7 @@ function Detail({ a, review }: { a: Act; review?: ActivityReview | null }) {
         <div className="label mb-1">Belastung danach</div>
         <dl className="space-y-0.5 tnum">
           <Row k="ACWR" v={<span className={d.acwrPost != null && d.acwrPost > 1.3 ? 'text-orange-300' : ''}>{fmtNum(d.acwrPost, 2)}</span>} />
-          <Row k="Monotonie" v={<span className={d.monotonyPost != null && d.monotonyPost > 2 ? 'text-orange-300' : d.monotonyPost != null && d.monotonyPost > 1.6 ? 'text-yellow-300' : ''}>{fmtNum(d.monotonyPost, 2)}</span>} />
+          <Row k="Monotonie" v={<span className={monoTone(d.monotonyPost)}>{fmtNum(d.monotonyPost, 2)}</span>} />
           <Row k="CTL / ATL" v={`${fmtNum(d.ctlPost)} / ${fmtNum(d.atlPost)}`} />
           <Row k="Ertrag" v={a.ertrag != null ? `${fmtNum(a.ertrag, 2)} TE/100 ESS` : '—'} />
         </dl>

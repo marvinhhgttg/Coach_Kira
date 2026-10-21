@@ -5,6 +5,7 @@
 import { BASE_URL, fetchChartData, fetchPlanSimulationWithTimeout, toNum } from './api';
 import { atlStep, ctlStep, esStep, windowMean, ES_MODEL } from './ctlModel';
 import { buildDays, localIsoDate, RECOVERY_FETCH_METRICS, VOTE_LABEL, type RecoveryDay } from '../screens/RecoveryPanel';
+import { MONOTONIE_REGEL_TEXT } from './monotony';
 
 const EXTRA = ['fbATL_obs', 'fbCTL_obs', 'garminEnduranceScore', 'Trainingszustand'] as const;
 const r1 = (v: number | null | undefined, d = 1) => (v == null || !Number.isFinite(v) ? null : Math.round(v * 10 ** d) / 10 ** d);
@@ -113,7 +114,8 @@ export async function buildChatContext(): Promise<ChatContext> {
       kei_hinweis: 'KEI = CTL-Zuwachs 7 T / (max(ACWR;0,8) × (1+Monotonie))',
     },
     regeln: {
-      votum: 'Monotonie > 1,6 oder ACWR > 1,3 → max. Train; Monotonie > 2,0 oder ACWR > 1,5 → max. Easy',
+      votum: 'ACWR > 1,3 → max. Train; ACWR > 1,5 → max. Easy. Monotonie siehe monotonie_regel (Verlauf statt Einzelwert).',
+      monotonie_regel: MONOTONIE_REGEL_TEXT,
       ziele: 'CTL-Rampe 3–5 %/Woche; Form vor harter Einheit > −15 %, vor Formspitze +5 bis +15 %; Schlafziel 7,5 h',
     },
     letzte_14_tage: days.slice(-14).map((d) => ({

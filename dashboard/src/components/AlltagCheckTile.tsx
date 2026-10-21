@@ -121,23 +121,40 @@ export function AlltagCheckTile({
         '- Regen > 5 mm oder Wind > 40 km/h: Rad draußen vermeiden; als Hinweis Indoor oder Lauf vorschlagen.',
         '- Wenn alles passt: tausch leer lassen.',
         '- fazit: 1–2 Sätze. hinweise: nur echte Auffälligkeiten, je max. 1 Satz.',
+        '',
+        'Antworte exakt in diesem JSON-Format (Schlüssel genau so, tausch und hinweise sind Listen):',
+        '{"fazit":"…","tausch":[{"a":"2026-10-24","b":"2026-10-25","grund":"…"}],"hinweise":[{"datum":"2026-10-25","text":"…"}]}',
       ].join('\n');
       const text = await localChat(
         [
           { role: 'system', content: 'Du bist Coach Kira, Marcs Trainingscoach. Du prüfst, ob der Trainingsplan zu Kalender und Wetter passt. Antworte nur mit JSON, Deutsch, du-Form, keine Emojis.' },
           { role: 'user', content: user },
         ],
-        { format: SCHEMA, temperature: 0.2, numCtx: 12288 },
+        { temperature: 0.2, numCtx: 12288 },
       );
-      const j = parseJsonLoose<KiErgebnis>(text);
+      const raw = parseJsonLoose<any>(text) || {};
+      const list = (v: any): any[] => (Array.isArray(v) ? v : v && typeof v === 'object' ? (Object.values(v).find((x) => Array.isArray(x)) as any[]) || [v] : []);
+      const dt = (v: any) => {
+        const m = String(v ?? '').match(/(\d{4}-\d{2}-\d{2})/);
+        return m ? m[1] : '';
+      };
+      const j: KiErgebnis = {
+        fazit: String(raw.fazit ?? raw.zusammenfassung ?? raw.summary ?? ''),
+        tausch: list(raw.tausch ?? raw.tausche ?? raw.swaps ?? raw.vorschlaege)
+          .map((x: any) => ({ a: dt(x?.a ?? x?.von ?? x?.tag1 ?? x?.from), b: dt(x?.b ?? x?.nach ?? x?.tag2 ?? x?.to), grund: String(x?.grund ?? x?.begruendung ?? x?.reason ?? '') }))
+          .filter((x) => x.a && x.b),
+        hinweise: list(raw.hinweise ?? raw.notes ?? raw.hinweis)
+          .map((x: any) => (typeof x === 'string' ? { datum: dt(x), text: x } : { datum: dt(x?.datum ?? x?.date), text: String(x?.text ?? x?.hinweis ?? '') }))
+          .filter((x) => x.text),
+      };
       const byDate = new Map(rows.map((r) => [r.d, r]));
-      const tausch = (j?.tausch || []).filter((s) => {
+      const tausch = j.tausch.filter((s) => {
         const a = byDate.get(String(s.a));
         const b = byDate.get(String(s.b));
         return a && b && a.d !== b.d && !a.fest && !b.fest;
       });
-      const verworfen = (j?.tausch || []).length - tausch.length;
-      const r: KiErgebnis = { fazit: String(j?.fazit || ''), tausch, hinweise: (j?.hinweise || []).filter((h) => h && h.text) };
+      const verworfen = j.tausch.length - tausch.length;
+      const r: KiErgebnis = { fazit: j.fazit || 'Kira hat kein Fazit geliefert.', tausch, hinweise: j.hinweise };
       setRes(r);
       setSel(tausch.map(() => true));
       if (verworfen > 0) setNotes((x) => [...x, `${verworfen} Vorschlag/Vorschläge verworfen (gesperrter oder unbekannter Tag).`]);

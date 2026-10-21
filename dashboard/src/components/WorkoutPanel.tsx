@@ -61,6 +61,77 @@ function blockMinutes(b: KiBlock) {
   return b.schritte.reduce((s, x) => s + (Number(x.minuten) || 0), 0) * Math.max(1, b.wiederholungen || 1);
 }
 
+
+// Antwort tolerant lesen: das lokale Modell hält sich nicht immer an die Schlüsselnamen
+function arr(v: any): any[] {
+  if (Array.isArray(v)) return v;
+  if (v && typeof v === 'object') {
+    const inner = Object.values(v).find((x) => Array.isArray(x));
+    if (inner) return inner as any[];
+    return [v];
+  }
+  return [];
+}
+function pick(o: any, keys: string[]): any {
+  for (const k of keys) if (o && o[k] !== undefined && o[k] !== null) return o[k];
+  return undefined;
+}
+const ZONEN = ['Z1', 'Z2', 'Z3', 'Z4', 'Z5'];
+function normZone(v: any): Zone {
+  const m = String(v ?? '').toUpperCase().match(/Z?\s*([1-5])/);
+  return m && ZONEN.includes('Z' + m[1]) ? (('Z' + m[1]) as Zone) : 'offen';
+}
+function normArt(v: any): string {
+  const t = String(v ?? '').toLowerCase();
+  if (/warm|aufw|einroll|einlauf/.test(t)) return 'warmup';
+  if (/cool|ausroll|auslauf|abw/.test(t)) return 'cooldown';
+  if (/interv|tempo|belast|work|hart/.test(t)) return 'interval';
+  if (/recov|erhol|locker|pause/.test(t)) return 'recovery';
+  if (/rest|ruhe/.test(t)) return 'rest';
+  return 'active';
+}
+function normMin(v: any): number {
+  if (typeof v === 'number') return v;
+  if (v && typeof v === 'object') {
+    const val = Number(v.value ?? v.wert ?? v.minuten ?? v.minutes ?? 0);
+    return /h|stunde/i.test(String(v.unit ?? v.einheit ?? '')) ? val * 60 : /s(ec|ek)/i.test(String(v.unit ?? '')) ? val / 60 : val;
+  }
+  const t = String(v ?? '');
+  const h = t.match(/(\d+(?:[.,]\d+)?)\s*h/);
+  const m = t.match(/(\d+(?:[.,]\d+)?)/);
+  if (h) return Number(h[1].replace(',', '.')) * 60;
+  return m ? Number(m[1].replace(',', '.')) : 0;
+}
+function normalizeWorkout(raw: any): KiWorkout | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const root = raw.workout && typeof raw.workout === 'object' ? raw.workout : raw;
+  let blocks = arr(pick(root, ['bloecke', 'blöcke', 'blocks', 'block', 'abschnitte', 'phasen']));
+  // nur Schritte ohne Blöcke geliefert
+  if (!blocks.length) {
+    const steps = arr(pick(root, ['schritte', 'steps', 'intervalle', 'einheiten']));
+    if (steps.length) blocks = [{ wiederholungen: 1, schritte: steps }];
+  }
+  const out: KiBlock[] = blocks
+    .map((b: any) => {
+      const st = arr(pick(b, ['schritte', 'steps', 'intervalle'])).length ? arr(pick(b, ['schritte', 'steps', 'intervalle'])) : pick(b, ['minuten', 'minutes', 'dauer', 'duration']) !== undefined ? [b] : [];
+      return {
+        wiederholungen: Math.max(1, Math.round(Number(pick(b, ['wiederholungen', 'repeat', 'repeats', 'wdh', 'anzahl'])) || 1)),
+        schritte: st
+          .map((x: any) => ({
+            name: String(pick(x, ['name', 'titel', 'bezeichnung']) || 'Schritt').slice(0, 15),
+            minuten: Math.round(normMin(pick(x, ['minuten', 'minutes', 'dauer', 'duration', 'min'])) * 10) / 10,
+            art: normArt(`${pick(x, ['art', 'typ', 'type', 'intensity']) ?? ''} ${pick(x, ['name', 'titel']) ?? ''}`),
+            zone: normZone(pick(x, ['zone', 'hf_zone', 'hr_zone', 'intensitaet']) ?? x?.target?.zone ?? x?.ziel?.zone),
+            hinweis: String(pick(x, ['hinweis', 'notiz', 'note', 'notes', 'beschreibung']) || '').slice(0, 30),
+          }))
+          .filter((x: KiStep) => x.minuten > 0),
+      };
+    })
+    .filter((b: KiBlock) => b.schritte.length);
+  if (!out.length) return null;
+  return { name: String(pick(root, ['name', 'titel', 'title']) || 'Kira-Workout'), beschreibung: String(pick(root, ['beschreibung', 'description', 'ziel']) || ''), bloecke: out };
+}
+
 export function WorkoutPanel({ day, onClose }: { day: PlanDay; onClose: () => void }) {
   const [phys, setPhys] = useState<PhysBaseline | null>(null);
   const [ki, setKi] = useState<KiWorkout | null>(null);
@@ -93,19 +164,23 @@ export function WorkoutPanel({ day, onClose }: { day: PlanDay; onClose: () => vo
         '- Intervalle als eigener Block mit wiederholungen > 1 (Belastung + Erholung).',
         '- Schrittnamen max. 15 Zeichen, hinweis max. 30 Zeichen, Deutsch.',
         '- Bei 0 ESS: kurze Mobility-Einheit, 20 min, Zone offen.',
+        '',
+        'Antworte exakt in diesem JSON-Format (Schlüssel genau so):',
+        '{"name":"Gravel Z2","beschreibung":"1 Satz","bloecke":[{"wiederholungen":1,"schritte":[{"name":"Einrollen","minuten":15,"art":"warmup","zone":"Z1","hinweis":""}]},{"wiederholungen":4,"schritte":[{"name":"Tempo","minuten":8,"art":"interval","zone":"Z3","hinweis":""},{"name":"Locker","minuten":4,"art":"recovery","zone":"Z2","hinweis":""}]},{"wiederholungen":1,"schritte":[{"name":"Ausrollen","minuten":10,"art":"cooldown","zone":"Z1","hinweis":""}]}]}',
+        'Erlaubt: art = warmup|active|interval|recovery|cooldown|rest, zone = Z1|Z2|Z3|Z4|Z5|offen.',
       ].join('\n');
       const text = await localChat(
         [
           { role: 'system', content: 'Du bist Coach Kira, Marcs Trainingscoach. Du baust strukturierte Garmin-Workouts. Antworte nur mit JSON. Deutsch, keine Emojis.' },
           { role: 'user', content: user },
         ],
-        { format: SCHEMA, temperature: 0.3, numCtx: 8192 },
+        { temperature: 0.3, numCtx: 8192 },
       );
-      const j = parseJsonLoose<KiWorkout>(text);
-      if (!j || !Array.isArray(j.bloecke) || !j.bloecke.length) throw new Error('Kira hat kein gültiges Workout geliefert.');
-      j.bloecke = j.bloecke
-        .map((b) => ({ wiederholungen: Math.max(1, Math.round(Number(b.wiederholungen) || 1)), schritte: (b.schritte || []).filter((s) => Number(s.minuten) > 0) }))
-        .filter((b) => b.schritte.length);
+      const j = normalizeWorkout(parseJsonLoose<any>(text));
+      if (!j) {
+        console.warn('Workout-Antwort nicht lesbar:', text);
+        throw new Error('Kira hat kein gültiges Workout geliefert. Bitte „Neu“ versuchen.');
+      }
       setKi(j);
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));

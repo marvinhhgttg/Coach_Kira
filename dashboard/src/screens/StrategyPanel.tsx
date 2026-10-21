@@ -16,6 +16,7 @@ import { fmtDateShort, fmtNum } from '../lib/format';
 import { Panel } from '../components/UI';
 import { buildDays, demandOf, RECOVERY_FETCH_METRICS, VOTE_LABEL, VOTE_ORDER, localIsoDate } from './RecoveryPanel';
 import { atlStep, ctlStep, windowMean } from '../lib/ctlModel';
+import { assessMonotony, monoTone } from '../lib/monotony';
 
 // ---------------------------------------------------------------------------
 // Strategische Planung für das Plan Cockpit (alles lokal, deterministisch):
@@ -48,17 +49,23 @@ const step = (atl: number, ctl: number, load: number, series: number[]) => ({
   ctl: ctlStep(ctl, load, windowMean(series)),
 });
 
-// Belastungsregeln wie im Tagesentscheid (Stand Vortag)
-const MONO_WARN = 1.6;
-const MONO_HIGH = 2.0;
+// Belastungsregeln wie im Tagesentscheid (Stand Vortag): ACWR fest, Monotonie als Verlauf (lib/monotony.ts)
 const ACWR_WARN = 1.3;
 const ACWR_HIGH = 1.5;
-export function capFromLoad(acwr: number | null, mono: number | null): { cap: Vote; why: string | null } {
-  if ((mono ?? 0) > MONO_HIGH || (acwr ?? 0) > ACWR_HIGH)
-    return { cap: 'EASY', why: (mono ?? 0) > MONO_HIGH ? `Monotonie ${fmtNum(mono, 2)} > 2,0` : `ACWR ${fmtNum(acwr, 2)} > 1,5` };
-  if ((mono ?? 0) > MONO_WARN || (acwr ?? 0) > ACWR_WARN)
-    return { cap: 'TRAIN', why: (mono ?? 0) > MONO_WARN ? `Monotonie ${fmtNum(mono, 2)} > 1,6` : `ACWR ${fmtNum(acwr, 2)} > 1,3` };
-  return { cap: 'QUALITY', why: null };
+export function capFromLoad(
+  acwr: number | null,
+  mono: number | null,
+  loads: number[] = [],
+  monoHist: (number | null)[] = [],
+): { cap: Vote; why: string | null } {
+  const order = (v: Vote) => VOTE_ORDER.indexOf(v);
+  let cap: Vote = 'QUALITY';
+  let why: string | null = null;
+  if ((acwr ?? 0) > ACWR_HIGH) { cap = 'EASY'; why = `ACWR ${fmtNum(acwr, 2)} > 1,5`; }
+  else if ((acwr ?? 0) > ACWR_WARN) { cap = 'TRAIN'; why = `ACWR ${fmtNum(acwr, 2)} > 1,3`; }
+  const ma = assessMonotony({ mono, loads, monoHistory: monoHist });
+  if (ma.cap && order(ma.cap) < order(cap)) { cap = ma.cap; why = ma.text.replace(/ → .*$/, ''); }
+  return { cap, why };
 }
 const formPct = (atl: number, ctl: number) => (ctl > 0 ? ((ctl - atl) / ctl) * 100 : 0);
 const isHard = (d: PlanRow) => d.sim_load >= 200 || demandOf(d.sim_load, d.sport, d.zone, d.te_ae, d.te_an) === 'QUALITY';
@@ -69,7 +76,9 @@ export function planChecks(sim: PlanRow[], recGap: number): DayCheck[] {
   return sim.map((d, i) => {
     const demand = demandOf(d.sim_load, d.sport, d.zone, d.te_ae, d.te_an);
     const prev = i > 0 ? sim[i - 1] : null;
-    const { cap, why } = prev ? capFromLoad(prev.acwr, prev.monotony) : { cap: 'QUALITY' as Vote, why: null };
+    const { cap, why } = prev
+      ? capFromLoad(prev.acwr, prev.monotony, sim.slice(0, i).map((r) => r.sim_load), sim.slice(Math.max(0, i - 8), i - 1).map((r) => r.monotony))
+      : { cap: 'QUALITY' as Vote, why: null };
     const issues: string[] = [];
     if (i > 0 && !d.locked && VOTE_ORDER.indexOf(demand) > VOTE_ORDER.indexOf(cap)) issues.push(`${VOTE_LABEL[demand]} geplant, ${why} erlaubt max. ${VOTE_LABEL[cap]}`);
     if (isHard(d)) {
@@ -520,7 +529,7 @@ export function StrategyPanel({
                       <td className="py-1 pr-2">{fmtNum(d.sim_load)}{d.locked ? ' · fix' : ''}</td>
                       <td className="py-1 pr-2">{d.sim_load > 0 ? VOTE_LABEL[c.demand] : 'Ruhe'}</td>
                       <td className="py-1 pr-2">{i === 0 ? 'Tagesentscheid' : VOTE_LABEL[c.cap]}</td>
-                      <td className={`py-1 pr-2 ${d.monotony > 2 ? 'text-orange-300' : d.monotony > 1.6 ? 'text-yellow-300' : ''}`}>{fmtNum(d.monotony, 2)}</td>
+                      <td className={`py-1 pr-2 ${monoTone(d.monotony)}`}>{fmtNum(d.monotony, 2)}</td>
                       <td className={`py-1 pr-2 ${d.acwr > 1.3 ? 'text-orange-300' : ''}`}>{fmtNum(d.acwr, 2)}</td>
                       <td className="py-1 pr-2">{c.form > 0 ? '+' : ''}{fmtNum(c.form, 1)} %</td>
                       <td className={`py-1 ${amp(c.level)}`}>{c.issues.length ? c.issues.join(' · ') : '✓'}</td>
@@ -639,7 +648,7 @@ export function StrategyPanel({
                       <td className="py-1 pr-2">{fmtNum(s.sum)}</td>
                       <td className="py-1 pr-2">{fmtNum(s.ctlEnd)}</td>
                       <td className={`py-1 pr-2 ${s.maxAcwr > 1.3 ? 'text-orange-300' : ''}`}>{fmtNum(s.maxAcwr, 2)}</td>
-                      <td className={`py-1 pr-2 ${s.maxMono > 2 ? 'text-orange-300' : s.maxMono > 1.6 ? 'text-yellow-300' : ''}`}>{fmtNum(s.maxMono, 2)}</td>
+                      <td className={`py-1 pr-2 ${monoTone(s.maxMono)}`}>{fmtNum(s.maxMono, 2)}</td>
                       <td className="py-1 pr-2">{s.formEnd > 0 ? '+' : ''}{fmtNum(s.formEnd, 1)} %</td>
                       <td className={`py-1 pr-2 ${s.conf ? 'text-orange-300' : 'text-green-300'}`}>{s.conf}</td>
                       <td className="py-1 whitespace-nowrap">
