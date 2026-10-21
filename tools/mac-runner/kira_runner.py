@@ -537,24 +537,43 @@ def cmd_backfill(days: int, dry: bool) -> None:
 
 
 def cmd_supervisor() -> None:
-    """Supervisor-Auftrag vom Apps Script abholen und lokal mit Ollama rechnen."""
+    """Supervisor-Aufträge abholen; wurde ein Auftrag während der Rechnung ersetzt,
+    sofort den neueren rechnen (max. 3 Runden)."""
+    import fcntl
+    lock = open(Path.home() / "coach-kira-runner" / "supervisor.lock", "w")
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        return  # läuft schon – nicht doppelt rechnen
+    try:
+        for _ in range(3):
+            if _supervisor_once() != "superseded":
+                return
+            log("Supervisor: neuerer Auftrag vorhanden – rechne ihn sofort")
+    finally:
+        fcntl.flock(lock, fcntl.LOCK_UN)
+        lock.close()
+
+
+def _supervisor_once() -> str:
+    """Einen Supervisor-Auftrag abholen und lokal mit Ollama rechnen."""
     st = load_state()
     try:
         j = http_get_json(SCRIPT_URL + "?mode=supervisorJob", timeout=60)
     except RuntimeError:
-        return  # kein JSON = Patch fehlt, still beenden
+        return "none"  # kein JSON = Patch fehlt, still beenden
     job = j.get("job")
     if not job:
-        return  # still beenden
+        return "none"  # still beenden
     if job["id"] in st.get("sup_done", []):
-        return  # schon erledigt
+        return "none"  # schon erledigt
     fails = st.get("sup_fail", {})
     if fails.get(job["id"], 0) >= 2:
-        return  # zu oft gescheitert
+        return "none"  # zu oft gescheitert
     model = ROUTES["supervisor"]
     if not ollama_ready(model):
         log("Supervisor: Ollama/coach-kira nicht erreichbar – später erneut")
-        return
+        return "none"
     log(f"Supervisor: Auftrag {job['id']} übernommen (Prompt {len(job.get('prompt', ''))} Zeichen)")
     messages = [
         {"role": "system", "content": job.get("system") or ""},
@@ -574,11 +593,16 @@ def cmd_supervisor() -> None:
             timeout=600,
         )
         if not saved.get("ok"):
-            raise RuntimeError(saved.get("error") or "saveSupervisor fehlgeschlagen")
+            err = str(saved.get("error") or "saveSupervisor fehlgeschlagen")
+            if "neuerer Auftrag" in err:
+                log(f"Supervisor: Ergebnis zu {job['id']} verworfen (inzwischen neu gestartet)")
+                return "superseded"
+            raise RuntimeError(err)
         st["sup_done"] = (st.get("sup_done", []) + [job["id"]])[-30:]
         save_state(st)
         log(f"Supervisor: Auftrag {job['id']} lokal erledigt und gespeichert")
         notify("Coach Kira", "KI-Report lokal erstellt (coach-kira).")
+        return "ok"
     except Exception as e:
         fails[job["id"]] = fails.get(job["id"], 0) + 1
         st["sup_fail"] = fails
@@ -586,6 +610,7 @@ def cmd_supervisor() -> None:
         log(f"Supervisor: FEHLER {e}")
         if fails[job["id"]] >= 2:
             notify("Coach Kira", "KI-Report lokal fehlgeschlagen – siehe runner.log")
+        return "error"
 
 
 def cmd_tick() -> None:
@@ -597,10 +622,7 @@ def cmd_tick() -> None:
         cmd_activity()
     except Exception as e:
         log(f"activity: FEHLER {e}")
-    try:
-        cmd_supervisor()
-    except Exception as e:
-        log(f"supervisor: FEHLER {e}")
+    # Supervisor-Aufträge holt der eigene LaunchAgent de.coachkira.supervisor (jede Minute)
 
 
 # ---------------------------------------------------------------------------
