@@ -602,7 +602,7 @@ def _supervisor_once() -> str:
             log(f"  Supervisor: {model} {time.time() - t0:.0f} s, {tok:.0f} tok/s")
         else:
             log(f"  Supervisor: {model} {time.time() - t0:.0f} s")
-        json.loads(text)  # muss gültiges JSON sein, sonst Exception
+        text = json_clean(text)  # Codeblock/Vortext entfernen; muss gültiges JSON sein, sonst Exception
         saved = http_post_json(
             SCRIPT_URL + "?mode=saveSupervisor",
             {"kind": "saveSupervisor", "id": job["id"], "content": text, "model": model},
@@ -777,6 +777,28 @@ def run_briefing(type_: str) -> float:
 # ---------------------------------------------------------------------------
 
 
+def _as_str(s: str) -> str:
+    """AppleScript-String: nur Anführungszeichen und Backslashes escapen (Umlaute bleiben)."""
+    return '"' + str(s).replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def json_clean(text: str) -> str:
+    """Modellantwort zu gültigem JSON-Text machen: ```json-Blöcke und Vor-/Nachtext entfernen."""
+    import re
+    t = (text or "").strip()
+    t = re.sub(r"^```(?:json)?\s*|\s*```\s*$", "", t, flags=re.S).strip()
+    try:
+        json.loads(t)
+        return t
+    except Exception:
+        a, b = t.find("{"), t.rfind("}")
+        if a >= 0 and b > a:
+            cand = t[a:b + 1]
+            json.loads(cand)
+            return cand
+        raise ValueError("Modellantwort ist kein JSON: " + (t[:80] or "leer"))
+
+
 def notify(title: str, msg: str) -> None:
     """subprocess.run(['osascript', '-e', ...], timeout=10) in try/except."""
     try:
@@ -784,7 +806,7 @@ def notify(title: str, msg: str) -> None:
             [
                 "osascript",
                 "-e",
-                f'display notification {json.dumps(msg)} with title {json.dumps(title)}',
+                f'display notification {_as_str(msg)} with title {_as_str(title)}',
             ],
             timeout=10,
         )
