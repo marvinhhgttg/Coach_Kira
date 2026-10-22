@@ -11,6 +11,7 @@ import {
   LOAD_METRICS,
   TimeoutError,
   dedupeByDateKeepLast,
+  BASE_URL,
   fetchChartData,
   fetchPlan,
   fetchPlanBriefing,
@@ -28,6 +29,16 @@ import { fmtDateShort, fmtNum, fmtSigned, fmtTime } from '../lib/format';
 import { proxyGeneratePlanBriefing, proxyRunSupervisor, proxySavePlanSimulation } from '../lib/proxy';
 import { SupervisorPlanTile } from '../components/SupervisorPlanTile';
 import { AlltagCheckTile, type AlltagSwap } from '../components/AlltagCheckTile';
+import { AutopilotTile, type AutopilotTag } from '../components/AutopilotTile';
+import { DisruptionTile } from '../components/DisruptionTile';
+import { WhatIfTile } from '../components/WhatIfTile';
+import { GoalPlannerTile } from '../components/GoalPlannerTile';
+import { SeasonTile } from '../components/SeasonTile';
+import { LoadFactorTile } from '../components/LoadFactorTile';
+import { ReadinessStrip } from '../components/ReadinessStrip';
+import { fetchHistory, trainModel, forecastPlan, type HistRow, type Model } from '../lib/readinessModel';
+import { kalibriereFaktoren, type FaktorVorschlag } from '../lib/planning';
+import { fetchLoadFactors, saveExtra } from '../lib/extras';
 import { ErrorBox, Panel, Skeleton } from '../components/UI';
 import { assessMonotony } from '../lib/monotony';
 import {
@@ -420,6 +431,29 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
   const [supPlan, setSupPlan] = useState<PlanDay[]>([]);
   const [supBusy, setSupBusy] = useState(false);
   const [supStatus, setSupStatus] = useState<string | null>(null);
+  // Bereiche der Plan-Seite
+  type PlanTab = 'woche' | 'simulation' | 'strategie' | 'ziele';
+  const [planTab, setPlanTabState] = useState<PlanTab>(() => {
+    try {
+      const t = localStorage.getItem('ck_plan_tab');
+      return t === 'simulation' || t === 'strategie' || t === 'ziele' ? t : 'woche';
+    } catch {
+      return 'woche';
+    }
+  });
+  const setPlanTab = (t: PlanTab) => {
+    setPlanTabState(t);
+    try { localStorage.setItem('ck_plan_tab', t); } catch { /* egal */ }
+  };
+  // Bereitschafts-Prognose (lokal gelernt)
+  const [hist, setHist] = useState<HistRow[]>([]);
+  const [histErr, setHistErr] = useState<string | null>(null);
+  // Lastfaktoren
+  const [lf, setLf] = useState<FaktorVorschlag[] | null>(null);
+  const [lfBusy, setLfBusy] = useState(false);
+  const [lfErr, setLfErr] = useState<string | null>(null);
+  // Ungespeicherte Änderungen
+  const [baseline, setBaseline] = useState('');
   const applySupPlan = (days: PlanDay[]) => {
     const today = new Date().toLocaleDateString('sv-SE');
     const list = (days || []).filter((d) => d.date && d.date >= today);
@@ -736,7 +770,10 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
       const res = proxyAuthenticated
         ? await proxySavePlanSimulation(payload)
         : await savePlanSimulation(token.trim(), payload);
-      if (res.ok) toast('ok', res.message || 'Plan in timeline gespeichert.');
+      if (res.ok) {
+        toast('ok', res.message || 'Plan in timeline gespeichert.');
+        setBaseline(JSON.stringify([loads, sports, zones]));
+      }
       else toast('err', res.error || res.raw || 'Speichern fehlgeschlagen.');
     } catch (e) {
       toast('err', e instanceof ApiError ? e.message : String(e));
@@ -811,6 +848,69 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
     };
     return hits ? { state: st, days: supPlan.length } : null;
   }, [supPlan, plan, loads, sports, zones, teAe, teAn, locks]);
+
+  useEffect(() => {
+    fetchHistory().then(setHist).catch((e) => setHistErr(String(e instanceof Error ? e.message : e)));
+  }, []);
+  const models = useMemo(() => (hist.length ? { r: trainModel(hist, 'readiness'), h: trainModel(hist, 'hrv') } : { r: null as Model | null, h: null as Model | null }), [hist]);
+  const readiness = useMemo(
+    () => forecastPlan(hist.filter((r) => r.date < (sim[0]?.date || '9999')), models.r, models.h, sim.map((d) => ({ date: d.date, load: d.sim_load, acwr: d.acwr, mono: d.monotony }))),
+    [hist, models, sim],
+  );
+
+  const stateKey = JSON.stringify([loads, sports, zones]);
+  useEffect(() => {
+    if (!loading && !baseline && loads.length) setBaseline(stateKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, loads.length]);
+  const dirty = !!baseline && baseline !== stateKey;
+
+  async function refreshLoadFactors() {
+    setLfBusy(true);
+    setLfErr(null);
+    try {
+      const [fak, rv, tl] = await Promise.all([
+        fetchLoadFactors(),
+        fetch(`${BASE_URL}?mode=activityReviews&n=2000&cb=${Date.now()}`, { redirect: 'follow' }).then((r) => r.json()),
+        fetchChartData('365d' as any, ['Sport_x', 'Zone']),
+      ]);
+      const tmap: Record<string, { sport: string; zone: string }> = {};
+      ((tl as any)?.data || []).forEach((r: any) => (tmap[r.date] = { sport: String(r.Sport_x || ''), zone: String(r.Zone || '') }));
+      const v = kalibriereFaktoren(rv?.reviews || [], tmap, fak.load.map((x) => ({ ...x, Factor: Number(x.Factor) })));
+      setLf(v);
+      const relevant = v.filter((x) => x.n >= 4 && Math.abs(x.verhaeltnis - 1) > 0.08);
+      saveExtra(
+        'lastfaktoren',
+        new Date().toLocaleDateString('sv-SE'),
+        relevant.length ? relevant.map((x) => `${x.typ} ${x.zone}: ${Math.round(x.verhaeltnis * 100)} % (n=${x.n}) → ${x.faktor} → ${x.vorschlag} ESS/h`).join('\n') : 'Keine relevanten Abweichungen.',
+        { vorschlaege: v },
+      ).catch(() => undefined);
+    } catch (e) {
+      setLfErr(/JSON|Lastfaktoren|Failed to fetch|Load failed/.test(String(e)) ? 'Patch „Zukunftsplanung“ noch nicht aktiv.' : String(e instanceof Error ? e.message : e));
+    } finally {
+      setLfBusy(false);
+    }
+  }
+
+  // Vorschläge (Autopilot, Was-wäre-wenn, Umplanen) in die Slider übernehmen – gesperrte Tage nie
+  function applyPlanValues(l: number[], sp: string[], z: string[], label: string) {
+    setTeAe((old) => old.map((v, i) => (locks[i] || (l[i] === loads[i] && z[i] === zones[i]) ? v : estimateTe(l[i], sp[i] ?? '').ae)));
+    setTeAn((old) => old.map((v, i) => (locks[i] || (l[i] === loads[i] && z[i] === zones[i]) ? v : estimateTe(l[i], sp[i] ?? '').an)));
+    setLoads((old) => old.map((v, i) => (locks[i] ? v : l[i] ?? v)));
+    setSports((old) => old.map((v, i) => (locks[i] ? v : sp[i] ?? v)));
+    setZones((old) => old.map((v, i) => (locks[i] ? v : z[i] ?? v)));
+    toast('info', `${label} übernommen. Noch nicht gespeichert.`);
+  }
+  function applyAutopilot(tage: AutopilotTag[]) {
+    const by = new Map(tage.map((t) => [t.datum, t]));
+    const ds = (plan?.plan || []).map((d) => d.date);
+    applyPlanValues(
+      ds.map((d, i) => (by.has(d) ? Number(by.get(d)!.last) : loads[i])),
+      ds.map((d, i) => (by.has(d) ? String(by.get(d)!.sport) : sports[i])),
+      ds.map((d, i) => (by.has(d) ? String(by.get(d)!.zone) : zones[i])),
+      'Autopilot-Vorschlag',
+    );
+  }
 
   // Alltag-Check: Tage tauschen (Last, Sport, Zone, TE) – gesperrte Tage nie
   function applyAlltagSwaps(swaps: AlltagSwap[]) {
@@ -897,6 +997,11 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
             <span className="text-2xs text-ink-dim tnum">
               {plan?.timestamp && <>Stand · {fmtTime(plan.timestamp)} · Quelle {source}</>}
             </span>
+            {dirty && (
+              <span className="chip border border-yellow-400/50 text-2xs text-yellow-300" title="Slider-Werte weichen vom gespeicherten Plan ab">
+                ungespeicherte Änderungen
+              </span>
+            )}
             <button
               onClick={saveToTimeline}
               disabled={saving}
@@ -928,34 +1033,55 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
                 <strong className="font-semibold">Hinweis:</strong> {sourceReason}
               </div>
             )}
-            <div className="grid gap-3 lg:grid-cols-5">
+            <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
               <div className="panel-raised p-3">
                 <div className="label">Start ATL</div>
-                <div className="tnum text-2xl font-semibold mt-1">{fmtNum(startAtl)}</div>
+                <div className="tnum text-xl sm:text-2xl font-semibold mt-1">{fmtNum(startAtl)}</div>
               </div>
               <div className="panel-raised p-3">
                 <div className="label">Start CTL</div>
-                <div className="tnum text-2xl font-semibold mt-1">{fmtNum(startCtl)}</div>
+                <div className="tnum text-xl sm:text-2xl font-semibold mt-1">{fmtNum(startCtl)}</div>
               </div>
               <div className="panel-raised p-3">
                 <div className="label">Final CTL</div>
-                <div className="tnum text-2xl font-semibold mt-1 text-accent">{fmtNum(finalCtl)}</div>
+                <div className="tnum text-xl sm:text-2xl font-semibold mt-1 text-accent">{fmtNum(finalCtl)}</div>
               </div>
               <div className="panel-raised p-3">
                 <div className="label">Max ACWR</div>
-                <div className={`tnum text-2xl font-semibold mt-1 ${maxAcwr > 1.3 ? 'text-ampel-orange' : 'text-ampel-gruen'}`}>
+                <div className={`tnum text-xl sm:text-2xl font-semibold mt-1 ${maxAcwr > 1.3 ? 'text-ampel-orange' : 'text-ampel-gruen'}`}>
                   {fmtNum(maxAcwr, 2)}
                 </div>
               </div>
               <div className="panel-raised p-3">
                 <div className="label">KEI Ø</div>
-                <div className={`tnum text-2xl font-semibold mt-1 ${keiAvg < 0 ? 'text-ampel-rot' : keiAvg < 3 ? 'text-ampel-gelb' : 'text-ampel-gruen'}`}>
+                <div className={`tnum text-xl sm:text-2xl font-semibold mt-1 ${keiAvg < 0 ? 'text-ampel-rot' : keiAvg < 3 ? 'text-ampel-gelb' : 'text-ampel-gruen'}`}>
                   {fmtSigned(keiAvg, 1)}
                 </div>
               </div>
             </div>
 
-            <SupervisorPlanTile
+            <nav className="md:sticky md:top-28 z-20 -mx-1 flex flex-wrap gap-1 rounded-lg border border-border bg-bg-panel/95 p-1 backdrop-blur" aria-label="Bereiche der Plan-Seite">
+              {([
+                ['woche', 'Diese Woche', 'Wochenplan, Störungen, Autopilot, Alltag'],
+                ['simulation', 'Simulation', 'Tagestabelle, Slider, Prognose'],
+                ['strategie', 'Strategie', 'Prüfung, Szenarien, Was-wäre-wenn, Kira-Plan'],
+                ['ziele', 'Ziele & Saison', 'Touren, Saisonrahmen, Lastfaktoren'],
+              ] as [PlanTab, string, string][]).map(([id, l, hint]) => (
+                <button
+                  key={id}
+                  onClick={() => setPlanTab(id)}
+                  className={`flex-1 min-w-[8rem] rounded-md px-3 py-1.5 text-left transition-colors ${planTab === id ? 'bg-bg-subtle text-ink' : 'text-ink-muted hover:text-ink'}`}
+                  aria-pressed={planTab === id}
+                >
+                  <div className="text-sm">{l}</div>
+                  <div className="hidden sm:block text-2xs text-ink-dim">{hint}</div>
+                </button>
+              ))}
+            </nav>
+
+            {planTab === 'woche' && (
+              <div className="space-y-4">
+                <SupervisorPlanTile
               days={supPlan}
               lockedDates={new Set((plan?.plan || []).filter((_, i) => locks[i]).map((d) => d.date))}
               status={supStatus}
@@ -964,7 +1090,9 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
               onRefresh={onRunSupervisor}
             />
 
-            <AlltagCheckTile
+                <DisruptionTile sim={sim} loads={loads} sports={sports} zones={zones} locks={locks} simulateWith={simulateWith}
+                  onApply={(l, sp, z) => applyPlanValues(l, sp, z, 'Angepasster Rest-Plan')} />
+                <AlltagCheckTile
               dates={(plan?.plan || []).map((d) => d.date)}
               loads={loads}
               sports={sports}
@@ -973,6 +1101,14 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
               onApply={applyAlltagSwaps}
             />
 
+                <AutopilotTile planDates={(plan?.plan || []).map((d) => d.date)} onApply={applyAutopilot} />
+                <ReadinessStrip forecast={readiness} model={models.r} error={histErr} />
+              </div>
+            )}
+
+            {planTab === 'simulation' && (
+              <div className="space-y-4">
+                <ReadinessStrip forecast={readiness} model={models.r} error={histErr} />
             <div className="panel-raised p-3">
               <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                 <div>
@@ -1199,11 +1335,31 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
                 <div className="text-sm text-ampel-rot mt-1">KEI &lt; 0 oder ACWR hoch</div>
               </div>
             </div>
+                {sim.length > 0 && <PlanKpis sim={sim} />}
+              </div>
+            )}
+
+            {planTab === 'ziele' && (
+              <div className="space-y-4">
+                <GoalPlannerTile />
+                <SeasonTile />
+                <LoadFactorTile vorschlaege={lf} busy={lfBusy} error={lfErr} onRefresh={refreshLoadFactors} />
+              </div>
+            )}
           </div>
         )}
       </Panel>
-      {!loading && !err && sim.length > 0 && <PlanKpis sim={sim} />}
-      {!loading && !err && sim.length > 0 && (
+      {!loading && !err && sim.length > 0 && planTab === 'strategie' && (
+        <WhatIfTile
+          sim={sim}
+          state={{ loads, sports, zones, teAe, teAn }}
+          locks={locks}
+          simulateWith={simulateWith}
+          recGap={recGap}
+          onApply={(l, sp, z) => applyPlanValues(l, sp, z, 'Was-wäre-wenn-Variante')}
+        />
+      )}
+      {!loading && !err && sim.length > 0 && planTab === 'strategie' && (
         <StrategyPanel
           sim={sim}
           state={{ loads, sports, zones, teAe, teAn }}
@@ -1216,7 +1372,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
           kiPlan={kiScenario}
         />
       )}
-      {!loading && !err && sim.length > 0 && (
+      {!loading && !err && sim.length > 0 && planTab === 'strategie' && (
         <PlanLoopPanel
           sim={sim}
           loads={loads}

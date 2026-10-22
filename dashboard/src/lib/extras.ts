@@ -1,7 +1,7 @@
 /** KI-Extras: Speicher AI_KIRA_EXTRAS, Kalender-Belegung, phys_baseline, Wetter (Open-Meteo). */
 import { BASE_URL } from './api';
 
-export type ExtraTyp = 'treffer_tag' | 'treffer_woche' | 'selbsttest' | 'plausi' | 'ernaehrung' | 'alltag' | 'workout';
+export type ExtraTyp = 'treffer_tag' | 'treffer_woche' | 'selbsttest' | 'plausi' | 'ernaehrung' | 'alltag' | 'workout' | 'ziel' | 'saison' | 'autopilot' | 'umplanung' | 'lastfaktoren' | 'prognose';
 
 export interface ExtraItem<T = any> {
   datum: string;
@@ -149,4 +149,26 @@ export function hrZones(lthr: number, sport: 'run' | 'bike' | 'other' = 'run') {
     ? [[0, 0.81], [0.81, 0.89], [0.9, 0.93], [0.94, 0.99], [1.0, 1.06]]
     : [[0, 0.85], [0.85, 0.89], [0.9, 0.94], [0.95, 0.99], [1.0, 1.06]];
   return f.map(([a, b], i) => ({ zone: `Z${i + 1}`, low: Math.round(lthr * a) || 100, high: Math.round(lthr * b) }));
+}
+
+/** Eintrag löschen (z. B. ein Ziel) – braucht den Patch „Zukunftsplanung“ */
+export async function deleteExtra(typ: ExtraTyp, datum: string): Promise<void> {
+  const res = await fetch(`${BASE_URL}?mode=saveExtra&cb=${Date.now()}`, {
+    method: 'POST',
+    redirect: 'follow',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ kind: 'saveExtra', typ, datum, loeschen: true }),
+  });
+  const j = JSON.parse(await res.text());
+  if (!j.ok) throw new Error(j.error || 'Löschen fehlgeschlagen');
+}
+
+export interface LoadFactors {
+  load: { ActivityType: string; Zone: string; Factor: number }[];
+  elev: { ActivityType: string; ElevFactor_per_100m: number }[];
+}
+export async function fetchLoadFactors(): Promise<LoadFactors> {
+  const j = await getJson(`${BASE_URL}?mode=loadFactors&cb=${Date.now()}`);
+  if (!j || !j.ok) throw new Error((j && j.error) || 'Lastfaktoren nicht lesbar');
+  return { load: j.load || [], elev: j.elev || [] };
 }

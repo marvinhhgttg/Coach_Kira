@@ -1342,6 +1342,270 @@ def cmd_ernaehrung(force: bool = False) -> None:
 # ---------------------------------------------------------------------------
 
 
+# ============================================================
+# Zukunftsplanung: Monotonie-Prüfung, Wochen-Autopilot, Störungen
+# ============================================================
+
+def ref_load(loads: list) -> float:
+    xs = [float(x) for x in loads[-28:]]
+    return sum(xs) / len(xs) if xs else 0.0
+
+
+def is_demanding(l: float, ref: float) -> bool:
+    return l >= max(60.0, 0.7 * ref)
+
+
+def is_relief(l: float, ref: float) -> bool:
+    return l <= max(40.0, 0.5 * ref)
+
+
+def mono7(w: list) -> float:
+    w = [float(x) for x in w[-7:]]
+    if len(w) < 7:
+        return 0.0
+    m = sum(w) / 7
+    sd = (sum((x - m) ** 2 for x in w) / 7) ** 0.5
+    return (9.99 if m > 0 else 0.0) if sd == 0 else m / sd
+
+
+def _k(v: float) -> str:
+    return f"{v:.2f}".replace(".", ",")
+
+
+def mono_verstoesse(hist: list, plan: list) -> list:
+    """Monotonie-Regel (wie lib/monotony.ts, monotonyPlanViolations) für einen Plan [{'datum','last','fest'}]."""
+    allv = [float(x) for x in hist]
+    ref = ref_load(allv + [float(d["last"]) for d in plan])
+    out = []
+    streak = 0
+    for x in reversed(allv):
+        if is_relief(x, ref):
+            break
+        streak += 1
+    run25 = 0
+    for i, d in enumerate(plan):
+        last = float(d["last"])
+        allv.append(last)
+        streak = 0 if is_relief(last, ref) else streak + 1
+        m = mono7(allv)
+        run25 = run25 + 1 if m > 2.5 else 0
+        nxt = [plan[j] for j in (i + 1, i + 2) if j < len(plan)]
+        next_relief = any(is_relief(float(n["last"]), ref) for n in nxt)
+        bewertbar = i + 2 < len(plan)
+        if streak == 5:
+            out.append(f"{d['datum']}: 5 Tage in Folge ohne deutliche Entlastung")
+        if bewertbar and m > 3.0 and not next_relief:
+            out.append(f"{d['datum']}: Monotonie {_k(m)} > 3,0 ohne Entlastung in 48 h")
+        elif bewertbar and run25 == 2 and not next_relief:
+            out.append(f"{d['datum']}: Monotonie seit 2 Tagen > 2,5 ohne Ruhetag in 48 h")
+        if i + 1 < len(plan) and m > 2.0:
+            dem = 0
+            for x in reversed(allv):
+                if is_relief(x, ref):
+                    break
+                if is_demanding(x, ref):
+                    dem += 1
+            n = plan[i + 1]
+            nl = float(n["last"])
+            if dem >= 4 and not n.get("fest") and not is_relief(nl, ref) and nl > 0.6 * ref:
+                out.append(f"{n['datum']}: sollte nach Monotonie {_k(m)} und {dem} fordernden Tagen sehr locker oder frei sein")
+    return out
+
+
+_WTAG = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+
+
+def _wetter(tage: int = 9) -> dict:
+    try:
+        w = http_get_json(
+            "https://api.open-meteo.com/v1/forecast?latitude=48.31&longitude=10.12"
+            "&daily=temperature_2m_max,precipitation_sum,wind_speed_10m_max&timezone=Europe%2FBerlin"
+            f"&forecast_days={tage}"
+        )["daily"]
+        return {d: {"tmax": w["temperature_2m_max"][i], "regen": w["precipitation_sum"][i], "wind": w["wind_speed_10m_max"][i]}
+                for i, d in enumerate(w["time"])}
+    except Exception as e:
+        log(f"autopilot: Wetter nicht verfügbar ({e})")
+        return {}
+
+
+def _kalender(tage: int = 9) -> dict:
+    try:
+        return {d["date"]: d for d in http_get_json(SCRIPT_URL + f"?mode=calendarDays&days={tage}").get("days", [])}
+    except Exception as e:
+        log(f"autopilot: Kalender nicht verfügbar ({e})")
+        return {}
+
+
+def cmd_autopilot(force: bool = False) -> None:
+    """Sonntagabend: Plan der neuen Woche prüfen und Verbesserungen vorschlagen."""
+    st = load_x()
+    jetzt = datetime.datetime.now(tz_local)
+    if not force and not (jetzt.weekday() == 6 and 17 <= jetzt.hour < 23 and st.get("autopilot_done") != today()):
+        return
+    if not ollama_ready():
+        log("autopilot: Ollama nicht bereit – später")
+        return
+    tage_bis_mo = (7 - jetzt.weekday()) % 7 or 7
+    montag_d = (jetzt + datetime.timedelta(days=tage_bis_mo)).date()
+    woche_d = [montag_d + datetime.timedelta(days=i) for i in range(7)]
+    woche = [d.isoformat() for d in woche_d]
+    plan_all = {d["date"]: d for d in http_get_json(SCRIPT_URL + "?mode=planSimulationJson").get("days", [])}
+    plan = []
+    for i, d in enumerate(woche):
+        p = plan_all.get(d) or {}
+        plan.append({"datum": d, "tag": _WTAG[i], "last": round(float(p.get("load") or 0)), "sport": p.get("sport") or "Off",
+                     "zone": p.get("zone") or "Off", "fest": bool(p.get("locked"))})
+    rows = {r["date"]: r for r in fetch_rows(35, ["load_fb_day"])}
+    hist = []
+    for k in range(28, 0, -1):
+        d = (montag_d - datetime.timedelta(days=k)).isoformat()
+        if d in rows and num(rows[d].get("load_fb_day")) is not None and d < today():
+            hist.append(num(rows[d].get("load_fb_day")))
+        elif d in plan_all:
+            hist.append(float(plan_all[d].get("load") or 0))
+        else:
+            hist.append(0.0)
+    kal, wet = _kalender(), _wetter()
+    ziel_ess, saison_txt, ziele_txt = None, "", []
+    try:
+        items = http_get_json(SCRIPT_URL + "?mode=extras&typ=saison,ziel&n=20").get("items", [])
+        sa = next((x for x in items if x["typ"] == "saison"), None)
+        if sa and sa.get("data"):
+            w = next((x for x in sa["data"].get("wochen", []) if x.get("start") == woche[0]), None)
+            if w:
+                ziel_ess = w.get("ziel_ess")
+                saison_txt = f"Saisonrahmen: Phase {w.get('phase')}, Ziel-Wochenlast ca. {ziel_ess} ESS, Fokus {w.get('fokus') or w.get('sportmix') or '-'}"
+        ziele_txt = [f"{x['datum']}: {x['text'][:160]}" for x in items if x["typ"] == "ziel" and x["datum"] >= woche[0]][:3]
+    except Exception as e:
+        log(f"autopilot: Saison/Ziele nicht lesbar ({e})")
+    v0 = mono_verstoesse(hist, plan)
+
+    def zeile(p):
+        k = kal.get(p["datum"]) or {}
+        w = wet.get(p["datum"]) or {}
+        kt = f"{k.get('termine', '?')} Termine, {k.get('belegt_h', '?')} h belegt{', abends' if k.get('abends') else ''}{', REISE' if k.get('reise') else ''}" if k else "unbekannt"
+        wt = f"{w.get('tmax')}°, Regen {w.get('regen')} mm, Wind {w.get('wind')} km/h" if w else "unbekannt"
+        return f"{p['datum']} {p['tag']} | Plan: {p['last']} ESS {p['sport']} {p['zone']}{' FEST' if p['fest'] else ''} | Kalender: {kt} | Wetter: {wt}"
+
+    regeln = ("Regeln: FEST-Tage nie ändern. "
+              + (f"Wochenlast höchstens 10 % neben {ziel_ess} ESS. " if ziel_ess else "Wochenlast etwa beibehalten (±10 %). ")
+              + "Monotonie-Regel: höchstens 4 Tage in Folge ohne deutliche Entlastung (<= 40 ESS); harte Tage klar hart, lockere wirklich locker. "
+              "Lange Einheiten auf Tage mit wenig Terminen und gutem Wetter. Rad draußen nicht bei Regen > 5 mm oder Wind > 40 km/h. Nur nötige Änderungen.")
+    beispiel = '{"tage":[{"datum":"' + woche[0] + '","last":130,"sport":"Bike","zone":"Z2","grund":"kurz"}],"fazit":"1-2 Sätze"}'
+    user = ("Plan der Woche ab " + woche[0] + ":\n" + "\n".join(zeile(p) for p in plan) + "\n\n"
+            + (saison_txt + "\n" if saison_txt else "") + ("Ziele: " + "; ".join(ziele_txt) + "\n" if ziele_txt else "")
+            + ("Gefundene Regelverstöße: " + "; ".join(v0) + "\n" if v0 else "Keine Regelverstöße gefunden.\n")
+            + regeln + "\nAntworte nur mit JSON in diesem Format, tage enthält ALLE 7 Tage: " + beispiel)
+    msgs = [{"role": "system", "content": "Du bist Coach Kira, Marcs Trainingscoach. Deutsch, du-Form, keine Emojis. Antworte nur mit JSON."},
+            {"role": "user", "content": user}]
+
+    def anwenden(antwort: str):
+        j = parse_loose(antwort)
+        by = {str(x.get("datum", ""))[:10]: x for x in (j.get("tage") or [])}
+        neu = []
+        for p in plan:
+            x = by.get(p["datum"])
+            if p["fest"] or not x:
+                neu.append(dict(p, grund=""))
+                continue
+            try:
+                last = max(0, min(400, round(float(x.get("last", p["last"])))))
+            except Exception:
+                last = p["last"]
+            neu.append(dict(p, last=last, sport=str(x.get("sport") or p["sport"]), zone=str(x.get("zone") or p["zone"]), grund=str(x.get("grund") or "")))
+        return neu, str(j.get("fazit") or "")
+
+    t0 = time.time()
+    txt, _ = ollama_chat(MODEL, msgs, num_ctx=12288, timeout=900)
+    neu, fazit = anwenden(txt)
+    v1 = mono_verstoesse(hist, neu)
+    if v1:
+        msgs2 = msgs + [{"role": "assistant", "content": txt},
+                        {"role": "user", "content": "Dein Plan verletzt noch: " + "; ".join(v1) + ". Korrigiere und gib das vollständige JSON erneut aus."}]
+        try:
+            txt2, _ = ollama_chat(MODEL, msgs2, num_ctx=12288, timeout=900)
+            neu2, fazit2 = anwenden(txt2)
+            v2 = mono_verstoesse(hist, neu2)
+            if len(v2) < len(v1):
+                neu, fazit, v1 = neu2, fazit2, v2
+        except Exception as e:
+            log(f"autopilot: Nachfrage fehlgeschlagen ({e})")
+    aend = [{"datum": n["datum"], "tag": n["tag"], "alt": {"last": p["last"], "sport": p["sport"], "zone": p["zone"]},
+             "neu": {"last": n["last"], "sport": n["sport"], "zone": n["zone"]}, "grund": n["grund"]}
+            for p, n in zip(plan, neu) if (p["last"], p["sport"], p["zone"]) != (n["last"], n["sport"], n["zone"])]
+    wa, wn = sum(p["last"] for p in plan), sum(n["last"] for n in neu)
+    zeilen = [f"Plan für die Woche ab {woche[0]}: {len(aend)} Änderung(en), Wochenlast {wa} → {wn} ESS.", fazit]
+    zeilen += [f"- {a['tag']} {a['datum'][8:10]}.{a['datum'][5:7]}.: {a['alt']['last']} → {a['neu']['last']} ESS {a['neu']['sport']} {a['neu']['zone']} – {a['grund']}" for a in aend]
+    if v1:
+        zeilen.append("Noch offen: " + "; ".join(v1))
+    save_extra("autopilot", woche[0], "\n".join(z for z in zeilen if z),
+               {"tage": neu, "aenderungen": aend, "verstoesse_vorher": v0, "verstoesse": v1, "wochenlast_alt": wa,
+                "wochenlast_neu": wn, "saison_ziel": ziel_ess, "fazit": fazit, "sekunden": round(time.time() - t0)}, "mac:" + MODEL)
+    notify("Coach Kira", f"Plan für nächste Woche bereit: {len(aend)} Änderung(en)")
+    st["autopilot_done"] = today()
+    save_x(st)
+    log(f"autopilot: Woche ab {woche[0]} – {len(aend)} Änderung(en), Verstöße {len(v0)} → {len(v1)}")
+
+
+def cmd_stoerung(force: bool = False) -> None:
+    """Morgens: Infekt-Verdacht, starke Müdigkeit, ausgefallenen Tag oder Reise erkennen."""
+    st = load_x()
+    if not force and (st.get("stoerung_done") == today() or not (6 <= now_h() < 22)):
+        return
+    rows = fetch_rows(21, ["hrv_status", "hrv_threshholds", "rhr_bpm", "sleep_score_0_100", "Garmin_Training_Readiness", "load_fb_day", "befinden_1_5"])
+    by = {r["date"]: r for r in rows}
+    h = by.get(today())
+    if not h or num(h.get("hrv_status")) is None:
+        return  # Morgenwerte noch nicht da
+    vor = [r for r in rows if r["date"] < today()]
+    befunde = []
+    hrv, rhr = num(h.get("hrv_status")), num(h.get("rhr_bpm"))
+    unten = None
+    try:
+        unten = float(str(h.get("hrv_threshholds") or "").split(";")[0].replace(",", "."))
+    except Exception:
+        pass
+    h7 = [num(r.get("hrv_status")) for r in vor[-7:] if num(r.get("hrv_status")) is not None]
+    r14 = sorted(num(r.get("rhr_bpm")) for r in vor[-14:] if num(r.get("rhr_bpm")) is not None)
+    rmed = r14[len(r14) // 2] if r14 else None
+    hrv_tief = hrv is not None and ((unten is not None and hrv < unten) or (h7 and hrv < 0.85 * sum(h7) / len(h7)))
+    rhr_hoch = rhr is not None and rmed is not None and rhr >= rmed + 5
+    bef = num(h.get("befinden_1_5"))
+    if hrv_tief and rhr_hoch:
+        befunde.append({"art": "infekt", "schwere": "hoch", "text": f"Infekt-Verdacht: HRV {hrv:.0f} unter Normalband/Schnitt, Ruhepuls {rhr:.0f} (Median {rmed:.0f})."})
+    elif bef is not None and bef <= 2 and (hrv_tief or rhr_hoch):
+        befunde.append({"art": "infekt", "schwere": "hoch", "text": f"Befinden {bef:.0f}/5 und auffällige Morgenwerte – Infekt möglich."})
+    tr, sl = num(h.get("Garmin_Training_Readiness")), num(h.get("sleep_score_0_100"))
+    if not befunde and tr is not None and sl is not None and tr <= 35 and sl < 60:
+        befunde.append({"art": "muede", "schwere": "mittel", "text": f"Sehr müde: Trainingsbereitschaft {tr:.0f}, Schlafscore {sl:.0f}."})
+    gestern = (datetime.datetime.now(tz_local).date() - datetime.timedelta(days=1)).isoformat()
+    try:
+        rv = http_get_json(SCRIPT_URL + "?mode=activityReviews&n=5").get("reviews", [])
+        g = next((x for x in rv if x.get("date") == gestern), None)
+        soll = num(g.get("loadSoll")) if g else None
+        ist = num((by.get(gestern) or {}).get("load_fb_day"))
+        if soll is not None and soll >= 60 and (ist is None or ist <= 10):
+            befunde.append({"art": "ausfall", "schwere": "mittel", "text": f"Gestern {soll:.0f} ESS geplant, nicht trainiert."})
+    except Exception as e:
+        log(f"stoerung: Aktivitäten nicht lesbar ({e})")
+    kal = _kalender(7)
+    reise = [d for d, k in sorted(kal.items()) if d > today() and (k.get("reise") or (k.get("belegt_h") or 0) >= 10)]
+    if reise:
+        befunde.append({"art": "reise", "schwere": "niedrig", "text": "Reise/sehr volle Tage: " + ", ".join(d[8:10] + "." + d[5:7] + "." for d in reise)})
+    st["stoerung_done"] = today()
+    save_x(st)
+    if not befunde:
+        return
+    text = "\n".join(b["text"] for b in befunde)
+    save_extra("umplanung", today(), text, {"befunde": befunde, "werte": {"hrv": hrv, "rhr": rhr, "readiness": tr, "schlaf": sl, "befinden": bef}}, "mac-regeln")
+    wichtig = [b for b in befunde if b["schwere"] in ("hoch", "mittel")]
+    if wichtig:
+        notify("Coach Kira", "Störung erkannt: " + wichtig[0]["text"][:80] + " – Rest-Plan im Cockpit anpassen")
+    log(f"stoerung: {len(befunde)} Befund(e) – {', '.join(b['art'] for b in befunde)}")
+
+
+
 def _main() -> None:
     """CLI mit Unterbefehlen für alle Extras."""
     ap = argparse.ArgumentParser(description="Coach Kira Extras")
@@ -1359,6 +1623,10 @@ def _main() -> None:
     tw_p = sub_parsers.add_parser("treffer-woche", help="Wochenbilanz erstellen")
     tw_p.add_argument("--force", action="store_true", help="Montag-Check ignorieren")
 
+    ap_p = sub_parsers.add_parser("autopilot", help="Wochen-Autopilot")
+    ap_p.add_argument("--force", action="store_true")
+    sp_p = sub_parsers.add_parser("stoerung", help="Störungen erkennen")
+    sp_p.add_argument("--force", action="store_true")
     ern_p = sub_parsers.add_parser("ernaehrung", help="Ernährungsplan für morgen")
     ern_p.add_argument("--force", action="store_true", help="Zeitfenster-Check ignorieren")
 
@@ -1420,6 +1688,16 @@ def _main() -> None:
         except Exception as e:
             log(f"extras: FEHLER tick/ernaehrung – {e}")
 
+        try:
+            cmd_stoerung()
+        except Exception as e:
+            log(f"extras: FEHLER tick/stoerung – {e}")
+
+        try:
+            cmd_autopilot()
+        except Exception as e:
+            log(f"extras: FEHLER tick/autopilot – {e}")
+
     elif args.command == "snapshot":
         try:
             cmd_snapshot()
@@ -1443,6 +1721,18 @@ def _main() -> None:
             cmd_ernaehrung(force=args.force)
         except Exception as e:
             log(f"extras: FEHLER ernährung – {e}")
+
+    elif args.command == "autopilot":
+        try:
+            cmd_autopilot(force=args.force)
+        except Exception as e:
+            log(f"extras: FEHLER autopilot – {e}")
+
+    elif args.command == "stoerung":
+        try:
+            cmd_stoerung(force=args.force)
+        except Exception as e:
+            log(f"extras: FEHLER stoerung – {e}")
 
 
 # Alias für backward-compat
