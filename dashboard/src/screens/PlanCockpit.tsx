@@ -29,6 +29,7 @@ import { proxyGeneratePlanBriefing, proxyRunSupervisor, proxySavePlanSimulation 
 import { SupervisorPlanTile } from '../components/SupervisorPlanTile';
 import { AlltagCheckTile, type AlltagSwap } from '../components/AlltagCheckTile';
 import { ErrorBox, Panel, Skeleton } from '../components/UI';
+import { assessMonotony } from '../lib/monotony';
 import {
   Bar,
   CartesianGrid,
@@ -55,6 +56,7 @@ type SimDay = PlanDay & {
   monotony: number;
   kei: number;
   flag: 'OK' | 'WATCH' | 'RISK';
+  flag_why?: string;
   sg_flags: string;
   hrv_status?: number | null;
   hrv_thresholds?: string | null;
@@ -144,15 +146,15 @@ const PLAN_ANCHOR_METRICS = [
  *   =TRIM( IF(hrv_status < (LEFT(hrv_threshholds; ";") - 2); "H "; "") &
  *          IF(Monotony7 > 1,6; "M"; "") )
  * H = HRV alarm (hrv_status more than 2 below the lower threshold band).
- * M = Monotony warning (7-day monotony > 1.6).
+ * M = Monotonie-Regel greift (lib/monotony.ts: Verlauf statt Einzelwert; ersetzt die alte Sheet-Schwelle 1,6).
  */
 function computeSgFlags(input: {
   hrvStatus?: number | null;
   hrvThresholds?: string | null;
-  monotony?: number | null;
+  monoRelevant?: boolean;
 }): string {
   const parts: string[] = [];
-  const { hrvStatus, hrvThresholds, monotony } = input;
+  const { hrvStatus, hrvThresholds, monoRelevant } = input;
   if (
     typeof hrvStatus === 'number' &&
     Number.isFinite(hrvStatus) &&
@@ -165,7 +167,7 @@ function computeSgFlags(input: {
       parts.push('H');
     }
   }
-  if (typeof monotony === 'number' && Number.isFinite(monotony) && monotony > 1.6) {
+  if (monoRelevant) {
     parts.push('M');
   }
   return parts.join(' ');
@@ -297,6 +299,7 @@ function simulate(
   let atl = startAtl;
   let ctl = startCtl;
   const history = ctlHistorySeed.length >= 7 ? ctlHistorySeed.slice(-7) : Array(7).fill(startCtl);
+  const monoSeries: number[] = [];
   return base.map((d, idx) => {
     const load = Math.max(0, loads[idx] ?? 0);
     const hasTimelineAnchor =
@@ -340,13 +343,21 @@ function simulate(
     const manualZone = zones[idx] ?? d.recommended_zone ?? '';
     const manualAe = Number.isFinite(teAe[idx]) ? teAe[idx] : estimateTe(load, manualSport).ae;
     const manualAn = Number.isFinite(teAn[idx]) ? teAn[idx] : estimateTe(load, manualSport).an;
-    const flag: SimDay['flag'] = acwr > 1.35 || monotony > 2.4 ? 'RISK' : acwr > 1.25 || monotony > 2.0 ? 'WATCH' : 'OK';
+    // Monotonie-Regel: Verlauf (fordernde Tage ohne Entlastung, anhaltend hohe Werte) statt Einzelwert
+    const monoLoads = loadHistorySeed.concat(loads.slice(1, idx + 1).map((v) => Math.max(0, v ?? 0)));
+    const ma = assessMonotony({ mono: monotony, loads: monoLoads, monoHistory: monoSeries.slice(-7) });
+    monoSeries.push(monotony);
+    const monoFlag: SimDay['flag'] = ma.cap === 'EASY' && ma.restWithin48h ? 'RISK' : ma.cap ? 'WATCH' : 'OK';
+    const acwrFlag: SimDay['flag'] = acwr > 1.35 ? 'RISK' : acwr > 1.25 ? 'WATCH' : 'OK';
+    const rank = { OK: 0, WATCH: 1, RISK: 2 } as const;
+    const flag: SimDay['flag'] = rank[monoFlag] > rank[acwrFlag] ? monoFlag : acwrFlag;
+    const flagWhy = [acwrFlag !== 'OK' ? `ACWR ${acwr.toFixed(2).replace('.', ',')}` : '', ma.cap ? ma.text : ''].filter(Boolean).join(' · ');
     // SG_Flags: für vergangene/verankerte Tage mit gemessenem HRV wird die Sheet-Formel 1:1 reproduziert;
     // für zukünftige Tage bleibt der H-Anteil leer (kein HRV verfügbar), M kommt aus der simulierten Monotony7.
     const sgFlags = computeSgFlags({
       hrvStatus: d.timeline_hrv_status ?? null,
       hrvThresholds: d.timeline_hrv_thresholds ?? null,
-      monotony,
+      monoRelevant: !!ma.cap,
     });
     return {
       ...d,
@@ -364,6 +375,7 @@ function simulate(
       monotony,
       kei,
       flag,
+      flag_why: flagWhy,
       sg_flags: sgFlags,
       hrv_status: d.timeline_hrv_status ?? null,
       hrv_thresholds: d.timeline_hrv_thresholds ?? null,
@@ -1139,7 +1151,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
                             title={
                               (d.sg_flags.includes('H') ? 'H: HRV-Alarm (hrv_status < unterer Schwellwert − 2)' : '') +
                               (d.sg_flags.includes('H') && d.sg_flags.includes('M') ? ' · ' : '') +
-                              (d.sg_flags.includes('M') ? 'M: Monotony7 > 1,6' : '')
+                              (d.sg_flags.includes('M') ? 'M: Monotonie-Regel greift (fordernde Tage ohne Entlastung bzw. anhaltend hohe Monotonie)' : '')
                             }
                           >
                             {d.sg_flags}
@@ -1149,7 +1161,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
                         )}
                       </td>
                       <td className="px-2 py-3">
-                        <span className={`chip border ${d.flag === 'OK' ? 'border-ampel-gruen/40 bg-ampel-gruen/10 text-green-300' : d.flag === 'WATCH' ? 'border-ampel-gelb/40 bg-ampel-gelb/10 text-yellow-300' : 'border-ampel-rot/40 bg-ampel-rot/10 text-red-300'}`}>
+                        <span title={d.flag_why || 'unauffällig'} className={`chip border ${d.flag === 'OK' ? 'border-ampel-gruen/40 bg-ampel-gruen/10 text-green-300' : d.flag === 'WATCH' ? 'border-ampel-gelb/40 bg-ampel-gelb/10 text-yellow-300' : 'border-ampel-rot/40 bg-ampel-rot/10 text-red-300'}`}>
                           {d.flag}
                         </span>
                       </td>

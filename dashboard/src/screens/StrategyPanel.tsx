@@ -17,6 +17,7 @@ import { Panel } from '../components/UI';
 import { buildDays, demandOf, RECOVERY_FETCH_METRICS, VOTE_LABEL, VOTE_ORDER, localIsoDate } from './RecoveryPanel';
 import { atlStep, ctlStep, windowMean } from '../lib/ctlModel';
 import { assessMonotony, monoTone } from '../lib/monotony';
+import { monotonyPlanViolations } from '../lib/monotony';
 
 // ---------------------------------------------------------------------------
 // Strategische Planung für das Plan Cockpit (alles lokal, deterministisch):
@@ -64,7 +65,7 @@ export function capFromLoad(
   if ((acwr ?? 0) > ACWR_HIGH) { cap = 'EASY'; why = `ACWR ${fmtNum(acwr, 2)} > 1,5`; }
   else if ((acwr ?? 0) > ACWR_WARN) { cap = 'TRAIN'; why = `ACWR ${fmtNum(acwr, 2)} > 1,3`; }
   const ma = assessMonotony({ mono, loads, monoHistory: monoHist });
-  if (ma.cap && order(ma.cap) < order(cap)) { cap = ma.cap; why = ma.text.replace(/ → .*$/, ''); }
+  if (ma.cap && order(ma.cap) < order(cap)) { cap = ma.cap; why = `${ma.text.replace(/ → .*$/, '')} (Stand Vortag)`; }
   return { cap, why };
 }
 const formPct = (atl: number, ctl: number) => (ctl > 0 ? ((ctl - atl) / ctl) * 100 : 0);
@@ -259,7 +260,9 @@ export function StrategyPanel({
 
   // ---------- 1) Hebel ----------
   const lever = useMemo(() => {
-    const maxMono = (rows: PlanRow[]) => { const xs = rows.slice(2).map((r) => r.monotony); return xs.reduce((a, b) => a + b, 0) / Math.max(1, xs.length); };
+    // Monotonie-Regel statt Ø-Monotonie: Verstöße zählen, nicht den Mittelwert drücken
+    const maxMono = (rows: PlanRow[]) =>
+      monotonyPlanViolations(rows.map((r) => ({ label: r.date, load: r.sim_load, mono: r.monotony, locked: r.locked }))).length;
     const conflicts = (rows: PlanRow[]) => planChecks(rows, recGap).filter((c) => c.issues.length).length;
     const base = { mono: maxMono(sim), conf: conflicts(sim) };
     let best: { i: number; mode: 'rest' | 'half'; mono: number; conf: number } | null = null;
@@ -270,7 +273,7 @@ export function StrategyPanel({
         l[i] = mode === 'rest' ? 0 : Math.round(l[i] / 2 / 5) * 5;
         const rows = simulateWith(l);
         const r = { i, mode, mono: maxMono(rows), conf: conflicts(rows) };
-        const score = (x: { mono: number; conf: number }) => x.conf * 10 + x.mono;
+        const score = (x: { mono: number; conf: number }) => x.conf * 10 + x.mono * 5 + (mode === 'half' ? 0 : 0.5);
         if (!best || score(r) < score(best) - 0.01) best = r;
       }
     }
@@ -542,16 +545,18 @@ export function StrategyPanel({
           <div className="mt-2 rounded border border-border px-3 py-2 text-xs flex flex-wrap items-center justify-between gap-2">
             <span>
               <span className="label mr-2">Hebel</span>
-              {lever.best && (lever.best.conf < lever.base.conf || lever.best.mono < lever.base.mono - 0.05) ? (
+              {lever.best && (lever.best.conf < lever.base.conf || lever.best.mono < lever.base.mono) ? (
                 <>
                   {lever.best.mode === 'rest' ? 'Ruhetag' : 'Last halbieren'} am <b>{wdOf(sim[lever.best.i].date)} {fmtDateShort(sim[lever.best.i].date).slice(0, 6)}</b> (statt {fmtNum(sim[lever.best.i].sim_load)} ESS):
-                  Konflikte {lever.base.conf} → <b>{lever.best.conf}</b>, Ø Monotonie {fmtNum(lever.base.mono, 2)} → <b>{fmtNum(lever.best.mono, 2)}</b>.
+                  Konflikte {lever.base.conf} → <b>{lever.best.conf}</b>, Verstöße gegen die Monotonie-Regel {lever.base.mono} → <b>{lever.best.mono}</b>.
                 </>
               ) : (
-                'Kein einzelner Eingriff verbessert den Plan spürbar.'
+                lever.base.conf === 0 && lever.base.mono === 0
+                  ? 'Keine Konflikte und keine Verstöße gegen die Monotonie-Regel – ein einzelner hoher Monotonie-Wert ist kein Grund zum Eingreifen.'
+                  : 'Kein einzelner Eingriff verbessert den Plan spürbar.'
               )}
             </span>
-            {lever.best && (lever.best.conf < lever.base.conf || lever.best.mono < lever.base.mono - 0.05) && (
+            {lever.best && (lever.best.conf < lever.base.conf || lever.best.mono < lever.base.mono) && (
               <button className="btn btn-primary text-xs px-2 py-1" onClick={applyLever}>Übernehmen</button>
             )}
           </div>
