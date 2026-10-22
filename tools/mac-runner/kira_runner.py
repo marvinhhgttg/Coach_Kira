@@ -603,6 +603,27 @@ def _supervisor_once() -> str:
         else:
             log(f"  Supervisor: {model} {time.time() - t0:.0f} s")
         text = json_clean(text)  # Codeblock/Vortext entfernen; muss gültiges JSON sein, sonst Exception
+        fehlt = plan_luecken(text)
+        if fehlt:
+            log(f"  Supervisor: Antwort unvollständig ({fehlt}) – frage einmal nach")
+            nach = messages + [
+                {"role": "assistant", "content": text},
+                {"role": "user", "content": (
+                    "Deine Antwort ist unvollständig. Jeder Tag in 'empfohlener_plan' braucht ALLE Felder: datum, tag, "
+                    "original_load_ess, empfohlener_load_ess, empfohlene_zone, beispiel_training_1, beispiel_training_2, "
+                    "prognostizierte_auswirkung, wetterempfehlung. Gib das vollständige JSON erneut aus, nur JSON."
+                )},
+            ]
+            t1 = time.time()
+            text2, _ = ollama_chat(model, nach, 32768, fmt=job.get("schema") or "json", timeout=1800)
+            try:
+                text2 = json_clean(text2)
+                if len(plan_luecken(text2)) < len(fehlt):
+                    text = text2
+                log(f"  Supervisor: Nachfrage {time.time() - t1:.0f} s, danach fehlt: {plan_luecken(text) or 'nichts'}")
+            except Exception as e2:
+                log(f"  Supervisor: Nachfrage unbrauchbar ({e2}) – nehme erste Antwort")
+        text = plan_auffuellen(text)
         saved = http_post_json(
             SCRIPT_URL + "?mode=saveSupervisor",
             {"kind": "saveSupervisor", "id": job["id"], "content": text, "model": model},
@@ -775,6 +796,37 @@ def run_briefing(type_: str) -> float:
 # ---------------------------------------------------------------------------
 # Benachrichtigung
 # ---------------------------------------------------------------------------
+
+
+_WT = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+
+
+def plan_luecken(text: str) -> str:
+    """Welche Pflichtfelder fehlen im empfohlener_plan? Leerer String = vollständig."""
+    try:
+        plan = json.loads(text).get("empfohlener_plan") or []
+    except Exception:
+        return "kein JSON"
+    if not plan:
+        return "empfohlener_plan fehlt"
+    need = ["empfohlener_load_ess", "empfohlene_zone", "beispiel_training_1", "prognostizierte_auswirkung"]
+    miss = sorted({k for d in plan for k in need if not str(d.get(k, "")).strip()})
+    return ", ".join(miss)
+
+
+def plan_auffuellen(text: str) -> str:
+    """Wochentag aus dem Datum ergänzen (deterministisch)."""
+    try:
+        d = json.loads(text)
+    except Exception:
+        return text
+    for day in d.get("empfohlener_plan") or []:
+        if not str(day.get("tag", "")).strip():
+            try:
+                day["tag"] = _WT[datetime.strptime(str(day.get("datum"))[:10], "%Y-%m-%d").weekday()]
+            except Exception:
+                pass
+    return json.dumps(d, ensure_ascii=False)
 
 
 def _as_str(s: str) -> str:
