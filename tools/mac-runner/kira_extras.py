@@ -157,6 +157,8 @@ def _fmt(v: float | None) -> str:
     """Zahl mit Komma formatieren (1 Dezimalstelle), None als '–'."""
     if v is None:
         return "–"
+    if not isinstance(v, (int, float)):
+        return str(v) or "–"
     return f"{v:.1f}".replace(".", ",")
 
 
@@ -262,7 +264,7 @@ def plausi_check(row: dict, hist: list[dict]) -> list[dict]:
 
     # --- hrv_threshholds ------------------------------------------------------
     hrv_t = row.get("hrv_threshholds")
-    if hrv_t is not None:
+    if hrv_t is not None and str(hrv_t).strip() != "":
         s = str(hrv_t).strip()
         parts = [p.strip() for p in s.split(";")] if ";" in s else []
         valid = False
@@ -1466,6 +1468,19 @@ def cmd_autopilot(force: bool = False) -> None:
             hist.append(float(plan_all[d].get("load") or 0))
         else:
             hist.append(0.0)
+    # Tagesobergrenze aus der eigenen Historie (95. Perzentil der Trainingstage, letzte 360 Tage)
+    try:
+        lang = sorted(v for v in (num(r.get("load_fb_day")) for r in fetch_rows(360, ["load_fb_day"])) if v and v > 0)
+        spitze = round(lang[int(len(lang) * 0.95)]) if len(lang) >= 30 else 240
+    except Exception:
+        spitze = 240
+
+    def tag_max(alt: int) -> int:
+        """Höchstens +40 % je Tag und nie über die eigene Spitze (außer der Plan lag schon darüber)."""
+        if alt <= 0:
+            return round(spitze * 0.7)
+        return max(alt, min(spitze, round(alt * 1.4)))
+
     kal, wet = _kalender(), _wetter()
     ziel_ess, saison_txt, ziele_txt = None, "", []
     try:
@@ -1489,7 +1504,8 @@ def cmd_autopilot(force: bool = False) -> None:
         return f"{p['datum']} {p['tag']} | Plan: {p['last']} ESS {p['sport']} {p['zone']}{' FEST' if p['fest'] else ''} | Kalender: {kt} | Wetter: {wt}"
 
     regeln = ("Regeln: FEST-Tage nie ändern. "
-              + (f"Wochenlast höchstens 10 % neben {ziel_ess} ESS. " if ziel_ess else "Wochenlast etwa beibehalten (±10 %). ")
+              + (f"Wochenlast höchstens 10 % über {ziel_ess} ESS, gern bis 15 % darunter. " if ziel_ess else "Wochenlast etwa beibehalten (15 % weniger ist in Ordnung, höchstens 10 % mehr). ")
+              + f"Kein Tag über {spitze} ESS und kein Tag mehr als 40 % über seinem bisherigen Plan. Gestrichene Last nicht auf einen Tag packen: auf zwei bis drei Tage verteilen oder die Wochenlast senken. "
               + "Monotonie-Regel: höchstens 4 Tage in Folge ohne deutliche Entlastung (<= 40 ESS); harte Tage klar hart, lockere wirklich locker. "
               "Lange Einheiten auf Tage mit wenig Terminen und gutem Wetter. Rad draußen nicht bei Regen > 5 mm oder Wind > 40 km/h. Nur nötige Änderungen.")
     beispiel = '{"tage":[{"datum":"' + woche[0] + '","last":130,"sport":"Bike","zone":"Z2","grund":"kurz"}],"fazit":"1-2 Sätze"}'
@@ -1510,7 +1526,7 @@ def cmd_autopilot(force: bool = False) -> None:
                 neu.append(dict(p, grund=""))
                 continue
             try:
-                last = max(0, min(400, round(float(x.get("last", p["last"])))))
+                last = max(0, min(tag_max(p["last"]), round(float(x.get("last", p["last"])))))
             except Exception:
                 last = p["last"]
             neu.append(dict(p, last=last, sport=str(x.get("sport") or p["sport"]), zone=str(x.get("zone") or p["zone"]), grund=str(x.get("grund") or "")))
