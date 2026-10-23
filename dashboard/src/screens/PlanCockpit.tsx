@@ -31,6 +31,7 @@ import { SupervisorPlanTile } from '../components/SupervisorPlanTile';
 import { AlltagCheckTile, type AlltagSwap } from '../components/AlltagCheckTile';
 import { AutopilotTile, type AutopilotTag } from '../components/AutopilotTile';
 import { DisruptionTile } from '../components/DisruptionTile';
+import { VorausblickTile } from '../components/VorausblickTile';
 import { WhatIfTile } from '../components/WhatIfTile';
 import { GoalPlannerTile } from '../components/GoalPlannerTile';
 import { SeasonTile } from '../components/SeasonTile';
@@ -1090,6 +1091,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
               onRefresh={onRunSupervisor}
             />
 
+                <VorausblickTile />
                 <DisruptionTile sim={sim} loads={loads} sports={sports} zones={zones} locks={locks} simulateWith={simulateWith}
                   onApply={(l, sp, z) => applyPlanValues(l, sp, z, 'Angepasster Rest-Plan')} />
                 <AlltagCheckTile

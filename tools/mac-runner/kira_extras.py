@@ -496,7 +496,7 @@ def cmd_selbsttest(force: bool = False) -> None:
 
     # Nur einmal pro Tag (außer force)
     if not force and st.get("selbsttest_done") == today():
-        log("selbsttest: bereits heute ausgeführt – übersprungen")
+        pass
         return
 
     if not ollama_ready():
@@ -1064,7 +1064,7 @@ def cmd_treffer_woche(force: bool = False) -> None:
     if not force:
         wday = datetime.datetime.now(tz_local).weekday()  # 0=Mo
         if wday != 0:
-            log("treffer_woche: kein Montag – übersprungen")
+            pass
             return
         if st.get("woche_done") == heute:
             log("treffer_woche: bereits heute ausgeführt – übersprungen")
@@ -1172,10 +1172,10 @@ def cmd_ernaehrung(force: bool = False) -> None:
     if not force:
         nh = now_h()
         if not (17 <= nh < 23):
-            log(f"ernaehrung: Zeitfenster {nh}h nicht erfüllt (17-23) – übersprungen")
+            pass  # außerhalb 17–23 Uhr still
             return
         if st.get("ern_done") == heute:
-            log(f"ernaehrung: bereits heute ausgeführt – übersprungen")
+            pass
             return
 
     morgen = (datetime.datetime.now(tz_local) + datetime.timedelta(days=1)).strftime("%Y-%m-%d")
@@ -1622,6 +1622,475 @@ def cmd_stoerung(force: bool = False) -> None:
 
 
 
+# ---------------------------------------------------------------------------
+# Vorausblick, Tourfenster, Frühwarnung (morgens vor den Briefings, abends erneut)
+# ---------------------------------------------------------------------------
+
+_ATL = (-8.819849, 0.83645661, 1.24059231)
+_CTL = (-3.95042, 0.97283824, 0.2336734, 0.7, 7.1)
+
+
+def _atl_step(atl: float, load: float) -> float:
+    return _ATL[0] + _ATL[1] * atl + _ATL[2] * load
+
+
+def _ctl_step(ctl: float, load: float, mean28: float) -> float:
+    a, b, c, g, k = _CTL
+    return g * (a + b * ctl + c * load) + (1 - g) * k * mean28
+
+
+def _mean(xs: list) -> float | None:
+    xs = [float(x) for x in xs if x is not None]
+    return sum(xs) / len(xs) if xs else None
+
+
+def _slope_per_week(ys: list) -> float | None:
+    pts = [(i, float(y)) for i, y in enumerate(ys) if y is not None]
+    if len(pts) < 7:
+        return None
+    mx = sum(p[0] for p in pts) / len(pts)
+    my = sum(p[1] for p in pts) / len(pts)
+    den = sum((p[0] - mx) ** 2 for p in pts) or 1.0
+    return 7.0 * sum((p[0] - mx) * (p[1] - my) for p in pts) / den
+
+
+# --- Bereitschafts-Modell (wie lib/readinessModel.ts, Ridge-Regression) -------
+
+def _feats(load, prev, mean7, acwr, mono, start):
+    return [load, prev, mean7, acwr, min(mono, 4.0), start, 1.0 if load <= 20 else 0.0]
+
+
+def _solve(A, b):
+    n = len(b)
+    M = [row[:] + [b[i]] for i, row in enumerate(A)]
+    for c in range(n):
+        p = max(range(c, n), key=lambda r: abs(M[r][c]))
+        M[c], M[p] = M[p], M[c]
+        d = M[c][c] or 1e-9
+        M[c] = [v / d for v in M[c]]
+        for r in range(n):
+            if r != c:
+                f_ = M[r][c]
+                M[r] = [M[r][k] - f_ * M[c][k] for k in range(n + 1)]
+    return [M[r][n] for r in range(n)]
+
+
+def _fit(X, y, lam=3.0):
+    p = len(X[0])
+    mean = [sum(r[j] for r in X) / len(X) for j in range(p)]
+    sd = [((sum((r[j] - mean[j]) ** 2 for r in X) / len(X)) ** 0.5) or 1.0 for j in range(p)]
+    Z = [[1.0] + [(r[j] - mean[j]) / sd[j] for j in range(p)] for r in X]
+    k = p + 1
+    A = [[sum(z[i] * z[j] for z in Z) + (lam if i == j and i > 0 else 0.0) for j in range(k)] for i in range(k)]
+    bb = [sum(z[i] * y[t] for t, z in enumerate(Z)) for i in range(k)]
+    return {"w": _solve(A, bb), "mean": mean, "sd": sd}
+
+
+def _pred(m, x):
+    return m["w"][0] + sum(m["w"][j + 1] * ((v - m["mean"][j]) / m["sd"][j]) for j, v in enumerate(x))
+
+
+def _bereitschaft_modell(hist: list) -> dict | None:
+    """hist: [{'date','load','readiness','acwr','mono'}] chronologisch."""
+    X, y, naive = [], [], []
+    for i in range(7, len(hist) - 1):
+        d, n = hist[i], hist[i + 1]
+        if n["readiness"] is None or d["readiness"] is None or d["load"] is None:
+            continue
+        prev = hist[i - 1]["load"] or 0.0
+        w7 = [r["load"] or 0.0 for r in hist[i - 6:i + 1]]
+        X.append(_feats(d["load"], prev, sum(w7) / 7, d["acwr"] or 1.0, d["mono"] or 1.5, d["readiness"]))
+        y.append(n["readiness"])
+        naive.append(d["readiness"])
+    if len(X) < 30:
+        return None
+    cut = int(len(X) * 0.8)
+    mt = _fit(X[:cut], y[:cut])
+    err = [y[cut + i] - _pred(mt, X[cut + i]) for i in range(len(X) - cut)]
+    mae = sum(abs(e) for e in err) / len(err)
+    base = sum(abs(y[cut + i] - naive[cut + i]) for i in range(len(err))) / len(err)
+    m = _fit(X, y)
+    m.update({"n": len(X), "mae": mae, "naiv": base})
+    return m
+
+
+def _wetter_tage(tage: int = 10) -> dict:
+    try:
+        w = http_get_json(
+            "https://api.open-meteo.com/v1/forecast?latitude=48.31&longitude=10.12"
+            "&daily=temperature_2m_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,sunshine_duration"
+            f"&timezone=Europe%2FBerlin&forecast_days={tage}"
+        )["daily"]
+        out = {}
+        for i, d in enumerate(w["time"]):
+            out[d] = {"tmax": w["temperature_2m_max"][i], "regen": w["precipitation_sum"][i],
+                      "regen_p": (w.get("precipitation_probability_max") or [None] * 99)[i],
+                      "wind": w["wind_speed_10m_max"][i],
+                      "sonne_h": round(((w.get("sunshine_duration") or [0] * 99)[i] or 0) / 3600, 1)}
+        return out
+    except Exception as e:
+        log(f"vorausblick: Wetter nicht verfügbar ({e})")
+        return {}
+
+
+def _dm(d: str) -> str:
+    dt = datetime.date.fromisoformat(d)
+    return f"{_WTAG[dt.weekday()]} {dt.day:02d}.{dt.month:02d}."
+
+
+def _de(v: float, nd: int = 0) -> str:
+    return (f"{v:.{nd}f}").replace(".", ",")
+
+
+def vorausblick_rechnen() -> dict:
+    """Alles regelbasiert/statistisch – das Sprachmodell formuliert danach nur den Text."""
+    heute = today()
+    metr = ["load_fb_day", "Garmin_Training_Readiness", "hrv_status", "hrv_threshholds", "fbACWR_obs", "Monotony7",
+            "rhr_bpm", "sleep_hours", "sleep_score_0_100"]
+    rows = sorted(fetch_rows(200, metr), key=lambda r: r["date"])
+    vor = [r for r in rows if r["date"] < heute]
+    h = next((r for r in rows if r["date"] == heute), {})
+    sim = http_get_json(SCRIPT_URL + "?mode=planSimulationJson")
+    base = sim.get("base") or {}
+    plan = [d for d in (sim.get("days") or []) if d.get("date", "") >= heute][:14]
+    if not plan:
+        raise RuntimeError("planSimulationJson ohne Plantage")
+
+    # --- Simulation ATL/CTL/ACWR/Monotonie (wie Plan-Cockpit) + Verlängerung auf 28 Tage
+    hist_loads = [num(r.get("load_fb_day")) or 0.0 for r in vor][-60:]
+    loads = [float(d.get("load") or 0) for d in plan]
+    saison_wo = None
+    try:
+        sx = http_get_json(SCRIPT_URL + "?mode=extras&typ=saison&n=1").get("items") or []
+        saison_wo = (sx[0].get("data") or {}).get("wochen") if sx else None
+    except Exception:
+        pass
+    datum0 = datetime.date.fromisoformat(plan[0]["date"])
+    ext_dates = [(datum0 + datetime.timedelta(days=i)).isoformat() for i in range(29)]
+    ext_loads = loads[:]
+    fallback = (sum(loads[1:]) / max(1, len(loads) - 1)) if len(loads) > 1 else 120.0
+    for i in range(len(loads), 29):
+        d = ext_dates[i]
+        wl = None
+        for w in saison_wo or []:
+            s = w.get("start", "")
+            if s and s <= d < (datetime.date.fromisoformat(s) + datetime.timedelta(days=7)).isoformat():
+                wl = float(w.get("ziel_ess") or 0) / 7
+        ext_loads.append(wl if wl else fallback)
+    atl, ctl = float(base.get("atl") or 0), float(base.get("ctl") or 0)
+    serie = hist_loads[:]
+    tage = []
+    for i, l in enumerate(ext_loads):
+        serie.append(l)
+        if i > 0:
+            atl = _atl_step(atl, l)
+            ctl = _ctl_step(ctl, l, sum(serie[-28:]) / len(serie[-28:]))
+        acwr = atl / ctl if ctl > 0 else 0.0
+        mono = mono7(serie)
+        tage.append({"datum": ext_dates[i], "last": round(l), "atl": round(atl), "ctl": round(ctl), "acwr": round(acwr, 2),
+                     "mono": round(min(mono, 9.99), 2)})
+    for i, d in enumerate(plan):
+        tage[i].update({"sport": d.get("sport") or "Off", "zone": d.get("zone") or "Off", "fest": bool(d.get("locked")), "tag": _dm(d["date"])})
+
+    # --- Bereitschafts-Prognose (Morgenwert)
+    hm = [{"date": r["date"], "load": num(r.get("load_fb_day")), "readiness": num(r.get("Garmin_Training_Readiness")),
+           "acwr": num(r.get("fbACWR_obs")), "mono": num(r.get("Monotony7"))} for r in vor]
+    modell = _bereitschaft_modell(hm)
+    bereit = {}
+    r_heute = num(h.get("Garmin_Training_Readiness"))
+    if r_heute is not None:
+        bereit[heute] = round(r_heute)
+    if modell:
+        r = r_heute if r_heute is not None else next((x["readiness"] for x in reversed(hm) if x["readiness"] is not None), 60.0)
+        ls = hist_loads[:]
+        for i in range(min(len(plan), 13)):
+            ls.append(tage[i]["last"])
+            prev = ls[-2] if len(ls) > 1 else 0.0
+            m7 = sum(ls[-7:]) / len(ls[-7:])
+            rn = max(1.0, min(100.0, _pred(modell, _feats(tage[i]["last"], prev, m7, tage[i]["acwr"], tage[i]["mono"], r))))
+            bereit[tage[i + 1]["datum"]] = round(rn)
+            r = rn
+    for t in tage:
+        if t["datum"] in bereit:
+            t["bereitschaft"] = bereit[t["datum"]]
+
+    # --- Monotonie-Hinweise im Plan
+    mono_w = mono_verstoesse(hist_loads[-28:], [{"datum": t["datum"], "last": t["last"], "fest": t.get("fest")} for t in tage[:len(plan)]])
+    mono_daten = {w[:10] for w in mono_w}
+    ref = ref_load(hist_loads[-28:])
+
+    # --- Kalender + Wetter
+    kal = _kalender(11)
+    wet = _wetter_tage(10)
+
+    def kal_score(k: dict | None, d: str) -> tuple[float, str]:
+        if not k:
+            return 0.7, "Kalender unbekannt"
+        if k.get("reise"):
+            return 0.1, "Reise"
+        bh = float(k.get("belegt_h") or 0)
+        wochenende = datetime.date.fromisoformat(d).weekday() >= 5
+        if k.get("frei") or bh <= 1:
+            s, t = 1.0, "frei"
+        elif bh <= 3:
+            s, t = 0.8, f"{_de(bh)} h belegt"
+        elif bh <= 5:
+            s, t = 0.55, f"{_de(bh)} h belegt"
+        else:
+            s, t = 0.25, f"{_de(bh)} h belegt"
+        if wochenende and bh <= 3:
+            s = min(1.0, s + 0.1)
+        return s, t
+
+    def wetter_score(w: dict | None) -> tuple[float, str]:
+        if not w:
+            return 0.6, "Wetter unbekannt"
+        rg, wd, tm = float(w.get("regen") or 0), float(w.get("wind") or 0), float(w.get("tmax") or 0)
+        s = (1.0 if rg <= 1 else 0.6 if rg <= 4 else 0.2) * (1.0 if wd <= 25 else 0.7 if wd <= 40 else 0.3) * (1.0 if 5 <= tm <= 26 else 0.75)
+        return s, f"{_de(tm)}°, {_de(rg, 1)} mm, Wind {_de(wd)} km/h"
+
+    # --- Bester Qualitätstag (nächste 7 Tage)
+    qual = None
+    for i in range(1, min(8, len(plan))):
+        t = tage[i]
+        b = t.get("bereitschaft")
+        if b is None or b < 55 or t["acwr"] >= 1.3 or t["datum"] in mono_daten or (t.get("fest") and t["last"] <= 0):
+            continue
+        ks, kt = kal_score(kal.get(t["datum"]), t["datum"])
+        if ks < 0.5:
+            continue
+        vortag = tage[i - 1]["last"]
+        score = b + (5 if vortag <= max(60.0, 0.7 * ref) else -5) + 10 * ks
+        if not qual or score > qual["score"]:
+            qual = {"datum": t["datum"], "tag": t["tag"], "score": round(score), "bereitschaft": b,
+                    "grund": f"Bereitschaft ~{b}, Vortag {'locker' if vortag <= max(60.0, 0.7 * ref) else 'fordernd'} ({vortag} ESS), {kt}, ACWR {_de(t['acwr'], 2)}"}
+
+    # --- Tourfenster (nächste 9 Tage)
+    fenster = []
+    for i in range(1, min(10, len(tage))):
+        t = tage[i]
+        d = t["datum"]
+        ws, wt = wetter_score(wet.get(d))
+        ks, kt = kal_score(kal.get(d), d)
+        b = t.get("bereitschaft")
+        bs = 0.7 if b is None else (1.0 if b >= 65 else 0.75 if b >= 50 else 0.4)
+        ps = 1.0
+        if t.get("fest") and t["last"] <= 0:
+            ps = 0.4
+        if d in mono_daten:
+            ps = min(ps, 0.6)
+        if tage[i - 1]["last"] > 1.3 * max(ref, 1):
+            ps = min(ps, 0.8)
+        score = round(100 * (0.35 * ws + 0.3 * ks + 0.25 * bs + 0.1 * ps))
+        if ks <= 0.1:
+            score = min(score, 40)  # Reisetag
+        elif ks < 0.5:
+            score = min(score, 50)  # zu voller Tag für eine lange Tour
+        fenster.append({"datum": d, "tag": _dm(d), "score": score, "wetter": wt, "kalender": kt,
+                        "bereitschaft": b, "plan": f"{t['last']} ESS {t.get('sport', '')} {t.get('zone', '')}".strip()})
+    fenster.sort(key=lambda x: (-x["score"], x["datum"]))
+    top = [x for x in fenster if x["score"] >= 65][:3]
+
+    # --- Frühwarnung (Trends der letzten 2–5 Wochen)
+    def col(k, rs):
+        return [num(r.get(k)) for r in rs]
+    r_all = vor + ([h] if h else [])
+    letzte7, basis = r_all[-7:], r_all[-35:-7]
+    sig = []
+
+    def add(name, schwere, text, art):
+        sig.append({"name": name, "schwere": schwere, "text": text, "art": art})
+
+    hv7, hvb = _mean(col("hrv_status", letzte7)), _mean(col("hrv_status", basis))
+    if hv7 and hvb:
+        pct = (hv7 / hvb - 1) * 100
+        if pct <= -12:
+            add("HRV", "orange", f"HRV 7 Tage Ø {_de(hv7)} ms, {_de(pct)} % unter deinem 4-Wochen-Schnitt", "koerper")
+        elif pct <= -7:
+            add("HRV", "gelb", f"HRV 7 Tage Ø {_de(hv7)} ms, {_de(pct)} % unter deinem 4-Wochen-Schnitt", "koerper")
+        else:
+            sl = _slope_per_week(col("hrv_status", r_all[-14:]))
+            if sl is not None and sl <= -3:
+                add("HRV-Trend", "gelb", f"HRV fällt seit 2 Wochen um {_de(-sl, 1)} ms pro Woche", "koerper")
+    rh7, rhb = _mean(col("rhr_bpm", letzte7)), _mean(col("rhr_bpm", basis))
+    if rh7 and rhb:
+        dlt = rh7 - rhb
+        if dlt >= 4:
+            add("Ruhepuls", "orange", f"Ruhepuls 7 Tage Ø {_de(rh7)} – {_de(dlt, 1)} Schläge über deinem Schnitt", "koerper")
+        elif dlt >= 2:
+            add("Ruhepuls", "gelb", f"Ruhepuls 7 Tage Ø {_de(rh7)} – {_de(dlt, 1)} Schläge über deinem Schnitt", "koerper")
+    sh = [x for x in col("sleep_hours", letzte7) if x is not None]
+    if len(sh) >= 5:
+        schuld = sum(max(0.0, 7.5 - x) for x in sh)
+        if schuld >= 7:
+            add("Schlafschuld", "orange", f"Schlafschuld {_de(schuld, 1)} h in 7 Tagen (Ziel 7,5 h/Nacht)", "koerper")
+        elif schuld >= 4:
+            add("Schlafschuld", "gelb", f"Schlafschuld {_de(schuld, 1)} h in 7 Tagen (Ziel 7,5 h/Nacht)", "koerper")
+    ss7 = _mean(col("sleep_score_0_100", letzte7))
+    if ss7 is not None and ss7 < 70:
+        add("Schlafqualität", "gelb", f"Schlafscore 7 Tage Ø {_de(ss7)}", "koerper")
+    rd7, rdb = _mean(col("Garmin_Training_Readiness", letzte7)), _mean(col("Garmin_Training_Readiness", basis))
+    if rd7 is not None and rdb is not None:
+        dlt = rd7 - rdb
+        if dlt <= -18:
+            add("Bereitschaft", "orange", f"Trainingsbereitschaft 7 Tage Ø {_de(rd7)}, {_de(-dlt)} Punkte unter Schnitt", "koerper")
+        elif dlt <= -10:
+            add("Bereitschaft", "gelb", f"Trainingsbereitschaft 7 Tage Ø {_de(rd7)}, {_de(-dlt)} Punkte unter Schnitt", "koerper")
+    a0 = tage[0]["acwr"]
+    if a0 > 1.5:
+        add("ACWR", "orange", f"ACWR {_de(a0, 2)} – akute Last deutlich über der Grundlage", "last")
+    elif a0 > 1.3:
+        add("ACWR", "gelb", f"ACWR {_de(a0, 2)} – akute Last über der Grundlage", "last")
+    amax = max(tage[1:len(plan)], key=lambda t: t["acwr"]) if len(plan) > 1 else None
+    if amax and amax["acwr"] > 1.35 and a0 <= 1.3:
+        add("ACWR geplant", "gelb", f"Plan führt zu ACWR {_de(amax['acwr'], 2)} am {_dm(amax['datum'])}", "last")
+    # Monotonie-Verlauf (tatsächliche Tage)
+    mono_seq = [mono7(hist_loads[:k]) for k in range(max(7, len(hist_loads) - 6), len(hist_loads) + 1)]
+    ueber2 = 0
+    for m in reversed(mono_seq):
+        if m > 2.0:
+            ueber2 += 1
+        else:
+            break
+    if mono_seq and mono_seq[-1] > 2.5 and ueber2 >= 2:
+        add("Monotonie", "orange", f"Monotonie {_de(mono_seq[-1], 2)}, seit {ueber2} Tagen über 2,0", "last")
+    elif ueber2 >= 3:
+        add("Monotonie", "gelb", f"Monotonie seit {ueber2} Tagen über 2,0", "last")
+    # Geplante Wochenlast (nächste 7 Tage) vs. Schnitt der letzten 4 Wochen – Monotonie zählt separat
+    if len(hist_loads) >= 28 and len(plan) >= 8:
+        wo_schnitt = sum(hist_loads[-28:]) / 4
+        wo_plan = sum(t["last"] for t in tage[1:8])
+        if wo_schnitt > 0:
+            plus = (wo_plan / wo_schnitt - 1) * 100
+            if plus >= 45:
+                add("Wochenlast geplant", "orange", f"Nächste 7 Tage {_de(wo_plan)} ESS – {_de(plus)} % über deinem 4-Wochen-Schnitt", "last")
+            elif plus >= 25:
+                add("Wochenlast geplant", "gelb", f"Nächste 7 Tage {_de(wo_plan)} ESS – {_de(plus)} % über deinem 4-Wochen-Schnitt", "last")
+    if mono_w:
+        add("Monotonie-Regel", "gelb", f"{len(mono_w)} Hinweis(e) im Plan, zuerst {_mono_txt(mono_w[0])}", "last")
+    kor = [s for s in sig if s["art"] == "koerper"]
+    las = [s for s in sig if s["art"] == "last"]
+    orange_k = [s for s in kor if s["schwere"] == "orange"]
+    orange_l = [s for s in las if s["schwere"] == "orange"]
+    if len(orange_k) >= 2 or (orange_k and orange_l):
+        stufe = "rot"
+    elif orange_k or orange_l or len(sig) >= 3:
+        stufe = "orange"
+    elif sig:
+        stufe = "gelb"
+    else:
+        stufe = "gruen"
+    if kor and las:
+        prog = "Körperwerte und Last zeigen in dieselbe Richtung: Bleibt der Plan so, droht in 5–7 Tagen Überlastung – Entlastungstag früh einplanen."
+    elif kor:
+        prog = "Der Körper zeigt erste Ermüdung, die Last ist moderat – Qualität nur bei guten Morgenwerten, sonst locker."
+    elif las:
+        prog = "Der Plan braucht mehr Entlastung, die Körperwerte sind noch stabil – Entlastungstag einplanen."
+    else:
+        prog = "Keine Frühwarnzeichen in den letzten Wochen."
+
+    i7, i14 = min(7, len(tage) - 1), min(14, len(tage) - 1)
+    c0, c28 = tage[0]["ctl"], tage[-1]["ctl"]
+    trend = "steigt" if c28 > c0 * 1.03 else "sinkt" if c28 < c0 * 0.97 else "stabil"
+    return {
+        "erstellt": datetime.datetime.now(tz_local).isoformat(timespec="minutes"),
+        "vorausblick": {
+            "ctl_heute": c0, "ctl_7": tage[i7]["ctl"], "ctl_14": tage[i14]["ctl"], "ctl_28": c28, "trend": trend,
+            "basis_28": "Saisonrahmen" if saison_wo else "Ø Plan",
+            "acwr_max": {"wert": amax["acwr"], "datum": amax["datum"]} if amax else None,
+            "mono_hinweise": mono_w, "qualitaetstag": qual, "tage": tage[:len(plan)],
+            "modell": {"n": modell["n"], "mae": round(modell["mae"], 1), "naiv": round(modell["naiv"], 1)} if modell else None,
+        },
+        "tourfenster": top,
+        "tourfenster_alle": fenster,
+        "fruehwarnung": {"stufe": stufe, "signale": sig, "prognose": prog},
+    }
+
+
+def _mono_txt(x: str) -> str:
+    """'2026-10-28: …' → 'Mi 28.10.: …'"""
+    try:
+        return _dm(x[:10]) + x[10:]
+    except Exception:
+        return x
+
+
+def _vorausblick_block(d: dict) -> str:
+    v, fw = d["vorausblick"], d["fruehwarnung"]
+    z = [f"**VORAUSBLICK (vom Mac berechnet, {d['erstellt'][11:16]} Uhr):**",
+         f"- Fitness (CTL): heute {v['ctl_heute']} → 7 Tage {v['ctl_7']} → 14 Tage {v['ctl_14']} → 28 Tage {v['ctl_28']} ({v['trend']}; ab Tag 15 {v['basis_28']})."]
+    if v.get("acwr_max"):
+        z.append(f"- Höchster ACWR im Plan: {_de(v['acwr_max']['wert'], 2)} am {_dm(v['acwr_max']['datum'])}")
+    br = [f"{t['tag']} {t['bereitschaft']}" for t in v["tage"][1:8] if t.get("bereitschaft") is not None]
+    if br:
+        z.append("- Bereitschafts-Prognose (Morgenwert): " + ", ".join(br) + (f" (Fehler ±{_de(v['modell']['mae'])})" if v.get("modell") else "") + ".")
+    if v.get("qualitaetstag"):
+        q = v["qualitaetstag"]
+        z.append(f"- Bester Tag für eine Qualitätseinheit: {q['tag']} – {q['grund']}.")
+    if d["tourfenster"]:
+        z.append("- Tourfenster: " + "; ".join(f"{x['tag']} (Eignung {x['score']}/100: {x['wetter']}, {x['kalender']})" for x in d["tourfenster"]) + ".")
+    else:
+        z.append("- Tourfenster: in den nächsten 9 Tagen kein gutes Fenster (Wetter/Kalender/Bereitschaft).")
+    if v["mono_hinweise"]:
+        z.append("- Monotonie-Regel im Plan: " + "; ".join(_mono_txt(x) for x in v["mono_hinweise"][:3]) + ".")
+    z.append(f"- Frühwarnung: {fw['stufe'].upper()}" + (" – " + "; ".join(s["text"] for s in fw["signale"][:4]) if fw["signale"] else "") + f". {fw['prognose']}")
+    z.append("Nutze diese Zukunftssicht: Nenne kurz die nächste Chance (Qualitätstag oder Tourfenster) und reagiere auf die Frühwarnung, ohne die Monotonie- und ACWR-Regeln zu verletzen.")
+    return "\n".join(z)
+
+
+def cmd_vorausblick(force: bool = False) -> None:
+    """Morgens (sobald die Morgenwerte da sind) und ab 17 Uhr ein zweites Mal."""
+    st = load_x()
+    jetzt = datetime.datetime.now(tz_local)
+    slot = "abend" if jetzt.hour >= 17 else "morgen"
+    key = f"{today()}:{slot}"
+    if not force and (st.get("vorausblick_done") == key or not (5 <= jetzt.hour < 23)):
+        return
+    if slot == "morgen" and not force:
+        r0 = {r["date"]: r for r in fetch_rows(3, ["Garmin_Training_Readiness"])}.get(today()) or {}
+        if num(r0.get("Garmin_Training_Readiness")) is None:
+            return  # Morgenwerte noch nicht da
+    t0 = time.time()
+    d = vorausblick_rechnen()
+    block = _vorausblick_block(d)
+    text = ""
+    if ollama_ready():
+        try:
+            msgs = [
+                {"role": "system", "content": "Du bist Coach Kira, Marcs Trainingscoach. Deutsch, du-Form, keine Emojis, keine Überschriften."},
+                {"role": "user", "content": block + "\n\nFasse das in 3–5 Sätzen für Marc zusammen: zuerst die Frühwarnung (nur wenn nicht grün), dann die nächste Chance (Qualitätstag, Tourfenster) und der Fitnesstrend. Konkrete Tage nennen, keine neuen Zahlen erfinden."},
+            ]
+            text, _ = ollama_chat(MODEL, msgs, num_ctx=8192, timeout=600)
+            text = text.strip().strip('"')
+        except Exception as e:
+            log(f"vorausblick: Text lokal nicht erzeugt ({e}) – nur Regeltext")
+    if not text:
+        fw = d["fruehwarnung"]
+        teile = []
+        if fw["stufe"] != "gruen":
+            teile.append(f"Frühwarnung {fw['stufe']}: {fw['prognose']}")
+        if d["vorausblick"].get("qualitaetstag"):
+            teile.append(f"Bester Qualitätstag: {d['vorausblick']['qualitaetstag']['tag']}.")
+        if d["tourfenster"]:
+            teile.append(f"Tourfenster: {d['tourfenster'][0]['tag']}.")
+        teile.append(f"Fitness {d['vorausblick']['trend']} ({d['vorausblick']['ctl_heute']} → {d['vorausblick']['ctl_28']} in 28 Tagen).")
+        text = " ".join(teile)
+    d["text"] = text
+    d["sekunden"] = round(time.time() - t0)
+    save_extra("prognose", today(), text, d, "mac:" + MODEL)
+    st = load_x()
+    st["vorausblick_done"] = key
+    st["vorausblick_datum"] = today()
+    st["vorausblick_block"] = block
+    save_x(st)
+    fw = d["fruehwarnung"]
+    log(f"vorausblick: {slot} gespeichert – Frühwarnung {fw['stufe']}, {len(d['tourfenster'])} Tourfenster, Qualitätstag {(d['vorausblick'].get('qualitaetstag') or {}).get('tag', '–')} ({d['sekunden']} s)")
+    if fw["stufe"] in ("orange", "rot") and st.get("fw_gemeldet") != today():
+        st["fw_gemeldet"] = today()
+        save_x(st)
+        notify("Coach Kira", f"Frühwarnung {fw['stufe']}: {fw['signale'][0]['text'] if fw['signale'] else fw['prognose']}")
+
+
 def _main() -> None:
     """CLI mit Unterbefehlen für alle Extras."""
     ap = argparse.ArgumentParser(description="Coach Kira Extras")
@@ -1643,6 +2112,8 @@ def _main() -> None:
     ap_p.add_argument("--force", action="store_true")
     sp_p = sub_parsers.add_parser("stoerung", help="Störungen erkennen")
     sp_p.add_argument("--force", action="store_true")
+    vb_p = sub_parsers.add_parser("vorausblick", help="Vorausblick, Tourfenster, Frühwarnung")
+    vb_p.add_argument("--force", action="store_true")
     ern_p = sub_parsers.add_parser("ernaehrung", help="Ernährungsplan für morgen")
     ern_p.add_argument("--force", action="store_true", help="Zeitfenster-Check ignorieren")
 
@@ -1714,6 +2185,11 @@ def _main() -> None:
         except Exception as e:
             log(f"extras: FEHLER tick/autopilot – {e}")
 
+        try:
+            cmd_vorausblick()
+        except Exception as e:
+            log(f"extras: FEHLER tick/vorausblick – {e}")
+
     elif args.command == "snapshot":
         try:
             cmd_snapshot()
@@ -1744,6 +2220,11 @@ def _main() -> None:
         except Exception as e:
             log(f"extras: FEHLER autopilot – {e}")
 
+    elif args.command == "vorausblick":
+        try:
+            cmd_vorausblick(force=args.force)
+        except Exception as e:
+            log(f"extras: FEHLER vorausblick – {e}")
     elif args.command == "stoerung":
         try:
             cmd_stoerung(force=args.force)

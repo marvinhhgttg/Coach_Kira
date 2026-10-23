@@ -9,8 +9,11 @@ subprocess, sys, time, argparse.
 from __future__ import annotations
 
 import argparse
+import fcntl
 import json
+import os
 import subprocess
+from contextlib import contextmanager
 import sys
 import time
 from datetime import datetime, timedelta
@@ -142,6 +145,76 @@ def http_post_json(url: str, obj: object, timeout: int = 120) -> dict:
 # ---------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------
+# Modell-Sperre: immer nur EIN Lauf auf dem lokalen Modell (alle Dienste)
+# ---------------------------------------------------------------------------
+_SPERRE_TIEFE = 0
+
+
+@contextmanager
+def modell_sperre(wer: str, warten: int = 1800):
+    """Exklusiver Zugriff auf Ollama über eine Sperrdatei (gilt für Runner und Extras).
+    Hält den Mac mit caffeinate wach, solange gerechnet wird. Verschachtelt nutzbar."""
+    global _SPERRE_TIEFE
+    if _SPERRE_TIEFE > 0:
+        _SPERRE_TIEFE += 1
+        try:
+            yield
+        finally:
+            _SPERRE_TIEFE -= 1
+        return
+    BASE.mkdir(parents=True, exist_ok=True)
+    fh = open(BASE / "modell.lock", "a+")
+    t0 = time.time()
+    gemeldet = False
+    while True:
+        try:
+            fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            break
+        except OSError:
+            if time.time() - t0 > warten:
+                fh.close()
+                raise RuntimeError(f"lokales Modell seit {warten // 60} min belegt – {wer} später")
+            if not gemeldet:
+                try:
+                    fh.seek(0)
+                    halter = fh.read().strip()[:80]
+                except Exception:
+                    halter = "?"
+                log(f"{wer}: wartet auf das lokale Modell (belegt: {halter or '?'})")
+                gemeldet = True
+            time.sleep(5)
+    wach = None
+    try:
+        wach = subprocess.Popen(["caffeinate", "-i", "-w", str(os.getpid())])
+    except Exception:
+        pass
+    try:
+        fh.seek(0)
+        fh.truncate()
+        fh.write(f"{wer} seit {datetime.now(TZ).strftime('%H:%M:%S')}")
+        fh.flush()
+    except Exception:
+        pass
+    _SPERRE_TIEFE = 1
+    try:
+        yield
+    finally:
+        _SPERRE_TIEFE = 0
+        try:
+            fh.seek(0)
+            fh.truncate()
+        except Exception:
+            pass
+        fcntl.flock(fh, fcntl.LOCK_UN)
+        fh.close()
+        if wach is not None:
+            try:
+                wach.terminate()
+            except Exception:
+                pass
+
+
 def ollama_ready(model: str = MODEL) -> bool:
     """GET OLLAMA/api/tags (timeout 5); True, wenn ein Modell mit name == model
     oder name beginnt mit model + ':'. Fehler -> False."""
@@ -190,8 +263,9 @@ def ollama_chat(
         },
         method="POST",
     )
-    with urlopen(req, timeout=timeout) as resp:
-        j = json.loads(resp.read().decode("utf-8"))
+    with modell_sperre(f"chat {model}"):
+        with urlopen(req, timeout=timeout) as resp:
+            j = json.loads(resp.read().decode("utf-8"))
     text = (j.get("message") or {}).get("content")
     if not text:
         raise RuntimeError("Ollama antwortete ohne Text")
@@ -583,6 +657,30 @@ def _supervisor_once() -> str:
         return "none"  # still beenden
     if job["id"] in st.get("sup_done", []):
         return "none"  # schon erledigt
+    # Veraltete Aufträge (älter als 2 h) verwerfen – z. B. wenn der Mac nachts geschlafen hat
+    try:
+        alter_h = (time.time() * 1000 - int(str(job["id"]).rsplit("-", 1)[-1])) / 3.6e6
+    except Exception:
+        alter_h = 0.0
+    if alter_h > 2:
+        st["sup_done"] = (st.get("sup_done", []) + [job["id"]])[-30:]
+        save_state(st)
+        log(f"Supervisor: Auftrag {job['id']} ist {alter_h:.1f} h alt – verworfen")
+        return "none"
+    # Morgen-Briefings haben Vorrang
+    jetzt = datetime.now(TZ)
+    heute = jetzt.strftime("%Y-%m-%d")
+    if WINDOW[0] <= jetzt.hour < WINDOW[1] and st.get("morning_done") != heute and (st.get("tries", {}).get("date") != heute or st.get("tries", {}).get("n", 0) < MAX_TRIES):
+        try:
+            bereit, _ = morning_data_ready(heute)
+        except Exception:
+            bereit = False
+        if bereit:
+            if st.get("sup_wartet") != heute:
+                st["sup_wartet"] = heute
+                save_state(st)
+                log("Supervisor: wartet – Morgen-Briefings haben Vorrang")
+            return "none"
     fails = st.get("sup_fail", {})
     if fails.get(job["id"], 0) >= 2:
         return "none"  # zu oft gescheitert
@@ -593,7 +691,7 @@ def _supervisor_once() -> str:
     log(f"Supervisor: Auftrag {job['id']} übernommen (Prompt {len(job.get('prompt', ''))} Zeichen)")
     messages = [
         {"role": "system", "content": job.get("system") or ""},
-        {"role": "user", "content": job["prompt"]},
+        {"role": "user", "content": job["prompt"] + vorausblick_block()},
     ]
     try:
         t0 = time.time()
@@ -650,7 +748,29 @@ def _supervisor_once() -> str:
         return "error"
 
 
+def schlaf_luecke_merken() -> None:
+    """Lücke zwischen zwei Ticks > 30 min zwischen 0 und 9 Uhr = Mac hat geschlafen (für den Wachhund)."""
+    try:
+        st = load_state()
+        jetzt = datetime.now(TZ)
+        vorher = st.get("letzter_tick")
+        st["letzter_tick"] = jetzt.isoformat(timespec="seconds")
+        if vorher:
+            v = datetime.fromisoformat(vorher)
+            if (jetzt - v).total_seconds() > 1800 and jetzt.hour < 9:
+                st["schlaf_luecke"] = {"datum": jetzt.strftime("%Y-%m-%d"), "von": v.strftime("%H:%M"), "bis": jetzt.strftime("%H:%M")}
+                log(f"tick: Mac war von {v.strftime('%H:%M')} bis {jetzt.strftime('%H:%M')} im Ruhezustand")
+        save_state(st)
+    except Exception:
+        pass
+
+
 def cmd_tick() -> None:
+    schlaf_luecke_merken()
+    try:
+        cmd_akku_check()
+    except Exception as e:
+        log(f"akku: FEHLER {e}")
     try:
         cmd_morning()
     except Exception as e:
@@ -736,19 +856,99 @@ def done_today(src: dict, type_: str, today_str: str) -> bool:
 # ---------------------------------------------------------------------------
 
 
+def vorausblick_block() -> str:
+    """Heutigen Vorausblick (vom Mac berechnet, kira_extras vorausblick) als Prompt-Block."""
+    try:
+        x = json.loads((BASE / "extras_state.json").read_text(encoding="utf-8"))
+    except Exception:
+        return ""
+    if x.get("vorausblick_datum") != datetime.now(TZ).strftime("%Y-%m-%d"):
+        return ""
+    b = str(x.get("vorausblick_block") or "").strip()
+    return ("\n\n---\n" + b + "\n---\n") if b else ""
+
+
+def mit_vorausblick(messages: list[dict]) -> list[dict]:
+    """Vorausblick an die letzte Nutzer-Nachricht anhängen (Kopie, Original unverändert)."""
+    b = vorausblick_block()
+    if not b:
+        return messages
+    out = [dict(m) for m in messages]
+    for m in reversed(out):
+        if m.get("role") == "user":
+            m["content"] = str(m.get("content") or "") + b
+            break
+    return out
+
+
+def auf_akku() -> tuple[bool, int | None]:
+    """(läuft auf Akku?, Ladestand %) aus pmset -g batt."""
+    try:
+        o = subprocess.run(["pmset", "-g", "batt"], capture_output=True, text=True, timeout=10).stdout
+    except Exception:
+        return False, None
+    import re as _re
+    m = _re.search(r"(\d+)%", o)
+    return ("Battery Power" in o), (int(m.group(1)) if m else None)
+
+
+def cmd_akku_check() -> None:
+    """Abends einmal erinnern, wenn der Mac auf Akku läuft (sonst schläft er nachts ein)."""
+    now = datetime.now(TZ)
+    if not (21 <= now.hour < 24):
+        return
+    st = load_state()
+    heute = now.strftime("%Y-%m-%d")
+    if st.get("akku_erinnert") == heute:
+        return
+    akku, pct = auf_akku()
+    if not akku:
+        return
+    st["akku_erinnert"] = heute
+    save_state(st)
+    log(f"akku: Mac läuft abends auf Akku ({pct} %) – Erinnerung gesendet")
+    notify("Coach Kira", f"Mac läuft auf Akku ({pct} %). Bitte ans Netzteil und Deckel offen lassen – sonst schläft er nachts ein und die Briefings kommen erst, wenn du ihn aufweckst.")
+
+
+def wachhund(st: dict, today: str, ready: bool, extra: str = "") -> None:
+    """Ab 07:30: fehlen die Briefings noch, Grund melden (einmal am Tag) und einen weiteren Versuch erlauben."""
+    now = datetime.now(TZ)
+    if now.hour * 60 + now.minute < 7 * 60 + 30 or st.get("wachhund") == today:
+        return
+    gruende = [extra] if extra else []
+    schlaf = st.get("schlaf_luecke")
+    if schlaf and schlaf.get("datum") == today:
+        gruende.append(f"Mac hat von {schlaf['von']} bis {schlaf['bis']} geschlafen")
+    if not ready:
+        gruende.append("Morgenwerte (Trainingsbereitschaft, Schlafscore) fehlen noch im Sheet")
+    tries = st.get("tries", {})
+    if tries.get("date") == today and tries.get("n", 0) >= MAX_TRIES:
+        gruende.append("drei Versuche gescheitert – ich versuche es noch einmal")
+        tries["n"] = MAX_TRIES - 1
+        st["tries"] = tries
+    st["wachhund"] = today
+    save_state(st)
+    txt = "; ".join(gruende) or "unbekannter Grund – siehe runner.log"
+    log(f"wachhund: Briefings um {now.strftime('%H:%M')} noch nicht fertig – {txt}")
+    notify("Coach Kira", f"Morgen-Briefings noch nicht fertig: {txt}.")
+
+
 def run_briefing(type_: str) -> float:
     """Briefing für 'type_' erzeugen und speichern. Rückgabe Sekunden (float)."""
     p = http_get_json(SCRIPT_URL + "?mode=briefingPrompt&type=" + type_)
     if not p.get("ok"):
         raise RuntimeError(p.get("error") or "BriefingPrompt fehlgeschlagen")
     model = ROUTES.get(type_, MODEL)
+    messages = p["messages"]
+    if type_ in ("status", "consolidated"):
+        messages = mit_vorausblick(messages)
     body: dict = {
         "model": model,
         "stream": False,
         "think": False,
         "keep_alive": "30m",
         "options": {"temperature": 0.3, "num_ctx": 32768},
-        "messages": p["messages"],
+        "messages": messages,
     }
     if p.get("format") == "json":
         body["format"] = "json"
@@ -763,7 +963,7 @@ def run_briefing(type_: str) -> float:
         },
         method="POST",
     )
-    with urlopen(req, timeout=1200) as resp:
+    with modell_sperre(f"briefing {type_}"), urlopen(req, timeout=1200) as resp:
         j = json.loads(resp.read().decode("utf-8"))
     elapsed = time.time() - start
     text = (j.get("message") or {}).get("content")
@@ -901,8 +1101,12 @@ def cmd_morning(force: bool = False) -> None:
         return  # still beenden
     if not ollama_ready():
         log("Ollama/coach-kira nicht erreichbar – später erneut")
+        if not force:
+            wachhund(st, today, True, "Ollama/coach-kira nicht erreichbar")
         return
     ready, row = morning_data_ready(today)
+    if not force:
+        wachhund(st, today, ready)
     if not ready:
         hour = now.hour
         if st.get("last_wait_log") != hour:
@@ -919,6 +1123,12 @@ def cmd_morning(force: bool = False) -> None:
         tries["n"] += 1
         st["tries"] = tries
         save_state(st)
+    # Vorausblick, Tourfenster und Frühwarnung zuerst rechnen – sie fließen in die Briefings ein
+    try:
+        import kira_extras
+        kira_extras.cmd_vorausblick()
+    except Exception as e:
+        log(f"vorausblick: FEHLER {e}")
     src = sources()
     ergebnisse: list[str] = []
     fehler: list[str] = []
@@ -1050,4 +1260,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    sys.modules.setdefault("kira_runner", sys.modules["__main__"])
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
     main()

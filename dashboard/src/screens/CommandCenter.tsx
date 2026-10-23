@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { VorausblickTile } from '../components/VorausblickTile';
 import {
   fetchStatus,
   fetchStatusAiAnalysis,
@@ -508,6 +509,7 @@ export function CommandCenter({
   return (
     <div className="space-y-6">
       <RecoveryPanel token={token} toast={toast} proxyAuthenticated={proxy.authenticated} />
+      <VorausblickTile compact />
       <section className="panel overflow-hidden">
         <div>
           <div className="p-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
