@@ -1,10 +1,15 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import { EreignisTile } from '../components/EreignisTile';
 import { plausiCheck, PLAUSI_FELDER, FELD_LABEL, type Befund } from '../lib/plausi';
 import { ApiError, fetchChartData, submitCockpitEntry, type EntryType, type SubmitEntryResponse } from '../lib/api';
 import { proxySubmitEntry } from '../lib/proxy';
 import { fmtDateShort } from '../lib/format';
 import { Panel } from '../components/UI';
+import { fetchExtras } from '../lib/extras';
+
+type Abschnitt = 'morgens' | 'aktivitaet' | 'abends';
+/** Schlüssel in jeder Sektion: string → string | number */
+type GarminVorschlag = Record<Abschnitt, Record<string, string | number> | undefined>;
 
 type ToastFn = (kind: 'ok' | 'err' | 'info', text: string) => void;
 
@@ -157,6 +162,75 @@ export function EntryPanel({
   const [result, setResult] = useState<SubmitEntryResponse | null>(null);
   const [befunde, setBefunde] = useState<Befund[]>([]);
   const histRef = useRef<Record<string, unknown>[] | null>(null);
+  const [garmin, setGarmin] = useState<Record<string, GarminVorschlag>>({});
+  const [garminLoaded, setGarminLoaded] = useState(false);
+  const [garminTimestamp, setGarminTimestamp] = useState<Record<string, string>>({});
+  const [filled, setFilled] = useState<Record<EntryType, string[]>>({ Morgens: [], 'Nach Aktivität': [], Abends: [] });
+
+  // Garmin-Daten beim Mount laden
+  useEffect(() => {
+    let cancelled = false;
+    fetchExtras<GarminVorschlag>('garmin_api', 5)
+      .then((items) => {
+        if (cancelled) return;
+        const map: Record<string, GarminVorschlag> = {};
+        const tsMap: Record<string, string> = {};
+        for (const item of items) {
+          map[item.datum] = item.data || {} as GarminVorschlag;
+          if (item.gespeichert) {
+            const m = item.gespeichert.slice(11, 16);
+            if (m) tsMap[item.datum] = m;
+          }
+        }
+        setGarmin(map);
+        setGarminTimestamp(tsMap);
+      })
+      .catch(() => {/* still ignorieren – Patch evtl. noch nicht aktiv */})
+      .finally(() => { if (!cancelled) setGarminLoaded(true); });
+    return () => { cancelled = true; };
+  }, []);
+
+  /** Garmin-Werte in leere Felder übernehmen */
+  function handleGarminFill() {
+    const abschnittMap: Record<EntryType, Abschnitt> = {
+      Morgens: 'morgens',
+      'Nach Aktivität': 'aktivitaet',
+      Abends: 'abends',
+    };
+    const abschnitt = abschnittMap[type];
+    const vorschlag = garmin[date]?.[abschnitt];
+    if (!vorschlag) return;
+    const fieldKeys = new Set(fields.map((f) => f.key));
+    const keys: string[] = [];
+    for (const [fk, fv] of Object.entries(vorschlag)) {
+      if (!fieldKeys.has(fk)) continue;
+      const f = fields.find((ff) => ff.key === fk);
+      if (f && f.kind === 'hrvBand') {
+        // Fix Cloud-Review: Band "unten;oben" auf die zwei Eingabefelder verteilen
+        const [lo, hi] = String(fv).split(';').map((x) => x.trim());
+        if (!lo || !hi || (v[`${fk}__lo`] || '').trim() || (v[`${fk}__hi`] || '').trim()) continue;
+        set(`${fk}__lo`, lo);
+        set(`${fk}__hi`, hi);
+        keys.push(fk);
+        continue;
+      }
+      const existing = (v[fk] || '').trim();
+      if (existing) continue;
+      if (f && f.kind === 'select' && f.options) {
+        const sval = String(fv).replace(',', '.');
+        if (!f.options.includes(sval)) continue;
+      }
+      set(fk, String(fv));
+      keys.push(fk);
+    }
+    // Fix Cloud-Review: übernommene Felder merken (nach den set-Aufrufen)
+    setFilled((prev) => ({ ...prev, [type]: keys }));
+  }
+
+  /** filled[type] bei Typ-/Datumswechsel leeren */
+  function clearFilledForType(t: EntryType) {
+    setFilled((prev) => ({ ...prev, [t]: [] }));
+  }
 
   async function review() {
     // Plausibilitäts-Check gegen die letzten 30 Tage, dann Bestätigung zeigen
@@ -193,10 +267,51 @@ export function EntryPanel({
   const errors = validate(fields, v);
   const payload = buildPayload(fields, v);
 
+  // Garmin-Hilfsberechnungen
+  const abschnittMap: Record<EntryType, Abschnitt> = {
+    Morgens: 'morgens',
+    'Nach Aktivität': 'aktivitaet',
+    Abends: 'abends',
+  };
+  const abschnitt = abschnittMap[type];
+  const garminVorschlag = garminLoaded ? garmin[date]?.[abschnitt] : undefined;
+  const timeStr = garminTimestamp[date] || '';
+
+  /** Prüft ob vorschlag mind. einen Schlüssel hat, der in FIELDS[type] vorkommt */
+  const garminButtonVisible = useMemo(() => {
+    if (!garminVorschlag) return false;
+    const fieldKeys = new Set(fields.map((f) => f.key));
+    return Object.keys(garminVorschlag).some((k) => fieldKeys.has(k));
+  }, [garminVorschlag, fields]);
+
+  /** Anzahl verfügbarer Werte im vorschlag */
+  const garminCount = useMemo(() => {
+    if (!garminVorschlag) return 0;
+    const fieldKeys = new Set(fields.map((f) => f.key));
+    return Object.keys(garminVorschlag).filter((k) => fieldKeys.has(k)).length;
+  }, [garminVorschlag, fields]);
+
+  /** Info für 'Nach Aktivität': Anzahl Aktivitäten, km, hm aus aktivitaet-Sektion */
+  const aktivitaetInfo = useMemo(() => {
+    if (type !== 'Nach Aktivität' || !garminVorschlag) return null;
+    const ak = garminVorschlag; // Fix Cloud-Review: garminVorschlag ist bereits der Abschnitt „aktivitaet“
+    const anzahl = (ak.anzahl as number | undefined);
+    const kmNum = (ak.km as number | undefined);
+    const hmNum = (ak.hm as number | undefined);
+    return { anzahl: Number.isFinite(anzahl) ? anzahl : null, kmNum, hmNum };
+  }, [garminVorschlag, type]);
+
+  /** Anzahl übernommene Werte */
+  const filledCount = filled[type]?.length || 0;
+
   function set(key: string, val: string) {
     setConfirming(false);
     setBefunde([]);
     setValues((s) => ({ ...s, [type]: { ...s[type], [key]: val } }));
+    setFilled((prev) => ({
+      ...prev,
+      [type]: (prev[type] || []).filter((k) => k !== key),
+    }));
   }
 
   function applyOffDay() {
@@ -225,6 +340,7 @@ export function EntryPanel({
       if (!res.ok) throw new ApiError(res.error || 'Senden fehlgeschlagen');
       toast('ok', `${type} für ${fmtDateShort(date)} übertragen (Zeile ${res.row}).`);
       setValues((s) => ({ ...s, [type]: {} }));
+      setFilled((prev) => ({ ...prev, [type]: [] }));
       setBefunde([]);
       histRef.current = null;
     } catch (e) {
@@ -253,6 +369,7 @@ export function EntryPanel({
                   setType(t);
                   setConfirming(false);
                   setResult(null);
+                  clearFilledForType(t);
                 }}
                 className={`px-3 py-1.5 text-sm rounded ${type === t ? 'bg-bg-subtle text-ink' : 'text-ink-muted hover:text-ink'}`}
                 data-testid={`entry-tab-${t}`}
@@ -266,7 +383,7 @@ export function EntryPanel({
               {([0, 1] as const).map((o) => (
                 <button
                   key={o}
-                  onClick={() => setDayOffset(o)}
+                  onClick={() => { setDayOffset(o); clearFilledForType(type); }}
                   className={`px-2.5 py-1 text-xs rounded ${dayOffset === o ? 'bg-bg-subtle text-ink' : 'text-ink-muted hover:text-ink'}`}
                 >
                   {o === 0 ? 'Heute' : 'Gestern'}
@@ -275,6 +392,11 @@ export function EntryPanel({
             </div>
           ) : null}
           <span className="text-xs text-ink-muted tnum">Datum: {fmtDateShort(date)}</span>
+          {garminButtonVisible && (
+            <button onClick={handleGarminFill} className="btn btn-ghost text-xs px-2 py-1" data-testid="garmin-fill">
+              Garmin-Werte übernehmen
+            </button>
+          )}
           {type === 'Nach Aktivität' && (
             <button onClick={applyOffDay} className="btn btn-ghost text-xs px-2 py-1">
               Off-Tag vorbelegen
@@ -282,6 +404,15 @@ export function EntryPanel({
           )}
         </div>
         <p className="text-2xs text-ink-dim">{TYPE_HINT[type]}{type !== 'Morgens' && dayOffset === 1 ? ' Für gestern werden keine Analysen gestartet.' : ''}</p>
+        {garminVorschlag && (
+          <div className="text-2xs text-ink-dim" data-testid="garmin-hint">
+            Garmin-API (Stand {timeStr}): {garminCount} Werte verfügbar
+            {filledCount > 0 && ` · ${filledCount} übernommen, Rest bitte ergänzen`}
+            {type === 'Nach Aktivität' && aktivitaetInfo && (
+              <> · {aktivitaetInfo.anzahl} Aktivität{aktivitaetInfo.anzahl !== 1 ? 'en' : ''}{aktivitaetInfo.kmNum != null && `, ${Number(aktivitaetInfo.kmNum).toFixed(1).replace('.', ',')} km`}{aktivitaetInfo.hmNum != null && `, ${Math.round(Number(aktivitaetInfo.hmNum))} hm`}</>
+            )}
+          </div>
+        )}
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {fields.map((f) => {
@@ -290,6 +421,7 @@ export function EntryPanel({
               <label key={f.key} className="block">
                 <span className="label">
                   {f.label}
+                  {filled[type]?.includes(f.key) && <span className="text-ink-dim"> · Garmin</span>}
                   {f.required ? ' *' : ''}
                 </span>
                 {f.kind === 'select' ? (
