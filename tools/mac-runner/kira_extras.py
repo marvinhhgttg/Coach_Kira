@@ -1795,6 +1795,18 @@ def vorausblick_rechnen() -> dict:
     # --- Bereitschafts-Prognose (Morgenwert)
     hm = [{"date": r["date"], "load": num(r.get("load_fb_day")), "readiness": num(r.get("Garmin_Training_Readiness")),
            "acwr": num(r.get("fbACWR_obs")), "mono": num(r.get("Monotony7"))} for r in vor]
+    # Krankheitstage (Ereignis-Marker) und den Folgetag nicht als Lernbeispiel verwenden
+    try:
+        krank = set()
+        for e in http_get_json(SCRIPT_URL + "?mode=extras&typ=ereignis&n=400").get("items") or []:
+            if "krank" in ((e.get("data") or {}).get("arten") or []):
+                d0 = datetime.date.fromisoformat(str(e.get("datum"))[:10])
+                krank.update({d0.isoformat(), (d0 + datetime.timedelta(days=1)).isoformat()})
+        for x in hm:
+            if x["date"] in krank:
+                x["readiness"] = None
+    except Exception:
+        pass
     modell = _bereitschaft_modell(hm)
     bereit = {}
     r_heute = num(h.get("Garmin_Training_Readiness"))
@@ -1901,17 +1913,58 @@ def vorausblick_rechnen() -> dict:
     def add(name, schwere, text, art):
         sig.append({"name": name, "schwere": schwere, "text": text, "art": art})
 
-    hv7, hvb = _mean(col("hrv_status", letzte7)), _mean(col("hrv_status", basis))
-    if hv7 and hvb:
-        pct = (hv7 / hvb - 1) * 100
-        if pct <= -12:
-            add("HRV", "orange", f"HRV 7 Tage Ø {_de(hv7)} ms, {_de(pct)} % unter deinem 4-Wochen-Schnitt", "koerper")
-        elif pct <= -7:
-            add("HRV", "gelb", f"HRV 7 Tage Ø {_de(hv7)} ms, {_de(pct)} % unter deinem 4-Wochen-Schnitt", "koerper")
-        else:
-            sl = _slope_per_week(col("hrv_status", r_all[-14:]))
-            if sl is not None and sl <= -3:
-                add("HRV-Trend", "gelb", f"HRV fällt seit 2 Wochen um {_de(-sl, 1)} ms pro Woche", "koerper")
+    def _band(v):
+        """Pars hrv_threshholds: 'lo;hi' oder 'lo,hi'. Gibt (lo, hi) oder None."""
+        if not v or str(v).strip() == "":
+            return None
+        try:
+            s = str(v).strip()
+            parts = [p.strip().replace(",", ".") for p in s.split(";")] if ";" in s else [p.strip() for p in s.split(",")]
+            if len(parts) != 2:
+                return None
+            lo, hi = float(parts[0]), float(parts[1])
+            if lo >= hi:
+                return None
+            return (lo, hi)
+        except Exception:
+            return None
+
+    # Für letzte 14 Tage: Liste von (hrv, lo, hi)
+    tage_14 = r_all[-14:]  # letzte 14 Tage chronologisch
+    hrv_bands = []
+    for r in tage_14:
+        hrv_val = num(r.get("hrv_status"))
+        band = _band(r.get("hrv_threshholds"))
+        if hrv_val is None or band is None:
+            continue
+        hrv_bands.append((hrv_val, band[0], band[1]))
+
+    # unter_folge: aufeinanderfolgende Tage am Ende (rückwärts), an denen hrv < lo
+    unter_folge = 0
+    if hrv_bands:
+        for entry in reversed(hrv_bands):
+            h, lo, hi = entry
+            if h < lo:
+                unter_folge += 1
+            else:
+                break
+
+    # unter_7: Anzahl Tage unter lo unter den letzten 7 Einträgen
+    letzteren7 = hrv_bands[-7:] if len(hrv_bands) >= 7 else hrv_bands
+    unter_7 = sum(1 for entry in letzteren7 if entry[0] < entry[1])
+
+    # Signale
+    if hrv_bands:  # nicht-leere Liste
+        neu = hrv_bands[-1]
+        # Schwellen am eigenen Verlauf geprüft (400 Tage): orange 14 Tage, gelb 77 Tage; Krankheit 12/2025 neun Tage vorher orange
+        if unter_folge >= 7 and neu[0] < neu[1] - 3:
+            add("HRV", "orange", f"HRV seit {unter_folge} Tagen unter deinem Garmin-Normalband ({_de(neu[1])}–{_de(neu[2])} ms), heute {_de(neu[0])} ms", "koerper")
+        elif unter_folge >= 4 or unter_7 >= 6:
+            add("HRV", "gelb", f"HRV an {max(unter_folge, unter_7)} der letzten 7 Tage unter deinem Garmin-Normalband ({_de(neu[1])}–{_de(neu[2])} ms)", "koerper")
+        elif len(hrv_bands) >= 10:
+            sl = _slope_per_week([e[1] for e in hrv_bands])
+            if sl is not None and sl <= -1.0:
+                add("HRV-Basis", "gelb", f"Deine HRV-Basis (untere Bandgrenze) sinkt um {_de(-sl, 1)} ms pro Woche", "koerper")
     rh7, rhb = _mean(col("rhr_bpm", letzte7)), _mean(col("rhr_bpm", basis))
     if rh7 and rhb:
         dlt = rh7 - rhb

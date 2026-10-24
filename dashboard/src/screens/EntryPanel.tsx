@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { EreignisTile } from '../components/EreignisTile';
 import { plausiCheck, PLAUSI_FELDER, FELD_LABEL, type Befund } from '../lib/plausi';
 import { ApiError, fetchChartData, submitCockpitEntry, type EntryType, type SubmitEntryResponse } from '../lib/api';
 import { proxySubmitEntry } from '../lib/proxy';
@@ -235,6 +236,7 @@ export function EntryPanel({
   }
 
   return (
+    <div className="space-y-4">
     <Panel
       title="Eingabe · statt Formular"
       right={<span className="text-2xs text-ink-dim">läuft über dieselbe onFormSubmit-Logik wie das Google-Formular</span>}
@@ -394,5 +396,7 @@ export function EntryPanel({
         )}
       </div>
     </Panel>
+      <EreignisTile />
+    </div>
   );
 }

@@ -1,4 +1,5 @@
 import { RecoveryPanel } from './RecoveryPanel';
+import { DataQualityTile } from '../components/DataQualityTile';
 import { TrainingControl } from './TrainingControl';
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import {
@@ -625,6 +626,8 @@ export function ChartDeck() {
         </>
         )}
       </Panel>
+
+      <DataQualityTile />
 
       {fullscreenSection && (
         <FullscreenChart

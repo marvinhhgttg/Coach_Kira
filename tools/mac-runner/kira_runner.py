@@ -765,8 +765,35 @@ def schlaf_luecke_merken() -> None:
         pass
 
 
+def cmd_befinden_check() -> None:
+    """Zwischen 9:30 und 12 Uhr einmal erinnern, wenn das Befinden für heute fehlt."""
+    now = datetime.now(TZ)
+    if not ((now.hour == 9 and now.minute >= 30) or 10 <= now.hour < 12):
+        return
+    st = load_state()
+    heute = now.strftime("%Y-%m-%d")
+    if st.get("befinden_erinnert") == heute:
+        return
+    try:
+        j = http_get_json(SCRIPT_URL + "?mode=chartData&range=3d&metrics=befinden_1_5", timeout=60)
+    except Exception:
+        return
+    row = next((r for r in (j.get("data") or []) if r.get("date") == heute), None)
+    if row is None:
+        return
+    st["befinden_erinnert"] = heute
+    save_state(st)
+    if num(row.get("befinden_1_5")) is None:
+        log("befinden: heute noch nicht erfasst – Erinnerung gesendet")
+        notify("Coach Kira", "Wie fühlst du dich heute? Ein Tipp auf 1–5 im Cockpit (Heute) reicht.")
+
+
 def cmd_tick() -> None:
     schlaf_luecke_merken()
+    try:
+        cmd_befinden_check()
+    except Exception as e:
+        log(f"befinden: FEHLER {e}")
     try:
         cmd_akku_check()
     except Exception as e:

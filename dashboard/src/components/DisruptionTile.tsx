@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchExtras, type ExtraItem } from '../lib/extras';
+import { fetchExtras, saveExtra, type ExtraItem } from '../lib/extras';
 import { localChat, parseJsonLoose } from '../lib/localLLM';
 import { fmtDateShort } from '../lib/format';
 import { monotonyPlanViolations } from '../lib/monotony';
@@ -140,7 +140,17 @@ export function DisruptionTile({
           </table>
           <p className="text-2xs text-ink-dim">Verstöße gegen die Monotonie-Regel: {vor.v0} → {vor.v1}</p>
           <div className="flex gap-2">
-            <button className="btn btn-primary text-xs px-2 py-1" onClick={() => onApply(vor.loads, vor.sports, vor.zones)}>In Slider übernehmen</button>
+            <button
+              className="btn btn-primary text-xs px-2 py-1"
+              onClick={() => {
+                onApply(vor.loads, vor.sports, vor.zones);
+                // Grund als Ereignis-Marker merken (krank/Reise), damit die Lernmodelle ihn kennen
+                const art = grund === 'infekt' ? 'krank' : grund === 'reise' ? 'reise' : null;
+                if (art) saveExtra('ereignis', heute(), art === 'krank' ? 'krank – aus Umplanen' : 'Reise – aus Umplanen', { arten: [art], notiz: 'aus Umplanen bei Störungen' }).catch(() => undefined);
+              }}
+            >
+              In Slider übernehmen
+            </button>
             <button className="btn btn-ghost text-xs px-2 py-1" onClick={() => setVor(null)}>Verwerfen</button>
           </div>
         </div>

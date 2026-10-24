@@ -39,7 +39,7 @@ import { LoadFactorTile } from '../components/LoadFactorTile';
 import { ReadinessStrip } from '../components/ReadinessStrip';
 import { fetchHistory, trainModel, forecastPlan, type HistRow, type Model } from '../lib/readinessModel';
 import { kalibriereFaktoren, type FaktorVorschlag } from '../lib/planning';
-import { fetchLoadFactors, saveExtra } from '../lib/extras';
+import { fetchExtras, fetchLoadFactors, saveExtra } from '../lib/extras';
 import { ErrorBox, Panel, Skeleton } from '../components/UI';
 import { assessMonotony } from '../lib/monotony';
 import {
@@ -851,7 +851,18 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
   }, [supPlan, plan, loads, sports, zones, teAe, teAn, locks]);
 
   useEffect(() => {
-    fetchHistory().then(setHist).catch((e) => setHistErr(String(e instanceof Error ? e.message : e)));
+    // Krankheitstage (Ereignis-Marker) und den Folgetag nicht als Lernbeispiel verwenden
+    Promise.all([fetchHistory(), fetchExtras<{ arten?: string[] }>(['ereignis'], 400).catch(() => [])])
+      .then(([h, ev]) => {
+        const krank = new Set<string>();
+        ev.filter((e) => (e.data?.arten || []).includes('krank')).forEach((e) => {
+          const d0 = new Date(String(e.datum).slice(0, 10) + 'T12:00:00');
+          krank.add(d0.toLocaleDateString('sv-SE'));
+          krank.add(new Date(d0.getTime() + 86400000).toLocaleDateString('sv-SE'));
+        });
+        setHist(krank.size ? h.map((r) => (krank.has(r.date) ? { ...r, readiness: null } : r)) : h);
+      })
+      .catch((e) => setHistErr(String(e instanceof Error ? e.message : e)));
   }, []);
   const models = useMemo(() => (hist.length ? { r: trainModel(hist, 'readiness'), h: trainModel(hist, 'hrv') } : { r: null as Model | null, h: null as Model | null }), [hist]);
   const readiness = useMemo(

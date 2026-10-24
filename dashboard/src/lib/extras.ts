@@ -1,7 +1,7 @@
 /** KI-Extras: Speicher AI_KIRA_EXTRAS, Kalender-Belegung, phys_baseline, Wetter (Open-Meteo). */
 import { BASE_URL } from './api';
 
-export type ExtraTyp = 'treffer_tag' | 'treffer_woche' | 'selbsttest' | 'plausi' | 'ernaehrung' | 'alltag' | 'workout' | 'ziel' | 'saison' | 'autopilot' | 'umplanung' | 'lastfaktoren' | 'prognose';
+export type ExtraTyp = 'treffer_tag' | 'treffer_woche' | 'selbsttest' | 'plausi' | 'ernaehrung' | 'alltag' | 'workout' | 'ziel' | 'saison' | 'autopilot' | 'umplanung' | 'lastfaktoren' | 'prognose' | 'ereignis';
 
 export interface ExtraItem<T = any> {
   datum: string;

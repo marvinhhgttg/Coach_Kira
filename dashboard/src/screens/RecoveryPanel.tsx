@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { BefindenHinweis } from '../components/BefindenHinweis';
 import {
   Area,
   Bar,
@@ -854,6 +855,9 @@ function WellbeingInput({ todayIso, yesterdayIso, todayValue, yesterdayValue, on
         <span>1 = gar nicht</span>
         <span>{current != null ? `gespeichert: ${current}/5` : 'noch nicht erfasst'}</span>
         <span>5 = voll</span>
+      </div>
+      <div className="mt-2">
+        <BefindenHinweis erfasst={todayValue != null} />
       </div>
     </div>
   );

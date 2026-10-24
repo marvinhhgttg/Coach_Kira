@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { istPlatzhalter } from '../lib/dataQuality';
 import {
   Bar,
   CartesianGrid,
@@ -975,7 +976,7 @@ export function Reports() {
         return {
           ...d,
           x: {
-            kcalIn: toNum(r.kcal_in),
+            kcalIn: istPlatzhalter('kcal_in', r.kcal_in) ? null : toNum(r.kcal_in),
             kcalOut: toNum(r.kcal_out),
             carb: toNum(r.carb_g),
             protein: toNum(r.protein_g),
