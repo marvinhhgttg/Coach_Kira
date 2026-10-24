@@ -32,6 +32,8 @@ import { AlltagCheckTile, type AlltagSwap } from '../components/AlltagCheckTile'
 import { AutopilotTile, type AutopilotTag } from '../components/AutopilotTile';
 import { DisruptionTile } from '../components/DisruptionTile';
 import { VorausblickTile } from '../components/VorausblickTile';
+import { ErholungspreisTile } from '../components/ErholungspreisTile';
+import { GrauzoneTile } from '../components/GrauzoneTile';
 import { WhatIfTile } from '../components/WhatIfTile';
 import { GoalPlannerTile } from '../components/GoalPlannerTile';
 import { SeasonTile } from '../components/SeasonTile';
@@ -1371,6 +1373,12 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
           recGap={recGap}
           onApply={(l, sp, z) => applyPlanValues(l, sp, z, 'Was-wäre-wenn-Variante')}
         />
+      )}
+      {!loading && !err && sim.length > 0 && planTab === 'strategie' && (
+        <div className="grid gap-4 xl:grid-cols-2">
+          <ErholungspreisTile plan={sim.map((d, i) => ({ date: d.date, load: Math.round(loads[i] ?? 0), sport: sports[i] ?? '', zone: zones[i] ?? '' }))} />
+          <GrauzoneTile />
+        </div>
       )}
       {!loading && !err && sim.length > 0 && planTab === 'strategie' && (
         <StrategyPanel
