@@ -1475,6 +1475,24 @@ def cmd_autopilot(force: bool = False) -> None:
     except Exception:
         spitze = 240
 
+    # Wochenrhythmus (weiche Präferenz): Ø Trainingsbereitschaft je Wochentag, letzte 180 Tage
+    rhythmus = ""
+    try:
+        wt = {}
+        for r in fetch_rows(180, ["Garmin_Training_Readiness"]):
+            v = num(r.get("Garmin_Training_Readiness"))
+            if v is not None:
+                wt.setdefault(datetime.date.fromisoformat(r["date"]).weekday(), []).append(v)
+        mw = {k: sum(v) / len(v) for k, v in wt.items() if len(v) >= 8}
+        if len(mw) == 7:
+            ordn = sorted(mw, key=lambda k: -mw[k])
+            gut = ", ".join(_WTAG[k] for k in ordn[:3])
+            schwach = _WTAG[ordn[-1]]
+            rhythmus = (f"Weiche Präferenz aus deinem Wochenrhythmus: Bereitschaft im Schnitt am höchsten {gut}, am niedrigsten {schwach} "
+                        f"({round(mw[ordn[0]])} gegen {round(mw[ordn[-1]])}). Qualität eher auf die starken Tage, den schwächsten Tag eher locker – nur wenn Kalender und Regeln es zulassen. ")
+    except Exception:
+        rhythmus = ""
+
     def tag_max(alt: int) -> int:
         """Höchstens +40 % je Tag und nie über die eigene Spitze (außer der Plan lag schon darüber)."""
         if alt <= 0:
@@ -1505,6 +1523,7 @@ def cmd_autopilot(force: bool = False) -> None:
 
     regeln = ("Regeln: FEST-Tage nie ändern. "
               + (f"Wochenlast höchstens 10 % über {ziel_ess} ESS, gern bis 15 % darunter. " if ziel_ess else "Wochenlast etwa beibehalten (15 % weniger ist in Ordnung, höchstens 10 % mehr). ")
+              + rhythmus
               + f"Kein Tag über {spitze} ESS und kein Tag mehr als 40 % über seinem bisherigen Plan. Gestrichene Last nicht auf einen Tag packen: auf zwei bis drei Tage verteilen oder die Wochenlast senken. "
               + "Monotonie-Regel: höchstens 4 Tage in Folge ohne deutliche Entlastung (<= 40 ESS); harte Tage klar hart, lockere wirklich locker. "
               "Lange Einheiten auf Tage mit wenig Terminen und gutem Wetter. Rad draußen nicht bei Regen > 5 mm oder Wind > 40 km/h. Nur nötige Änderungen.")

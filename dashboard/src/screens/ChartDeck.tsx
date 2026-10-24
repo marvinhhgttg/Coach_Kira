@@ -1,4 +1,6 @@
 import { RecoveryPanel } from './RecoveryPanel';
+import { WochenrhythmusTile } from '../components/WochenrhythmusTile';
+import { IntensitaetTile } from '../components/IntensitaetTile';
 import { DataQualityTile } from '../components/DataQualityTile';
 import { TrainingControl } from './TrainingControl';
 import { useEffect, useMemo, useState, useCallback } from 'react';
@@ -627,6 +629,10 @@ export function ChartDeck() {
         )}
       </Panel>
 
+      <div className="grid gap-4 xl:grid-cols-2 items-start">
+        <WochenrhythmusTile />
+        <IntensitaetTile />
+      </div>
       <DataQualityTile />
 
       {fullscreenSection && (

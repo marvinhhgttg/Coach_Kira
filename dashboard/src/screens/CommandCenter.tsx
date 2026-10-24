@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { SchlafkontoTile } from '../components/SchlafkontoTile';
 import { VorausblickTile } from '../components/VorausblickTile';
 import { ErholungsuhrTile } from '../components/ErholungsuhrTile';
 import {
@@ -511,7 +512,10 @@ export function CommandCenter({
     <div className="space-y-6">
       <RecoveryPanel token={token} toast={toast} proxyAuthenticated={proxy.authenticated} />
       <VorausblickTile compact />
-      <ErholungsuhrTile />
+      <div className="grid gap-4 lg:grid-cols-2 items-start">
+        <ErholungsuhrTile />
+        <SchlafkontoTile />
+      </div>
       <section className="panel overflow-hidden">
         <div>
           <div className="p-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

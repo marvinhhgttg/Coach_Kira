@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FormRampeTile } from '../components/FormRampeTile';
+import { EsHebelTile } from '../components/EsHebelTile';
 import { StrategyPanel, planChecks, useEvents } from './StrategyPanel';
 import { PlanKpis } from './PlanKpis';
 import { PlanLoopPanel } from './PlanLoopPanel';
@@ -1124,6 +1126,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
             {planTab === 'simulation' && (
               <div className="space-y-4">
                 <ReadinessStrip forecast={readiness} model={models.r} error={histErr} />
+                <FormRampeTile plan={sim.map((d) => ({ date: d.date, atl: d.atl, ctl: d.ctl }))} />
             <div className="panel-raised p-3">
               <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                 <div>
@@ -1358,6 +1361,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
               <div className="space-y-4">
                 <GoalPlannerTile />
                 <SeasonTile />
+                <EsHebelTile />
                 <LoadFactorTile vorschlaege={lf} busy={lfBusy} error={lfErr} onRefresh={refreshLoadFactors} />
               </div>
             )}
