@@ -1,4 +1,5 @@
 import { RecoveryPanel } from './RecoveryPanel';
+import { FormelEditorTile } from '../components/FormelEditorTile';
 import { WochenrhythmusTile } from '../components/WochenrhythmusTile';
 import { IntensitaetTile } from '../components/IntensitaetTile';
 import { DataQualityTile } from '../components/DataQualityTile';
@@ -628,6 +629,8 @@ export function ChartDeck() {
         </>
         )}
       </Panel>
+
+      <FormelEditorTile />
 
       <div className="grid gap-4 xl:grid-cols-2 items-start">
         <WochenrhythmusTile />

@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { ZeitraumVergleichTile } from '../components/ZeitraumVergleichTile';
+import { JahresrueckblickTile } from '../components/JahresrueckblickTile';
 import { istPlatzhalter } from '../lib/dataQuality';
 import {
   Bar,
@@ -43,7 +45,7 @@ const EXTRA_METRICS = ['kcal_in', 'kcal_out', 'carb_g', 'protein_g', 'fat_g', 'd
 type Extra = { kcalIn: number | null; kcalOut: number | null; carb: number | null; protein: number | null; fat: number | null; dist: number | null; elev: number | null; ctl: number | null };
 type D = RecoveryDay & { x: Extra };
 
-type Sub = 'month' | 'week' | 'recovery' | 'year' | 'sleep' | 'nutrition' | 'outage';
+type Sub = 'month' | 'week' | 'recovery' | 'year' | 'sleep' | 'nutrition' | 'outage' | 'vergleich' | 'wrapped';
 const SUBS: { id: Sub; label: string }[] = [
   { id: 'month', label: 'Monat' },
   { id: 'week', label: 'Woche' },
@@ -52,6 +54,8 @@ const SUBS: { id: Sub; label: string }[] = [
   { id: 'sleep', label: 'Schlaf' },
   { id: 'nutrition', label: 'Ernährung' },
   { id: 'outage', label: 'Ausfälle' },
+  { id: 'vergleich', label: 'Zeitraumvergleich' },
+  { id: 'wrapped', label: 'Kira Wrapped' },
 ];
 
 const TITLES: Record<Sub, string> = {
@@ -62,6 +66,8 @@ const TITLES: Record<Sub, string> = {
   sleep: 'Schlafbericht',
   nutrition: 'Ernährungsbericht',
   outage: 'Krankheit & Datenlücken',
+  vergleich: 'Zeitraumvergleich',
+  wrapped: 'Kira Wrapped',
 };
 const GRID = '#1f2731';
 const MONTHS_DE = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
@@ -997,7 +1003,11 @@ export function Reports() {
         <Chips items={SUBS.map((s) => s.id)} value={sub} onChange={setSub} fmt={(id) => SUBS.find((s) => s.id === id)!.label} />
         {needsWin && <Chips items={WINDOWS} value={win} onChange={setWin} fmt={winLabel} />}
       </div>
-      {sub === 'month' ? (
+      {sub === 'vergleich' ? (
+        <ZeitraumVergleichTile />
+      ) : sub === 'wrapped' ? (
+        <JahresrueckblickTile />
+      ) : sub === 'month' ? (
         all.length ? <MonthReport days={all} /> : err ? <ErrorBox message={err} /> : <Skeleton className="h-64" />
       ) : (
         <Panel title={`${TITLES[sub]}${needsWin ? ` · ${winTitle(win)}` : ''}`}>

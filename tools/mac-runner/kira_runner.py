@@ -1173,6 +1173,11 @@ def cmd_morning(force: bool = False) -> None:
     if not fehler:
         st["morning_done"] = today
         save_state(st)
+        try:
+            import kira_push
+            kira_push.morgen_push(today)
+        except Exception as e:
+            log(f"push: FEHLER {e}")
     if ergebnisse:
         names: list[str] = []
         for t in ergebnisse:

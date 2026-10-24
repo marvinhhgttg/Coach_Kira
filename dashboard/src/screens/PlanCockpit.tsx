@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { TourformTile } from '../components/TourformTile';
+import { RezeptbuchTile } from '../components/RezeptbuchTile';
 import { FormRampeTile } from '../components/FormRampeTile';
 import { EsHebelTile } from '../components/EsHebelTile';
 import { StrategyPanel, planChecks, useEvents } from './StrategyPanel';
@@ -1360,8 +1362,10 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
             {planTab === 'ziele' && (
               <div className="space-y-4">
                 <GoalPlannerTile />
+                <TourformTile />
                 <SeasonTile />
                 <EsHebelTile />
+                <RezeptbuchTile />
                 <LoadFactorTile vorschlaege={lf} busy={lfBusy} error={lfErr} onRefresh={refreshLoadFactors} />
               </div>
             )}
