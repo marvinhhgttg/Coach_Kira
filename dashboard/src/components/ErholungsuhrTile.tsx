@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import {
   ladeTage,
   erholungsDauer,
+  erholungJeBand,
+  lastBand,
+  type BandErholung,
   zonenKlasse,
   type ETag,
 } from '../lib/recoveryPrice';
@@ -141,12 +144,36 @@ export function ErholungsuhrTile() {
     return <div className="panel-raised p-4"><p className="text-sm text-orange-300">{error}</p></div>;
   }
 
-  // Ohne grosserTag: Fallback-Anzeige
+  // Ohne großen Tag: Erfahrungswert für die Last von heute bzw. gestern (alle Lastbereiche)
   if (!grosserTag) {
+    const bz = erholungJeBand(tage);
+    const tagMitLast = heute && heute.load != null && heute.load > 0 ? heute : gestern && gestern.load != null && gestern.load > 0 ? gestern : null;
+    const band = tagMitLast ? bz.baender.find((b) => b.band === lastBand(tagMitLast.load!, bz.p50, bz.p90)) : undefined;
+    const tageTxt = (m: number | null) => (m == null ? 'unbekannt' : m <= 1 ? 'am nächsten Morgen' : `nach ${m} Tagen`);
+    const grenzTxt = (b: BandErholung) => (b.bis == null ? `ab ${Math.round(b.von)}` : b.band === 'locker' ? `unter ${Math.round(b.bis)}` : `${Math.round(b.von)}–${Math.round(b.bis) - 1}`);
     return (
-      <div className="panel-raised p-3 text-xs text-ink-muted">
-        Erholungsuhr: kein großer Belastungstag (ab {Math.round(p90)} ESS) gestern oder heute.
-        Nach solchen Tagen bist du meist nach {median === null ? 'unbekannt' : String(Math.round(median))} Tagen wieder auf Basis.
+      <div className="panel-raised p-4" data-testid="erholungsuhr">
+        <div className="label">Coach Kira · Erholungsuhr</div>
+        {tagMitLast && band ? (
+          <p className="mt-2 text-xs text-ink">
+            {tagMitLast === heute ? 'Heute' : 'Gestern'} {Math.round(tagMitLast.load!)} ESS ({band.label}):{' '}
+            {band.median != null && band.median <= 1 && band.sofortAnteil != null
+              ? `Nach solchen Tagen bist du in ${Math.round(band.sofortAnteil * 100)} % der Fälle schon am nächsten Morgen wieder auf deiner Basis (~${fmtDe(basis)}).`
+              : `Nach solchen Tagen bist du meist ${tageTxt(band.median)} wieder auf deiner Basis (~${fmtDe(basis)})${band.sofortAnteil != null && band.faelle >= 5 ? `, in ${Math.round(band.sofortAnteil * 100)} % der Fälle schon am nächsten Morgen` : ''}.`}
+          </p>
+        ) : (
+          <p className="mt-2 text-xs text-ink">Gestern und heute ohne Training – Erholung läuft.</p>
+        )}
+        <div className="mt-2 grid grid-cols-3 gap-2 text-2xs tnum">
+          {bz.baender.map((b) => (
+            <div key={b.band} className={`rounded border p-1.5 ${band?.band === b.band ? 'border-accent' : 'border-border'}`}>
+              <div className="text-ink-muted">{b.label} · {grenzTxt(b)} ESS</div>
+              <div className="text-ink text-xs">{b.median == null ? '—' : b.median <= 1 ? '1 Tag' : `${b.median === 9 ? '9+' : b.median} Tage`}</div>
+              <div className="text-ink-dim">{b.faelle} Fälle</div>
+            </div>
+          ))}
+        </div>
+        <p className="mt-1 text-2xs text-ink-dim">Tage bis die Bereitschaft wieder höchstens 3 Punkte unter deinem 28-Tage-Schnitt liegt (Median, ohne Krankheitstage).</p>
       </div>
     );
   }

@@ -462,6 +462,76 @@ export function erholungsDauer(tags: ETag[]): ErholungsDauer {
   return { p90, faelle: Object.values(verteilung).reduce((a, b) => a + b, 0), verteilung: verteilung, median };
 }
 
+// ─── Erholungsdauer je Lastbereich ───────────────────────────────────────────
+
+export type LastBand = 'locker' | 'mittel' | 'gross';
+export interface BandErholung {
+  band: LastBand;
+  label: string;
+  von: number;
+  bis: number | null;
+  faelle: number;
+  median: number | null;
+  verteilung: Record<string, number>;
+  /** Anteil der Fälle, in denen am nächsten Morgen schon die Basis erreicht war. */
+  sofortAnteil: number | null;
+}
+export interface ErholungBaender { p50: number; p90: number; baender: BandErholung[] }
+
+/** Lastbereich eines Tages (Grenzen aus eigenen Daten: P50 und P90 der Tage mit Last). */
+export function lastBand(load: number, p50: number, p90: number): LastBand {
+  return load >= p90 ? 'gross' : load >= p50 ? 'mittel' : 'locker';
+}
+
+/** Wie erholungsDauer, aber für alle Lastbereiche (locker < P50 ≤ mittel < P90 ≤ groß). */
+export function erholungJeBand(tags: ETag[]): ErholungBaender {
+  const loads = tags.filter((t) => t.load != null && t.load > 0).map((t) => t.load!).sort((a, b) => a - b);
+  if (!loads.length) return { p50: 0, p90: 0, baender: [] };
+  const q = (p: number) => loads[Math.max(0, Math.ceil(loads.length * p) - 1)];
+  const p50 = q(0.5), p90 = q(0.9);
+  const acc: Record<LastBand, Record<string, number>> = { locker: {}, mittel: {}, gross: {} };
+  for (let i = 0; i < tags.length; i++) {
+    const t = tags[i];
+    if (t.load == null || t.load <= 0 || t.krank) continue;
+    const ref: number[] = [];
+    for (let j = i - 28; j <= i - 1; j++) {
+      if (j < 0) continue;
+      const r = tags[j];
+      if (!r.krank && r.readiness != null) ref.push(r.readiness);
+    }
+    if (ref.length < 14) continue;
+    const thr = ref.reduce((a, b) => a + b, 0) / ref.length - 3;
+    let k: number | null = null;
+    let offen = false;
+    for (let kk = 1; kk <= 8; kk++) {
+      if (i + kk >= tags.length) { offen = true; break; }
+      const n = tags[i + kk];
+      if (n.readiness != null && n.readiness >= thr) { k = kk; break; }
+    }
+    if (offen && k == null) continue; // noch nicht abgeschlossen
+    const key = k == null ? '9+' : String(k);
+    const b = lastBand(t.load, p50, p90);
+    acc[b][key] = (acc[b][key] || 0) + 1;
+  }
+  const mk = (band: LastBand, label: string, von: number, bis: number | null): BandErholung => {
+    const v = acc[band];
+    const keys = Object.keys(v).sort((a, b) => (a === '9+' ? 1 : b === '9+' ? -1 : Number(a) - Number(b)));
+    const total = Object.values(v).reduce((a, b) => a + b, 0);
+    let median: number | null = null;
+    let half = Math.ceil(total / 2);
+    for (const k of keys) { half -= v[k]; if (half <= 0) { median = k === '9+' ? 9 : Number(k); break; } }
+    return { band, label, von, bis, faelle: total, median, verteilung: v, sofortAnteil: total ? (v['1'] || 0) / total : null };
+  };
+  return {
+    p50, p90,
+    baender: [
+      mk('locker', 'locker', 1, p50),
+      mk('mittel', 'mittel', p50, p90),
+      mk('gross', 'groß', p90, null),
+    ],
+  };
+}
+
 // ─── Grauzone-Analyse ────────────────────────────────────────────────────────
 
 export interface GrauFall {
