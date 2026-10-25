@@ -18,6 +18,8 @@ import { fmtDateShort, fmtNum } from '../lib/format';
 import { ErrorBox, Panel, Skeleton } from '../components/UI';
 import { CorrelationPanel } from './CorrelationPanel';
 import { atlStep, ctlStep, windowMean } from '../lib/ctlModel';
+import { useGarminTage, fmtDauer } from '../lib/garmin';
+import { sportProfile, lastJeStunde } from '../components/GarminSportProfilTile';
 import { WINDOWS, ALL_RANGE, winLabel, winTitle, sliceWin, rangeFor, rangeDays, type WinKey } from '../lib/windows';
 import { assessMonotony, monoStufe, type MonoAssessment } from '../lib/monotony';
 
@@ -445,7 +447,55 @@ function doneVerdict(today: RecoveryDay): { ok: boolean; demand: Vote } | null {
   return { ok: VOTE_ORDER.indexOf(demand) <= VOTE_ORDER.indexOf(today.vote), demand };
 }
 
-function PlanCheck({ plan, today }: { plan: PlannedSession | null | 'loading'; today: RecoveryDay }) {
+// ---------------------------------------------------------------------------
+// Lastempfehlung heute (min–max): Votum × Fitness, gedeckelt durch ACWR ≤ 1,3
+// ---------------------------------------------------------------------------
+const BAND: Record<Vote, [number, number]> = { REST: [0, 0.25], EASY: [0.3, 0.8], TRAIN: [0.7, 1.25], QUALITY: [1.0, 1.7] };
+type Empfehlung = { min: number; max: number; halte: number; acwrGrenze: number | null; gedeckelt: boolean };
+
+function lastEmpfehlung(today: RecoveryDay, yesterday: RecoveryDay | null): Empfehlung | null {
+  const vote = today.vote;
+  const atl0 = yesterday?.atlPost ?? null;
+  const ctl0 = yesterday?.ctlPost ?? null;
+  if (!vote || atl0 == null || ctl0 == null || ctl0 <= 0) return null;
+  const m0 = ctl0 / 7.04; // Ø-Tageslast der letzten 28 Tage (CTL ≈ 7,04 × Ø28)
+  const ctlNach = (L: number) => ctlStep(ctl0, L, (27 * m0 + L) / 28);
+  const acwrNach = (L: number) => atlStep(atl0, L) / ctlNach(L);
+  let halte = 0;
+  for (let L = 0; L <= 500; L += 1) if (ctlNach(L) >= ctl0) { halte = L; break; }
+  let acwrGrenze: number | null = null;
+  for (let L = 0; L <= 600; L += 1) if (acwrNach(L) > 1.3) { acwrGrenze = L - 1; break; }
+  const r5 = (x: number) => Math.max(0, Math.round(x / 5) * 5);
+  let [lo, hi] = BAND[vote].map((f) => r5(f * halte));
+  let gedeckelt = false;
+  if (acwrGrenze != null && hi > acwrGrenze) { hi = r5(Math.max(0, acwrGrenze)); gedeckelt = true; if (lo > hi) lo = r5(hi * 0.6); }
+  return { min: lo, max: hi, halte: r5(halte), acwrGrenze: acwrGrenze != null ? r5(acwrGrenze) : null, gedeckelt };
+}
+
+function EmpfehlungZeile({ e, vote, plan, ist = false }: { e: Empfehlung; vote: Vote; plan: PlannedSession | null; ist?: boolean }) {
+  const { tage } = useGarminTage();
+  const sport = plan && plan.load > 0 && plan.sport && plan.sport.toLowerCase() !== 'off' ? plan.sport : 'Bike';
+  const prof = sportProfile(tage, 120).find((p) => p.sport === sport);
+  const lph = lastJeStunde(prof);
+  const dauer = lph && e.max > 0 ? `≈ ${e.min > 0 ? fmtDauer((e.min / lph) * 3600) + '–' : 'bis '}${fmtDauer((e.max / lph) * 3600)} ${sport}` : null;
+  const lage = plan && plan.load > 0 ? (plan.load > e.max ? 'darüber' : plan.load < e.min ? 'darunter' : 'im Rahmen') : null;
+  return (
+    <div className="mt-2 border-t border-border pt-2 text-xs" data-testid="last-empfehlung">
+      <div className="flex flex-wrap items-baseline gap-x-2">
+        <span className="label">{ist ? 'Empfehlung war' : 'Empfehlung heute'}</span>
+        <span className="font-semibold tnum text-ink">{vote === 'REST' && e.max <= 30 ? `0–${e.max} ESS (Ruhe, höchstens Mobility)` : `${e.min}–${e.max} ESS`}</span>
+        {dauer && <span className="tnum text-ink-muted">{dauer}</span>}
+      </div>
+      <div className="mt-0.5 text-2xs text-ink-dim tnum">
+        Votum {VOTE_LABEL[vote]} · Fitness halten ≈ {e.halte} ESS{e.acwrGrenze != null ? ` · ACWR 1,3 bei ≈ ${e.acwrGrenze} ESS` : ''}{e.gedeckelt ? ' (Obergrenze dadurch gesenkt)' : ''}
+        {lage && <> · {ist ? 'Absolviert' : 'Plan'} {fmtNum(plan!.load)} ESS <span className={lage === 'im Rahmen' ? 'text-green-300' : 'text-orange-300'}>{lage}</span></>}
+      </div>
+    </div>
+  );
+}
+
+function PlanCheck({ plan, today, yesterday }: { plan: PlannedSession | null | 'loading'; today: RecoveryDay; yesterday?: RecoveryDay | null }) {
+  const emp = today.vote ? lastEmpfehlung(today, yesterday ?? null) : null;
   const done = isDoneToday(today, plan);
   const act = actualSession(today);
 
@@ -475,6 +525,7 @@ function PlanCheck({ plan, today }: { plan: PlannedSession | null | 'loading'; t
         {planDiffers && planObj && (
           <div className="mt-1 text-2xs text-ink-dim tnum">Geplant war: {sessionText(planObj)}.</div>
         )}
+        {emp && today.vote && <EmpfehlungZeile e={emp} vote={today.vote} plan={act} ist />}
       </div>
     );
   }
@@ -483,7 +534,12 @@ function PlanCheck({ plan, today }: { plan: PlannedSession | null | 'loading'; t
     return <div className="text-2xs text-ink-dim">Plan für heute wird geladen…</div>;
   }
   if (!plan) {
-    return <div className="text-2xs text-ink-dim">Kein Plan für heute gefunden (Plan Cockpit / PlanApp).</div>;
+    return (
+      <div>
+        <div className="text-2xs text-ink-dim">Kein Plan für heute gefunden (Plan Cockpit / PlanApp).</div>
+        {emp && today.vote && <EmpfehlungZeile e={emp} vote={today.vote} plan={null} />}
+      </div>
+    );
   }
   const verdict = today.vote ? planVerdict(plan, today.vote) : null;
   const lvl: Level = !verdict ? 'leer' : verdict.ok ? 'gruen' : 'orange';
@@ -502,6 +558,7 @@ function PlanCheck({ plan, today }: { plan: PlannedSession | null | 'loading'; t
           {verdict.text}
         </div>
       )}
+      {emp && today.vote && <EmpfehlungZeile e={emp} vote={today.vote} plan={plan} />}
     </div>
   );
 }
@@ -983,7 +1040,7 @@ function TodayCard({
       </dl>
 
       <div className="mt-4">
-        <PlanCheck plan={plan} today={today} />
+        <PlanCheck plan={plan} today={today} yesterday={yesterday} />
       </div>
 
       <div className="mt-4">
