@@ -321,13 +321,15 @@ export function rechne(ast: Knoten, reihen: Reihen): Array<number | null> {
 }
 
 export const VARIABLEN: Record<string, string> = {
-  load: 'ES (Endurance Score) — Tagesbelastung',
-  atl: 'ATL (Alertness/Müdigkeit) — Acute Training Load',
-  ctl: 'CTL (Chronic Training Load/Form) — Chronic Training Load',
-  acwr: 'ACWR — Acute/Chronic Workload Ratio',
-  rhr: 'Ruhepuls in Schlägen pro Minute (bpm)',
-  hrv: 'Herzratenvariabilität (HRV, ms)',
-  sleep: 'Schlaf in Stunden',
-  readiness: ' Trainingsbereitsbarkeit (Readiness, Score)',
-  es: 'Endurance Score (ES) — Tagesbelastung',
+  load: 'Tageslast (ESS)',
+  atl: 'ATL – akute Belastung (7 Tage)',
+  ctl: 'CTL – chronische Belastung, Fitness (28 Tage)',
+  acwr: 'ACWR – ATL / CTL',
+  rhr: 'Ruhepuls (bpm)',
+  hrv: 'HRV, 7-Tage-Schnitt (ms)',
+  sleep: 'Schlaf (Stunden)',
+  sleepScore: 'Schlafscore (0–100)',
+  readiness: 'Trainingsbereitschaft (0–100)',
+  es: 'Ausdauerwert (Garmin Endurance Score)',
+  mono: 'Monotonie (7 Tage)',
 };

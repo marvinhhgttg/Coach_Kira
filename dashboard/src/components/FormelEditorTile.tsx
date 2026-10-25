@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { fetchChartData } from '../lib/api';
+import { fetchChartData, toNum } from '../lib/api';
+import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { parseFormel, rechne, VARIABLEN, type Knoten } from '../lib/formel';
 
 // ── Typen und Hilfsfunktionen ───────────────────────────────────────
@@ -48,6 +49,8 @@ const METRIC_MAP: Record<string, string> = {
 };
 
 const VARIABLEN_ORDER = Object.keys(VARIABLEN);
+/** Variable -> Sheet-Spalte (Fix: METRIC_MAP ist Spalte -> Variable). */
+const VAR_ZU_SPALTE: Record<string, string> = Object.fromEntries(Object.entries(METRIC_MAP).map(([spalte, v]) => [v, spalte]));
 
 // ── Komponente ─────────────────────────────────────────────────────
 export function FormelEditorTile() {
@@ -142,27 +145,21 @@ export function FormelEditorTile() {
       // Reihen aufbauen: VARIABLEN-Namen → Array von Werten
       const reihen: Record<string, Array<number | null>> = {};
       for (const varName of VARIABLEN_ORDER) {
-        const metric = METRIC_MAP[varName];
+        const metric = VAR_ZU_SPALTE[varName];
         if (!metric || !rawData.length) {
           reihen[varName] = new Array(rawData.length).fill(null);
           continue;
         }
         reihen[varName] = rawData.map((r: Record<string, any>) => {
-          const v = r[metric];
-          return v != null ? Number(v) : null;
+          return toNum(r[metric]);
         });
       }
 
       // Nur die letzten N Tage verwenden (abzüglich der Datenlänge)
+      // Erst über die ganze Reihe rechnen (Fenster wie avg(x, 28) brauchen die Vortage), dann zuschneiden
       const dataLen = rawData.length;
       const startIdx = Math.max(0, dataLen - tage);
-      const sliceReihen: Record<string, Array<number | null>> = {};
-      for (const k of Object.keys(reihen)) {
-        sliceReihen[k] = reihen[k].slice(startIdx);
-      }
-
-      // Berechne Ergebnis-Array elementweise
-      const erg = rechne(parsed, sliceReihen);
+      const erg = rechne(parsed, reihen).slice(startIdx);
 
       // Mit Datum verbinden (nur die Datenpunkte ab startIdx)
       const points: { label: string; xVal: string; yVal: number | null }[] = [];
@@ -267,7 +264,7 @@ export function FormelEditorTile() {
             className="border border-border rounded px-2 py-1 text-sm bg-transparent w-full"
           />
         </div>
-        <button onClick={speichereFormel} className="px-3 py-1 border border-border rounded text-sm hover:bg-gray-50 shrink-0">
+        <button onClick={speichereFormel} className="px-3 py-1 border border-border rounded text-sm hover:bg-bg-subtle shrink-0">
           Speichern
         </button>
       </div>
@@ -277,8 +274,8 @@ export function FormelEditorTile() {
         {formeln.map((f, i) => (
           <div key={i} className="flex items-center">
             <button
-              onClick={() => setSelectedIdx(i === selectedIdx ? null : i)}
-              className={`px-2 py-1 border rounded text-xs ${i === selectedIdx ? 'bg-accent/10 border-accent' : 'border-border hover:bg-gray-50'}`}
+              onClick={() => setSelectedIdx(i)}
+              className={`px-2 py-1 border rounded text-xs ${i === selectedIdx ? 'bg-accent/10 border-accent' : 'border-border hover:bg-bg-subtle'}`}
             >
               {f.name}
             </button>
@@ -293,7 +290,7 @@ export function FormelEditorTile() {
           <button
             key={d}
             onClick={() => setTage(d)}
-            className={`px-2 py-1 border rounded text-xs ${tage === d ? 'bg-accent/10 border-accent' : 'border-border hover:bg-gray-50'}`}
+            className={`px-2 py-1 border rounded text-xs ${tage === d ? 'bg-accent/10 border-accent' : 'border-border hover:bg-bg-subtle'}`}
           >
             {d} Tage
           </button>
@@ -312,11 +309,17 @@ export function FormelEditorTile() {
             {/* recharts-Diagramm: ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid */}
             {/* Da recharts importiert werden muss: direkte Implementierung mit den Named-Imports */}
             <div style={{ height: 220 }}>
-              {resultData.length > 0 ? (
-                <div className="recharts-wrapper" style={{ height: 220 }}>
-                  {/* Wir bauen das Diagramm manuell mit SVG für maximale Kompatibilität */}
-                  <DiagramChartWerkzeuge daten={resultData} error={chartError} />
-                </div>
+              {resultData.some((d) => d.yVal != null) ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={resultData} margin={{ top: 6, right: 12, left: -8, bottom: 0 }}>
+                    <CartesianGrid stroke="#1f2731" vertical={false} />
+                    <XAxis dataKey="xVal" tickFormatter={(v) => fmtDateShort(String(v))} tickLine={false} axisLine={{ stroke: '#1f2731' }} tick={{ fill: '#8b97a6', fontSize: 11 }} minTickGap={24} />
+                    <YAxis tickLine={false} axisLine={{ stroke: '#1f2731' }} tick={{ fill: '#8b97a6', fontSize: 11 }} domain={['auto', 'auto']} />
+                    <ReferenceLine y={0} stroke="#475569" strokeDasharray="3 3" />
+                    <Tooltip contentStyle={{ background: '#0f141a', border: '1px solid #1f2731', fontSize: 12 }} labelFormatter={(v) => fmtDateShort(String(v))} formatter={(v: any) => [v == null ? '—' : fmtNum(Number(v)), formeln[selectedIdx]?.name || 'Wert']} />
+                    <Line dataKey="yVal" stroke="#38bdf8" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
+                  </LineChart>
+                </ResponsiveContainer>
               ) : (
                 <p className="text-2xs text-ink-dim flex items-center justify-center" style={{ height: 220 }}>
                   Keine Daten für diese Formel verfügbar.
@@ -368,101 +371,5 @@ export function FormelEditorTile() {
         </div>
       </div>
     </div>
-  );
-}
-
-// ── Diagramm-Komponente (SVG-basiert, mit recharts-Komponenten-Props) ─
-interface DiagramChartWerkzeugeProps {
-  daten: { label: string; xVal: string; yVal: number | null }[];
-  error?: string | null;
-}
-
-function DiagramChartWerkzeuge({ daten, error }: DiagramChartWerkzeugeProps) {
-  // Filtere gültige Werte für Y-Achsen-Bereich
-  const validVals = daten.map(d => d.yVal).filter(v => v != null && Number.isFinite(v as number)) as number[];
-  if (validVals.length === 0 && !error) return null;
-
-  const width = daten.length > 0 ? Math.max(daten.length * 3, 200) : 200;
-  const height = 196; // 220 - padding
-  const padL = 50, padR = 10, padT = 10, padB = 30;
-  const chartW = width - padL - padR;
-  const chartH = height - padT - padB;
-
-  let yMin: number, yMax: number;
-  if (validVals.length > 0) {
-    const margin = (Math.max(...validVals) - Math.min(...validVals)) * 0.1;
-    yMin = Math.min(...validVals) - margin;
-    yMax = Math.max(...validVals) + margin;
-  } else {
-    yMin = -10; yMax = 10;
-  }
-
-  function xPos(i: number): number { return padL + (i / Math.max(daten.length - 1, 1)) * chartW; }
-  function yPos(v: number): number { return padT + (1 - (v - yMin) / (yMax - yMin)) * chartH; }
-
-  // Linien-Pfad bauen
-  const pts = daten.map((d, i) => ({ x: xPos(i), y: yPos(d.yVal ?? 0) }));
-  const pathParts: string[] = [];
-  let started = false;
-  for (let i = 0; i < pts.length; i++) {
-    if (daten[i].yVal == null) { started = false; continue; }
-    if (!started) { pathParts.push(`M${pts[i].x},${pts[i].y}`); started = true; }
-    else { pathParts.push(`L${pts[i].x},${pts[i].y}`); }
-  }
-  const pathD = pathParts.join(' ');
-
-  // Gitter-Linien (5 horizontal)
-  const gridLines: string[] = [];
-  for (let j = 0; j <= 4; j++) {
-    const gv = yMin + (yMax - yMin) * (1 - j / 4);
-    const gy = yPos(gv);
-    gridLines.push(`M${padL},${gy} L${width - padR},${gy}`);
-  }
-
-  // Y-Achsen-Beschriftungen
-  const yLabels: { label: string; yPos: number }[] = [];
-  for (let j = 0; j <= 4; j++) {
-    const gv = yMin + (yMax - yMin) * (1 - j / 4);
-    const gy = yPos(gv);
-    yLabels.push({ label: Math.round(gv).toString(), yPos: gy });
-  }
-
-  // X-Achsen-Beschriftungen (alle N Tage)
-  const xLabels: { label: string; xPos: number }[] = [];
-  const stepX = Math.max(1, Math.floor(daten.length / 8));
-  for (let i = 0; i < daten.length; i += stepX) {
-    xLabels.push({ label: daten[i].label, xPos: xPos(i) });
-  }
-
-  return (
-    <svg width={width} height={height} className="text-accent">
-      {/* Gitter */}
-      <g stroke="#ddd" strokeWidth={0.5}>
-        {gridLines.map((d, i) => <path key={i} d={d} />)}
-      </g>
-
-      {/* Linie */}
-      {pathD && (
-        <path d={pathD} fill="none" stroke="currentColor" strokeWidth={2} className="text-accent" />
-      )}
-
-      {/* Y-Achsen-Beschriftungen */}
-      {yLabels.map((l, i) => (
-        <text key={i} x={padL - 4} y={l.yPos + 3} textAnchor="end" fontSize={10} fill="#666">
-          {l.label}
-        </text>
-      ))}
-
-      {/* X-Achsen-Beschriftungen */}
-      {xLabels.map((l, i) => (
-        <text key={i} x={l.xPos} y={height - 2} textAnchor="middle" fontSize={9} fill="#666">
-          {l.label}
-        </text>
-      ))}
-
-      {/* Achsen */}
-      <line x1={padL} y1={padT} x2={padL} y2={height - padB} stroke="#ccc" strokeWidth={1} />
-      <line x1={padL} y1={height - padB} x2={width - padR} y2={height - padB} stroke="#ccc" strokeWidth={1} />
-    </svg>
   );
 }
