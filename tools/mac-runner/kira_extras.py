@@ -1761,6 +1761,166 @@ def _de(v: float, nd: int = 0) -> str:
     return (f"{v:.{nd}f}").replace(".", ",")
 
 
+# ---------------------------------------------------------------------------
+# Garmin Personal API: Signale für Frühwarnung und Lage für den Prompt
+# (Daten: AI_KIRA_EXTRAS typ garmin_tag, geschrieben von kira_garmin.py)
+# ---------------------------------------------------------------------------
+def garmin_tage(n: int = 60) -> dict:
+    """Garmin-Tagesdetails als {datum: data}. Fehler -> {}."""
+    try:
+        j = http_get_json(SCRIPT_URL + f"?mode=extras&typ=garmin_tag&n={n}")
+        return {it["datum"]: it.get("data") or {} for it in (j.get("items") or []) if it.get("datum")}
+    except Exception as e:
+        log(f"vorausblick: Garmin-Tage nicht verfügbar ({e})")
+        return {}
+
+
+def _g_tage(heute: str, von_offset: int, bis_offset: int) -> list:
+    """Datumsliste heute-von_offset … heute-bis_offset (von_offset >= bis_offset)."""
+    h = datetime.date.fromisoformat(heute)
+    return [(h - datetime.timedelta(days=k)).isoformat() for k in range(von_offset, bis_offset - 1, -1)]
+
+
+def _g_get(data: dict, *pfad):
+    x = data
+    for p in pfad:
+        if not isinstance(x, dict):
+            return None
+        x = x.get(p)
+    return x if isinstance(x, (int, float)) and not isinstance(x, bool) else None
+
+
+def garmin_signale(gt: dict, heute: str) -> tuple:
+    """Frühwarn-Signale aus Garmin-Tageswerten gegen den eigenen Schnitt (Tag -35 … -8)."""
+    sig: list = []
+    lage: dict = {}
+    if not gt:
+        return sig, lage
+
+    def bb_auf(d):
+        g = gt.get(d) or {}
+        v = _g_get(g, "bb_aufwachen")
+        return v if v is not None else _g_get(g, "tag", "bb_max")
+
+    def werte(tage, f):
+        return [v for v in (f(d) for d in tage) if v is not None]
+
+    def med(xs):
+        return _median(xs) if xs else None
+
+    basis = _g_tage(heute, 35, 8)
+    l7 = _g_tage(heute, 6, 0)
+    l3 = _g_tage(heute, 2, 0)
+    vorwoche = _g_tage(heute, 7, 1)
+
+    def pruefe(name, f, aktuell, grenze_o, grenze_g, richtung, text, einheit="", nd=0, extra=None):
+        b = werte(basis, f)
+        a = werte(aktuell, f)
+        if len(b) < 10 or len(a) < 2:
+            return
+        bm, am = med(b), sum(a) / len(a)
+        d = (am - bm) * richtung
+        if extra is not None and not extra(am, bm):
+            schwere = "gelb" if d >= grenze_g else None
+        else:
+            schwere = "orange" if d >= grenze_o else "gelb" if d >= grenze_g else None
+        if schwere:
+            sig.append({"name": name, "schwere": schwere, "art": "koerper",
+                        "text": text.format(m=_de(am, nd), b=_de(bm, nd), d=_de(abs(am - bm), nd), e=einheit)})
+
+    # a) Body Battery beim Aufwachen (orange nur, wenn zusätzlich absolut niedrig)
+    pruefe("Body Battery", bb_auf, l3, 20, 18, -1,
+           "Body Battery beim Aufwachen 3 Tage Ø {m} (dein Schnitt {b})", extra=lambda am, bm: am < 35)
+    # b) Schlafstress
+    pruefe("Schlafstress", lambda d: _g_get(gt.get(d) or {}, "schlaf", "stress"), l7, 8, 4, 1,
+           "Schlafstress 7 Tage Ø {m} – {d} über deinem Schnitt")
+    # c) Atmung im Schlaf
+    pruefe("Atmung", lambda d: _g_get(gt.get(d) or {}, "schlaf", "atem"), l3, 1.5, 1.0, 1,
+           "Atmung im Schlaf 3 Tage Ø {m}/min – {d} über deinem Schnitt (frühes Krankheitszeichen möglich)", nd=1)
+    # d) SpO2 im Schlaf
+    pruefe("SpO2", lambda d: _g_get(gt.get(d) or {}, "schlaf", "spo2"), l3, 3, 2, -1,
+           "SpO2 im Schlaf 3 Tage Ø {m} % – {d} unter deinem Schnitt")
+    # e) Stress tagsüber (heute unvollständig -> Vorwoche)
+    pruefe("Stress", lambda d: _g_get(gt.get(d) or {}, "tag", "stress_avg"), vorwoche, 8, 5, 1,
+           "Stress tagsüber 7 Tage Ø {m} – {d} über deinem Schnitt")
+
+    # f) Grauzone nach Zonenzeit (Last-Signal)
+    z = [0.0] * 5
+    std = km = hm = 0.0
+    for d in vorwoche:
+        sm = (gt.get(d) or {}).get("summe") or {}
+        for i, v in enumerate((sm.get("zonen_s") or [])[:5]):
+            z[i] += v or 0
+        std += (sm.get("bewegt_s") or sm.get("dauer_s") or 0) / 3600
+        km += sm.get("km") or 0
+        hm += sm.get("hm") or 0
+    zsum = sum(z)
+    if zsum >= 3 * 3600:
+        z3, hart = z[2] / zsum, (z[3] + z[4]) / zsum
+        if z3 >= 0.40 and hart < 0.10:  # am Verlauf geprüft: ab 30 % an 35 % aller Tage -> zu laut
+            sig.append({"name": "Grauzone", "schwere": "gelb", "art": "last",
+                        "text": f"Grauzone: {_de(z3 * 100)} % der Trainingszeit der letzten 7 Tage in Z3, nur {_de(hart * 100)} % hart"})
+    if zsum > 0:
+        lage["zonen7_pct"] = [round(v / zsum * 100) for v in z]
+    if std > 0:
+        lage["std7"], lage["km7"], lage["hm7"] = round(std, 1), round(km), round(hm)
+
+    # Lage für den Prompt (nur vorhandene Werte)
+    g0 = gt.get(heute) or {}
+    gest = gt.get(_g_tage(heute, 1, 1)[0]) or {}
+    if bb_auf(heute) is not None:
+        lage["bb_aufwachen"] = bb_auf(heute)
+    b = werte(basis, bb_auf)
+    if len(b) >= 10:
+        lage["bb_schnitt"] = med(b)
+    for k, src in (("schlaf_tief_min", "tief_s"), ("schlaf_rem_min", "rem_s"), ("schlaf_wach_min", "wach_s")):
+        v = _g_get(g0, "schlaf", src)
+        if v is not None:
+            lage[k] = round(v / 60)
+    dauer, bedarf = _g_get(g0, "schlaf", "dauer_s"), _g_get(g0, "schlaf", "bedarf_min")
+    if dauer is not None and bedarf is not None:
+        lage["schlafbedarf_diff_min"] = round(dauer / 60 - bedarf)
+    for k, pfad in (("schlafstress", ("schlaf", "stress")), ("atem", ("schlaf", "atem")), ("spo2", ("schlaf", "spo2"))):
+        v = _g_get(g0, *pfad)
+        if v is not None:
+            lage[k] = v
+    for k, pfad in (("atem_schnitt", ("schlaf", "atem")), ("spo2_schnitt", ("schlaf", "spo2"))):
+        xs = werte(basis, lambda d, p=pfad: _g_get(gt.get(d) or {}, *p))
+        if len(xs) >= 10:
+            lage[k] = med(xs)
+    v = _g_get(gest, "tag", "stress_avg")
+    if v is not None:
+        lage["stress_gestern"] = v
+    return sig, lage
+
+
+def _garmin_lage_txt(l: dict) -> str:
+    t = []
+    if "bb_aufwachen" in l:
+        t.append(f"Body Battery beim Aufwachen {_de(l['bb_aufwachen'])}" + (f" (Schnitt {_de(l['bb_schnitt'])})" if "bb_schnitt" in l else ""))
+    sl = [f"{n} {l[k]}" for n, k in (("tief", "schlaf_tief_min"), ("REM", "schlaf_rem_min"), ("wach", "schlaf_wach_min")) if k in l]
+    if sl:
+        s = "Schlaf " + " / ".join(sl) + " min"
+        if "schlafbedarf_diff_min" in l:
+            dm = l["schlafbedarf_diff_min"]
+            s += f", Bedarf {'+' if dm >= 0 else '−'}{abs(dm)} min"
+        t.append(s)
+    if "schlafstress" in l:
+        t.append(f"Schlafstress {_de(l['schlafstress'])}")
+    if "atem" in l:
+        t.append(f"Atmung {_de(l['atem'], 1)}/min" + (f" (Schnitt {_de(l['atem_schnitt'], 1)})" if "atem_schnitt" in l else ""))
+    if "spo2" in l:
+        t.append(f"SpO2 {_de(l['spo2'])} %" + (f" (Schnitt {_de(l['spo2_schnitt'])})" if "spo2_schnitt" in l else ""))
+    if "stress_gestern" in l:
+        t.append(f"Stress gestern {_de(l['stress_gestern'])}")
+    if "std7" in l:
+        s = f"letzte 7 Tage {_de(l['std7'], 1)} h, {_de(l['km7'])} km, {_de(l['hm7'])} hm"
+        if "zonen7_pct" in l:
+            s += ", Zonen " + " · ".join(f"Z{i + 1} {p} %" for i, p in enumerate(l["zonen7_pct"]))
+        t.append(s)
+    return "; ".join(t)
+
+
 def vorausblick_rechnen() -> dict:
     """Alles regelbasiert/statistisch – das Sprachmodell formuliert danach nur den Text."""
     heute = today()
@@ -2040,13 +2200,17 @@ def vorausblick_rechnen() -> dict:
                 add("Wochenlast geplant", "gelb", f"Nächste 7 Tage {_de(wo_plan)} ESS – {_de(plus)} % über deinem 4-Wochen-Schnitt", "last")
     if mono_w:
         add("Monotonie-Regel", "gelb", f"{len(mono_w)} Hinweis(e) im Plan, zuerst {_mono_txt(mono_w[0])}", "last")
+    g_sig, g_lage = garmin_signale(garmin_tage(60), heute)
+    for s in g_sig:
+        add(s["name"], s["schwere"], s["text"], s["art"])
+        sig[-1]["quelle"] = "garmin"
     kor = [s for s in sig if s["art"] == "koerper"]
     las = [s for s in sig if s["art"] == "last"]
     orange_k = [s for s in kor if s["schwere"] == "orange"]
     orange_l = [s for s in las if s["schwere"] == "orange"]
     if len(orange_k) >= 2 or (orange_k and orange_l):
         stufe = "rot"
-    elif orange_k or orange_l or len(sig) >= 3:
+    elif orange_k or orange_l or len([s for s in sig if not (s.get("quelle") == "garmin" and s["schwere"] == "gelb")]) >= 3:
         stufe = "orange"
     elif sig:
         stufe = "gelb"
@@ -2076,6 +2240,7 @@ def vorausblick_rechnen() -> dict:
         "tourfenster": top,
         "tourfenster_alle": fenster,
         "fruehwarnung": {"stufe": stufe, "signale": sig, "prognose": prog},
+        "garmin_lage": g_lage,
     }
 
 
@@ -2106,6 +2271,10 @@ def _vorausblick_block(d: dict) -> str:
     if v["mono_hinweise"]:
         z.append("- Monotonie-Regel im Plan: " + "; ".join(_mono_txt(x) for x in v["mono_hinweise"][:3]) + ".")
     z.append(f"- Frühwarnung: {fw['stufe'].upper()}" + (" – " + "; ".join(s["text"] for s in fw["signale"][:4]) if fw["signale"] else "") + f". {fw['prognose']}")
+    if d.get("garmin_lage"):
+        gl = _garmin_lage_txt(d["garmin_lage"])
+        if gl:
+            z.append(f"- Garmin-Lage: {gl}.")
     z.append("Nutze diese Zukunftssicht: Nenne kurz die nächste Chance (Qualitätstag oder Tourfenster) und reagiere auf die Frühwarnung, ohne die Monotonie- und ACWR-Regeln zu verletzen.")
     return "\n".join(z)
 
