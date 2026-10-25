@@ -1,5 +1,30 @@
 import { useEffect, useState } from 'react';
 import { ladeP3, intensitaetProWoche, type P3Tag } from '../lib/paket3';
+import { useGarminTage, type GarminTage } from '../lib/garmin';
+
+type Basis = 'last' | 'zeit';
+/** Zeitanteile je Woche aus den Garmin-Zonensekunden (Z1–Z2 locker, Z3 grau, Z4–Z5 hart). */
+function zeitAnteile(g: GarminTage | null, wocheMontag: string) {
+  if (!g) return null;
+  const z = [0, 0, 0, 0, 0];
+  const start = new Date(wocheMontag + 'T12:00:00');
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start); d.setDate(start.getDate() + i);
+    const zs = g.get(d.toLocaleDateString('sv-SE'))?.summe?.zonen_s;
+    if (zs) for (let k = 0; k < 5; k++) z[k] += zs[k] || 0;
+  }
+  const sum = z.reduce((a, b) => a + b, 0);
+  if (sum <= 0) return null;
+  return { locker: (z[0] + z[1]) / sum, grau: z[2] / sum, hart: (z[3] + z[4]) / sum, std: sum / 3600 };
+}
+function typAus(locker: number, grau: number, hart: number, ruhe: boolean): string {
+  void locker;
+  if (ruhe) return 'Ruhewoche';
+  if (hart >= 0.1 && grau < 0.15) return 'polarisiert';
+  if (grau >= 0.25) return 'schwellenlastig';
+  if (grau >= 0.1 && grau > hart) return 'pyramidal';
+  return 'Grundlage';
+}
 
 // ── Hilfsfunktionen ──────────────────────────────────────────────────────
 function fmtDateShort(iso: string): string {
@@ -25,6 +50,8 @@ export function IntensitaetTile() {
   const [tage, setTage] = useState<P3Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { tage: garmin } = useGarminTage();
+  const [basis, setBasis] = useState<Basis>('zeit');
 
   useEffect(() => {
     let cancelled = false;
@@ -49,7 +76,15 @@ export function IntensitaetTile() {
     return <div className="panel-raised p-4"><p className="text-sm text-orange-300">{error}</p></div>;
   }
 
-  const ws = intensitaetProWoche(tage, 12);
+  const wsLast = intensitaetProWoche(tage, 12);
+  const hatGarmin = !!garmin && wsLast.some((w) => zeitAnteile(garmin, w.woche));
+  const nachZeit = basis === 'zeit' && hatGarmin;
+  const ws = wsLast.map((w) => {
+    if (!nachZeit) return { ...w, std: null as number | null };
+    const z = zeitAnteile(garmin, w.woche);
+    if (!z) return { ...w, locker: 0, grau: 0, hart: 0, std: null as number | null };
+    return { ...w, locker: z.locker, grau: z.grau, hart: z.hart, std: z.std, typ: typAus(z.locker, z.grau, z.hart, w.typ === 'Ruhewoche') as typeof w.typ };
+  });
 
   // Fazit: Typen zählen
   const typZahlen = new Map<string, number>();
@@ -68,9 +103,19 @@ export function IntensitaetTile() {
     <div className="panel-raised p-4">
       {/* Kopf */}
       <div>
-        <div className="label">Coach Kira · Intensitätsverteilung</div>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="label">Coach Kira · Intensitätsverteilung</div>
+          {hatGarmin && (
+            <div className="inline-flex bg-bg rounded border border-border p-0.5 text-xs" data-testid="intensitaet-basis">
+              <button className={`px-2 py-0.5 rounded ${basis === 'zeit' ? 'bg-bg-subtle text-ink' : 'text-ink-muted'}`} onClick={() => setBasis('zeit')}>Zeit in HF-Zonen</button>
+              <button className={`px-2 py-0.5 rounded ${basis === 'last' ? 'bg-bg-subtle text-ink' : 'text-ink-muted'}`} onClick={() => setBasis('last')}>Last nach Zone</button>
+            </div>
+          )}
+        </div>
         <p className="mt-1 text-2xs text-ink-muted">
-          Lastanteile je Woche nach Zone (locker Z1–Z2, Grauzone Z3, hart Z4–Z5) und Wochentyp.
+          {nachZeit
+            ? 'Zeitanteile je Woche aus den Garmin-Zonensekunden (locker Z1–Z2, Grauzone Z3, hart Z4–Z5) und Wochentyp.'
+            : 'Lastanteile je Woche nach eingetragener Zone (locker Z1–Z2, Grauzone Z3, hart Z4–Z5) und Wochentyp.'}
         </p>
       </div>
 
@@ -108,7 +153,8 @@ export function IntensitaetTile() {
                 </div>
 
                 {/* Wochenlast */}
-                <span className="tnum w-12 text-right">{w.last} ESS</span>
+                <span className="tnum w-16 text-right whitespace-nowrap">{w.last} ESS</span>
+                {nachZeit && <span className="tnum w-12 text-right text-ink-muted">{w.std != null ? `${w.std.toFixed(1).replace('.', ',')} h` : '—'}</span>}
 
                 {/* Typ-Chip */}
                 <span className={`px-2 py-0.5 rounded-full text-xs ${chip.cls}`}>{chip.text}</span>

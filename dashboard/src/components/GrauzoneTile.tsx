@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useGarminTage } from '../lib/garmin';
 import {
   ladeTage,
   reaktionen,
@@ -37,7 +38,15 @@ function fmtDateShort(iso: string): string {
 }
 
 // ── Komponente ───────────────────────────────────────────────────────────
+/** Anteil der Zeit in Z3 oder höher (0..1) laut Garmin-Zonensekunden. */
+function z3plus(z?: number[]): number | null {
+  if (!z || z.length < 5) return null;
+  const sum = z.reduce((a, b) => a + (b || 0), 0);
+  return sum > 0 ? ((z[2] || 0) + (z[3] || 0) + (z[4] || 0)) / sum : null;
+}
+
 export function GrauzoneTile() {
+  const { tage: garmin } = useGarminTage();
   const [tage, setTage] = useState<ETag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -141,6 +150,12 @@ export function GrauzoneTile() {
   const proWoche = Array.from(proWocheMap.values()).sort((a, b) => a.woche.localeCompare(b.woche));
   const letzteWoche = proWoche.length > 0 ? proWoche[proWoche.length - 1] : { geplantLocker: 0, grau: 0 };
 
+  // Garmin-Zonenzeit für locker geplante Einheiten
+  const gLocker = tage.filter((t) => zonenKlasse(t.planZone) === 'locker' && t.load != null && t.load > 30)
+    .map((t) => z3plus(garmin?.get(t.date)?.summe?.zonen_s)).filter((x): x is number => x != null);
+  const gGrau = gLocker.filter((x) => x > 0.2).length;
+  const gAvg = gLocker.length ? gLocker.reduce((a, b) => a + b, 0) / gLocker.length : null;
+
   // Prozent berechnen
   const prozent = lockerGeplantCount > 0 ? Math.round(faelle.length / lockerGeplantCount * 100) : 0;
 
@@ -195,6 +210,11 @@ export function GrauzoneTile() {
           </p>
         ) : null}
 
+        {gLocker.length > 0 && gAvg != null && (
+          <p className="mt-1" data-testid="grauzone-garmin">
+            Laut Garmin-Zonenzeit lag in {gGrau} von {gLocker.length} locker geplanten Einheiten mehr als 20 % der Zeit in Z3 oder höher (Ø {fmtDeInt(Math.round(gAvg * 100))} %).
+          </p>
+        )}
         <p className={`mt-1 ${grau >= 2 ? 'text-yellow-400' : ''}`}>
           Diese Woche: {grau} von {geplantLocker} lockeren Einheiten in der Grauzone.
         </p>
@@ -242,6 +262,7 @@ export function GrauzoneTile() {
                 <span className="text-ink">{dateShortFromISO(f.date)}</span>
                 <span className="text-ink-muted">geplant {f.planZone} → {f.zone}</span>
                 <span className="tnum">{f.load} ESS</span>
+                {(() => { const z = z3plus(garmin?.get(f.date)?.summe?.zonen_s); return z != null ? <span className="tnum text-ink-muted">Z3+ {fmtDeInt(Math.round(z * 100))} % Zeit</span> : null; })()}
                 <span className={f.dR != null && f.dR >= 0 ? 'text-green-300' : f.dR != null && f.dR >= -8 ? 'text-yellow-300' : 'text-orange-300'}>
                   {f.dR != null ? fmtSigned(f.dR) : '–'}
                 </span>

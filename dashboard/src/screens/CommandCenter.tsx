@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { GarminNachtTile } from '../components/GarminNachtTile';
+import { GarminGesternTile } from '../components/GarminGesternTile';
 import { SchlafkontoTile } from '../components/SchlafkontoTile';
 import { VorausblickTile } from '../components/VorausblickTile';
 import { ErholungsuhrTile } from '../components/ErholungsuhrTile';
@@ -515,6 +517,10 @@ export function CommandCenter({
       <div className="grid gap-4 lg:grid-cols-2 items-start">
         <ErholungsuhrTile />
         <SchlafkontoTile />
+      </div>
+      <div className="grid gap-4 xl:grid-cols-2 items-start">
+        <GarminNachtTile />
+        <GarminGesternTile />
       </div>
       <section className="panel overflow-hidden">
         <div>

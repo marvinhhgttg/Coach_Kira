@@ -3,6 +3,8 @@ import { FormelEditorTile } from '../components/FormelEditorTile';
 import { WochenrhythmusTile } from '../components/WochenrhythmusTile';
 import { IntensitaetTile } from '../components/IntensitaetTile';
 import { DataQualityTile } from '../components/DataQualityTile';
+import { GarminVerlaufTile } from '../components/GarminVerlaufTile';
+import { GarminSportProfilTile } from '../components/GarminSportProfilTile';
 import { TrainingControl } from './TrainingControl';
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import {
@@ -636,6 +638,8 @@ export function ChartDeck() {
         <WochenrhythmusTile />
         <IntensitaetTile />
       </div>
+      <GarminVerlaufTile />
+      <GarminSportProfilTile />
       <DataQualityTile />
 
       {fullscreenSection && (
