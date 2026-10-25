@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { GarminBerichtTile } from '../components/GarminBerichtTile';
 import { ZeitraumVergleichTile } from '../components/ZeitraumVergleichTile';
 import { JahresrueckblickTile } from '../components/JahresrueckblickTile';
 import { istPlatzhalter } from '../lib/dataQuality';
@@ -45,8 +46,9 @@ const EXTRA_METRICS = ['kcal_in', 'kcal_out', 'carb_g', 'protein_g', 'fat_g', 'd
 type Extra = { kcalIn: number | null; kcalOut: number | null; carb: number | null; protein: number | null; fat: number | null; dist: number | null; elev: number | null; ctl: number | null };
 type D = RecoveryDay & { x: Extra };
 
-type Sub = 'month' | 'week' | 'recovery' | 'year' | 'sleep' | 'nutrition' | 'outage' | 'vergleich' | 'wrapped';
+type Sub = 'month' | 'week' | 'recovery' | 'year' | 'sleep' | 'nutrition' | 'outage' | 'vergleich' | 'wrapped' | 'garmin';
 const SUBS: { id: Sub; label: string }[] = [
+  { id: 'garmin', label: 'Umfang & Bestwerte' },
   { id: 'month', label: 'Monat' },
   { id: 'week', label: 'Woche' },
   { id: 'recovery', label: 'Erholung' },
@@ -59,6 +61,7 @@ const SUBS: { id: Sub; label: string }[] = [
 ];
 
 const TITLES: Record<Sub, string> = {
+  garmin: 'Umfang & Bestwerte',
   month: 'Monatsbericht',
   week: 'Wochenbericht',
   recovery: 'Erholung nach harten Einheiten',
@@ -1003,7 +1006,9 @@ export function Reports() {
         <Chips items={SUBS.map((s) => s.id)} value={sub} onChange={setSub} fmt={(id) => SUBS.find((s) => s.id === id)!.label} />
         {needsWin && <Chips items={WINDOWS} value={win} onChange={setWin} fmt={winLabel} />}
       </div>
-      {sub === 'vergleich' ? (
+      {sub === 'garmin' ? (
+        <GarminBerichtTile />
+      ) : sub === 'vergleich' ? (
         <ZeitraumVergleichTile />
       ) : sub === 'wrapped' ? (
         <JahresrueckblickTile />

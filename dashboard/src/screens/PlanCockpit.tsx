@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { LastDauerTile } from '../components/LastDauerTile';
 import { TourformTile } from '../components/TourformTile';
 import { RezeptbuchTile } from '../components/RezeptbuchTile';
 import { FormRampeTile } from '../components/FormRampeTile';
@@ -1129,6 +1130,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
               <div className="space-y-4">
                 <ReadinessStrip forecast={readiness} model={models.r} error={histErr} />
                 <FormRampeTile plan={sim.map((d) => ({ date: d.date, atl: d.atl, ctl: d.ctl }))} />
+                <LastDauerTile vorschlag={loads[0]} />
             <div className="panel-raised p-3">
               <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                 <div>

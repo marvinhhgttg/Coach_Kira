@@ -3,6 +3,7 @@
  * kompakt als JSON. Rein deterministisch (kein Modell).
  */
 import { BASE_URL, fetchChartData, fetchPlanSimulationWithTimeout, toNum } from './api';
+import { fetchGarminTage, teLabelDe, type GarminTage } from './garmin';
 import { atlStep, ctlStep, esStep, windowMean, ES_MODEL } from './ctlModel';
 import { buildDays, localIsoDate, RECOVERY_FETCH_METRICS, VOTE_LABEL, type RecoveryDay } from '../screens/RecoveryPanel';
 import { MONOTONIE_REGEL_TEXT } from './monotony';
@@ -18,10 +19,33 @@ export type ChatContext = Record<string, unknown>;
 
 export async function buildChatContext(): Promise<ChatContext> {
   const today = localIsoDate();
-  const [chart, sim] = await Promise.all([
+  const [chart, sim, garmin] = await Promise.all([
     fetchChartData('120d', [...RECOVERY_FETCH_METRICS, ...EXTRA]),
     fetchPlanSimulationWithTimeout(45000).catch(() => null as any),
+    fetchGarminTage().catch(() => new Map() as GarminTage),
   ]);
+  // Garmin Personal API: kompakte Tageswerte (Schlafphasen, Body Battery, Stress, Aktivitäten mit Zonen)
+  const gTag = (d: string) => {
+    const g = garmin.get(d);
+    if (!g) return null;
+    const zs = g.summe?.zonen_s;
+    const zsum = zs ? zs.reduce((a: number, b: number) => a + (b || 0), 0) : 0;
+    return {
+      km: g.summe?.km ?? null, hm: g.summe?.hm ?? null,
+      bewegung_min: g.summe ? Math.round((g.summe.bewegt_s || g.summe.dauer_s || 0) / 60) : null,
+      zonen_pct: zs && zsum ? zs.map((z: number) => Math.round(((z || 0) / zsum) * 100)) : null,
+      aktivitaeten: (g.akt || []).map((a) => ({ name: a.name, sport: a.sport, km: a.km, hm: a.hm, min: Math.round((a.bewegt_s || a.dauer_s || 0) / 60), hf: a.hf_avg, te_label: a.te_label ? teLabelDe(a.te_label) : null, watt_np: a.watt_np, bb: a.bb })),
+      schlaf_tief_min: g.schlaf?.tief_s != null ? Math.round(g.schlaf.tief_s / 60) : null,
+      schlaf_rem_min: g.schlaf?.rem_s != null ? Math.round(g.schlaf.rem_s / 60) : null,
+      schlaf_wach_min: g.schlaf?.wach_s != null ? Math.round(g.schlaf.wach_s / 60) : null,
+      schlafbedarf_min: g.schlaf?.bedarf_min ?? null, schlafstress: g.schlaf?.stress ?? null,
+      atmung_schlaf: g.schlaf?.atem ?? null, spo2_schlaf: g.schlaf?.spo2 ?? null,
+      body_battery_min_max: g.tag?.bb_min != null ? [g.tag.bb_min, g.tag.bb_max] : null, body_battery_aufwachen: g.bb_aufwachen ?? null,
+      stress_avg: g.tag?.stress_avg ?? null, stress_hoch_min: g.tag?.stress_min?.hoch ?? null,
+      schritte: g.tag?.schritte ?? null, intensitaetsmin: g.tag?.int_mod != null || g.tag?.int_vig != null ? (g.tag?.int_mod || 0) + 2 * (g.tag?.int_vig || 0) : null,
+      gewicht_kg: g.gewicht_kg ?? null,
+    };
+  };
   const raw = ((chart as any).data || []) as any[];
   const days: RecoveryDay[] = buildDays(raw).filter((d) => d.date <= today);
   const byDate = new Map(raw.map((r) => [String(r.date).slice(0, 10), r]));
@@ -98,6 +122,7 @@ export async function buildChatContext(): Promise<ChatContext> {
           befinden_1_5: t.befinden,
           trainingszustand_garmin: rowT?.Trainingszustand || null,
           ausdauerwert_garmin: esLast,
+          garmin: gTag(t.date),
         }
       : null,
     kennzahlen: {
@@ -127,6 +152,7 @@ export async function buildChatContext(): Promise<ChatContext> {
       hrv: d.hrv,
       ruhepuls: d.rhr,
       befinden: d.befinden,
+      garmin: gTag(d.date),
     })),
     plan_naechste_7_tage: plan, // ab dem Tag nach dem letzten Belastungsstand (heute inkl., falls noch offen)
   };
