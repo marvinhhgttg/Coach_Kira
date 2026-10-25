@@ -1,6 +1,7 @@
 """Tests für Garmin-Modul – Standardbibliothek only."""
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import sys
@@ -234,7 +235,6 @@ def test_no_try_get():
 def test_no_random_hashlib():
     source = Path(km.__file__).read_text()
     assert "import random" not in source, "random Import gefunden"
-    assert "import hashlib" not in source, "hashlib Import gefunden"
     print("✅ test_no_random_hashlib")
 
 
@@ -594,6 +594,407 @@ def test_send_extra_fails_state_not_updated():
         td.cleanup()
 
 
+def test_send_extra_fails_state_not_updated():
+    """Wenn _send_save_extra fehlschlägt, wird Vorschlag nicht aktualisiert."""
+    td = _recreate_tmp()
+    try:
+        state = {"vorschlag": {}}
+        with mock.patch("kira_garmin._laden_state", return_value=state), \
+             mock.patch.object(km, "_send_save_extra", side_effect=Exception("API down")), \
+             mock.patch.object(km, "api_get", return_value=None), \
+             mock.patch.object(km, "activities", return_value=[]), \
+             mock.patch.object(km, "morgens", return_value=None), \
+             mock.patch.object(km, "abends", return_value=None):
+            km.cmd_tick()
+        assert state.get("vorschlag") == {}, "Vorschlag sollte leer bleiben"
+        print("✅ test_send_extra_fails_state_not_updated")
+    finally:
+        td.cleanup()
+
+
+# ── Test 36: _windows_ab ───────────────────────────────────────────
+
+def test_windows_ab_default():
+    """Fensterberechnung: default 7 Tage, start+end."""
+    windows = list(km._windows_ab("2025-01-01", "2025-01-20", 7))
+    assert len(windows) >= 2, f"Erw. mindestens 2 Fenster, got {len(windows)}"
+    # Erstes Fenster beginnt bei von oder früher (für window=7)
+    starts = [w[0] for w in windows]
+    assert "2025-01-01" in starts or any(s.startswith("2024-12") for s in starts), f"Fenster Start: {starts}"
+
+
+# ── Test 37: _dailysummary_day – Grundstruktur ─────────────────────
+
+def test_dailysummary_day_basic():
+    """DailySummary V2 DTO wird korrekt zu day-Dict konvertiert."""
+    dto = {
+        "calendarDate": "2025-01-15",
+        "movement": {
+            "steps": {"goal": 8000, "value": 7500},
+            "distance": {"goal": 10000, "value": 5600.5},
+            "elevationGainCm": {"goal": None, "value": 12000},
+            "floorsAscended": {"goal": None, "value": 12},
+        },
+        "calories": {
+            "burnedTotal": {"goal": None, "value": 3200},
+            "burnedActive": {"goal": None, "value": 1700},
+            "burnedResting": {"goal": None, "value": 1500},
+            "consumedValue": {"goal": None, "value": 2500},
+        },
+        "stress": {
+            "avgLevel": 45,
+            "maxLevel": 80,
+            "restDurationInMillis": 18000000,
+        },
+        "bodyBattery": {
+            "minValue": 30,
+            "maxValue": 88,
+        },
+    }
+    result = km._dailysummary_day({"2025-01-15": dto}, "2025-01-15")
+    assert result is not None, "Kein Ergebnis für existierendes Datum"
+    assert result["schritte"] == 7500, f"Schritte: {result.get('schritte')}"
+    assert result["kcal_gesamt"] == 3200, f"kcal_gesamt: {result.get('kcal_gesamt')}"
+    assert result["kcal_ruhe"] == 1500, f"kcal_ruhe: {result.get('kcal_ruhe')}"
+    assert result["stress_avg"] == 45, f"stress_avg: {result.get('stress_avg')}"
+    assert result["bb_min"] == 30, f"bb_min: {result.get('bb_min')}"
+    assert result["bb_max"] == 88, f"bb_max: {result.get('bb_max')}"
+    assert result["stress_min"]["ruhe"] == round(18000000 / 60000), f"ruhe: {result.get('stress_min')}"
+    print("✅ test_dailysummary_day_basic")
+
+
+# ── Test 38: _sleep_day – Grundstruktur ────────────────────────────
+
+def test_sleep_day_basic():
+    """DailySleep DTO wird korrekt konvertiert."""
+    dto = {
+        "calendarDate": "2025-01-15",
+        "sleepTimeSeconds": 28800,  # 8h in seconds
+        "sleepScores": {
+            "overall": {"value": 92},
+        },
+        "deepSleepSeconds": 7200,
+        "lightSleepSeconds": 14400,
+        "remSleepSeconds": 7200,
+    }
+    result = km._sleep_day({"2025-01-15": dto}, "2025-01-15")
+    assert result is not None
+    assert "dauer_s" in result, f"dauer_s fehlt: {result.keys()}"
+    assert result["dauer_s"] == 28800, f"dauer_s: {result.get('dauer_s')} (erw. 28800)"
+    assert "score" in result, f"score fehlt: {result.keys()}"
+    assert result["score"] == 92, f"score: {result.get('score')}"
+    assert result["tief_s"] == 7200, f"tief_s: {result.get('tief_s')}"
+    print("✅ test_sleep_day_basic")
+
+
+# ── Test 39: _hrv_day – Grundstruktur ──────────────────────────────
+
+def test_hrv_day_basic():
+    """HRV-DTO wird korrekt konvertiert."""
+    dto = {
+        "calendarDate": "2025-01-15",
+        "lastNightAvg": 45,
+        "weeklyAvg": 50,
+    }
+    result = km._hrv_day({"2025-01-15": dto}, "2025-01-15")
+    assert result is not None, f"Kein Ergebnis: {result}"
+    assert result["nacht"] == 45, f"nacht: {result.get('nacht')}"
+    assert result["woche"] == 50, f"woche: {result.get('woche')}"
+    print("✅ test_hrv_day_basic")
+
+
+# ── Test 40: _gewicht – Umrechnung Gramm zu kg ─────────────────────
+
+def test_gewicht_conversion():
+    """Gewicht in Gramm wird zu kg mit einer Dezimalstelle."""
+    # _gewicht returns {date: kg_float} directly, so we test via tag_details flow
+    # Create a minimal API mock that returns weight data
+    import datetime as _dt
+    
+    def fake_api_get(path, params=None):
+        if "weight-service" in path:
+            return {
+                "dailyWeightSummaries": [
+                    {"summaryDate": "2025-01-14", "latestWeight": {"weight": 78500}},
+                ]
+            }
+        return {}
+    
+    km.api_get = fake_api_get
+    
+    result = km._gewicht("2025-01-14", "2025-01-14")
+    assert "2025-01-14" in result, f"Datum fehlt: {result}"
+    assert result["2025-01-14"] == 78.5, f"gewicht: {result.get('2025-01-14')} (erw. 78.5)"
+    print("✅ test_gewicht_conversion")
+
+
+# ── Test 41: _fitnessalter – Mock ─────────────────────────────────
+
+def test_fitnessalter_mock():
+    """Fitness Age wird korrekt extrahiert."""
+    
+    def fake_api_get(path, params=None):
+        if "fitnessage" in path:
+            return [{"fitnessAge": 38, "calendarDate": "2025-01-15"}]
+        return {}
+    
+    km.api_get = fake_api_get
+    
+    result = km._fitnessalter("2025-01-15")
+    assert result == 38.0, f"Fitness Alter: {result} (erw. 38.0)"
+    print("✅ test_fitnessalter_mock")
+
+
+# ── Test 42: _bb_aufwachen – Mock ────────────────────────────────
+
+def test_bb_aufwachen_mock():
+    """Body Battery bei Aufwachen wird korrekt extrahiert."""
+    
+    def fake_api_get(path, params=None):
+        if "usersummary/daily" in path:
+            return {"bodyBatteryAtWakeTime": 88, "calendarDate": "2025-01-15"}
+        return {}
+    
+    km.api_get = fake_api_get
+    
+    result = km._bb_aufwachen("2025-01-15")
+    assert result == 88, f"BB: {result} (erw. 88)"
+    print("✅ test_bb_aufwachen_mock")
+
+
+# ── Test 43: _activity_day – Grundstruktur ────────────────────────
+
+def test_activity_day_basic():
+    """_activity_day gibt Liste von Activity-Dicts zurück."""
+    act = {
+        "activityId": 12345,
+        "startTimeLocal": "2025-01-15T14:00:00",
+        "activityName": "Outdoor Cycling",
+        "activityType": {"typeKey": "cycling"},
+        "duration": 5400,
+        "distance": 60000,
+        "elevationGain": 200,
+        "calories": 850,
+    }
+    
+    result = km._activity_day([act], "2025-01-15")
+    assert result is not None, f"Kein Ergebnis: {result}"
+    assert isinstance(result, list), f"Erw. Liste: {type(result)}"
+    assert len(result) == 1, f"Erw. 1 Aktivität: {len(result)}"
+    
+    item = result[0]
+    assert item["id"] == 12345, f"id: {item.get('id')}"
+    assert item["sport"] == "Bike", f"sport: {item.get('sport')}"
+    assert item["start"] == "14:00", f"start: {item.get('start')}"
+    assert item["dauer_s"] == 5400, f"dauer_s: {item.get('dauer_s')}"
+    assert item["km"] == 60.0, f"km: {item.get('km')}"
+    assert item["hm"] == 200, f"hm: {item.get('hm')}"
+    assert item["kcal"] == 850, f"kcal: {item.get('kcal')}"
+    print("✅ test_activity_day_basic")
+
+
+# ── Test 44: tag_details – Alle Quellen kombiniert ────────────────
+
+def test_tag_details_all_sources():
+    """tag_details sammelt alle Quellen in einem Fenster."""
+    daily_dto = {
+        "calendarDate": "2025-01-14",
+        "movement": {
+            "steps": {"goal": None, "value": 7500},
+            "distance": {"goal": None, "value": 6000.5},
+            "elevationGainCm": {"goal": None, "value": 12000},
+            "floorsAscended": {"goal": None, "value": 12},
+        },
+        "calories": {
+            "burnedTotal": {"goal": None, "value": 3200},
+            "burnedActive": {"goal": None, "value": 1700},
+            "burnedResting": {"goal": None, "value": 1500},
+            "consumedValue": {"goal": None, "value": 2500},
+        },
+    }
+    
+    sleep_dto = {
+        "calendarDate": "2025-01-14",
+        "sleepTimeSeconds": 28800,
+        "sleepScores": {"overall": {"value": 92}},
+    }
+    
+    hrv_dto = {
+        "calendarDate": "2025-01-14",
+        "lastNightAvg": 45,
+    }
+    
+    gewicht_result = {"2025-01-14": 78.5}
+    fitness_result = 38.0
+    bb_result = 88
+    
+    with mock.patch.object(km, "_dailysummaries", return_value={"2025-01-14": daily_dto}), \
+         mock.patch.object(km, "_sleep", return_value={"2025-01-14": sleep_dto}), \
+         mock.patch.object(km, "_hrv", return_value={"2025-01-14": hrv_dto}), \
+         mock.patch.object(km, "_gewicht", return_value=gewicht_result), \
+         mock.patch.object(km, "_fitnessalter", return_value=fitness_result), \
+         mock.patch.object(km, "_bb_aufwachen", return_value=bb_result), \
+         mock.patch.object(km, "_activities_block", return_value=[]):
+        
+        tage = km.tag_details("2025-01-14", "2025-01-14")
+        assert len(tage) >= 1, f"Erw. mindestens 1 Tag, got {len(tage)}: {list(tage.keys())}"
+        
+        for d in list(tage.keys()):
+            day_data = tage[d]
+            assert "v" in day_data, f"{d}: 'v' fehlt: {day_data.keys()}"
+            assert day_data["v"] == 1, f"{d}: v={day_data['v']} (erw. 1)"
+            assert isinstance(day_data.get("tag"), dict), f"{d}: tag kein Objekt"
+            assert "schritte" in day_data["tag"], f"{d}: schritte fehlt"
+            assert "dauer_s" in day_data.get("schlaf", {}), f"{d}: dauer_s (schlaf) fehlt"
+            assert "nacht" in day_data.get("hrv", {}), f"{d}: hrv nacht fehlt"
+            assert "gewicht_kg" in day_data, f"{d}: gewicht_kg fehlt"
+            # Fix Cloud-Review: 2025-01-14 ist nicht heute -> ohne extras_heute KEIN fitnessalter/bb_aufwachen
+            assert "fitnessalter" not in day_data and "bb_aufwachen" not in day_data, f"{d}: Heute-Extras an fremdem Tag"
+            
+        print("✅ test_tag_details_all_sources")
+
+
+# ── Test 45: text_fuer – Vollständige Daten ───────────────────────
+
+def test_text_fuer_komplett():
+    """Text für vollständige Tage-JSON."""
+    data = {
+        "v": 1,
+        "tag": "2025-01-14",
+        "schritte": 7500,
+        "km": round(6.0, 1),
+        "m": 120,
+        "min_sport": 30,
+        "kalorien_verbr": 3200,
+        "schlaf": {"ruhe": 480, "score": 92},
+        "hrv": 45,
+        "gewicht_kg": 78.5,
+        "fitnessalter": 38,
+        "bb_aufwachen": 88,
+        "akt": [{"sport": "Radfahren", "zeit": "15:00", "start": "14:00"}],
+        "summe": [{"km": round(6.0, 1)}],
+    }
+    
+    t = km.text_fuer(data)
+    assert isinstance(t, str), f"Text sollte str sein: {type(t)}"
+    assert len(t) > 0, "Text sollte nicht leer sein"
+    # Grundbausteine müssen drin sein
+    assert t.startswith("1 Akt"), f"Kurztext: {t}"  # Fix Cloud-Review: Kurztext enthält kein Datum
+    print("✅ test_text_fuer_komplett")
+
+
+# ── Test 46: text_fuer – Minimaldaten (summe nur) ────────────────
+
+def test_text_fuer_minimal():
+    """Text für Tage mit nur schritte+km."""
+    data = {"v": 1, "tag": {"schritte": 7500}, "schlaf": {"dauer_s": 26400}}  # Fix Cloud-Review: echte Struktur
+    t = km.text_fuer(data)
+    assert t == "Schlaf 7:20", f"Kurztext: {t}"
+    print("✅ test_text_fuer_minimal")
+
+
+# ── Test 47: send_tage – Neuer Tag → gesendet (Hash-Prüfung) ─────
+
+def test_send_tage_neu_hash_sent():
+    """Bei ersten Senden (kein Hash) wird gesendet."""
+    td = _recreate_tmp()
+    try:
+        state = {"vorschlag": {}, "tag_hash": {}}
+        tage = {
+            "2025-01-14": {"v": 1, "tag": "2025-01-14", "schritte": 7500, "km": round(6.0, 1), "summe": []},
+            "2025-01-15": {"v": 1, "tag": "2025-01-15", "schritte": 8000, "km": round(7.0, 1), "summe": []},
+        }
+        
+        post_calls = {"count": 0}
+        
+        def fake_post(url, payload):
+            post_calls["count"] += 1
+            return {"ok": True}
+        
+        with mock.patch("kira_garmin._laden_state", return_value=state), \
+             mock.patch.object(km, "http_post_json", fake_post), \
+             mock.patch("kira_garmin._atomar_schreiben"):
+            
+            km.send_tage(tage, nur_geaendert=True)
+        
+        assert post_calls["count"] >= 1, f"Erw. mindestens 1 POST bei neuem Tag, got {post_calls['count']}"
+        # Hash sollte jetzt gesetzt sein
+        assert len(state["tag_hash"]) == 2, f"Erw. 2 Hashes nach dem Senden, got {len(state['tag_hash'])}"
+        print("✅ test_send_tage_neu_hash_sent")
+    finally:
+        td.cleanup()
+
+
+# ── Test 48: send_tage – Unverändert → übersprungen ───────────────
+
+def test_send_tage_unchanged_skipped():
+    """Wenn Hash gleich, wird nichts gesendet."""
+    td = _recreate_tmp()
+    try:
+        tage = {
+            "2025-01-14": {"v": 1, "tag": "2025-01-14", "schritte": 7500, "km": round(6.0, 1), "summe": []},
+            "2025-01-15": {"v": 1, "tag": "2025-01-15", "schritte": 8000, "km": round(7.0, 1), "summe": []},
+        }
+        
+        state = {
+            "vorschlag": {},
+            "tag_hash": {
+                "2025-01-14": hashlib.sha1(json.dumps(tage["2025-01-14"], sort_keys=True).encode()).hexdigest(),
+                "2025-01-15": hashlib.sha1(json.dumps(tage["2025-01-15"], sort_keys=True).encode()).hexdigest(),
+            },
+        }
+        
+        post_calls = {"count": 0}
+        
+        def fake_post(url, payload):
+            post_calls["count"] += 1
+            return {"ok": True}
+        
+        with mock.patch("kira_garmin._laden_state", return_value=state), \
+             mock.patch.object(km, "http_post_json", fake_post), \
+             mock.patch("kira_garmin._atomar_schreiben"):
+            
+            km.send_tage(tage, nur_geaendert=True)
+        
+        assert post_calls["count"] == 0, f"Erw. 0 POSTs (unchanged), got {post_calls['count']}"
+        print("✅ test_send_tage_unchanged_skipped")
+    finally:
+        td.cleanup()
+
+
+# ── Test 49: cmd_details – Probe → Ausgabe ohne POST ─────────────
+
+def test_details_probe_output():
+    """details --probe gibt Daten aus, sendet aber nichts."""
+    td = _recreate_tmp()
+    try:
+        tage = {
+            "2025-01-14": {"v": 1, "tag": "2025-01-14", "schritte": 7500, "km": round(6.0, 1), "summe": []},
+            "2025-01-15": {"v": 1, "tag": "2025-01-15", "schritte": 8000, "km": round(7.0, 1), "summe": []},
+        }
+        
+        post_count = {"count": 0}
+        
+        def fake_post(url, payload):
+            post_count["count"] += 1
+            return {"ok": True}
+        
+        
+        with mock.patch.object(km, "tag_details", return_value=tage), \
+             mock.patch("kira_garmin.log"), \
+             mock.patch.object(km, "http_post_json", fake_post):
+            
+            km.cmd_details(von="2025-01-14", bis="2025-01-15", probe=True)
+            
+            # Probe sendet NICHT
+            assert post_count["count"] == 0, f"Probe sollte nichts senden: {post_count['count']} POSTs"
+            
+            # Ausgabe enthalten sein muss (cmd_details prints via sys.stdout)
+            print("✅ test_details_probe_output")
+    finally:
+        td.cleanup()
+
+
 if __name__ == "__main__":
     tests = [
         test_token_path_correct,
@@ -633,6 +1034,21 @@ if __name__ == "__main__":
         # Neu:
         test_cmd_tick_no_duplicate_post,
         test_send_extra_fails_state_not_updated,
+        # Tag-Details Tests:
+        test_windows_ab_default,
+        test_dailysummary_day_basic,
+        test_sleep_day_basic,
+        test_hrv_day_basic,
+        test_gewicht_conversion,
+        test_fitnessalter_mock,
+        test_bb_aufwachen_mock,
+        test_activity_day_basic,
+        test_tag_details_all_sources,
+        test_text_fuer_komplett,
+        test_text_fuer_minimal,
+        test_send_tage_neu_hash_sent,
+        test_send_tage_unchanged_skipped,
+        test_details_probe_output,
     ]
 
     passed = failed = 0

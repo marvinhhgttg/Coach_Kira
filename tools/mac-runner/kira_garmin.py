@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import base64
 import datetime
+import hashlib
 import json
 import os
 import sys
@@ -509,6 +510,689 @@ def _send_save_extra(datum: str, text: str, data: dict):
 
 
 # ---------------------------------------------------------------------------
+# Garmin Tag-Details: tag_details, text_fuer, send_tage
+# ---------------------------------------------------------------------------
+
+def _windows_ab(von: str, bis: str, window: int):
+    """Generator von Fenster-Datenpaaren (start_iso, end_iso) in window-Tages-Schritten."""
+    von_dt = datetime.date.fromisoformat(von)
+    bis_dt = datetime.date.fromisoformat(bis)
+    while von_dt <= bis_dt:
+        end = min(von_dt + datetime.timedelta(days=window), bis_dt + datetime.timedelta(days=1))
+        yield von_dt.isoformat(), (end - datetime.timedelta(days=1)).isoformat()
+        von_dt = end
+
+
+def _dailysummaries(von: str, bis: str) -> dict:
+    """{calendarDate: UserDailySummaryV2DTO} aus v2/dailysummaries."""
+    result = {}
+    for start, end in _windows_ab(von, bis, 365):
+        try:
+            data = api_get("/usersummary-service/v2/dailysummaries", {"startDate": start, "endDate": end})
+            if isinstance(data, dict):
+                items = data.get("data", [])
+            elif isinstance(data, list):
+                items = data
+            else:
+                items = []
+            for entry in items:
+                cd = entry.get("calendarDate", "")
+                if cd:
+                    result[cd] = entry
+        except Exception as e:
+            log(f"[garmin] dailysummaries({start}/{end}): {e}")
+    return result
+
+
+def _dailysummary_day(dailies: dict, datum: str) -> dict | None:
+    """tag-Dict aus UserDailySummaryV2DTO für ein Datum, nur existierende Schlüssel."""
+    entry = dailies.get(datum)
+    if not entry:
+        return None
+
+    wc = entry.get("wellnessChronology") or {}
+    mov = entry.get("movement") or {}
+    cal = entry.get("calories") or {}
+    hr = entry.get("heartRate") or {}
+    im = entry.get("intensityMinutes") or {}
+    stress = entry.get("stress") or {}
+    bb = entry.get("bodyBattery") or {}
+    hydra = entry.get("hydration") or {}
+    resp = entry.get("respiration") or {}
+    spo2 = entry.get("pulseOx") or {}
+    jetlag = entry.get("jetLag")
+
+    day = {}
+    m_val = mov.get("steps")
+    if m_val is not None:
+        st = m_val or {}
+        schritte = st.get("value")
+        if schritte is not None: day["schritte"] = int(schritte)
+    z = entry.get("dailyStepGoal") or entry.get("totalSteps")  # dailyStepGoal in V2
+    s_goal = (entry or {}).get("dailyStepGoal")
+    if s_goal is not None: day["schritte_ziel"] = int(s_goal)
+    fl = mov.get("floorsAscended") or {}
+    if fl is not None:
+        et = fl.get("value")
+        if et is not None: day["etagen"] = int(et)
+    kc = cal.get("burnedTotal") if cal.get("burnedTotal") else cal.get("burnedResting", 0) + cal.get("burnedActive", 0)
+    bt = cal.get("burnedTotal")
+    if isinstance(bt, dict): bt = bt.get("value")
+    if bt is not None: day["kcal_gesamt"] = int(bt)
+    ba = cal.get("burnedActive")
+    if isinstance(ba, dict): ba = ba.get("value")
+    if ba is not None: day["kcal_aktiv"] = int(ba)
+    br = cal.get("burnedResting")
+    if isinstance(br, dict): br = br.get("value")
+    if br is not None: day["kcal_ruhe"] = int(br)
+    cg = cal.get("consumedValue")
+    if isinstance(cg, dict): cg = cg.get("value")
+    if cg is not None: day["kcal_gegessen"] = int(cg)
+    hm_min = hr.get("minValue")
+    if isinstance(hm_min, dict): hm_min = hm_min.get("value")
+    if hm_min is not None: day["hf_min"] = int(hm_min)
+    hm_max = hr.get("maxValue")
+    if isinstance(hm_max, dict): hm_max = hm_max.get("value")
+    if hm_max is not None: day["hf_max"] = int(hm_max)
+    rhr = hr.get("restingValue")
+    if isinstance(rhr, dict): rhr = rhr.get("value")
+    if rhr is not None: day["rhr"] = int(rhr)
+    intm = im.get("moderate")
+    if isinstance(intm, dict): intm = intm.get("value")
+    if intm is not None: day["int_mod"] = int(intm)
+    ivg = im.get("vigorous")
+    if isinstance(ivg, dict): ivg = ivg.get("value")
+    if ivg is not None: day["int_vig"] = int(ivg)
+
+    sa = stress.get("avgLevel")
+    if isinstance(sa, dict): sa = sa.get("value")
+    if sa is not None: day["stress_avg"] = int(sa)
+    sm = stress.get("maxLevel")
+    if isinstance(sm, dict): sm = sm.get("value")
+    if sm is not None: day["stress_max"] = int(sm)
+    sq = stress.get("qualifier")
+    if sq: day["stress_q"] = sq
+
+    # stress_min: Duration-Werte / 60000 gerundet, verschachtelt
+    stress_min = {}
+    rdur = stress.get("restDurationInMillis")
+    if rdur is not None: stress_min["ruhe"] = round(rdur / 60000)
+    lsd = stress.get("lowStressDurationInMillis")
+    if lsd is not None: stress_min["niedrig"] = round(lsd / 60000)
+    msd = stress.get("mediumStressDurationInMillis")
+    if msd is not None: stress_min["mittel"] = round(msd / 60000)
+    hsd = stress.get("highStressDurationInMillis")
+    if hsd is not None: stress_min["hoch"] = round(hsd / 60000)
+    adur = stress.get("activityDurationInMillis")
+    if adur is not None: stress_min["aktiv"] = round(adur / 60000)
+    if stress_min: day["stress_min"] = stress_min
+
+    bb_min_val = bb.get("minValue")
+    if bb_min_val is not None: day["bb_min"] = int(bb_min_val)
+    bb_max_val = bb.get("maxValue")
+    if bb_max_val is not None: day["bb_max"] = int(bb_max_val)
+    charged = bb.get("chargedValue")
+    if charged is not None: day["bb_geladen"] = int(charged)
+    drained = bb.get("drainedValue")
+    if drained is not None: day["bb_verbraucht"] = int(drained)
+
+    end_of_day_val = bb.get("endOfDayValue")
+    if end_of_day_val is not None: day["bb_ende"] = int(end_of_day_val)
+
+    ra = resp.get("avgValue")
+    if ra is not None: day["atem_avg"] = int(ra)
+    rmin = resp.get("minValue")
+    if rmin is not None: day["atem_min"] = int(rmin)
+    rmax = resp.get("maxValue")
+    if rmax is not None: day["atem_max"] = int(rmax)
+
+    s_avg = spo2.get("avgValue")
+    if s_avg is not None: day["spo2_avg"] = int(s_avg)
+    s_min = spo2.get("minValue")
+    if s_min is not None: day["spo2_min"] = int(s_min)
+
+    h_consumed = hydra.get("consumedInFractionalMl")
+    if h_consumed is not None and int(h_consumed) > 0: day["wasser_ml"] = round(int(h_consumed))
+
+    if jetlag and isinstance(jetlag, dict) and jetlag.get("tripName"):
+        day["jetlag"] = jetlag.get("tripName")
+
+    return day
+
+
+def _sleep(von: str, bis: str) -> dict:
+    """{calendarDate: DailySleepDTO} aus dailySleepSummariesByDate."""
+    result = {}
+    for start, end in _windows_ab(von, bis, 31):
+        try:
+            data = api_get("/sleep-service/sleep/dailySleepSummariesByDate", {"startDate": start, "endDate": end})
+            if isinstance(data, list):
+                for entry in data:
+                    cd = entry.get("calendarDate", "")
+                    if cd:
+                        result[cd] = entry
+        except Exception as e:
+            log(f"[garmin] sleep({start}/{end}): {e}")
+    return result
+
+
+def _sleep_day(sleeps: dict, datum: str) -> dict | None:
+    """schlaf-Dict aus DailySleepDTO für ein Datum."""
+    entry = sleeps.get(datum)
+    if not entry:
+        return None
+
+    sn = entry.get("sleepNeed", {}) or {}
+    scores = entry.get("sleepScores") or {}
+    overall = scores.get("overall") if isinstance(scores, dict) else None
+    oval = overall.get("value") if isinstance(overall, dict) else None
+
+    Schlaf = {}
+    ds = entry.get("sleepTimeSeconds")
+    if ds is not None: Schlaf["dauer_s"] = int(ds)
+    ts = entry.get("deepSleepSeconds")
+    if ts is not None: Schlaf["tief_s"] = int(ts)
+    ls = entry.get("lightSleepSeconds")
+    if ls is not None: Schlaf["leicht_s"] = int(ls)
+    rms = entry.get("remSleepSeconds")
+    if rms is not None: Schlaf["rem_s"] = int(rms)
+    ws = entry.get("awakeSleepSeconds")
+    if ws is not None: Schlaf["wach_s"] = int(ws)
+    nap = entry.get("napTimeSeconds") or entry.get("nap_s")
+    if nap is not None: Schlaf["nap_s"] = int(nap)
+    if oval is not None: Schlaf["score"] = int(oval)
+
+    aw = entry.get("awakeCount")
+    if aw is not None: Schlaf["wachphasen"] = int(aw)
+
+    ss = entry.get("avgSleepStress")
+    if ss is not None: Schlaf["stress"] = round(ss, 1)
+
+    hf = entry.get("avgHeartRate")
+    if hf is not None: Schlaf["hf"] = round(hf, 1)
+
+    at = entry.get("averageRespirationValue")
+    if at is not None: Schlaf["atem"] = round(at, 1)
+
+    sp = entry.get("averageSpO2Value")
+    if sp is not None: Schlaf["spo2"] = round(sp, 1)
+
+    # start / ende als HH:MM
+    st_ts = entry.get("sleepStartTimestampLocal") or entry.get("sleepStartTimestampGMT")
+    en_ts = entry.get("sleepEndTimestampLocal") or entry.get("sleepEndTimestampGMT")
+    def _ts_to_hhmm(val):
+        if not val: return None
+        try:
+            ts = int(val)
+            dt = datetime.datetime.fromtimestamp(ts / 1000.0, tz=TZ)
+            return dt.strftime("%H:%M")
+        except Exception:
+            if isinstance(val, str) and len(val) == 5:
+                return val[:5]
+            try:
+                dt = datetime.datetime.fromisoformat(str(val)[:19])
+                return dt.strftime("%H:%M")
+            except Exception:
+                return None
+
+    start_mm = _ts_to_hhmm(st_ts)
+    if start_mm: Schlaf["start"] = start_mm
+    end_mm = _ts_to_hhmm(en_ts)
+    if end_mm: Schlaf["ende"] = end_mm
+
+    need_actual = sn.get("actual")
+    if need_actual is not None and isinstance(need_actual, (int, float)):
+        Schlaf["bedarf_min"] = int(need_actual)
+
+    fb = entry.get("sleepScoreFeedback")
+    if fb: Schlaf["feedback"] = fb
+
+    return Schlaf
+
+
+def _hrv(von: str, bis: str) -> dict:
+    """{calendarDate: HrvSummaryDTO} aus hrv-service/hrv/daily."""
+    result = {}
+    for start, end in _windows_ab(von, bis, 31):
+        try:
+            data = api_get(f"/hrv-service/hrv/daily/{start}/{end}")
+            if isinstance(data, dict):
+                items = data.get("hrvSummaries", [])
+            elif isinstance(data, list):
+                items = data
+            else:
+                items = []
+            for entry in items:
+                cd = entry.get("calendarDate", "")
+                if cd:
+                    result[cd] = entry
+        except Exception as e:
+            log(f"[garmin] hrv({start}/{end}): {e}")
+    return result
+
+
+def _hrv_day(hrvs: dict, datum: str) -> dict | None:
+    """hrv-Dict aus HrvSummaryDTO für ein Datum."""
+    entry = hrvs.get(datum)
+    if not entry:
+        return None
+
+    hrv_dict = {}
+    ln = entry.get("lastNightAvg")
+    if ln is not None: hrv_dict["nacht"] = int(ln)
+    wk = entry.get("weeklyAvg")
+    if wk is not None: hrv_dict["woche"] = int(wk)
+    m5 = entry.get("lastNight5MinHigh")
+    if m5 is not None: hrv_dict["max5"] = int(m5)
+    st = entry.get("status")
+    if st: hrv_dict["status"] = st
+
+    base = entry.get("baseline") or {}
+    bl = base.get("balancedLow")
+    if bl is not None: hrv_dict["lo"] = int(bl)
+    bh = base.get("balancedUpper")
+    if bh is not None: hrv_dict["hi"] = int(bh)
+
+    return hrv_dict
+
+
+def _gewicht(von: str, bis: str) -> dict:
+    """{summaryDate: kg_float} aus weight-service/weight/range."""
+    result = {}
+    for start, end in _windows_ab(von, bis, 31):
+        try:
+            data = api_get(f"/weight-service/weight/range/{start}/{end}")
+            if isinstance(data, dict):
+                items = data.get("dailyWeightSummaries", [])
+            elif isinstance(data, list):
+                items = data
+            else:
+                items = []
+            for item in items:
+                sd = item.get("summaryDate", "")
+                lw = (item or {}).get("latestWeight") or {}
+                wt = lw.get("weight") if isinstance(lw, dict) else None
+                if sd and wt is not None:
+                    val = wt / 1000.0 if wt > 1000 else wt
+                    result[sd] = round(val, 1)
+        except Exception as e:
+            log(f"[garmin] gewicht({start}/{end}): {e}")
+    return result
+
+
+def _fitnessalter(heute: str) -> float | None:
+    """Fitness Age für ein Datum (1 Nachkommastelle)."""
+    try:
+        data = api_get(f"/fitnessage-service/fitnessage/v2/{heute}")
+        if isinstance(data, list) and len(data) > 0:
+            return round(data[0].get("fitnessAge", 0), 1)
+    except Exception as e:
+        log(f"[garmin] fitnessalter({heute}): {e}")
+    return None
+
+
+def _bb_aufwachen(datum: str) -> int | None:
+    """Body Battery at Wake Time für ein Datum."""
+    try:
+        data = api_get("/usersummary-service/usersummary/daily", {"calendarDate": datum})
+        if data:
+            val = data.get("bodyBatteryAtWakeTime")
+            return int(val) if val is not None else None
+    except Exception as e:
+        log(f"[garmin] bb_aufwachen({datum}): {e}")
+    return None
+
+
+def _activities_block(von: str, bis: str) -> list:
+    """Alle Aktivitäten in 31-Tage-Fenstern (wie backfill, aber Liste)."""
+    all_acts = []
+    for start, end in _windows_ab(von, bis, 31):
+        try:
+            acts = activities(start, end)
+            all_acts.extend(acts)
+        except Exception as e:
+            log(f"[garmin] activities({start}/{end}): {e}")
+    return all_acts
+
+
+def _activity_day(acts: list, datum: str) -> dict | None:
+    """Liste von Aktivitäts-Dicts für ein Datum (sortiert nach Startzeit)."""
+    day_acts = [a for a in acts if tag_aus(a) == datum]
+    day_acts.sort(key=lambda x: x.get("startTimeLocal", ""))
+    if not day_acts:
+        return None
+
+    aus = []
+    for a in day_acts:
+        item = {}
+        aid = a.get("activityId")
+        if aid is not None: item["id"] = int(aid)
+        aname = a.get("activityName")
+        if aname: item["name"] = aname
+
+        atype = a.get("activityType") or {}
+        tkey = atype.get("typeKey", "") if isinstance(atype, dict) else ""
+        if tkey: item["typ"] = tkey
+        sport = sport_map(tkey)
+        if sport: item["sport"] = sport
+
+        st = a.get("startTimeLocal", "")
+        if len(st) >= 16: item["start"] = st[11:16]
+
+        dur = a.get("duration")
+        if dur is not None: item["dauer_s"] = int(dur)
+        md = a.get("movingDuration")
+        if md is not None: item["bewegt_s"] = int(md)
+
+        dist = a.get("distance")
+        if dist is not None: item["km"] = round(dist / 1000.0, 2)
+
+        eg = a.get("elevationGain")
+        if eg is not None: item["hm"] = int(eg)
+        el = a.get("elevationLoss")
+        if el is not None: item["hm_ab"] = int(el)
+
+        ahr = a.get("averageHR")
+        if ahr is not None: item["hf_avg"] = int(ahr)
+        mhr = a.get("maxHR")
+        if mhr is not None: item["hf_max"] = int(mhr)
+
+        # Zonen
+        zones = []
+        for i in range(1, 6):
+            zk = f"hrTimeInZone_{i}"
+            zv = a.get(zk)
+            zones.append(int(zv) if zv is not None else 0)  # Fix Cloud-Review: immer 5 Werte
+        if sum(zones) > 0: item["zonen_s"] = zones
+
+        te_ae = a.get("aerobicTrainingEffect")
+        if te_ae is not None: item["te_ae"] = round(te_ae, 1)
+        te_an = a.get("anaerobicTrainingEffect")
+        if te_an is not None: item["te_an"] = round(te_an, 1)
+        tel = a.get("trainingEffectLabel")
+        if tel: item["te_label"] = tel
+
+        atl = a.get("activityTrainingLoad")
+        if atl is not None: item["last"] = int(atl)
+
+        cal = a.get("calories")
+        if cal is not None: item["kcal"] = int(cal)
+
+        bb_diff = a.get("differenceBodyBattery")
+        if bb_diff is not None: item["bb"] = int(bb_diff)
+
+        tmn = a.get("minTemperature")
+        if tmn is not None: item["temp_min"] = int(tmn)
+        tmx = a.get("maxTemperature")
+        if tmx is not None: item["temp_max"] = int(tmx)
+
+        speed = a.get("averageSpeed")
+        if speed is not None: item["v_kmh"] = round(speed * 3.6, 1)
+
+        p = a.get("avgPower")
+        if p is not None: item["watt"] = int(p)
+        np_pwr = a.get("normPower")
+        if np_pwr is not None: item["watt_np"] = int(np_pwr)
+        p20 = a.get("max20MinPower")
+        if p20 is not None: item["watt_20"] = int(p20)
+
+        cad = a.get("averageRunningCadenceInStepsPerMinute") or a.get("averageBikingCadenceInRevPerMinute")
+        if cad is not None: item["kadenz"] = int(cad)
+
+        vo2 = a.get("vO2MaxValue")
+        if vo2 is not None: item["vo2max"] = round(vo2, 1)
+
+        tss = a.get("trainingStressScore")
+        if tss is not None: item["tss"] = round(tss, 1)
+        if_val = a.get("intensityFactor")
+        if if_val is not None: item["if"] = round(if_val, 2)
+
+        loc = a.get("locationName")
+        if loc: item["ort"] = loc
+
+        steps = a.get("steps")
+        if steps is not None: item["schritte"] = int(steps)
+
+        im_m = a.get("moderateIntensityMinutes")
+        if im_m is not None: item["int_mod"] = int(im_m)
+        iv_v = a.get("vigorousIntensityMinutes")
+        if iv_v is not None: item["int_vig"] = int(iv_v)
+
+        aret = a.get("avgRespirationRate")
+        if aret is not None: item["atem"] = round(aret, 1)
+
+        sd_diff = a.get("differenceStress")
+        if sd_diff is not None: item["stress_diff"] = int(sd_diff)
+
+        rc = a.get("lapCount")
+        if rc is not None: item["runden"] = int(rc)
+
+        he_max = a.get("maxElevation")
+        if he_max is not None: item["hoehe_max"] = int(he_max)
+
+        is_pr = a.get("isPR")
+        if is_pr is True: item["pr"] = True
+
+        aus.append(item)
+    return aus
+
+
+def tag_details(von: str, bis: str, extras_heute=False) -> dict:
+    """{datum: data} für alle Tage von-von bis bis, mit allen Quellen."""
+    today_str = datetime.datetime.now(TZ).date().isoformat()
+
+    dailies = _dailysummaries(von, bis)
+    sleeps = _sleep(von, bis)
+    acts = _activities_block(von, bis)
+
+    hrvs = {}
+    try:
+        hrvs = _hrv(von, bis)
+    except Exception:
+        pass
+
+    gewicht = {}
+    try:
+        gewicht = _gewicht(von, bis)
+    except Exception:
+        pass
+
+    all_dates = set()
+    for cd in dailies: all_dates.add(cd)
+    for cd in sleeps: all_dates.add(cd)
+    seen_days = set()
+    for a in acts:
+        da = tag_aus(a)
+        if da: seen_days.add(da)
+    for cd in seen_days: all_dates.add(cd)
+
+    result = {}
+    for datum in sorted(all_dates):
+        tag_data = _dailysummary_day(dailies, datum) or {}
+        schlaf_data = _sleep_day(sleeps, datum)
+        akt_data = _activity_day(acts, datum)
+        hrv_data = _hrv_day(hrvs, datum) or {}
+
+        has_tag = bool(tag_data)
+        has_schlaf = schlaf_data is not None
+        has_akt = akt_data is not None
+
+        if not (has_tag or has_schlaf or has_akt):
+            continue
+
+        data = {"v": 1}  # Fix Cloud-Review: Versionskennung auf oberster Ebene
+        if has_tag:
+            if tag_data.get("v") == 1 or all(k != "v" for k in tag_data):
+                data["tag"] = {k: v for k, v in tag_data.items() if v is not None}
+        if has_schlaf:
+            data["schlaf"] = {k: v for k, v in schlaf_data.items() if v is not None}
+        if hrv_data:
+            data["hrv"] = {k: v for k, v in hrv_data.items() if k != "v" or v is not None}
+
+        # Gewicht
+        g = gewicht.get(datum)
+        if g is not None: data["gewicht_kg"] = g
+
+        # Fitness Alter und BB aufwachen nur für HEUTE (wenn extras_heute=True)
+        if datum == today_str and extras_heute:
+            fa = _fitnessalter(datum)
+            if fa is not None: data["fitnessalter"] = fa
+            bbw = _bb_aufwachen(datum)
+            if bbw is not None: data["bb_aufwachen"] = bbw
+
+        # Aktivitäten und Summe
+        if has_akt:
+            data["akt"] = akt_data
+            sum_entry = {"n": 0, "km": 0.0, "hm": 0, "dauer_s": 0, "bewegt_s": 0,
+                         "last": 0.0, "kcal": 0, "bb": 0, "zonen_s": [0] * 5}
+            for act in akt_data:
+                sum_entry["n"] += 1
+                sum_entry["km"] += act.get("km", 0)
+                sum_entry["hm"] += act.get("hm", 0)
+                sum_entry["dauer_s"] += act.get("dauer_s", 0)
+                sum_entry["bewegt_s"] += act.get("bewegt_s", 0)
+                l = act.get("last", 0)
+                if isinstance(l, (int, float)): sum_entry["last"] += l
+                sum_entry["kcal"] += act.get("kcal", 0)
+                sum_entry["bb"] += act.get("bb", 0)
+                zones = act.get("zonen_s")
+                if isinstance(zones, list):
+                    for i in range(min(len(zones), 5)):
+                        sum_entry["zonen_s"][i] += zones[i]
+
+            # Runde km und hm
+            sum_entry["km"] = round(sum_entry["km"], 2)
+            sum_entry["hm"] = int(round(sum_entry["hm"]))
+
+            data["summe"] = {k: v for k, v in sum_entry.items()}
+
+        # Clean: keine None-Werte
+        def _clean(d):
+            cleaned = {}
+            for k, v in d.items():
+                if v is not None:
+                    if isinstance(v, dict):
+                        cleaned[k] = {kk: vv for kk, vv in v.items() if vv is not None}
+                        if cleaned[k] == {}: pass  # keep empty dicts if no keys survived? no, skip
+                    else:
+                        cleaned[k] = v
+            return cleaned
+
+        data = _clean(data)
+        result[datum] = data
+
+    return result
+
+
+def text_fuer(data: dict) -> str:
+    """Kurztext für einen Tag aus data."""
+    parts = []
+
+    # Anzahl Aktivitäten, km, hm, Dauer
+    akt = data.get("akt", [])
+    n = len(akt) if isinstance(akt, list) else 0
+    sm = data.get("summe") or {}
+    if isinstance(akt, list) and len(akt) > 0:
+        km_val = sm.get("km", 0) if isinstance(sm, dict) else 0
+        hm_val = sm.get("hm", 0) if isinstance(sm, dict) else 0
+        dur = sm.get("dauer_s", 0) if isinstance(sm, dict) else 0
+    elif "tag" in data:
+        km_val = 0.0
+        hm_val = 0
+        dur = 0
+    else:
+        km_val = 0.0
+        hm_val = 0
+        dur = 0
+
+    if n > 0:
+        parts.append(f"{n} Akt")
+        parts.append(f"{km_val:.1f} km".replace(".", ","))
+        if hm_val > 0: parts.append(f"{hm_val} hm")
+        # Dauer als H:MM oder MM
+        if dur > 0:
+            h = dur // 3600
+            m = (dur % 3600) // 60
+            if h > 0:
+                parts.append(f"{h}:{m:02d} h")
+            else:
+                parts.append(f"{m} min")
+
+    # Schlaf
+    schlaf = data.get("schlaf", {})
+    if isinstance(schlaf, dict) and "dauer_s" in schlaf:
+        ds = schlaf["dauer_s"]
+        sh = ds // 3600
+        sm2 = (ds % 3600) // 60
+        parts.append(f"Schlaf {sh}:{sm2:02d}")
+
+    # BB
+    tag_data = data.get("tag", {})
+    bb_min = tag_data.get("bb_min") if isinstance(tag_data, dict) else None
+    bb_max = tag_data.get("bb_max") if isinstance(tag_data, dict) else None
+    if bb_min is not None and bb_max is not None:
+        parts.append(f"BB {bb_min}-{bb_max}")
+
+    return " · ".join(parts) if parts else ""
+
+
+def send_tage(tage: dict, nur_geaendert=True, state=None):
+    """tage = {datum: data}. Sende via saveExtra für garmin_tag.
+    
+    Mit state=None (Default): lädt/sichert State, printet Ergebnis.
+    Mit state=...: updates state["tag_hash"], gibt (gesendet, fehlert) zurück.
+    """
+    if state is None:
+        state = _laden_state()
+        load_save = True
+    else:
+        load_save = False
+
+    tag_hash = state.get("tag_hash", {}) if isinstance(state, dict) else {}
+    gesendet = 0
+    fehlert = 0
+
+    for datum in sorted(tage.keys()):
+        data = tage[datum]
+        h = hashlib.sha1(json.dumps(data, sort_keys=True).encode()).hexdigest()
+
+        if nur_geaendert:
+            old_h = tag_hash.get(datum, "")
+            if h == old_h and old_h:
+                continue
+
+        payload = {
+            "kind": "saveExtra",
+            "typ": "garmin_tag",
+            "datum": datum,
+            "text": text_fuer(data),
+            "data": data,
+            "quelle": "garmin-api",
+        }
+        resp = http_post_json(SCRIPT_URL, payload)
+        if not resp.get("ok"):
+            err = resp.get("error", "unbekannt")
+            log(f"[garmin] send_tage({datum}): {err}")
+            fehlert += 1
+        else:
+            tag_hash[datum] = h
+            gesendet += 1
+
+        # Pause 0.3s zwischen Aufrufen (nicht nach letztem)
+        if datum != sorted(tage.keys())[-1]:
+            time.sleep(0.3)
+
+    # tag_hash speichern, auf 30 neueste kürzen
+    state["tag_hash"] = dict(list(tag_hash.items())[-30:])
+    if load_save:
+        _atomar_schreiben(STATE_PATH, state)
+
+    if state is None:
+        print(f"Tage gesendet: {gesendet}, Fehler: {fehlert}")
+    return gesendet, fehlert
+
+
+# ---------------------------------------------------------------------------
 # Befehle (argparse)
 # ---------------------------------------------------------------------------
 
@@ -743,7 +1427,7 @@ def cmd_tick():
         fehler = 0
         state["fehler"] = 0
 
-    # Ablauf-Erinnerung: höchstens einmal pro Tag
+    # Ablauf-Erinnerung: höchstens einmal pro Tag
     if ablauf_gemeldet != heute_str:
         try:
             key_expiry = state.get("key_expiry")
@@ -753,10 +1437,23 @@ def cmd_tick():
                 diff = (exp_date - now_date).days
                 if 0 <= diff <= 7:
                     formatted = exp_date.strftime("%d.%m.%Y")
-                    notify("Coach Kira", f"Garmin-Schlüssel läuft am {formatted} ab")
+                    notify("Coach Kira", f"Garmin-Schlüssel läuft am {formatted} ab")
                     state["ablauf_gemeldet"] = heute_str
         except Exception:
             pass
+
+    # --- Garmin Tag: Details für gestern+heute abrufen und senden ---
+    try:
+        yesterday_str = (datetime.datetime.now(TZ) - datetime.timedelta(days=1)).date().isoformat()
+        today_str = datetime.datetime.now(TZ).date().isoformat()
+
+        tage_data = tag_details(yesterday_str, today_str, extras_heute=True)
+        if not tage_data:
+            log("[garmin] tick tag_details: keine Tage gefunden")
+
+        send_tage(tage_data, nur_geaendert=True, state=state)
+    except Exception as e:
+        log(f"[garmin] tick tag_details/send_tage: {e}")
 
     # STATE nur einmal am Ende speichern
     _atomar_schreiben(STATE_PATH, state)
@@ -805,7 +1502,7 @@ def cmd_vorschau(datum=None):
 
 
 def cmd_ablauf(bis):
-    """Ablaufdatum des Schlüssels im STATE speichern."""
+    """Ablaufdatum des Schlüssels im STATE speichern."""
     state = _laden_state()
     state["key_expiry"] = bis
     try:
@@ -814,7 +1511,43 @@ def cmd_ablauf(bis):
     except Exception:
         pass
     _atomar_schreiben(STATE_PATH, state)
-    log(f"[garmin] Schlüssel läuft am {bis} ab")
+    log(f"[garmin] Schlüssel läuft am {bis} ab")
+
+
+def cmd_details(von=None, bis=None, probe=False):
+    """Tag-Details für einen Zeitraum abrufen und optional senden."""
+    today = datetime.datetime.now(TZ).date().isoformat()
+    start_date = START_TIMELINE  # Vorlage für --von
+    
+    if von:
+        start_date = von
+    if bis:
+        end_date = bis
+    else:
+        end_date = today
+
+    tage = tag_details(start_date, end_date)
+    if not tage:
+        log("[garmin] details: keine Tage gefunden")
+        return
+
+    if probe:
+        # Ausgabe Beispiel (erster Tag mit akt) und Anzahl Tage
+        example_day = None
+        for d, data in sorted(tage.items()):
+            if "akt" in data:
+                example_day = d
+                break
+        
+        print(f"Tage gesamt: {len(tage)}")
+        if example_day:
+            print(f"Beispiel ({example_day}): {json.dumps(tage[example_day], ensure_ascii=False, indent=2, default=str)[:600]}")
+        print(f"Texte:")
+        for d, data in sorted(tage.items()):
+            t = text_fuer(data)
+            print(f"  {d}: {t}")
+    else:
+        send_tage(tage, nur_geaendert=False)
 
 
 def main():
@@ -843,6 +1576,12 @@ def main():
     p_ablauf = subparsers.add_parser("ablauf", help="Ablaufdatum speichern")
     p_ablauf.add_argument("--bis", required=True)
 
+    # details
+    p_details = subparsers.add_parser("details", help="Tag-Details abrufen/senden")
+    p_details.add_argument("--von", default=None)
+    p_details.add_argument("--bis", default=None)
+    p_details.add_argument("--probe", action="store_true")
+
     args = parser.parse_args()
     if not args.command:
         parser.print_help()
@@ -859,6 +1598,8 @@ def main():
             cmd_vorschau(datum=args.datum)
         elif args.command == "ablauf":
             cmd_ablauf(bis=args.bis)
+        elif args.command == "details":
+            cmd_details(von=args.von, bis=args.bis, probe=bool(args.probe))
     except Exception as e:
         log(f"[garmin] FATAL: {e}")
         raise

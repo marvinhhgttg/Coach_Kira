@@ -19,6 +19,8 @@ import {
 } from './RecoveryPanel';
 import { WINDOWS, ALL_RANGE, winLabel, winTitle, sliceWin, rangeFor, rangeDays, type WinKey } from '../lib/windows';
 import { monoTone } from '../lib/monotony';
+import { useGarminTage, fmtDauer, hmProKm, lastProStunde, teLabelDe, TE_LABEL_ZONE, zoneAusText, type GarminTag, type GarminTage } from '../lib/garmin';
+import { GarminZonenBalken } from '../components/GarminZonenBalken';
 
 // ---------------------------------------------------------------------------
 // Log: Aktivitäten mit Kontext, Kalender, Filter, Serien, Bestenliste, Ertrag.
@@ -131,7 +133,7 @@ const tone = (v: number | null, goodHigh = true, t = 3) => (v == null ? '' : (go
 // ---------------------------------------------------------------------------
 // 1) Detail / Nachbetrachtung
 // ---------------------------------------------------------------------------
-function Detail({ a, review }: { a: Act; review?: ActivityReview | null }) {
+function Detail({ a, review, g }: { a: Act; review?: ActivityReview | null; g?: GarminTag }) {
   const d = a.d;
   const n = a.next;
   const dr = n?.readiness != null && a.base.r != null ? n.readiness - a.base.r : null;
@@ -184,9 +186,60 @@ function Detail({ a, review }: { a: Act; review?: ActivityReview | null }) {
           <Row k="Ertrag" v={a.ertrag != null ? `${fmtNum(a.ertrag, 2)} TE/100 ESS` : '—'} />
         </dl>
       </div>
+      {g?.akt && g.akt.length > 0 && (
+        <div className="md:col-span-4 border-t border-border pt-3">
+          <div className="label mb-1">Garmin-Details{g.akt.length > 1 ? ` · ${g.akt.length} Aktivitäten` : ''}</div>
+          <div className="grid gap-2 grid-cols-[minmax(0,1fr)] sm:grid-cols-2">
+            {g.akt.map((x, i) => <GarminAktKarte key={x.id ?? i} x={x} zoneEingetragen={a.d.actual.zone} />)}
+          </div>
+        </div>
+      )}
       <div className="md:col-span-4 border-t border-border pt-3">
         <div className="flex items-center gap-2 mb-1"><div className="label">Kira-Kommentar</div>{review && <SourceBadge source={{ engine: review.engine, model: review.model }} />}</div>
         {review ? <p className="text-sm text-ink-muted leading-relaxed whitespace-pre-wrap">{review.text}</p> : <p className="text-2xs text-ink-dim">Noch kein Kira-Kommentar. Der Mac-Dienst kommentiert neue Einheiten automatisch.</p>}
+      </div>
+    </div>
+  );
+}
+function GarminAktKarte({ x, zoneEingetragen }: { x: NonNullable<GarminTag['akt']>[number]; zoneEingetragen: string }) {
+  const zLabel = x.te_label ? TE_LABEL_ZONE[x.te_label] : undefined;
+  const zEin = zoneAusText(zoneEingetragen);
+  const abw = zLabel != null && zEin != null && Math.abs(zLabel - zEin) >= 1;
+  const hk = hmProKm(x.km, x.hm);
+  const lph = lastProStunde(x.last, x.bewegt_s || x.dauer_s);
+  const teile = (xs: (string | null | false | undefined)[]) => xs.filter(Boolean).join(' · ');
+  return (
+    <div className="rounded border border-border p-2 space-y-1" data-testid="garmin-akt">
+      <div className="flex items-baseline gap-1.5 min-w-0">
+        {x.start && <span className="tnum text-ink-dim">{x.start}</span>}
+        <span className="font-semibold truncate">{x.name || x.typ || 'Aktivität'}</span>
+        {x.pr && <span className="chip text-2xs border border-border text-green-300">PR</span>}
+      </div>
+      <div className="tnum">{teile([x.km != null && `${fmtNum(x.km, 1)} km`, x.hm != null && `${fmtNum(x.hm)} hm${x.hm_ab != null ? ` (${fmtNum(x.hm_ab)} ab)` : ''}`, hk != null && `${fmtNum(hk, 1)} hm/km`, `${fmtDauer(x.bewegt_s || x.dauer_s)}`, x.v_kmh != null && `Ø ${fmtNum(x.v_kmh, 1)} km/h`])}</div>
+      {(x.hf_avg != null || x.zonen_s) && (
+        <div>
+          <div className="tnum text-ink-muted">{teile([x.hf_avg != null && `HF Ø ${x.hf_avg}`, x.hf_max != null && `max ${x.hf_max} bpm`])}</div>
+          <GarminZonenBalken zonen={x.zonen_s} beschriftung />
+        </div>
+      )}
+      <div className="tnum">
+        {teile([(x.te_ae != null || x.te_an != null) && `TE ${fmtNum(x.te_ae, 1)} / ${fmtNum(x.te_an, 1)}`, x.te_label && teLabelDe(x.te_label)])}
+        {abw && <span className="text-orange-300"> · Label passt nicht zur eingetragenen Zone {zoneEingetragen}</span>}
+      </div>
+      <div className="tnum text-ink-muted">{teile([x.last != null && `Last ${x.last}`, lph != null && `${lph}/h`, x.tss != null && `TSS ${fmtNum(x.tss, 1)}`, x.if != null && `IF ${fmtNum(x.if, 2)}`])}</div>
+      {x.watt != null && <div className="tnum text-ink-muted">{teile([`Ø ${x.watt} W`, x.watt_np != null && `NP ${x.watt_np} W`, x.watt_20 != null && `20 min ${x.watt_20} W`])}</div>}
+      <div className="tnum text-2xs text-ink-dim">
+        {teile([
+          x.bb != null && `Body Battery ${x.bb > 0 ? '+' : ''}${x.bb}`,
+          x.kcal != null && `${fmtNum(x.kcal)} kcal`,
+          x.kadenz != null && `Kadenz ${x.kadenz}`,
+          (x.temp_min != null || x.temp_max != null) && `${x.temp_min ?? '?'}–${x.temp_max ?? '?'} °C`,
+          x.vo2max != null && `VO2max ${fmtNum(x.vo2max, 0)}`,
+          x.atem != null && `Atem ${fmtNum(x.atem, 0)}/min`,
+          x.runden != null && `${x.runden} Runden`,
+          x.hoehe_max != null && `max. ${x.hoehe_max} m ü. NN`,
+          x.ort,
+        ])}
       </div>
     </div>
   );
@@ -259,14 +312,23 @@ function Calendar({ days, acts, onPick, picked }: { days: RecoveryDay[]; acts: M
 // ---------------------------------------------------------------------------
 // Hauptkomponente
 // ---------------------------------------------------------------------------
-type SortKey = 'date' | 'ess' | 'teAe' | 'teAn' | 'ertrag';
+type SortKey = 'date' | 'ess' | 'teAe' | 'teAn' | 'ertrag' | 'km' | 'hm' | 'dauer';
 const SORTS: { k: SortKey; l: string }[] = [
   { k: 'date', l: 'Datum' },
   { k: 'ess', l: 'Last' },
   { k: 'teAe', l: 'TE aerob' },
   { k: 'teAn', l: 'TE anaerob' },
   { k: 'ertrag', l: 'Ertrag' },
+  { k: 'km', l: 'km' },
+  { k: 'hm', l: 'Höhenmeter' },
+  { k: 'dauer', l: 'Dauer' },
 ];
+const gSek = (g?: GarminTag) => g?.summe ? g.summe.bewegt_s || g.summe.dauer_s || null : null;
+function gWert(tage: GarminTage | null, date: string, k: 'km' | 'hm' | 'dauer'): number {
+  const g = tage?.get(date);
+  if (!g?.summe) return -1;
+  return k === 'dauer' ? gSek(g) ?? -1 : (g.summe[k] ?? -1);
+}
 
 export function TacticalLog() {
   const [raw, setRaw] = useState<any[] | null>(null);
@@ -281,6 +343,7 @@ export function TacticalLog() {
   const [open, setOpen] = useState<string | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
   const [reviews, setReviews] = useState<Map<string, ActivityReview>>(new Map());
+  const { tage: garmin } = useGarminTage();
 
   const load = () => {
     setErr(null);
@@ -339,6 +402,7 @@ export function TacticalLog() {
     .filter((a) => !onlyMiss || a.fits === false)
     .sort((x, y) => {
       if (sort === 'date') return y.d.date.localeCompare(x.d.date);
+      if (sort === 'km' || sort === 'hm' || sort === 'dauer') return gWert(garmin, y.d.date, sort) - gWert(garmin, x.d.date, sort);
       const vx = sort === 'ertrag' ? x.ertrag ?? -1 : (x as any)[sort];
       const vy = sort === 'ertrag' ? y.ertrag ?? -1 : (y as any)[sort];
       return vy - vx;
@@ -350,9 +414,10 @@ export function TacticalLog() {
     const top = (xs: Act[], f: (a: Act) => number | null) => xs.reduce<Act | null>((b, a) => (f(a) != null && (!b || f(a)! > f(b)!) ? a : b), null);
     return groups.map((s) => {
       const xs = acts.filter((a) => a.sport === s);
-      return { s, n: xs.length, sum: xs.reduce((t, a) => t + a.ess, 0), maxL: top(xs, (a) => a.ess), maxAe: top(xs, (a) => a.teAe), maxAn: top(xs, (a) => a.teAn), bestE: top(xs, (a) => a.ertrag), avgE: avg(xs.map((a) => a.ertrag)) };
+      const gs = xs.map((a) => garmin?.get(a.d.date)?.summe).filter(Boolean) as NonNullable<GarminTag['summe']>[];
+      return { s, km: gs.length ? gs.reduce((t, g) => t + (g.km || 0), 0) : null, hm: gs.length ? gs.reduce((t, g) => t + (g.hm || 0), 0) : null, sek: gs.length ? gs.reduce((t, g) => t + (g.bewegt_s || g.dauer_s || 0), 0) : null, maxKm: top(xs, (a) => garmin?.get(a.d.date)?.summe?.km ?? null), maxHm: top(xs, (a) => garmin?.get(a.d.date)?.summe?.hm ?? null), n: xs.length, sum: xs.reduce((t, a) => t + a.ess, 0), maxL: top(xs, (a) => a.ess), maxAe: top(xs, (a) => a.teAe), maxAn: top(xs, (a) => a.teAn), bestE: top(xs, (a) => a.ertrag), avgE: avg(xs.map((a) => a.ertrag)) };
     });
-  }, [acts]);
+  }, [acts, garmin]);
   const ertragSorted = acts.filter((a) => a.ertrag != null && a.ess >= 60).sort((a, b) => b.ertrag! - a.ertrag!);
   const jump = (date: string) => {
     setView('Tabelle');
@@ -364,6 +429,11 @@ export function TacticalLog() {
     setTimeout(() => document.getElementById(`log-${date}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 50);
   };
 
+  const gTot = (() => {
+    let km = 0, hm = 0, sek = 0, n = 0;
+    for (const a of acts) { const g = garmin?.get(a.d.date)?.summe; if (!g) continue; n++; km += g.km || 0; hm += g.hm || 0; sek += g.bewegt_s || g.dauer_s || 0; }
+    return { km, hm, sek, n };
+  })();
   const totals = { n: acts.length, sum: acts.reduce((t, a) => t + a.ess, 0), miss: acts.filter((a) => a.fits === false).length, checked: acts.filter((a) => a.fits != null).length };
   const pickedDay = picked ? all.find((d) => d.date === picked) : null;
   const pickedAct = picked ? actMap.get(picked) : null;
@@ -393,7 +463,7 @@ export function TacticalLog() {
         ) : (
           <div className="space-y-4">
             {/* 4) Serien & Kennzahlen */}
-            <div className="grid gap-3 grid-cols-2 md:grid-cols-4 xl:grid-cols-8">
+            <div className="grid gap-3 grid-cols-2 md:grid-cols-4 xl:grid-cols-11">
               <Kpi label="Trainingstage am Stück" value={streaks.cur} tone={streaks.cur >= 6 ? 'text-orange-300' : ''} sub="aktuell" />
               <Kpi label="Seit letztem Ruhetag" value={streaks.sinceRest != null ? `${streaks.sinceRest} T` : '—'} tone={(streaks.sinceRest ?? 0) >= 7 ? 'text-orange-300' : ''} />
               <Kpi label="Seit letzter Quality" value={streaks.sinceQ != null ? `${streaks.sinceQ} T` : '—'} sub={streaks.lastQ ? fmtDateShort(streaks.lastQ.d.date).slice(0, 6) : undefined} />
@@ -401,6 +471,9 @@ export function TacticalLog() {
               <Kpi label="Längste Serie" value={`${streaks.best} T`} sub={streaks.bestEnd ? `bis ${fmtDateShort(streaks.bestEnd).slice(0, 6)}` : undefined} />
               <Kpi label="Aktivitäten" value={totals.n} sub={winTitle(win)} />
               <Kpi label="Gesamtlast" value={`${fmtNum(totals.sum)} ESS`} sub={`Ø ${fmtNum(totals.n ? totals.sum / totals.n : null)} / Einheit`} />
+              <Kpi label="Distanz" value={gTot.n ? `${fmtNum(gTot.km)} km` : '—'} sub="laut Garmin" />
+              <Kpi label="Höhenmeter" value={gTot.n ? `${fmtNum(gTot.hm)} hm` : '—'} sub="laut Garmin" />
+              <Kpi label="Bewegungszeit" value={gTot.n ? `${fmtNum(gTot.sek / 3600)} h` : '—'} sub="laut Garmin" />
               <Kpi label="Härter als Votum" value={`${totals.miss} / ${totals.checked}`} tone={totals.checked && totals.miss / totals.checked > 0.4 ? 'text-orange-300' : ''} />
             </div>
 
@@ -423,7 +496,7 @@ export function TacticalLog() {
                       </span>
                       <button className="btn btn-ghost text-2xs px-2 py-0.5" onClick={() => setPicked(null)}>× schließen</button>
                     </div>
-                    {pickedAct ? <Detail a={pickedAct} review={reviews.get(pickedAct.d.date)} /> : <p className="text-xs text-ink-dim">Kein Training an diesem Tag.</p>}
+                    {pickedAct ? <Detail a={pickedAct} review={reviews.get(pickedAct.d.date)} g={garmin?.get(pickedAct.d.date)} /> : <p className="text-xs text-ink-dim">Kein Training an diesem Tag.</p>}
                   </div>
                 )}
                 <Calendar days={days} acts={actMap} onPick={setPicked} picked={picked} />
@@ -444,10 +517,10 @@ export function TacticalLog() {
                 </div>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[760px] text-xs">
+                  <table className="w-full min-w-[1040px] text-xs">
                     <thead>
                       <tr className="text-left border-b border-border">
-                        {['Datum', 'Sport', 'Zone', 'Last', 'TE ae/an', 'Ertrag', 'Votum', 'Folgemorgen', ''].map((h) => (
+                        {['Datum', 'Sport', 'Zone', 'Last', 'km', 'hm', 'hm/km', 'Dauer', 'Last/h', 'TE ae/an', 'Ertrag', 'Votum', 'Folgemorgen', ''].map((h) => (
                           <th key={h} className="label px-2 py-2 font-normal">{h}</th>
                         ))}
                       </tr>
@@ -456,6 +529,10 @@ export function TacticalLog() {
                       {filtered.map((a) => {
                         const isOpen = open === a.d.date;
                         const dr = a.next?.readiness != null && a.base.r != null ? a.next.readiness - a.base.r : null;
+                        const gs = garmin?.get(a.d.date)?.summe;
+                        const sek = gs ? gs.bewegt_s || gs.dauer_s || null : null;
+                        const hk = hmProKm(gs?.km, gs?.hm);
+                        const lph = lastProStunde(a.ess, sek);
                         return (
                           <Fragment key={a.d.date}>
                             <tr id={`log-${a.d.date}`} className={`border-t border-border cursor-pointer hover:bg-bg-subtle/60 ${isOpen ? 'bg-bg-subtle/60' : ''}`} onClick={() => setOpen(isOpen ? null : a.d.date)}>
@@ -466,6 +543,11 @@ export function TacticalLog() {
                               </td>
                               <td className="px-2 py-1.5">{a.d.actual.zone || '—'}</td>
                               <td className={`px-2 py-1.5 tnum font-semibold ${a.ess >= 220 ? 'text-orange-300' : 'text-accent'}`}>{fmtNum(a.ess)}</td>
+                              <td className="px-2 py-1.5 tnum">{gs?.km != null ? fmtNum(gs.km, 1) : '—'}</td>
+                              <td className="px-2 py-1.5 tnum">{gs?.hm != null ? fmtNum(gs.hm) : '—'}</td>
+                              <td className="px-2 py-1.5 tnum">{hk != null ? fmtNum(hk, 1) : '—'}</td>
+                              <td className="px-2 py-1.5 tnum whitespace-nowrap">{sek != null ? fmtDauer(sek) : '—'}</td>
+                              <td className="px-2 py-1.5 tnum">{lph != null ? fmtNum(lph) : '—'}</td>
                               <td className="px-2 py-1.5 tnum">{fmtNum(a.teAe, 1)} / {fmtNum(a.teAn, 1)}</td>
                               <td className="px-2 py-1.5 tnum">{a.ertrag != null ? fmtNum(a.ertrag, 2) : '—'}</td>
                               <td className="px-2 py-1.5 whitespace-nowrap">
@@ -477,8 +559,8 @@ export function TacticalLog() {
                             </tr>
                             {isOpen && (
                               <tr className="bg-bg-subtle/40">
-                                <td colSpan={9} className="px-3 py-3">
-                                  <Detail a={a} review={reviews.get(a.d.date)} />
+                                <td colSpan={14} className="px-3 py-3">
+                                  <Detail a={a} review={reviews.get(a.d.date)} g={garmin?.get(a.d.date)} />
                                 </td>
                               </tr>
                             )}
@@ -490,7 +572,7 @@ export function TacticalLog() {
                   {!filtered.length && <p className="text-sm text-ink-muted py-3">Keine Einheiten für diese Filter.</p>}
                 </div>
                 <p className="text-2xs text-ink-dim">
-                  Ertrag = (TE aerob + TE anaerob) je 100 ESS. Folgemorgen = Readiness am nächsten Morgen ggü. deinem Schnitt der 28 Tage davor. Klick auf eine Zeile = Nachbetrachtung.
+                  Ertrag = (TE aerob + TE anaerob) je 100 ESS. km, hm, Dauer laut Garmin (Bewegungszeit); Last/h = Kira-Last je Stunde Bewegung. Folgemorgen = Readiness am nächsten Morgen ggü. deinem Schnitt der 28 Tage davor. Klick auf eine Zeile = Nachbetrachtung.
                 </p>
               </>
             )}
@@ -503,10 +585,10 @@ export function TacticalLog() {
           {/* 5) Bestenliste */}
           <Panel title={`Bestenliste je Sport · ${winTitle(win)}`}>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[620px] text-xs tnum">
+              <table className="w-full min-w-[980px] text-xs tnum">
                 <thead>
                   <tr className="text-left text-ink-dim">
-                    {['Sport', 'Einh.', 'Σ Last', 'Höchste Last', 'Max TE aerob', 'Max TE anaerob', 'Ø Ertrag'].map((h) => (
+                    {['Sport', 'Einh.', 'Σ Last', 'Σ km', 'Σ hm', 'Σ Zeit', 'Längste', 'Meiste hm', 'Höchste Last', 'Max TE aerob', 'Max TE anaerob', 'Ø Ertrag'].map((h) => (
                       <th key={h} className="py-1 pr-2 font-normal">{h}</th>
                     ))}
                   </tr>
@@ -520,7 +602,12 @@ export function TacticalLog() {
                       </td>
                       <td className="py-1.5 pr-2">{b.n}</td>
                       <td className="py-1.5 pr-2">{fmtNum(b.sum)}</td>
+                      <td className="py-1.5 pr-2">{b.km != null ? fmtNum(b.km) : '—'}</td>
+                      <td className="py-1.5 pr-2">{b.hm != null ? fmtNum(b.hm) : '—'}</td>
+                      <td className="py-1.5 pr-2">{b.sek != null ? `${fmtNum(b.sek / 3600)} h` : '—'}</td>
                       {[
+                        [b.maxKm, (a: Act) => `${fmtNum(garmin?.get(a.d.date)?.summe?.km, 1)} km`],
+                        [b.maxHm, (a: Act) => `${fmtNum(garmin?.get(a.d.date)?.summe?.hm)} hm`],
                         [b.maxL, (a: Act) => `${fmtNum(a.ess)} ESS`],
                         [b.maxAe, (a: Act) => fmtNum(a.teAe, 1)],
                         [b.maxAn, (a: Act) => fmtNum(a.teAn, 1)],
