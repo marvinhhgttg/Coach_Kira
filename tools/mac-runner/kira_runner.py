@@ -232,6 +232,54 @@ def ollama_ready(model: str = MODEL) -> bool:
         return False
 
 
+# ---------------------------------------------------------------------------
+# KI-frei im Apps Script (Stufe 3): Prompts baut kira_prompts.mjs (gleiche Quelle wie das Cockpit),
+# Cloud-KI läuft über den Cockpit-Server (Perplexity, Schlüssel im Tresor des Servers).
+# ---------------------------------------------------------------------------
+PROMPTS_JS = BASE / "kira_prompts.mjs"
+NODE = "/opt/homebrew/bin/node"
+COCKPIT_LLM = "https://coachkira.pplx.app/port/5000/api/llm"
+CLOUD_MODEL = "sonar-pro"
+
+
+def kira_prompts(art: str, payload: dict) -> dict:
+    """node kira_prompts.mjs <art>  (supervisor | briefing | telegram) – JSON rein, JSON raus."""
+    r = subprocess.run(
+        [NODE, str(PROMPTS_JS), art],
+        input=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+        capture_output=True,
+        timeout=60,
+    )
+    if r.returncode != 0:
+        raise RuntimeError("kira_prompts " + art + ": " + r.stderr.decode("utf-8", "replace")[:300])
+    return json.loads(r.stdout.decode("utf-8"))
+
+
+def cloud_chat(messages: list[dict], json_out: bool = False, max_tokens: int = 4000, timeout: int = 300) -> str:
+    """Cloud-KI über den Cockpit-Server (nur wenn ausdrücklich Cloud gewählt wurde – kein automatischer Wechsel)."""
+    msgs = list(messages)
+    if json_out:
+        msgs = [{"role": "system", "content": "Antworte ausschließlich mit gültigem JSON – ohne Codeblock, ohne Text davor oder danach."}] + msgs
+    body = {"messages": msgs, "model": CLOUD_MODEL, "max_tokens": max_tokens}
+    req = Request(
+        COCKPIT_LLM,
+        data=json.dumps(body, ensure_ascii=False).encode("utf-8"),
+        headers={"Content-Type": "application/json", "Origin": "https://coachkira.pplx.app", "User-Agent": "coach-kira-runner"},
+        method="POST",
+    )
+    try:
+        with urlopen(req, timeout=timeout) as resp:
+            j = json.loads(resp.read().decode("utf-8"))
+    except HTTPError as e:
+        try:
+            j = json.loads(e.read().decode("utf-8"))
+        except Exception:
+            raise RuntimeError(f"Cockpit-Server HTTP {e.code}")
+    if not j.get("ok"):
+        raise RuntimeError(str(j.get("error") or "Cloud-KI fehlgeschlagen"))
+    return str(j.get("answer") or "").strip()
+
+
 def ollama_chat(
     model: str,
     messages: list[dict],
@@ -626,6 +674,42 @@ def cmd_backfill(days: int, dry: bool) -> None:
 # ---------------------------------------------------------------------------
 
 
+def cmd_telegram() -> None:
+    """Telegram-Fragen aus dem Apps Script abholen und lokal (coach-kira) beantworten."""
+    try:
+        j = http_get_json(SCRIPT_URL + "?mode=telegramJobs", timeout=30)
+    except RuntimeError:
+        return  # Patch fehlt noch
+    jobs = j.get("jobs") or []
+    if not jobs:
+        return
+    st = load_state()
+    done = st.get("tg_done", [])
+    offen = [x for x in jobs if x.get("id") not in done]
+    if not offen:
+        return
+    if not ollama_ready(MODEL):
+        log("Telegram: Ollama/coach-kira nicht erreichbar – später erneut")
+        return
+    try:
+        status = ((http_get_json(SCRIPT_URL + "?mode=briefingData&type=status").get("daten")) or {}).get("status")
+    except Exception:
+        status = None
+    vb = vorausblick_block()
+    for job in offen:
+        try:
+            msgs = kira_prompts("telegram", {"frage": job.get("frage", ""), "status": status, "vorausblick": vb, "verlauf": j.get("verlauf") or []})["messages"]
+            t0 = time.time()
+            text, _ = ollama_chat(MODEL, msgs, 16384, timeout=600)
+            r = http_post_json(SCRIPT_URL + "?mode=telegramAnswer", {"kind": "telegramAnswer", "id": job["id"], "text": clean(text), "model": MODEL, "engine": "local"})
+            done = (done + [job["id"]])[-30:]
+            st["tg_done"] = done
+            save_state(st)
+            log(f"Telegram: Frage {job['id']} lokal beantwortet ({time.time() - t0:.0f} s, gesendet={bool(r.get('ok'))})")
+        except Exception as e:
+            log(f"Telegram: FEHLER {e}")
+
+
 def cmd_supervisor() -> None:
     """Supervisor-Aufträge abholen; wurde ein Auftrag während der Rechnung ersetzt,
     sofort den neueren rechnen (max. 3 Runden)."""
@@ -636,6 +720,10 @@ def cmd_supervisor() -> None:
     except OSError:
         return  # läuft schon – nicht doppelt rechnen
     try:
+        try:
+            cmd_telegram()  # Telegram-Fragen zuerst (kurz), dann Supervisor
+        except Exception as e:
+            log(f"Telegram: FEHLER {e}")
         for _ in range(3):
             if _supervisor_once() != "superseded":
                 return
@@ -684,18 +772,37 @@ def _supervisor_once() -> str:
     fails = st.get("sup_fail", {})
     if fails.get(job["id"], 0) >= 2:
         return "none"  # zu oft gescheitert
-    model = ROUTES["supervisor"]
-    if not ollama_ready(model):
+    cloud = str(job.get("engine") or "local") == "cloud"
+    model = CLOUD_MODEL if cloud else ROUTES["supervisor"]
+    if not cloud and not ollama_ready(model):
         log("Supervisor: Ollama/coach-kira nicht erreichbar – später erneut")
         return "none"
-    log(f"Supervisor: Auftrag {job['id']} übernommen (Prompt {len(job.get('prompt', ''))} Zeichen)")
+    try:
+        if job.get("data"):
+            pp = kira_prompts("supervisor", job["data"])  # Prompt aus dem Datenpaket (Stufe 3)
+            system, prompt, schema = pp["system"], pp["prompt"], pp.get("schema")
+        else:
+            system, prompt, schema = job.get("system") or "", job.get("prompt") or "", job.get("schema")  # alter Auftrag
+    except Exception as e:
+        fails[job["id"]] = fails.get(job["id"], 0) + 1
+        st["sup_fail"] = fails
+        save_state(st)
+        log(f"Supervisor: FEHLER beim Prompt-Bau {e}")
+        return "error"
+    log(f"Supervisor: Auftrag {job['id']} übernommen ({'Cloud' if cloud else 'lokal'}, Prompt {len(prompt)} Zeichen)")
     messages = [
-        {"role": "system", "content": job.get("system") or ""},
-        {"role": "user", "content": job["prompt"] + vorausblick_block()},
+        {"role": "system", "content": system},
+        {"role": "user", "content": prompt + vorausblick_block()},
     ]
+
+    def _rechne(msgs: list[dict]) -> tuple[str, float | None]:
+        if cloud:
+            return cloud_chat(msgs, json_out=True, max_tokens=8000, timeout=900), None
+        return ollama_chat(model, msgs, 32768, fmt=schema or "json", timeout=1800)
+
     try:
         t0 = time.time()
-        text, tok = ollama_chat(model, messages, 32768, fmt=job.get("schema") or "json", timeout=1800)
+        text, tok = _rechne(messages)
         if tok is not None:
             log(f"  Supervisor: {model} {time.time() - t0:.0f} s, {tok:.0f} tok/s")
         else:
@@ -713,7 +820,7 @@ def _supervisor_once() -> str:
                 )},
             ]
             t1 = time.time()
-            text2, _ = ollama_chat(model, nach, 32768, fmt=job.get("schema") or "json", timeout=1800)
+            text2, _ = _rechne(nach)
             try:
                 text2 = json_clean(text2)
                 if len(plan_luecken(text2)) < len(fehlt):
@@ -724,7 +831,7 @@ def _supervisor_once() -> str:
         text = plan_auffuellen(text)
         saved = http_post_json(
             SCRIPT_URL + "?mode=saveSupervisor",
-            {"kind": "saveSupervisor", "id": job["id"], "content": text, "model": model},
+            {"kind": "saveSupervisor", "id": job["id"], "content": text, "model": model, "engine": "cloud" if cloud else "local"},
             timeout=600,
         )
         if not saved.get("ok"):
@@ -735,8 +842,8 @@ def _supervisor_once() -> str:
             raise RuntimeError(err)
         st["sup_done"] = (st.get("sup_done", []) + [job["id"]])[-30:]
         save_state(st)
-        log(f"Supervisor: Auftrag {job['id']} lokal erledigt und gespeichert")
-        notify("Coach Kira", "KI-Report lokal erstellt (coach-kira).")
+        log(f"Supervisor: Auftrag {job['id']} {'in der Cloud' if cloud else 'lokal'} erledigt und gespeichert")
+        notify("Coach Kira", "KI-Report in der Cloud erstellt (sonar-pro)." if cloud else "KI-Report lokal erstellt (coach-kira).")
         return "ok"
     except Exception as e:
         fails[job["id"]] = fails.get(job["id"], 0) + 1
@@ -962,11 +1069,20 @@ def wachhund(st: dict, today: str, ready: bool, extra: str = "") -> None:
 
 def run_briefing(type_: str) -> float:
     """Briefing für 'type_' erzeugen und speichern. Rückgabe Sekunden (float)."""
-    p = http_get_json(SCRIPT_URL + "?mode=briefingPrompt&type=" + type_)
-    if not p.get("ok"):
-        raise RuntimeError(p.get("error") or "BriefingPrompt fehlgeschlagen")
+    # Stufe 3: Daten aus dem Apps Script, Prompt aus kira_prompts (Fallback: alter briefingPrompt)
+    try:
+        p = http_get_json(SCRIPT_URL + "?mode=briefingData&type=" + type_)
+    except RuntimeError:
+        p = {}
+    if p.get("ok") and p.get("daten") is not None:
+        b = kira_prompts("briefing", {"type": type_, "daten": p["daten"]})
+        messages, fmt = b["messages"], b.get("format")
+    else:
+        p = http_get_json(SCRIPT_URL + "?mode=briefingPrompt&type=" + type_)
+        if not p.get("ok"):
+            raise RuntimeError(p.get("error") or "BriefingPrompt fehlgeschlagen")
+        messages, fmt = p["messages"], p.get("format")
     model = ROUTES.get(type_, MODEL)
-    messages = p["messages"]
     if type_ in ("status", "consolidated"):
         messages = mit_vorausblick(messages)
     body: dict = {
@@ -977,7 +1093,7 @@ def run_briefing(type_: str) -> float:
         "options": {"temperature": 0.3, "num_ctx": 32768},
         "messages": messages,
     }
-    if p.get("format") == "json":
+    if fmt == "json":
         body["format"] = "json"
     start = time.time()
     data = json.dumps(body, ensure_ascii=False).encode("utf-8")
@@ -1010,7 +1126,7 @@ def run_briefing(type_: str) -> float:
             pass
     saved = http_post_json(
         SCRIPT_URL + "?mode=saveBriefing",
-        {"kind": "saveBriefing", "type": type_, "text": text, "model": model},
+        {"kind": "saveBriefing", "type": type_, "text": text, "model": model, "engine": "local"},
     )
     if not saved.get("ok"):
         raise RuntimeError(saved.get("error") or "saveBriefing fehlgeschlagen")
@@ -1220,6 +1336,7 @@ def main() -> None:
     backfill.add_argument("--dry", action="store_true", help="Nur anzeigen, nichts speichern")
 
     supervisor = sub.add_parser("supervisor", help="Supervisor-Auftrag abholen und lokal rechnen")
+    telegram = sub.add_parser("telegram", help="Telegram-Fragen abholen und lokal beantworten")
 
     args = ap.parse_args()
     if args.command == "check":
@@ -1286,6 +1403,8 @@ def main() -> None:
         except Exception as e:
             log(f"supervisor: FEHLER {e}")
             sys.exit(1)
+    elif args.command == "telegram":
+        cmd_telegram()
     else:
         ap.print_help()
         sys.exit(1)

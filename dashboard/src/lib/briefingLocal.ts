@@ -1,11 +1,12 @@
 /**
- * Briefings lokal erzeugen: Prompt kommt unverändert vom Apps Script (mode=briefingPrompt),
+ * Briefings erzeugen: Daten vom Apps Script (mode=briefingData), Prompt aus kiraPrompts.ts (gleich wie Mac),
  * gerechnet wird mit coach-kira auf dem Mac, gespeichert wird wieder im Apps Script (mode=saveBriefing).
  */
 import { BASE_URL } from './api';
 import { LOCAL_MODEL, OLLAMA_URL, pingLocal } from './chatContext';
 import { getEngine } from './engine';
 import { cloudChat } from './cloudLLM';
+import { briefingMessages, type KiMsg } from './kiraPrompts';
 
 export type BriefingType = 'status' | 'consolidated' | 'plan';
 export type BriefingSource = { engine: 'local' | 'cloud'; model: string | null; timestamp: string | null };
@@ -47,14 +48,28 @@ export async function runLocalBriefing(type: BriefingType, onProgress?: (text: s
       throw new Error('Lokales Modell nicht erreichbar. Starte Ollama auf dem Mac oder stelle den Schalter auf Cloud.');
     }
   }
-  const pr = await (await fetch(`${BASE_URL}?mode=briefingPrompt&type=${type}&cb=${Date.now()}`, { redirect: 'follow' })).text();
-  let prompt: any;
+  // Stufe 3: Daten vom Apps Script (mode=briefingData), Prompt aus kiraPrompts (gleiche Quelle wie der Mac).
+  // Übergang: kennt das Apps Script briefingData noch nicht, alter Weg über mode=briefingPrompt.
+  let prompt: { ok: boolean; format?: string; messages: KiMsg[]; error?: string };
+  let dj: any = null;
   try {
-    prompt = JSON.parse(pr);
+    const roh = await (await fetch(`${BASE_URL}?mode=briefingData&type=${type}&cb=${Date.now()}`, { redirect: 'follow' })).text();
+    dj = JSON.parse(roh);
   } catch {
-    throw new Error('Apps Script kennt mode=briefingPrompt noch nicht (Briefing-Patch eingespielt und neue Version bereitgestellt?)');
+    dj = null; // Apps Script noch ohne briefingData (HTML-Fehlerseite ohne CORS) → alter Weg
   }
-  if (!prompt.ok) throw new Error(prompt.error || 'Prompt konnte nicht geladen werden.');
+  if (dj && dj.ok && dj.daten) {
+    const b = briefingMessages(type, dj.daten);
+    prompt = { ok: true, format: b.format, messages: b.messages };
+  } else {
+    const pr = await (await fetch(`${BASE_URL}?mode=briefingPrompt&type=${type}&cb=${Date.now()}`, { redirect: 'follow' })).text();
+    try {
+      prompt = JSON.parse(pr);
+    } catch {
+      throw new Error('Apps Script liefert weder briefingData noch briefingPrompt (Patch eingespielt und neue Version bereitgestellt?)');
+    }
+  }
+  if (!prompt.ok) throw new Error(prompt.error || (dj && dj.error) || 'Briefing-Daten konnten nicht geladen werden.');
 
   if (cloud) {
     const r = await cloudChat(prompt.messages, { json: prompt.format === 'json', model: 'sonar-pro', maxTokens: 4000 });

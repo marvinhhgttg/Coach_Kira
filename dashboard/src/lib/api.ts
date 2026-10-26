@@ -1,3 +1,4 @@
+import { getEngine } from './engine';
 // Coach Kira Apps Script API client.
 // All requests are GET with a cache-buster `cb` parameter.
 // Token is never persisted — it lives in React state only.
@@ -337,9 +338,9 @@ export function fetchChartData(
 }
 
 // Action — token stays in caller scope
-export function runSupervisor(token: string, signal?: AbortSignal) {
+export function runSupervisor(token: string, signal?: AbortSignal, engine: 'local' | 'cloud' = getEngine() === 'pplx' ? 'cloud' : 'local') {
   return getJson<SupervisorResponse>(
-    buildUrl({ action: 'runSupervisor', token }),
+    buildUrl({ action: 'runSupervisor', token, engine }),
     signal
   );
 }
