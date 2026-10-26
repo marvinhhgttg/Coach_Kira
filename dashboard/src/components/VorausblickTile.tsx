@@ -58,6 +58,18 @@ interface Fruehwarnung {
   prognose: string;
 }
 
+interface VbWoche {
+  von: string;
+  bis: string;
+  tage: number;
+  quelle: string;
+  last: number;
+  halten: number;
+  diff: number;
+  ctl_ende: number;
+  unter: boolean;
+}
+
 export interface PrognoseDaten {
   erstellt: string;
   text: string;
@@ -73,6 +85,17 @@ export interface PrognoseDaten {
     qualitaetstag: Qualitaetstag | null;
     tage: TagPrognose[];
     modell: Modell | null;
+    horizont?: number;
+    ctl_ende?: number;
+    datum_ende?: string;
+    halte_tag?: number;
+    halte_woche?: number;
+    szenarien?: {
+      plan_saison: { ctl: number; tag: number };
+      halten: { ctl: number; tag: number };
+      vier_wochen: { ctl: number; tag: number };
+    };
+    wochen?: VbWoche[];
   };
   tourfenster: Tourfenster[];
   fruehwarnung: Fruehwarnung;
@@ -368,6 +391,13 @@ export function VorausblickTile({ compact = false }: { compact?: boolean }) {
             {vk.ctl_28 !== undefined && (
               <span className="tnum">{fmtDe(vk.ctl_28)}</span>
             )}
+            {vk.horizont !== undefined && vk.horizont > 28 && vk.ctl_ende !== undefined && (
+              <>
+                <span className="text-2xs text-ink-dim">→</span>
+                <span className="tnum">{fmtDe(vk.ctl_ende)}</span>
+                <span className="text-2xs text-ink-dim">({vk.horizont} T)</span>
+              </>
+            )}
           </div>
 
           {/* Trend-Wort */}
@@ -377,7 +407,7 @@ export function VorausblickTile({ compact = false }: { compact?: boolean }) {
 
           {/* basis_28 Hinweis */}
           {vk.basis_28 && (
-            <p className="text-2xs text-ink-dim">ab Tag 15: {vk.basis_28}</p>
+            <p className="text-2xs text-ink-dim">nach dem Plan: {vk.basis_28}</p>
           )}
 
           {/* ACWR max */}
@@ -416,6 +446,81 @@ export function VorausblickTile({ compact = false }: { compact?: boolean }) {
           )}
         </div>
       </div>
+      {(vk.szenarien || (vk.wochen && vk.wochen.length > 0)) && <NachDemPlan vk={vk} />}
+    </div>
+  );
+}
+
+function NachDemPlan({ vk }: { vk: PrognoseDaten['vorausblick'] }) {
+  const sz = vk.szenarien;
+  const wochen = vk.wochen || [];
+  const maxLast = Math.max(1, ...wochen.map((w) => Math.max(w.last, w.halten)));
+  const sign = (n: number) => (n >= 0 ? `+${fmtDe(n)}` : `−${fmtDe(Math.abs(n))}`);
+  const zeilen = sz
+    ? [
+        { k: 'Plan + Saisonrahmen', ctl: sz.plan_saison.ctl, tag: sz.plan_saison.tag, hint: 'so wie geplant' },
+        { k: 'Fitness halten', ctl: sz.halten.ctl, tag: sz.halten.tag, hint: `zurück auf ${fmtDe(vk.ctl_heute)}` },
+        { k: 'Wie letzte 4 Wochen', ctl: sz.vier_wochen.ctl, tag: sz.vier_wochen.tag, hint: 'gewohnter Umfang' },
+      ]
+    : [];
+  return (
+    <div className="mt-4 rounded-lg border border-border p-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <span className="label">Nach dem Plan{vk.datum_ende ? ` · bis ${dateShortFromISO(vk.datum_ende)}` : ''}</span>
+        {vk.halte_woche !== undefined && (
+          <span className="text-2xs text-ink-dim">Fitness halten auf Dauer: {fmtDe(vk.halte_woche)} ESS/Woche ({fmtDe(vk.halte_tag ?? 0)}/Tag)</span>
+        )}
+      </div>
+      {zeilen.length > 0 && (
+        <div className="mt-2 grid gap-2 sm:grid-cols-3">
+          {zeilen.map((z) => {
+            const d = z.ctl - vk.ctl_heute;
+            return (
+              <div key={z.k} className="rounded-md border border-border px-3 py-2">
+                <div className="text-2xs text-ink-dim">{z.k}</div>
+                <div className="mt-0.5 flex items-baseline gap-2">
+                  <span className="tnum text-lg font-semibold">{fmtDe(z.ctl)}</span>
+                  <span className={`tnum text-2xs ${d >= 0 ? 'text-green-500' : 'text-orange-500'}`}>{sign(d)}</span>
+                </div>
+                <div className="text-2xs text-ink-dim">{fmtDe(z.tag)} ESS/Tag nach dem Plan · {z.hint}</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {wochen.length > 0 && (
+        <table className="mt-3 w-full text-xs">
+          <thead>
+            <tr className="text-left text-2xs text-ink-dim">
+              <th className="py-1 font-normal">Woche</th>
+              <th className="py-1 font-normal">Quelle</th>
+              <th className="py-1 font-normal">Last</th>
+              <th className="py-1 text-right font-normal">zu Fitness halten</th>
+              <th className="py-1 text-right font-normal">CTL danach</th>
+            </tr>
+          </thead>
+          <tbody>
+            {wochen.map((w) => (
+              <tr key={w.von} className={`border-t border-border ${w.unter ? 'bg-orange-500/10' : ''}`}>
+                <td className="tnum py-1 pr-2 whitespace-nowrap">{dateShortFromISO(w.von)}–{dateShortFromISO(w.bis)}{w.tage < 7 ? ` (${w.tage} T)` : ''}</td>
+                <td className="py-1 pr-2">{w.quelle}{w.unter ? <span className="ml-1 text-orange-500">· unter Haltelast</span> : null}</td>
+                <td className="py-1 pr-2">
+                  <div className="flex items-center gap-2">
+                    <span className="tnum w-12">{fmtDe(w.last)}</span>
+                    <div className="relative h-2 w-28 rounded bg-black/10 dark:bg-white/10">
+                      <div className={`absolute left-0 top-0 h-2 rounded ${w.diff >= 0 ? 'bg-sky-500' : 'bg-orange-500'}`} style={{ width: `${(w.last / maxLast) * 100}%` }} />
+                      <div className="absolute top-[-2px] h-3 w-px bg-ink-muted" style={{ left: `${(w.halten / maxLast) * 100}%` }} title="Fitness halten" />
+                    </div>
+                  </div>
+                </td>
+                <td className={`tnum py-1 text-right ${w.diff >= 0 ? 'text-green-500' : 'text-orange-500'}`}>{sign(w.diff)}</td>
+                <td className="tnum py-1 text-right">{fmtDe(w.ctl_ende)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      <p className="mt-2 text-2xs text-ink-dim">Strich im Balken = Last, die deine heutige Fitness hält. Plan-Wochen deutlich darunter sind markiert.</p>
     </div>
   );
 }

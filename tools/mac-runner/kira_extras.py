@@ -1945,10 +1945,27 @@ def vorausblick_rechnen() -> dict:
     except Exception:
         pass
     datum0 = datetime.date.fromisoformat(plan[0]["date"])
-    ext_dates = [(datum0 + datetime.timedelta(days=i)).isoformat() for i in range(29)]
+
+    def _saison_woche(d: str):
+        for w in saison_wo or []:
+            st = w.get("start", "")
+            if st and st <= d < (datetime.date.fromisoformat(st) + datetime.timedelta(days=7)).isoformat():
+                return w
+        return None
+
+    # Horizont: 28 Tage – liegt Tag 28 in einer Entlastungswoche, bis zum Ende der Folgewoche weiterrechnen
+    horizont = 28
+    # Entlastungswoche in den Tagen 22–28? Dann bis zum Ende der Folgewoche (Wirkung der Entlastung sichtbar machen)
+    for k in range(22, 29):
+        wk = _saison_woche((datum0 + datetime.timedelta(days=k)).isoformat())
+        if wk and "entlast" in str(wk.get("phase", "")).lower():
+            ende = datetime.date.fromisoformat(wk["start"]) + datetime.timedelta(days=13)
+            horizont = max(horizont, min(42, (ende - datum0).days))
+            break
+    ext_dates = [(datum0 + datetime.timedelta(days=i)).isoformat() for i in range(horizont + 1)]
     ext_loads = loads[:]
     fallback = (sum(loads[1:]) / max(1, len(loads) - 1)) if len(loads) > 1 else 120.0
-    for i in range(len(loads), 29):
+    for i in range(len(loads), horizont + 1):
         d = ext_dates[i]
         wl = None
         for w in saison_wo or []:
@@ -2225,13 +2242,76 @@ def vorausblick_rechnen() -> dict:
     else:
         prog = "Keine Frühwarnzeichen in den letzten Wochen."
 
-    i7, i14 = min(7, len(tage) - 1), min(14, len(tage) - 1)
-    c0, c28 = tage[0]["ctl"], tage[-1]["ctl"]
-    trend = "steigt" if c28 > c0 * 1.03 else "sinkt" if c28 < c0 * 0.97 else "stabil"
+    i7, i14, i28 = min(7, len(tage) - 1), min(14, len(tage) - 1), min(28, len(tage) - 1)
+    c0, c28 = tage[0]["ctl"], tage[i28]["ctl"]
+    c_ende = tage[-1]["ctl"]
+    trend = "steigt" if c_ende > c0 * 1.03 else "sinkt" if c_ende < c0 * 0.97 else "stabil"
+
+    # --- Szenarien ab dem Tag nach dem Plan: Saisonrahmen / Fitness halten / wie die letzten 4 Wochen
+    def _lauf(fuell: float | None) -> float:
+        a_, c_ = float(base.get("atl") or 0), float(base.get("ctl") or 0)
+        se = hist_loads[:]
+        for i, l in enumerate(ext_loads):
+            l = l if (fuell is None or i < len(loads)) else fuell
+            se.append(l)
+            if i > 0:
+                a_ = _atl_step(a_, l)
+                c_ = _ctl_step(c_, l, sum(se[-28:]) / len(se[-28:]))
+        return round(c_)
+
+    def _halte_last(ctl0: float) -> float:
+        """Tageslast, bei der die CTL im Gleichgewicht bleibt (numerisch, 90 Tage konstante Last)."""
+        lo, hi = 0.0, 400.0
+        for _ in range(30):
+            mid = (lo + hi) / 2
+            c_ = ctl0
+            for _k in range(90):
+                c_ = _ctl_step(c_, mid, mid)
+            lo, hi = (mid, hi) if c_ < ctl0 else (lo, mid)
+        return (lo + hi) / 2
+
+    halte = _halte_last(float(c0))
+    vier = sum(hist_loads[-28:]) / max(1, len(hist_loads[-28:]))
+    # Füll-Last nach dem Plan, mit der die CTL am Horizont-Ende wieder auf dem heutigen Wert steht
+    lo, hi = 0.0, 500.0
+    for _ in range(30):
+        mid = (lo + hi) / 2
+        lo, hi = (mid, hi) if _lauf(mid) < c0 else (lo, mid)
+    fuell_halten = (lo + hi) / 2
+    szen = {
+        "plan_saison": {"ctl": c_ende, "tag": round(sum(ext_loads[len(loads):]) / max(1, len(ext_loads) - len(loads)))},
+        "halten": {"ctl": _lauf(fuell_halten), "tag": round(fuell_halten)},
+        "vier_wochen": {"ctl": _lauf(vier), "tag": round(vier)},
+    }
+
+    # --- Wochen (Mo–So) mit Quelle und Abstand zur Haltelast
+    wochen = []
+    i = 1
+    while i < len(ext_dates):
+        d0 = datetime.date.fromisoformat(ext_dates[i])
+        n_bis_so = 6 - d0.weekday()
+        j = min(len(ext_dates) - 1, i + n_bis_so)
+        idx = list(range(i, j + 1))
+        summe = sum(ext_loads[k] for k in idx)
+        im_plan = [k < len(loads) for k in idx]
+        if all(im_plan):
+            quelle = "Plan"
+        elif not any(im_plan):
+            w = _saison_woche(ext_dates[i])
+            quelle = f"Saison KW {w.get('kw')} ({w.get('phase')})" if w else "Ø Plan"
+        else:
+            quelle = "Plan + Saison"
+        soll = halte * len(idx)
+        wochen.append({"von": ext_dates[i], "bis": ext_dates[j], "tage": len(idx), "quelle": quelle,
+                       "last": round(summe), "halten": round(soll), "diff": round(summe - soll),
+                       "ctl_ende": tage[j]["ctl"], "unter": bool(summe < 0.9 * soll and all(im_plan))})
+        i = j + 1
     return {
         "erstellt": datetime.datetime.now(tz_local).isoformat(timespec="minutes"),
         "vorausblick": {
             "ctl_heute": c0, "ctl_7": tage[i7]["ctl"], "ctl_14": tage[i14]["ctl"], "ctl_28": c28, "trend": trend,
+            "horizont": len(tage) - 1, "ctl_ende": c_ende, "datum_ende": tage[-1]["datum"],
+            "halte_tag": round(halte), "halte_woche": round(halte * 7), "szenarien": szen, "wochen": wochen,
             "basis_28": "Saisonrahmen" if saison_wo else "Ø Plan",
             "acwr_max": {"wert": amax["acwr"], "datum": amax["datum"]} if amax else None,
             "mono_hinweise": mono_w, "qualitaetstag": qual, "tage": tage[:len(plan)],
@@ -2255,7 +2335,19 @@ def _mono_txt(x: str) -> str:
 def _vorausblick_block(d: dict) -> str:
     v, fw = d["vorausblick"], d["fruehwarnung"]
     z = [f"**VORAUSBLICK (vom Mac berechnet, {d['erstellt'][11:16]} Uhr):**",
-         f"- Fitness (CTL): heute {v['ctl_heute']} → 7 Tage {v['ctl_7']} → 14 Tage {v['ctl_14']} → 28 Tage {v['ctl_28']} ({v['trend']}; ab Tag 15 {v['basis_28']})."]
+         f"- Fitness (CTL): heute {v['ctl_heute']} → 7 Tage {v['ctl_7']} → 14 Tage {v['ctl_14']} → 28 Tage {v['ctl_28']}"
+         + (f" → {v['horizont']} Tage {v['ctl_ende']}" if v.get('horizont', 28) > 28 else "")
+         + f" ({v['trend']}; nach dem Plan {v['basis_28']})."]
+    if v.get("szenarien"):
+        sz = v["szenarien"]
+        z.append(f"- Nach dem Plan (bis {_dm(v['datum_ende'])}): laut Saisonrahmen CTL {sz['plan_saison']['ctl']} · Fitness halten (zurück auf {v['ctl_heute']}) bräuchte {sz['halten']['tag']} ESS/Tag · "
+                 f"wie letzte 4 Wochen ({sz['vier_wochen']['tag']} ESS/Tag) {sz['vier_wochen']['ctl']}.")
+    if v.get("wochen"):
+        wt = "; ".join(f"{_dm(w['von'])}–{_dm(w['bis'])} {w['quelle']} {w['last']} ESS ({'+' if w['diff'] >= 0 else '−'}{abs(w['diff'])} zu Fitness halten)" for w in v["wochen"])
+        z.append(f"- Wochen (Fitness halten auf Dauer = {v['halte_woche']} ESS/Woche): {wt}.")
+        unter = [w for w in v["wochen"] if w.get("unter")]
+        if unter:
+            z.append("- Achtung: " + "; ".join(f"Plan-Woche {_dm(w['von'])}–{_dm(w['bis'])} liegt {abs(w['diff'])} ESS unter Fitness halten" for w in unter) + ".")
     if v.get("acwr_max"):
         z.append(f"- Höchster ACWR im Plan: {_de(v['acwr_max']['wert'], 2)} am {_dm(v['acwr_max']['datum'])}")
     br = [f"{t['tag']} {t['bereitschaft']}" for t in v["tage"][1:8] if t.get("bereitschaft") is not None]
@@ -2299,7 +2391,7 @@ def cmd_vorausblick(force: bool = False) -> None:
         try:
             msgs = [
                 {"role": "system", "content": "Du bist Coach Kira, Marcs Trainingscoach. Deutsch, du-Form, keine Emojis, keine Überschriften."},
-                {"role": "user", "content": block + "\n\nFasse das in 3–5 Sätzen für Marc zusammen: zuerst die Frühwarnung (nur wenn nicht grün), dann die nächste Chance (Qualitätstag, Tourfenster) und der Fitnesstrend. Konkrete Tage nennen, keine neuen Zahlen erfinden."},
+                {"role": "user", "content": block + "\n\nFasse das in 3–5 Sätzen für Marc zusammen: zuerst die Frühwarnung (nur wenn nicht grün), dann die nächste Chance (Qualitätstag, Tourfenster) und der Fitnesstrend – sag dabei, ob ein Rückgang aus dem Plan (Woche unter Fitness halten) oder aus einer geplanten Entlastungswoche kommt. Konkrete Tage nennen, keine neuen Zahlen erfinden."},
             ]
             text, _ = ollama_chat(MODEL, msgs, num_ctx=8192, timeout=600)
             text = text.strip().strip('"')
@@ -2314,7 +2406,8 @@ def cmd_vorausblick(force: bool = False) -> None:
             teile.append(f"Bester Qualitätstag: {d['vorausblick']['qualitaetstag']['tag']}.")
         if d["tourfenster"]:
             teile.append(f"Tourfenster: {d['tourfenster'][0]['tag']}.")
-        teile.append(f"Fitness {d['vorausblick']['trend']} ({d['vorausblick']['ctl_heute']} → {d['vorausblick']['ctl_28']} in 28 Tagen).")
+        _v = d['vorausblick']
+        teile.append(f"Fitness {_v['trend']} ({_v['ctl_heute']} → {_v.get('ctl_ende', _v['ctl_28'])} in {_v.get('horizont', 28)} Tagen; Fitness halten wären {_v.get('halte_woche', '?')} ESS/Woche).")
         text = " ".join(teile)
     d["text"] = text
     d["sekunden"] = round(time.time() - t0)
