@@ -38,7 +38,7 @@ import {
   type WinKey,
 } from '../lib/windows';
 import { fmtDateShort, fmtTime } from '../lib/format';
-import { ErrorBox, Panel, Skeleton } from '../components/UI';
+import { ErrorBox, Panel, Skeleton, StorySection, StoryGrid } from '../components/UI';
 import { KiraExtrasPanel } from '../components/KiraExtrasPanel';
 
 const METRIC_COLORS: Record<string, string> = {
@@ -521,10 +521,10 @@ export function ChartDeck() {
   const fullscreenSection = sections.find((s) => s.id === fullscreenId && s.show);
 
   return (
-    <div className="space-y-5">
+    <div>
+      <StorySection id="fitness" titel="Wie entwickelt sich deine Fitness?" unter="Steuerung, Belastung und Fitnessverlauf">
+      <div className="space-y-4">
       <TrainingControl />
-      <KiraExtrasPanel />
-      <RecoveryPanel mode="history" />
       <Panel
         title="Einzelmetriken"
         right={
@@ -632,15 +632,35 @@ export function ChartDeck() {
         )}
       </Panel>
 
-      <FormelEditorTile />
-
-      <div className="grid gap-4 xl:grid-cols-2 items-start">
-        <WochenrhythmusTile />
-        <IntensitaetTile />
       </div>
-      <GarminVerlaufTile />
-      <GarminSportProfilTile />
-      <DataQualityTile />
+      </StorySection>
+
+      <StorySection id="training" titel="Wie trainierst du?" unter="Intensität, Wochenrhythmus, Sportarten und Garmin-Verläufe">
+        <div className="space-y-4">
+          <StoryGrid>
+            <IntensitaetTile />
+            <WochenrhythmusTile />
+          </StoryGrid>
+          <GarminSportProfilTile />
+          <GarminVerlaufTile />
+        </div>
+      </StorySection>
+
+      <StorySection id="erholung" titel="Wie erholst du dich?" unter="Erholungsverlauf und Zusammenhänge zwischen Last, Schlaf und Bereitschaft">
+        <RecoveryPanel mode="history" />
+      </StorySection>
+
+      <StorySection id="gelernt" titel="Was Kira gelernt hat" unter="Workouts, Treffer der Empfehlungen, Modelltest und Kalenderabgleich">
+        <KiraExtrasPanel />
+      </StorySection>
+
+      <StorySection id="eigene" titel="Deine eigenen Kennzahlen" unter="Formeln aus deinen Daten, lokal im Browser berechnet">
+        <FormelEditorTile />
+      </StorySection>
+
+      <StorySection id="daten" titel="Wie gut sind die Daten?" unter="Lücken, Dubletten und Plausibilität">
+        <DataQualityTile />
+      </StorySection>
 
       {fullscreenSection && (
         <FullscreenChart

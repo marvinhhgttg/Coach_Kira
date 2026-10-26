@@ -47,7 +47,7 @@ import { ReadinessStrip } from '../components/ReadinessStrip';
 import { fetchHistory, trainModel, forecastPlan, type HistRow, type Model } from '../lib/readinessModel';
 import { kalibriereFaktoren, type FaktorVorschlag } from '../lib/planning';
 import { fetchExtras, fetchLoadFactors, saveExtra } from '../lib/extras';
-import { ErrorBox, Panel, Skeleton } from '../components/UI';
+import { ErrorBox, Panel, Skeleton, StorySection, StoryGrid } from '../components/UI';
 import { assessMonotony } from '../lib/monotony';
 import {
   Bar,
@@ -1099,7 +1099,8 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
             </nav>
 
             {planTab === 'woche' && (
-              <div className="space-y-4">
+              <div>
+                <StorySection id="p-vorschlag" titel="Was Kira für diese Woche vorschlägt" unter="KI-Plan des Supervisors – übernehmen oder anpassen">
                 <SupervisorPlanTile
               days={supPlan}
               lockedDates={new Set((plan?.plan || []).filter((_, i) => locks[i]).map((d) => d.date))}
@@ -1108,8 +1109,15 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
               onApply={applyBriefingLoads}
               onRefresh={onRunSupervisor}
             />
-
+                </StorySection>
+                <StorySection id="p-kommt" titel="Was auf dich zukommt" unter="Fitnesstrend, Bereitschaft der nächsten Tage und Tourfenster">
+                <div className="space-y-4">
                 <VorausblickTile />
+                <ReadinessStrip forecast={readiness} model={models.r} error={histErr} />
+                </div>
+                </StorySection>
+                <StorySection id="p-alltag" titel="Was dazwischenkommt" unter="Störungen, Termine und Alltag – der Plan passt sich an">
+                <StoryGrid>
                 <DisruptionTile sim={sim} loads={loads} sports={sports} zones={zones} locks={locks} simulateWith={simulateWith}
                   onApply={(l, sp, z) => applyPlanValues(l, sp, z, 'Angepasster Rest-Plan')} />
                 <AlltagCheckTile
@@ -1120,17 +1128,27 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
               locks={locks}
               onApply={applyAlltagSwaps}
             />
-
+                </StoryGrid>
+                </StorySection>
+                <StorySection id="p-auto" titel="Autopilot" unter="Wochenplan automatisch aus Zielen, Saisonrahmen und Wochenrhythmus">
                 <AutopilotTile planDates={(plan?.plan || []).map((d) => d.date)} onApply={applyAutopilot} />
-                <ReadinessStrip forecast={readiness} model={models.r} error={histErr} />
+                </StorySection>
               </div>
             )}
 
             {planTab === 'simulation' && (
-              <div className="space-y-4">
+              <div>
+                <StorySection id="s-verlauf" titel="Wie die nächsten Tage laufen" unter="Bereitschaft, Form und wie lange eine geplante Last dauert">
+                <div className="space-y-4">
                 <ReadinessStrip forecast={readiness} model={models.r} error={histErr} />
+                <StoryGrid>
                 <FormRampeTile plan={sim.map((d) => ({ date: d.date, atl: d.atl, ctl: d.ctl }))} />
                 <LastDauerTile vorschlag={loads[0]} />
+                </StoryGrid>
+                </div>
+                </StorySection>
+                <StorySection id="s-tage" titel="Tag für Tag" unter="Last, Sport und Zone je Tag verschieben – die Simulation rechnet sofort mit">
+                <div className="space-y-4">
             <div className="panel-raised p-3">
               <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                 <div>
@@ -1358,23 +1376,38 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
               </div>
             </div>
                 {sim.length > 0 && <PlanKpis sim={sim} />}
+                </div>
+                </StorySection>
               </div>
             )}
 
             {planTab === 'ziele' && (
-              <div className="space-y-4">
-                <GoalPlannerTile />
-                <TourformTile />
-                <SeasonTile />
-                <EsHebelTile />
-                <RezeptbuchTile />
-                <LoadFactorTile vorschlaege={lf} busy={lfBusy} error={lfErr} onRefresh={refreshLoadFactors} />
+              <div>
+                <StorySection id="z-ziele" titel="Deine Ziele" unter="Touren und Ereignisse, auf die du hinarbeitest">
+                  <GoalPlannerTile />
+                </StorySection>
+                <StorySection id="z-bereit" titel="Bist du bereit?" unter="Tourform und was deinen Ausdauerwert hebt">
+                  <StoryGrid>
+                    <TourformTile />
+                    <EsHebelTile />
+                  </StoryGrid>
+                </StorySection>
+                <StorySection id="z-saison" titel="Die Saison" unter="Saisonrahmen und Wochen, die bei dir am besten funktioniert haben">
+                  <StoryGrid>
+                    <SeasonTile />
+                    <RezeptbuchTile />
+                  </StoryGrid>
+                </StorySection>
+                <StorySection id="z-faktoren" titel="Lastfaktoren" unter="Wie Kira Sport, Zone und Höhenmeter in Last umrechnet">
+                  <LoadFactorTile vorschlaege={lf} busy={lfBusy} error={lfErr} onRefresh={refreshLoadFactors} />
+                </StorySection>
               </div>
             )}
           </div>
         )}
       </Panel>
       {!loading && !err && sim.length > 0 && planTab === 'strategie' && (
+        <StorySection id="st-wenn" titel="Was wäre, wenn …" unter="Varianten ausprobieren, bevor du den Plan änderst">
         <WhatIfTile
           sim={sim}
           state={{ loads, sports, zones, teAe, teAn }}
@@ -1383,14 +1416,18 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
           recGap={recGap}
           onApply={(l, sp, z) => applyPlanValues(l, sp, z, 'Was-wäre-wenn-Variante')}
         />
+        </StorySection>
       )}
       {!loading && !err && sim.length > 0 && planTab === 'strategie' && (
-        <div className="grid gap-4 xl:grid-cols-2">
+        <StorySection id="st-preis" titel="Was der Plan kostet" unter="Erholungspreis je Einheit und wie oft locker zu hart wird">
+        <StoryGrid>
           <ErholungspreisTile plan={sim.map((d, i) => ({ date: d.date, load: Math.round(loads[i] ?? 0), sport: sports[i] ?? '', zone: zones[i] ?? '' }))} />
           <GrauzoneTile />
-        </div>
+        </StoryGrid>
+        </StorySection>
       )}
       {!loading && !err && sim.length > 0 && planTab === 'strategie' && (
+        <StorySection id="st-strategie" titel="Strategien im Vergleich" unter="Belastungsmuster prüfen und den passenden Weg wählen">
         <StrategyPanel
           sim={sim}
           state={{ loads, sports, zones, teAe, teAn }}
@@ -1402,8 +1439,10 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
           setRecGap={setRecGap}
           kiPlan={kiScenario}
         />
+        </StorySection>
       )}
       {!loading && !err && sim.length > 0 && planTab === 'strategie' && (
+        <StorySection id="st-kira" titel="Kira-Plan" unter="Kira optimiert den Plan schrittweise gegen deine Regeln">
         <PlanLoopPanel
           sim={sim}
           loads={loads}
@@ -1421,6 +1460,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
             toast('info', 'Kira-Plan in die Simulation übernommen. Noch nicht gespeichert.');
           }}
         />
+        </StorySection>
       )}
     </div>
   );

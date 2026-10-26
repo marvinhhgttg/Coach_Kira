@@ -4,7 +4,7 @@ import { plausiCheck, PLAUSI_FELDER, FELD_LABEL, type Befund } from '../lib/plau
 import { ApiError, fetchChartData, submitCockpitEntry, type EntryType, type SubmitEntryResponse } from '../lib/api';
 import { proxySubmitEntry } from '../lib/proxy';
 import { fmtDateShort } from '../lib/format';
-import { Panel } from '../components/UI';
+import { Panel, StorySection } from '../components/UI';
 import { fetchExtras } from '../lib/extras';
 
 type Abschnitt = 'morgens' | 'aktivitaet' | 'abends';
@@ -352,7 +352,8 @@ export function EntryPanel({
   }
 
   return (
-    <div className="space-y-4">
+    <div>
+    <StorySection id="eingabe" titel="Werte eintragen" unter="Morgens, nach der Aktivität, abends – Garmin-Werte übernehmen, Rest ergänzen, prüfen und senden">
     <Panel
       title="Eingabe · statt Formular"
       right={<span className="text-2xs text-ink-dim">läuft über dieselbe onFormSubmit-Logik wie das Google-Formular</span>}
@@ -528,7 +529,10 @@ export function EntryPanel({
         )}
       </div>
     </Panel>
+    </StorySection>
+    <StorySection id="ereignisse" titel="Besondere Tage" unter="Krankheit, Reise, Höhe, Hitze, Stress – damit Kira solche Tage richtig einordnet">
       <EreignisTile />
+    </StorySection>
     </div>
   );
 }

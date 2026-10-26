@@ -3,7 +3,7 @@ import { ApiError, fetchChartData } from '../lib/api';
 import { fetchActivityReviews, type ActivityReview } from '../lib/activityReviews';
 import { SourceBadge } from '../components/EngineSwitch';
 import { fmtDateShort, fmtNum } from '../lib/format';
-import { ErrorBox, Panel, Skeleton } from '../components/UI';
+import { ErrorBox, Panel, Skeleton, StorySection } from '../components/UI';
 import {
   buildDays,
   demandOf,
@@ -116,9 +116,9 @@ function Chips<T extends string | number>({ items, value, onChange, fmt }: { ite
 }
 function Kpi({ label, value, sub, tone }: { label: string; value: ReactNode; sub?: ReactNode; tone?: string }) {
   return (
-    <div className="panel-raised p-2.5 min-w-0">
+    <div className="panel p-3 min-w-0">
       <div className="text-2xs text-ink-dim">{label}</div>
-      <div className={`tnum text-sm font-semibold whitespace-nowrap ${tone || ''}`}>{value}</div>
+      <div className={`tnum text-lg font-semibold whitespace-nowrap ${tone || ''}`}>{value}</div>
       {sub != null && <div className="text-2xs text-ink-dim tnum truncate">{sub}</div>}
     </div>
   );
@@ -439,19 +439,41 @@ export function TacticalLog() {
   const pickedAct = picked ? actMap.get(picked) : null;
 
   return (
-    <div className="space-y-4">
-      <Panel
-        title="Log · Aktivitäten"
-        right={
+    <div>
+      <StorySection id="bilanz" titel="Deine Bilanz" unter={`Umfang und Rhythmus · ${winTitle(win)}`}
+        rechts={
           <div className="flex flex-wrap items-center gap-2">
-            <Chips items={['Tabelle', 'Kalender'] as const as any} value={view as any} onChange={(v: any) => setView(v)} />
             <Chips items={WINDOWS} value={win} onChange={setWin} fmt={winLabel} />
             <button className="btn btn-ghost text-xs px-2 py-1" onClick={load} disabled={!raw && !err}>
               {!raw && !err ? 'Lade…' : 'Aktualisieren'}
             </button>
           </div>
-        }
-      >
+        }>
+        {raw && !err ? (
+          <div className="space-y-3">
+            <div className="grid gap-3 grid-cols-2 md:grid-cols-5">
+              <Kpi label="Aktivitäten" value={totals.n} sub={winTitle(win)} />
+              <Kpi label="Gesamtlast" value={`${fmtNum(totals.sum)} ESS`} sub={`Ø ${fmtNum(totals.n ? totals.sum / totals.n : null)} / Einheit`} />
+              <Kpi label="Distanz" value={gTot.n ? `${fmtNum(gTot.km)} km` : '—'} sub="laut Garmin" />
+              <Kpi label="Höhenmeter" value={gTot.n ? `${fmtNum(gTot.hm)} hm` : '—'} sub="laut Garmin" />
+              <Kpi label="Bewegungszeit" value={gTot.n ? `${fmtNum(gTot.sek / 3600)} h` : '—'} sub="laut Garmin" />
+            </div>
+            <div className="grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+              <Kpi label="Trainingstage am Stück" value={streaks.cur} tone={streaks.cur >= 6 ? 'text-orange-300' : ''} sub="aktuell" />
+              <Kpi label="Seit letztem Ruhetag" value={streaks.sinceRest != null ? `${streaks.sinceRest} T` : '—'} tone={(streaks.sinceRest ?? 0) >= 7 ? 'text-orange-300' : ''} />
+              <Kpi label="Seit letzter Quality" value={streaks.sinceQ != null ? `${streaks.sinceQ} T` : '—'} sub={streaks.lastQ ? fmtDateShort(streaks.lastQ.d.date).slice(0, 6) : undefined} />
+              <Kpi label="Harte Tage am Stück" value={streaks.hardRun} tone={streaks.hardRun >= 2 ? 'text-orange-300' : ''} sub={`max. ${streaks.bestHard} im Zeitraum`} />
+              <Kpi label="Längste Serie" value={`${streaks.best} T`} sub={streaks.bestEnd ? `bis ${fmtDateShort(streaks.bestEnd).slice(0, 6)}` : undefined} />
+              <Kpi label="Härter als Votum" value={`${totals.miss} / ${totals.checked}`} tone={totals.checked && totals.miss / totals.checked > 0.4 ? 'text-orange-300' : ''} />
+            </div>
+          </div>
+        ) : (
+          <Skeleton className="h-40" />
+        )}
+      </StorySection>
+      <StorySection id="aktivitaeten" titel="Alle Aktivitäten" unter="Filtern, sortieren und jede Einheit mit Garmin-Details aufklappen"
+        rechts={<Chips items={['Tabelle', 'Kalender'] as const as any} value={view as any} onChange={(v: any) => setView(v)} />}>
+      <Panel title="Aktivitäten">
         {err ? (
           <ErrorBox message={err} onRetry={load} />
         ) : !raw ? (
@@ -462,20 +484,6 @@ export function TacticalLog() {
           </div>
         ) : (
           <div className="space-y-4">
-            {/* 4) Serien & Kennzahlen */}
-            <div className="grid gap-3 grid-cols-2 md:grid-cols-4 xl:grid-cols-11">
-              <Kpi label="Trainingstage am Stück" value={streaks.cur} tone={streaks.cur >= 6 ? 'text-orange-300' : ''} sub="aktuell" />
-              <Kpi label="Seit letztem Ruhetag" value={streaks.sinceRest != null ? `${streaks.sinceRest} T` : '—'} tone={(streaks.sinceRest ?? 0) >= 7 ? 'text-orange-300' : ''} />
-              <Kpi label="Seit letzter Quality" value={streaks.sinceQ != null ? `${streaks.sinceQ} T` : '—'} sub={streaks.lastQ ? fmtDateShort(streaks.lastQ.d.date).slice(0, 6) : undefined} />
-              <Kpi label="Harte Tage am Stück" value={streaks.hardRun} tone={streaks.hardRun >= 2 ? 'text-orange-300' : ''} sub={`max. ${streaks.bestHard} im Zeitraum`} />
-              <Kpi label="Längste Serie" value={`${streaks.best} T`} sub={streaks.bestEnd ? `bis ${fmtDateShort(streaks.bestEnd).slice(0, 6)}` : undefined} />
-              <Kpi label="Aktivitäten" value={totals.n} sub={winTitle(win)} />
-              <Kpi label="Gesamtlast" value={`${fmtNum(totals.sum)} ESS`} sub={`Ø ${fmtNum(totals.n ? totals.sum / totals.n : null)} / Einheit`} />
-              <Kpi label="Distanz" value={gTot.n ? `${fmtNum(gTot.km)} km` : '—'} sub="laut Garmin" />
-              <Kpi label="Höhenmeter" value={gTot.n ? `${fmtNum(gTot.hm)} hm` : '—'} sub="laut Garmin" />
-              <Kpi label="Bewegungszeit" value={gTot.n ? `${fmtNum(gTot.sek / 3600)} h` : '—'} sub="laut Garmin" />
-              <Kpi label="Härter als Votum" value={`${totals.miss} / ${totals.checked}`} tone={totals.checked && totals.miss / totals.checked > 0.4 ? 'text-orange-300' : ''} />
-            </div>
 
             {view === 'Kalender' ? (
               <>
@@ -579,9 +587,11 @@ export function TacticalLog() {
           </div>
         )}
       </Panel>
+      </StorySection>
 
       {raw && !err && (
-        <div className="grid gap-4 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <StorySection id="beste" titel="Bestwerte und Ertrag" unter="Was je Sport herauskam, und wie viel Trainingseffekt du pro Last bekommst">
+        <div className="grid gap-4 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] story-grid">
           {/* 5) Bestenliste */}
           <Panel title={`Bestenliste je Sport · ${winTitle(win)}`}>
             <div className="overflow-x-auto">
@@ -662,6 +672,7 @@ export function TacticalLog() {
             <p className="mt-2 text-2xs text-ink-dim">Nur Einheiten ab 60 ESS. Ø Ertrag je Sport steht in der Bestenliste.</p>
           </Panel>
         </div>
+        </StorySection>
       )}
     </div>
   );

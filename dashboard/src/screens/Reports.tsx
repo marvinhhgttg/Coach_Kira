@@ -18,7 +18,7 @@ import {
 import { ApiError, fetchChartData, toNum } from '../lib/api';
 import { WINDOWS, ALL_RANGE, winLabel, winTitle, sliceWin, rangeFor, rangeDays, type WinKey } from '../lib/windows';
 import { fmtDateShort, fmtNum } from '../lib/format';
-import { ErrorBox, Panel, Skeleton } from '../components/UI';
+import { ErrorBox, Panel, Skeleton, StorySection } from '../components/UI';
 import { KiraFazit } from '../components/KiraFazit';
 import {
   buildDays,
@@ -959,6 +959,7 @@ function OutageReport({ days }: { days: D[] }) {
 
 export function Reports() {
   const [sub, setSub] = useState<Sub>('month');
+  const [sub2, setSub2] = useState<Sub>('recovery');
   const [win, setWin] = useState<WinKey>(360);
   const [raw, setRaw] = useState<any[] | null>(null);
   const [extra, setExtra] = useState<any[] | null>(null);
@@ -998,43 +999,52 @@ export function Reports() {
       });
   }, [raw, extra]);
   const winDays = sliceWin(all, win);
-  const needsWin = sub === 'recovery' || sub === 'sleep' || sub === 'nutrition' || sub === 'outage';
+  const RUECK: Sub[] = ['week', 'month', 'year', 'vergleich', 'wrapped'];
+  const GESUND: Sub[] = ['recovery', 'sleep', 'nutrition', 'outage'];
+  const subR: Sub = RUECK.includes(sub) ? sub : 'month';
+  const subG: Sub = GESUND.includes(sub2) ? sub2 : 'recovery';
+  const lbl = (id: Sub) => SUBS.find((x) => x.id === id)!.label;
+
+  const inhalt = (id: Sub, mitFenster: boolean) => {
+    if (id === 'vergleich') return <ZeitraumVergleichTile />;
+    if (id === 'wrapped') return <JahresrueckblickTile />;
+    if (id === 'month') return all.length ? <MonthReport days={all} /> : err ? <ErrorBox message={err} /> : <Skeleton className="h-64" />;
+    return (
+      <Panel title={`${TITLES[id]}${mitFenster ? ` · ${winTitle(win)}` : ''}`}>
+        {err ? (
+          <ErrorBox message={err} />
+        ) : !all.length ? (
+          <Skeleton className="h-64" />
+        ) : id === 'week' ? (
+          <WeekReport days={all} />
+        ) : id === 'recovery' ? (
+          <RecoveryAfterHard days={winDays} />
+        ) : id === 'year' ? (
+          <YearReport days={all} />
+        ) : id === 'sleep' ? (
+          <SleepReport days={winDays} />
+        ) : id === 'nutrition' ? (
+          <NutritionReport days={winDays} />
+        ) : (
+          <OutageReport days={winDays} />
+        )}
+      </Panel>
+    );
+  };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <Chips items={SUBS.map((s) => s.id)} value={sub} onChange={setSub} fmt={(id) => SUBS.find((s) => s.id === id)!.label} />
-        {needsWin && <Chips items={WINDOWS} value={win} onChange={setWin} fmt={winLabel} />}
-      </div>
-      {sub === 'garmin' ? (
+    <div>
+      <StorySection id="umfang" titel="Was hast du geschafft?" unter="Umfang, Sportarten und Bestwerte laut Garmin – mit Vergleich zur Vorperiode">
         <GarminBerichtTile />
-      ) : sub === 'vergleich' ? (
-        <ZeitraumVergleichTile />
-      ) : sub === 'wrapped' ? (
-        <JahresrueckblickTile />
-      ) : sub === 'month' ? (
-        all.length ? <MonthReport days={all} /> : err ? <ErrorBox message={err} /> : <Skeleton className="h-64" />
-      ) : (
-        <Panel title={`${TITLES[sub]}${needsWin ? ` · ${winTitle(win)}` : ''}`}>
-          {err ? (
-            <ErrorBox message={err} />
-          ) : !all.length ? (
-            <Skeleton className="h-64" />
-          ) : sub === 'week' ? (
-            <WeekReport days={all} />
-          ) : sub === 'recovery' ? (
-            <RecoveryAfterHard days={winDays} />
-          ) : sub === 'year' ? (
-            <YearReport days={all} />
-          ) : sub === 'sleep' ? (
-            <SleepReport days={winDays} />
-          ) : sub === 'nutrition' ? (
-            <NutritionReport days={winDays} />
-          ) : (
-            <OutageReport days={winDays} />
-          )}
-        </Panel>
-      )}
+      </StorySection>
+      <StorySection id="rueckblick" titel="Rückblick" unter="Woche, Monat und Jahr im Detail, Zeiträume vergleichen, Kira Wrapped"
+        rechts={<Chips items={RUECK} value={subR} onChange={setSub} fmt={lbl} />}>
+        {inhalt(subR, false)}
+      </StorySection>
+      <StorySection id="gesund" titel="Erholung, Schlaf und Ernährung" unter="Wie du nach harten Tagen zurückkommst, wie du schläfst und isst, und wo Daten fehlen"
+        rechts={<div className="flex flex-wrap items-center gap-2"><Chips items={GESUND} value={subG} onChange={setSub2} fmt={lbl} /><Chips items={WINDOWS} value={win} onChange={setWin} fmt={winLabel} /></div>}>
+        {inhalt(subG, true)}
+      </StorySection>
     </div>
   );
 }
