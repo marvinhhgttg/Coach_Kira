@@ -167,7 +167,13 @@ export function EntryPanel({
   const [garminTimestamp, setGarminTimestamp] = useState<Record<string, string>>({});
   const [filled, setFilled] = useState<Record<EntryType, string[]>>({ Morgens: [], 'Nach Aktivität': [], Abends: [] });
 
-  // Garmin-Daten beim Mount laden
+  // Garmin-Daten beim Mount, per Knopf und beim Zurückkehren in den Tab laden
+  const [garminReload, setGarminReload] = useState(0);
+  useEffect(() => {
+    const onVis = () => { if (document.visibilityState === 'visible') setGarminReload((n) => n + 1); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, []);
   useEffect(() => {
     let cancelled = false;
     fetchExtras<GarminVorschlag>('garmin_api', 5)
@@ -188,7 +194,7 @@ export function EntryPanel({
       .catch(() => {/* still ignorieren – Patch evtl. noch nicht aktiv */})
       .finally(() => { if (!cancelled) setGarminLoaded(true); });
     return () => { cancelled = true; };
-  }, []);
+  }, [garminReload]);
 
   /** Garmin-Werte in leere Felder übernehmen */
   function handleGarminFill() {
@@ -398,6 +404,9 @@ export function EntryPanel({
               Garmin-Werte übernehmen
             </button>
           )}
+          <button onClick={() => setGarminReload((n) => n + 1)} className="btn btn-ghost text-xs px-2 py-1" title="Garmin-Vorschlag vom Mac neu laden">
+            Garmin neu laden
+          </button>
           {type === 'Nach Aktivität' && (
             <button onClick={applyOffDay} className="btn btn-ghost text-xs px-2 py-1">
               Off-Tag vorbelegen
@@ -405,6 +414,13 @@ export function EntryPanel({
           )}
         </div>
         <p className="text-2xs text-ink-dim">{TYPE_HINT[type]}{type !== 'Morgens' && dayOffset === 1 ? ' Für gestern werden keine Analysen gestartet.' : ''}</p>
+        {garminLoaded && !garminVorschlag && type !== 'Morgens' && (
+          <div className="rounded border border-orange-400/40 bg-orange-500/10 px-3 py-2 text-2xs text-orange-600 dark:text-orange-300" data-testid="garmin-missing">
+            {type === 'Nach Aktivität' ? 'Noch keine Aktivität' : 'Noch keine Abendwerte'} im Garmin-Vorschlag für {fmtDateShort(date)}
+            {timeStr ? ` (letzter Abruf vom Mac: ${timeStr} Uhr)` : ' (heute noch kein Abruf vom Mac)'}. Der Mac holt die Werte alle 30 Minuten – aber nur, wenn er wach ist
+            (zugeklappt im Akkubetrieb schläft er). Mac aufwecken oder am Netzteil lassen, dann „Garmin neu laden“.
+          </div>
+        )}
         {garminVorschlag && (
           <div className="text-2xs text-ink-dim" data-testid="garmin-hint">
             Garmin-API (Stand {timeStr}): {garminCount} Werte verfügbar
