@@ -4,7 +4,7 @@ import { EngineSwitch } from '../components/EngineSwitch';
 import { useEngine } from '../lib/engine';
 import {
   buildChatContext,
-  sendChat,
+  KIRA_SYSTEM,
   pingLocal,
   sendChatLocal,
   logLocalChat,
@@ -12,6 +12,7 @@ import {
   type ChatContext,
   type ChatMsg,
 } from '../lib/chatContext';
+import { cloudChat } from '../lib/cloudLLM';
 
 const STORAGE_KEY = 'ck_kira_chat_v1';
 const MAX_MSGS = 40;
@@ -192,10 +193,12 @@ export function KiraChat() {
       } else {
         setUsed(null);
         setLimit(null);
-        const res = await sendChat(plain, context, sources);
-        setMsgs((prev) => [...prev, { role: 'assistant', content: res.answer, citations: res.citations, ts: new Date().toISOString(), engine: 'pplx' }]);
+        const sys = KIRA_SYSTEM + '\n\nCOCKPIT-DATEN:\n' + JSON.stringify(context);
+        const res = await cloudChat([{ role: 'system', content: sys }, ...plain.slice(-12)], { model: 'sonar-pro', sources, maxTokens: 1500 });
+        setMsgs((prev) => [...prev, { role: 'assistant', content: res.answer, citations: res.citations, ts: new Date().toISOString(), engine: 'pplx', model: res.model }]);
         setUsed(res.used);
         setLimit(res.limit);
+        logLocalChat(text, res.answer, res.model, 'cloud').catch(() => {});
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -330,7 +333,7 @@ export function KiraChat() {
                   checked={sources}
                   onChange={(e) => setSources(e.target.checked)}
                   disabled={sending || engine === 'local'}
-                  title={engine === 'local' ? 'nur mit Perplexity' : undefined}
+                  title={engine === 'local' ? 'nur mit Cloud (Perplexity)' : undefined}
                 />
                 Mit Fachquellen (wissenschaftliche Suche)
               </label>
@@ -353,8 +356,8 @@ export function KiraChat() {
           </div>
           <div className="text-2xs text-ink-dim">
             {engine === 'local'
-              ? 'Kira (lokal) läuft auf deinem Mac – keine Cloud, kein Tageslimit. Verlauf: dieser Browser + AI_CHAT_LOG.'
-              : 'Kira berät nur – Plan und Sheet ändert sie nicht. Verlauf: dieser Browser + AI_CHAT_LOG.'}
+              ? 'Kira (lokal) läuft auf deinem Mac – keine Cloud. Verlauf: dieser Browser + AI_CHAT_LOG.'
+              : 'Kira (Cloud) läuft über den Cockpit-Server mit Perplexity. Sie berät nur – Plan und Sheet ändert sie nicht. Verlauf: dieser Browser + AI_CHAT_LOG.'}
           </div>
         </div>
       )}

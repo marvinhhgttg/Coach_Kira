@@ -178,6 +178,84 @@ app.post('/api/auth/logout', (req, res) => {
   res.json({ ok: true });
 });
 
+// ---------------------------------------------------------------------------
+// Cloud-KI (Perplexity) – ersetzt alle KI-Aufrufe im Apps Script.
+// Schlüssel liegt im Perplexity-Credential-Tresor und wird über den Proxy
+// (CUSTOM_CRED_API_PERPLEXITY_AI_URL + x-api-key) eingespielt, nie im Code.
+// ---------------------------------------------------------------------------
+const PPLX_URL = process.env.CUSTOM_CRED_API_PERPLEXITY_AI_URL || '';
+const PPLX_KEY = process.env.CUSTOM_CRED_API_PERPLEXITY_AI_PROXY_AUTH_KEY || '';
+const LLM_DAILY_LIMIT = Number(process.env.CK_LLM_DAILY_LIMIT || 80);
+const LLM_MODELS = new Set(['sonar', 'sonar-pro']);
+const LLM_ORIGINS = ['https://coachkira.pplx.app', 'http://localhost', 'http://127.0.0.1'];
+
+function llmDayKey() {
+  const d = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+  return 'llm_count_' + d;
+}
+function llmUsed() {
+  return Number(getSetting(llmDayKey()) || 0);
+}
+function llmOriginOk(req) {
+  const o = String(req.headers.origin || req.headers.referer || '');
+  if (!o) return true; // gleiche Herkunft ohne Origin-Header (GET/Navigation)
+  if (LLM_ORIGINS.some((x) => o.startsWith(x))) return true;
+  try {
+    return new URL(o).host.endsWith('.pplx.app');
+  } catch {
+    return false;
+  }
+}
+
+app.get('/api/llm/status', (req, res) => {
+  res.json({ ok: true, configured: !!(PPLX_URL && PPLX_KEY), used: llmUsed(), limit: LLM_DAILY_LIMIT, models: [...LLM_MODELS] });
+});
+
+app.post('/api/llm', async (req, res) => {
+  try {
+    if (!llmOriginOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
+    if (!PPLX_URL || !PPLX_KEY) return res.status(503).json({ ok: false, error: 'Cloud-KI ist auf dem Server nicht eingerichtet (Perplexity-Schlüssel fehlt).' });
+    const b = req.body || {};
+    const msgs = Array.isArray(b.messages) ? b.messages : [];
+    const clean = msgs
+      .filter((m) => m && ['system', 'user', 'assistant'].includes(m.role) && typeof m.content === 'string')
+      .map((m) => ({ role: m.role, content: m.content.slice(0, 60000) }));
+    if (!clean.length || clean[clean.length - 1].role !== 'user') return res.status(400).json({ ok: false, error: 'messages fehlen oder letzte Nachricht ist nicht vom Nutzer.' });
+    const total = clean.reduce((s, m) => s + m.content.length, 0);
+    if (total > 120000) return res.status(413).json({ ok: false, error: 'Anfrage zu groß.' });
+    const used = llmUsed();
+    if (used >= LLM_DAILY_LIMIT) return res.status(429).json({ ok: false, error: `Tageslimit von ${LLM_DAILY_LIMIT} Cloud-Anfragen erreicht.`, used, limit: LLM_DAILY_LIMIT });
+    setSetting(llmDayKey(), String(used + 1));
+    const model = LLM_MODELS.has(b.model) ? b.model : 'sonar-pro';
+    const payload = {
+      model,
+      messages: clean,
+      temperature: typeof b.temperature === 'number' ? Math.max(0, Math.min(1, b.temperature)) : 0.3,
+      max_tokens: Math.max(100, Math.min(8000, Number(b.max_tokens) || 2500)),
+    };
+    if (b.sources) payload.search_mode = 'academic';
+    else payload.disable_search = true;
+    const t0 = Date.now();
+    const r = await fetch(PPLX_URL.replace(/\/$/, '') + '/chat/completions', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-api-key': PPLX_KEY },
+      body: JSON.stringify(payload),
+    });
+    const text = await r.text();
+    let j;
+    try {
+      j = JSON.parse(text);
+    } catch {
+      return res.status(502).json({ ok: false, error: `Perplexity HTTP ${r.status}: ${text.slice(0, 200)}` });
+    }
+    if (!r.ok) return res.status(502).json({ ok: false, error: j?.error?.message || `Perplexity HTTP ${r.status}` });
+    const answer = j?.choices?.[0]?.message?.content || '';
+    res.json({ ok: true, answer, model, citations: j.citations || [], usage: j.usage || null, used: used + 1, limit: LLM_DAILY_LIMIT, ms: Date.now() - t0 });
+  } catch (err) {
+    res.status(502).json({ ok: false, error: err?.message || String(err) });
+  }
+});
+
 app.post('/api/action/:name', requireAuth, async (req, res) => {
   const params = actionToAppsScriptParams(req.params.name, req.body || {});
   if (!params) return res.status(404).json({ ok: false, error: 'unknown_action' });

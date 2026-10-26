@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { cloudStatus } from '../lib/cloudLLM';
+import { useEffect, useState } from 'react';
 import { localStatusText, useEngine, useLocalStatus } from '../lib/engine';
 
 /** Gemeinsamer Wahlschalter Lokal (Mac) / Cloud mit Statuspunkt. Gilt für Chat und alle Briefings. */
@@ -32,7 +33,7 @@ export function EngineSwitch({ compact = false }: { compact?: boolean }) {
           )}
         </span>
       )}
-      {engine === 'pplx' && <span className="text-2xs text-ink-dim">Perplexity über Apps Script</span>}
+      {engine === 'pplx' && <span className="text-2xs text-ink-dim">Perplexity über den Cockpit-Server</span>}
     </div>
   );
 }
@@ -58,11 +59,23 @@ export function HeaderEngineSwitch() {
     return () => window.clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [engine]);
-  const dot = engine !== 'local' ? 'bg-sky-400' : st.tone === 'ok' ? 'bg-green-400' : st.tone === 'warn' ? 'bg-orange-400' : 'bg-ink-dim';
+  const [cloud, setCloud] = useState<{ ok: boolean; configured: boolean; used: number; limit: number } | null>(null);
+  const recheckCloud = () => cloudStatus().then(setCloud);
+  useEffect(() => {
+    if (engine !== 'pplx') return;
+    recheckCloud();
+    const id = window.setInterval(recheckCloud, 60000);
+    return () => window.clearInterval(id);
+  }, [engine]);
+  const cloudOk = !!cloud?.ok && cloud.configured && cloud.used < cloud.limit;
+  const dot =
+    engine !== 'local'
+      ? cloud == null ? 'bg-ink-dim' : cloudOk ? 'bg-green-400' : 'bg-orange-400'
+      : st.tone === 'ok' ? 'bg-green-400' : st.tone === 'warn' ? 'bg-orange-400' : 'bg-ink-dim';
   const title =
     engine === 'local'
       ? `KI-Modell: lokal auf dem Mac · ${st.text}${st.tone !== 'ok' ? ' (Klick auf den Punkt prüft erneut)' : ''}`
-      : 'KI-Modell: Cloud (Perplexity über Apps Script)';
+      : `KI-Modell: Cloud (Perplexity über den Cockpit-Server)${cloud ? (cloud.configured ? ` · heute ${cloud.used}/${cloud.limit} Anfragen` : ' · Schlüssel fehlt auf dem Server') : ''}`;
   const btn = (active: boolean) =>
     `px-2.5 py-1 text-xs rounded transition-colors ${active ? 'bg-bg-subtle text-ink' : 'text-ink-muted hover:text-ink'}`;
   return (
@@ -75,7 +88,7 @@ export function HeaderEngineSwitch() {
     >
       <button
         type="button"
-        onClick={recheck}
+        onClick={engine === 'local' ? recheck : recheckCloud}
         className={`inline-block w-2 h-2 rounded-full ${dot}`}
         aria-label={title}
       />

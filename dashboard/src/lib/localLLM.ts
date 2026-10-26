@@ -1,5 +1,12 @@
-/** Allgemeiner Aufruf von coach-kira (Ollama auf dem Mac) direkt aus dem Browser, mit Streaming. */
+/**
+ * KI-Aufruf für alle Cockpit-Funktionen. Folgt dem globalen Schalter:
+ *   lokal → coach-kira (Ollama auf dem Mac) direkt aus dem Browser, mit Streaming
+ *   Cloud → Perplexity über den Cockpit-Server (/api/llm)
+ * Kein automatischer Wechsel zwischen beiden.
+ */
 import { LOCAL_MODEL, OLLAMA_URL, pingLocal } from './chatContext';
+import { getEngine } from './engine';
+import { cloudChat } from './cloudLLM';
 
 export type LlmMsg = { role: 'system' | 'user' | 'assistant'; content: string };
 
@@ -10,10 +17,20 @@ export async function ensureLocal(): Promise<void> {
   }
 }
 
-export async function localChat(
-  messages: LlmMsg[],
-  opts: { format?: 'json' | Record<string, unknown>; numCtx?: number; temperature?: number; onToken?: (textSoFar: string) => void } = {},
-): Promise<string> {
+export type KiOpts = { format?: 'json' | Record<string, unknown>; numCtx?: number; temperature?: number; onToken?: (textSoFar: string) => void };
+
+/** Engine-abhängiger Aufruf (Name aus historischen Gründen „localChat“). */
+export async function localChat(messages: LlmMsg[], opts: KiOpts = {}): Promise<string> {
+  if (getEngine() === 'pplx') {
+    const r = await cloudChat(messages, { json: !!opts.format, temperature: opts.temperature, maxTokens: 4000 });
+    opts.onToken?.(r.answer);
+    return r.answer;
+  }
+  return ollamaChat(messages, opts);
+}
+
+/** Immer lokal (coach-kira). */
+export async function ollamaChat(messages: LlmMsg[], opts: KiOpts = {}): Promise<string> {
   await ensureLocal();
   const res = await fetch(`${OLLAMA_URL}/api/chat`, {
     method: 'POST',

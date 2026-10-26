@@ -426,18 +426,18 @@ export function CommandCenter({
     fetchBriefingSources().then((s) => setSources(s || {}));
   }, []);
   const markSource = (k: 'status' | 'consolidated', local: boolean) =>
-    setSources((s) => ({ ...s, [k]: { engine: local ? 'local' : 'cloud', model: local ? 'coach-kira' : 'sonar', timestamp: new Date().toISOString() } }));
+    setSources((s) => ({ ...s, [k]: { engine: local ? 'local' : 'cloud', model: local ? 'coach-kira' : 'sonar-pro', timestamp: new Date().toISOString() } }));
 
   async function onAiAnalysis() {
     setAnalysisBusy(true);
-    if (engine === 'local') {
+    {
       try {
         setAnalysisLive('');
         const res = await runLocalBriefing('status', (t) => setAnalysisLive(t));
         setAnalysis(res.analysis || null);
         setAnalysisTs(res.timestamp || new Date().toISOString());
-        markSource('status', true);
-        toast('ok', 'KI-Statusanalyse lokal erstellt und gespeichert.');
+        markSource('status', engine === 'local');
+        toast('ok', `KI-Statusanalyse ${engine === 'local' ? 'lokal' : 'in der Cloud'} erstellt und gespeichert.`);
       } catch (e) {
         toast('err', e instanceof Error ? e.message : String(e));
       } finally {
@@ -446,33 +446,18 @@ export function CommandCenter({
       }
       return;
     }
-    try {
-      const res = proxy.authenticated ? await proxyRunStatusAiAnalysis() : await runStatusAiAnalysis(token.trim());
-      if (res.ok) {
-        setAnalysis(res.analysis || null);
-        setAnalysisTs(res.timestamp || null);
-        markSource('status', false);
-        toast('ok', 'KI-Statusanalyse aktualisiert.');
-      } else {
-        toast('err', res.error || 'KI-Analyse fehlgeschlagen.');
-      }
-    } catch (e) {
-      toast('err', e instanceof ApiError ? e.message : String(e));
-    } finally {
-      setAnalysisBusy(false);
-    }
   }
 
   async function onConsolidatedAnalysis() {
     setConsolidatedBusy(true);
-    if (engine === 'local') {
+    {
       try {
         setConsolidatedLive('');
         const res = await runLocalBriefing('consolidated', (t) => setConsolidatedLive(t));
         setConsolidated(res.analysis || null);
         setConsolidatedTs(res.timestamp || new Date().toISOString());
-        markSource('consolidated', true);
-        toast('ok', 'Konsolidierte Analyse lokal erstellt und gespeichert.');
+        markSource('consolidated', engine === 'local');
+        toast('ok', `Konsolidierte Analyse ${engine === 'local' ? 'lokal' : 'in der Cloud'} erstellt und gespeichert.`);
       } catch (e) {
         toast('err', e instanceof Error ? e.message : String(e));
       } finally {
@@ -480,21 +465,6 @@ export function CommandCenter({
         setConsolidatedBusy(false);
       }
       return;
-    }
-    try {
-      const res = proxy.authenticated ? await proxyRunConsolidatedAnalysis() : await runConsolidatedAnalysis(token.trim());
-      if (res.ok) {
-        setConsolidated(res.analysis || null);
-        setConsolidatedTs(res.analysisTimestamp || res.timestamp || null);
-        markSource('consolidated', false);
-        toast('ok', 'Konsolidierte Analyse aktualisiert.');
-      } else {
-        toast('err', res.error || 'Konsolidierte Analyse fehlgeschlagen.');
-      }
-    } catch (e) {
-      toast('err', e instanceof ApiError ? e.message : String(e));
-    } finally {
-      setConsolidatedBusy(false);
     }
   }
 
@@ -613,7 +583,7 @@ export function CommandCenter({
               </button>
             </div>
             {consolidatedLive !== null ? (
-              <div className="mt-3 whitespace-pre-wrap text-sm text-ink-muted">{consolidatedLive || 'Kira (lokal) liest die Daten…'}</div>
+              <div className="mt-3 whitespace-pre-wrap text-sm text-ink-muted">{consolidatedLive || (engine === 'local' ? 'Kira (lokal) liest die Daten…' : 'Kira (Cloud) liest die Daten…')}</div>
             ) : consolidated ? (
               <BriefingMarkdown text={consolidated} />
             ) : (
@@ -643,7 +613,7 @@ export function CommandCenter({
               </button>
             </div>
             {analysisLive !== null ? (
-              <div className="mt-3 whitespace-pre-wrap text-sm text-ink-muted">{analysisLive || 'Kira (lokal) liest die Daten…'}</div>
+              <div className="mt-3 whitespace-pre-wrap text-sm text-ink-muted">{analysisLive || (engine === 'local' ? 'Kira (lokal) liest die Daten…' : 'Kira (Cloud) liest die Daten…')}</div>
             ) : analysis ? (
               <AiAnalysisText text={analysis} />
             ) : (

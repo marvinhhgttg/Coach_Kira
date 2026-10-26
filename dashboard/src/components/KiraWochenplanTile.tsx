@@ -7,7 +7,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useEngine } from '../lib/engine';
 import { runPlanLoop, evaluate, localLlm, type LoopDay, type LoopSimRow } from '../lib/planLoop';
-import { cloudJson } from '../lib/cloudLLM';
 import { planChecks, type PlanRow } from '../screens/StrategyPanel';
 import { fetchExtras } from '../lib/extras';
 import { fmtDateShort, fmtNum } from '../lib/format';
@@ -151,7 +150,7 @@ export function KiraWochenplanTile({
         check,
         context,
         sportsAllowed,
-        llm: engine === 'pplx' ? cloudJson : localLlm,
+        llm: localLlm,
         onProgress: setProgress,
       });
       const b = r.best;

@@ -69,19 +69,15 @@ export function KiraFazit({ title, facts, data }: { title: string; facts: string
     <div className="mt-2 rounded border border-border px-3 py-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="label">Kira-Fazit</div>
-        {engine === 'local' ? (
-          <button className="btn btn-ghost text-xs px-2 py-1" onClick={run} disabled={busy}>
-            {busy ? 'Kira (lokal) schreibt…' : text ? 'Neu erstellen' : 'Fazit erstellen (lokal)'}
-          </button>
-        ) : (
-          <span className="text-2xs text-ink-dim">nur lokal – Schalter auf „Lokal (Mac)“ stellen</span>
-        )}
+        <button className="btn btn-ghost text-xs px-2 py-1" onClick={run} disabled={busy}>
+          {busy ? `Kira (${engine === 'local' ? 'lokal' : 'Cloud'}) schreibt…` : text ? 'Neu erstellen' : `Fazit erstellen (${engine === 'local' ? 'lokal' : 'Cloud'})`}
+        </button>
       </div>
       {err && <p className="mt-1 text-xs text-red-300">{err}</p>}
       {text ? (
         <p className="mt-1 text-sm text-ink-muted leading-relaxed whitespace-pre-wrap">{text}</p>
       ) : (
-        !busy && <p className="mt-1 text-2xs text-ink-dim">Kira deutet die Zahlen dieses Berichts – lokal auf deinem Mac, ohne Cloud.</p>
+        !busy && <p className="mt-1 text-2xs text-ink-dim">Kira deutet die Zahlen dieses Berichts – je nach Schalter lokal auf deinem Mac oder in der Cloud.</p>
       )}
     </div>
   );

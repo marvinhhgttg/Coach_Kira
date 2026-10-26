@@ -1,6 +1,6 @@
 /**
  * Gemeinsamer KI-Schalter für Kira-Chat und alle Briefings.
- * 'local' = Ollama auf dem Mac (coach-kira), 'pplx' = Cloud (Perplexity über Apps Script).
+ * 'local' = Ollama auf dem Mac (coach-kira), 'pplx' = Cloud (Perplexity über den Cockpit-Server).
  * Standard: lokal. Kein automatischer Wechsel in die Cloud.
  */
 import { useEffect, useState } from 'react';
@@ -19,6 +19,10 @@ function read(): Engine {
 }
 let store: Engine = read();
 const subs = new Set<(e: Engine) => void>();
+
+export function getEngine(): Engine {
+  return store;
+}
 
 export function setEngine(e: Engine) {
   store = e;

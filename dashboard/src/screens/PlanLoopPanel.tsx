@@ -124,7 +124,7 @@ export function PlanLoopPanel({
         Kira schlägt einen 14-Tage-Plan vor, deine Simulation rechnet ATL, CTL, ACWR und
         Monotonie nach und prüft die Regeln (ACWR 0,8–1,3, Monotonie als Verlauf (max. 4 Tage ohne Entlastung, Ruhetag nach anhaltend über 2,5), CTL-Verlust höchstens 5 %, mindestens 2
         Ruhetage, Abstand harter Einheiten, feste Tage bleiben). Bei Verstößen korrigiert
-        Kira – höchstens 3 Runden. Läuft lokal auf deinem Mac.
+        Kira – höchstens 3 Runden. Läuft je nach Schalter lokal auf deinem Mac oder in der Cloud.
       </p>
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
@@ -145,13 +145,13 @@ export function PlanLoopPanel({
         <button
           className="btn btn-primary text-xs"
           onClick={run}
-          disabled={busy || engine !== 'local' || !sim.length}
+          disabled={busy || !sim.length}
         >
           {busy
             ? progress || 'Kira plant…'
             : engine === 'local'
               ? 'Kira-Plan prüfen lassen (lokal)'
-              : 'nur lokal – Schalter auf „Lokal (Mac)“'}
+              : 'Kira-Plan prüfen lassen (Cloud)'}
         </button>
       </div>
 

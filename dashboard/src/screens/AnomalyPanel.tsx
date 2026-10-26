@@ -71,7 +71,7 @@ export function AnomalyPanel() {
               </p>
               {res!.items.length > 0 && <div className="mt-4">
                 <div className="label mb-1">Kira erklärt</div>
-                {engine === 'local' && res!.items.length > 0 ? (
+                {res!.items.length > 0 ? (
                   <>
                     <button
                       className="btn btn-primary text-xs px-2 py-1"
@@ -95,7 +95,7 @@ export function AnomalyPanel() {
                         }
                       }}
                     >
-                      {busy ? 'Kira (lokal) schreibt…' : 'Kira erklärt (lokal)'}
+                      {busy ? `Kira (${engine === 'local' ? 'lokal' : 'Cloud'}) schreibt…` : `Kira erklärt (${engine === 'local' ? 'lokal' : 'Cloud'})`}
                     </button>
                     {kErr && <p className="mt-2 text-xs text-red-300">{kErr}</p>}
                     {kira && <p className="mt-2 text-sm text-ink-muted whitespace-pre-wrap leading-relaxed">{kira}</p>}

@@ -268,13 +268,13 @@ export async function sendChatLocal(
 }
 
 /** Lokale Frage/Antwort in AI_CHAT_LOG protokollieren (zählt nicht gegen das Tageslimit). */
-export async function logLocalChat(question: string, answer: string, model: string) {
+export async function logLocalChat(question: string, answer: string, model: string, engine: 'local' | 'cloud' = 'local') {
   try {
     await fetch(`${BASE_URL}?mode=chatLog&cb=${Date.now()}`, {
       method: 'POST',
       redirect: 'follow',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ kind: 'chatLog', question, answer, model }),
+      body: JSON.stringify({ kind: 'chatLog', question, answer, model, engine }),
     });
   } catch {
     // Protokoll ist optional

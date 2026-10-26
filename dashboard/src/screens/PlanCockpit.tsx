@@ -806,7 +806,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
 
   async function onGenerateBriefing() {
     setBriefingBusy(true);
-    if (engine === 'local') {
+    {
       try {
         setBriefingLive('');
         const res = await runLocalBriefing('plan', (t) => setBriefingLive(t));
@@ -814,8 +814,8 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
         setBriefing(normalized.briefing);
         setBriefingTs(res.timestamp || new Date().toISOString());
         setBriefingRecommendations(normalized.recommendations);
-        setBriefingSource({ engine: 'local', model: 'coach-kira', timestamp: new Date().toISOString() });
-        toast('ok', 'Plan-Briefing lokal erstellt und gespeichert.');
+        setBriefingSource({ engine: engine === 'local' ? 'local' : 'cloud', model: engine === 'local' ? 'coach-kira' : 'sonar-pro', timestamp: new Date().toISOString() });
+        toast('ok', `Plan-Briefing ${engine === 'local' ? 'lokal' : 'in der Cloud'} erstellt und gespeichert.`);
       } catch (e) {
         toast('err', e instanceof Error ? e.message : String(e));
       } finally {
@@ -823,25 +823,6 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
         setBriefingBusy(false);
       }
       return;
-    }
-    try {
-      const res = proxyAuthenticated
-        ? await proxyGeneratePlanBriefing()
-        : await generatePlanBriefing(token.trim());
-      if (res.ok) {
-        const normalized = normalizeBriefingPayload(res.briefing, res.recommendations || null);
-        setBriefing(normalized.briefing);
-        setBriefingTs(res.briefingTimestamp || res.timestamp || null);
-        setBriefingRecommendations(normalized.recommendations);
-        setBriefingSource({ engine: 'cloud', model: 'sonar', timestamp: new Date().toISOString() });
-        toast('ok', 'Plan-Briefing erstellt und gespeichert.');
-      } else {
-        toast('err', res.error || 'Plan-Briefing fehlgeschlagen.');
-      }
-    } catch (e) {
-      toast('err', e instanceof ApiError ? e.message : String(e));
-    } finally {
-      setBriefingBusy(false);
     }
   }
 

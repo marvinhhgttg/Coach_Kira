@@ -4,6 +4,8 @@
  */
 import { BASE_URL } from './api';
 import { LOCAL_MODEL, OLLAMA_URL, pingLocal } from './chatContext';
+import { getEngine } from './engine';
+import { cloudChat } from './cloudLLM';
 
 export type BriefingType = 'status' | 'consolidated' | 'plan';
 export type BriefingSource = { engine: 'local' | 'cloud'; model: string | null; timestamp: string | null };
@@ -38,9 +40,12 @@ export async function fetchBriefingSources(): Promise<Record<BriefingType, Brief
  * Rückgabe = Antwort von saveBriefing (analysis bzw. briefing + recommendations).
  */
 export async function runLocalBriefing(type: BriefingType, onProgress?: (text: string) => void) {
-  const st = await pingLocal();
-  if (!st.ok || !st.hasModel) {
-    throw new Error('Lokales Modell nicht erreichbar. Starte Ollama auf dem Mac oder stelle den Schalter auf Cloud.');
+  const cloud = getEngine() === 'pplx';
+  if (!cloud) {
+    const st = await pingLocal();
+    if (!st.ok || !st.hasModel) {
+      throw new Error('Lokales Modell nicht erreichbar. Starte Ollama auf dem Mac oder stelle den Schalter auf Cloud.');
+    }
   }
   const pr = await (await fetch(`${BASE_URL}?mode=briefingPrompt&type=${type}&cb=${Date.now()}`, { redirect: 'follow' })).text();
   let prompt: any;
@@ -50,6 +55,14 @@ export async function runLocalBriefing(type: BriefingType, onProgress?: (text: s
     throw new Error('Apps Script kennt mode=briefingPrompt noch nicht (Briefing-Patch eingespielt und neue Version bereitgestellt?)');
   }
   if (!prompt.ok) throw new Error(prompt.error || 'Prompt konnte nicht geladen werden.');
+
+  if (cloud) {
+    const r = await cloudChat(prompt.messages, { json: prompt.format === 'json', model: 'sonar-pro', maxTokens: 4000 });
+    onProgress?.(r.answer);
+    const savedC = await postScript('saveBriefing', { kind: 'saveBriefing', type, text: r.answer, model: r.model, engine: 'cloud' });
+    if (!savedC.ok) throw new Error(savedC.error || 'Speichern im Apps Script fehlgeschlagen.');
+    return savedC as { ok: true; analysis?: string; briefing?: string; recommendations?: any[]; timestamp?: string };
+  }
 
   const res = await fetch(`${OLLAMA_URL}/api/chat`, {
     method: 'POST',
@@ -88,7 +101,7 @@ export async function runLocalBriefing(type: BriefingType, onProgress?: (text: s
     }
   }
   if (!text.trim()) throw new Error('Das lokale Modell hat keinen Text geliefert.');
-  const saved = await postScript('saveBriefing', { kind: 'saveBriefing', type, text, model: LOCAL_MODEL });
+  const saved = await postScript('saveBriefing', { kind: 'saveBriefing', type, text, model: LOCAL_MODEL, engine: 'local' });
   if (!saved.ok) throw new Error(saved.error || 'Speichern im Apps Script fehlgeschlagen.');
   return saved as { ok: true; analysis?: string; briefing?: string; recommendations?: any[]; timestamp?: string };
 }
