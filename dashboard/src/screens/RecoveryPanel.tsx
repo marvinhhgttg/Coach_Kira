@@ -15,7 +15,7 @@ import {
 import { ApiError, dedupeByDateKeepLast, fetchChartData, fetchPlanSimulationWithTimeout, saveWellbeing, toNum, type Range } from '../lib/api';
 import { proxySaveWellbeing } from '../lib/proxy';
 import { fmtDateShort, fmtNum } from '../lib/format';
-import { ErrorBox, Panel, Skeleton } from '../components/UI';
+import { ErrorBox, Panel, Skeleton, StorySection, StoryGrid, KpiKachel } from '../components/UI';
 import { CorrelationPanel } from './CorrelationPanel';
 import { atlStep, ctlStep, windowMean } from '../lib/ctlModel';
 import { useGarminTage, fmtDauer } from '../lib/garmin';
@@ -1261,15 +1261,61 @@ function FourLanes({ days }: { days: RecoveryDay[] }) {
 // ---------------------------------------------------------------------------
 type ToastFn = (kind: 'ok' | 'err' | 'info', text: string) => void;
 
+// ---------------------------------------------------------------------------
+// Wichtigste Daten (Garmin-Connect-Stil)
+// ---------------------------------------------------------------------------
+const AMPEL_HEX: Record<Level, string> = { gruen: '#22a15a', gelb: '#e0a800', orange: '#ef7d00', rot: '#d64545', grau: '#9aa5b1', leer: '#9aa5b1' };
+function Punkt({ farbe, haken = false }: { farbe: string; haken?: boolean }) {
+  return (
+    <span className="inline-flex items-center justify-center rounded-full" style={{ width: 44, height: 44, background: haken ? farbe : `${farbe}22` }}>
+      {haken ? (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+      ) : (
+        <span className="rounded-full" style={{ width: 18, height: 18, background: farbe }} />
+      )}
+    </span>
+  );
+}
+function WichtigsteDaten({ today, todayIso }: { today: RecoveryDay | null; todayIso: string }) {
+  const { tage } = useGarminTage();
+  const g = tage?.get(todayIso);
+  const bb = g?.bb_aufwachen ?? g?.tag?.bb_max ?? null;
+  const r = today?.readiness ?? null;
+  const rLvl = today?.levels.readiness ?? 'leer';
+  const vote = today?.vote ?? null;
+  const hrv = today?.hrv ?? null;
+  const lo = today?.hrvLow ?? null, hi = today?.hrvHigh ?? null;
+  const hrvTxt = hrv == null || lo == null || hi == null ? '—' : hrv < lo ? 'Unter dem Band' : hrv > hi ? 'Über dem Band' : 'Im Bereich';
+  const hrvFarbe = hrvTxt === 'Im Bereich' ? AMPEL_HEX.gruen : hrvTxt === '—' ? AMPEL_HEX.grau : AMPEL_HEX.orange;
+  const bbFarbe = bb == null ? AMPEL_HEX.grau : bb >= 75 ? '#1976d2' : bb >= 50 ? '#4aa3df' : bb >= 26 ? '#ef7d00' : '#d64545';
+  return (
+    <StoryGrid spalten={4}>
+      <KpiKachel testid="kpi-readiness" titel="Trainingsbereitschaft" ring={r} wert={r != null ? Math.round(r) : '—'} farbe={AMPEL_HEX[rLvl]} unter={r == null ? 'noch keine Morgenwerte' : r >= 75 ? 'Hoch' : r >= 50 ? 'Mäßig' : r >= 25 ? 'Niedrig' : 'Schlecht'} />
+      <KpiKachel testid="kpi-votum" titel="Tagesvotum" symbol={<Punkt farbe={vote ? AMPEL_HEX[VOTE_LEVEL[vote]] : AMPEL_HEX.grau} haken={vote === 'TRAIN' || vote === 'QUALITY'} />} wert={vote ? VOTE_LABEL[vote] : '—'} unter={vote ? VOTE_STATUS_TEXT[vote].replace(/^[A-ZÜ]+ — /, '') : 'noch offen'} />
+      <KpiKachel testid="kpi-hrv" titel="HRV-Status" symbol={<Punkt farbe={hrvFarbe} />} wert={hrvTxt} unter={hrv != null ? `${Math.round(hrv)} ms${lo != null && hi != null ? ` · Band ${Math.round(lo)}–${Math.round(hi)}` : ''}` : undefined} />
+      <KpiKachel testid="kpi-bb" titel="Body Battery" ring={bb} wert={bb != null ? Math.round(bb) : '—'} farbe={bbFarbe} unter={g?.bb_aufwachen != null ? 'beim Aufwachen' : bb != null ? 'Tageshoch' : 'keine Garmin-Daten'} />
+    </StoryGrid>
+  );
+}
+
 export function RecoveryPanel({
   token = '',
   toast = () => {},
   proxyAuthenticated = false,
   mode = 'today',
+  fokusRechts,
+  nachFokus,
+  nachWoche,
 }: {
   token?: string;
   toast?: ToastFn;
   proxyAuthenticated?: boolean;
+  /** Heute-Seite: Karte neben dem Recovery Brief (z. B. Letzte Nacht) */
+  fokusRechts?: ReactNode;
+  /** Heute-Seite: eigener Abschnitt zwischen „Im Fokus“ und „Die letzten 7 Tage“ */
+  nachFokus?: ReactNode;
+  /** Heute-Seite: zusätzliche Karten im Abschnitt „Die letzten 7 Tage“ */
+  nachWoche?: ReactNode;
   /** today = Tagesentscheid (Heute-Seite) · history = Verlauf + Korrelationen (Analyse-Seite) */
   mode?: 'today' | 'history';
 }) {
@@ -1371,6 +1417,62 @@ export function RecoveryPanel({
   const yesterday = today ? days[days.length - 2] || null : days[days.length - 1] || null;
   const stripDays = days.slice(-7);
   const laneDays = sliceWin(days, span);
+
+  if (isToday) {
+    const aktualisieren = (
+      <button onClick={() => load(rangeForSpan(span), true)} className="btn btn-ghost text-xs px-2 py-1" disabled={busy}>
+        {busy ? 'Lade…' : 'Aktualisieren'}
+      </button>
+    );
+    if (err) return <ErrorBox message={err} onRetry={() => load(rangeForSpan(span), true)} />;
+    if (busy && !raw) {
+      return (
+        <StorySection titel="Wichtigste Daten">
+          <StoryGrid spalten={4}>{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-44" />)}</StoryGrid>
+        </StorySection>
+      );
+    }
+    return (
+      <>
+        <StorySection id="wichtig" titel="Wichtigste Daten" unter="Wie stehst du heute da?" rechts={aktualisieren}>
+          <WichtigsteDaten today={today} todayIso={todayIso} />
+        </StorySection>
+        <StorySection id="fokus" titel="Im Fokus" unter="Was sagt Kira für heute, und wie war die Nacht?">
+          <StoryGrid>
+            <TodayCard
+              today={today}
+              yesterday={yesterday}
+              plan={planToday}
+              wellbeing={{
+                todayIso,
+                yesterdayIso,
+                todayValue: days.find((d) => d.date === todayIso)?.befinden ?? null,
+                yesterdayValue: days.find((d) => d.date === yesterdayIso)?.befinden ?? null,
+                onSave: handleSaveWellbeing,
+              }}
+            />
+            {fokusRechts}
+          </StoryGrid>
+        </StorySection>
+        {nachFokus}
+        <StorySection id="woche" titel="Die letzten 7 Tage" unter="Wie hast du dich die Woche über entwickelt, und wie geht es weiter?">
+          <div className="panel p-4 mb-4">
+            <div className="label mb-2">Erholung Tag für Tag</div>
+            <RecoveryStrip days={stripDays} todayIso={todayIso} />
+            <p className="mt-2 text-2xs text-ink-dim">
+              RHR-Baseline = Ø der vorherigen {RHR_BASELINE_DAYS} Tage · Schlafziel {fmtHm(SLEEP_GOAL_H)} h · Belastung jeweils Stand Vortag: ACWR über {fmtNum(ACWR_WARN, 1)} keine Qualität,
+              über {fmtNum(ACWR_HIGH, 1)} max. Easy. Monotonie zählt als Verlauf (über 2,0 nach 4–5 fordernden Tagen sehr locker oder frei, über 2,5 Ruhetag binnen 24–48 h, über 3,0 echter Entlastungstag).
+            </p>
+          </div>
+          <StoryGrid>
+            <WeekSummary days={days} />
+            <Outlook days={days} plan={planDays} />
+            {nachWoche}
+          </StoryGrid>
+        </StorySection>
+      </>
+    );
+  }
 
   return (
     <Panel

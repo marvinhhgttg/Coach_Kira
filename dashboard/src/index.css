@@ -268,3 +268,57 @@
 /* Wochenlast-Minibalken im Garmin-Modus */
 .garmin-mode .wk-bar { background: rgba(0, 119, 182, 0.28) !important; }
 .garmin-mode .wk-bar-last { background: #0077b6 !important; }
+
+/* ---------------------------------------------------------------------------
+   Geschichte je Seite: Abschnitte und gleich große Karten (beide Themen)
+   --------------------------------------------------------------------------- */
+.story-section + .story-section { margin-top: 2rem; }
+.story-h2 { font-size: 1.375rem; line-height: 1.75rem; font-weight: 400; color: #e6ebf2; }
+.story-unter { margin-top: 0.125rem; font-size: 0.75rem; color: #8a96a8; }
+.story-grid > * { height: 100%; min-width: 0; }
+.story-grid > .panel, .story-grid > .panel-raised, .story-grid > section { display: flex; flex-direction: column; }
+.story-grid > section > div:last-child { flex: 1 1 auto; }
+.kpi-titel { font-size: 0.8125rem; font-weight: 600; color: #e6ebf2; }
+.kpi-kachel { min-height: 190px; }
+
+/* ---------------------------------------------------------------------------
+   Garmin Connect – Feinschliff (näher am Original: flach, weiß, blau)
+   --------------------------------------------------------------------------- */
+.garmin-mode { background: #f2f2f2 !important; font-family: 'Open Sans', 'Segoe UI', Inter, system-ui, sans-serif; }
+.garmin-mode .story-h2 { color: #222; }
+.garmin-mode .story-unter { color: #6b6b6b; }
+.garmin-mode .kpi-titel { color: #333; }
+.garmin-mode .panel,
+.garmin-mode .panel-raised {
+  background: #ffffff !important;
+  border: 1px solid #d9d9d9 !important;
+  border-radius: 4px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+/* Karten in Karten: flach, ohne zweiten Schatten */
+.garmin-mode .panel .panel,
+.garmin-mode .panel .panel-raised,
+.garmin-mode .panel-raised .panel-raised {
+  box-shadow: none !important;
+  border-color: #e6e6e6 !important;
+  background: #fafafa !important;
+}
+.garmin-mode .label {
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  font-size: 0.8125rem !important;
+  font-weight: 600 !important;
+  color: #333 !important;
+}
+.garmin-mode .panel > header { border-bottom-color: transparent !important; padding-bottom: 0.25rem; }
+.garmin-mode .text-accent { color: #1976d2 !important; }
+.garmin-mode .border-accent { border-color: #1976d2 !important; }
+.garmin-mode .chip { text-transform: none; letter-spacing: 0; font-size: 0.75rem; }
+.garmin-mode > header { background: #ffffff !important; box-shadow: 0 1px 0 #dcdcdc !important; }
+.garmin-mode .panel > header, .garmin-mode .panel-raised > header { box-shadow: none !important; background: transparent !important; border-bottom-color: transparent !important; }
+.garmin-mode > header [role="tab"][aria-selected="true"] { color: #1976d2 !important; box-shadow: inset 0 -3px 0 #1976d2; background: transparent !important; }
+.garmin-mode .btn-primary { background: #1976d2 !important; border-color: #1976d2 !important; color: #fff !important; }
+.garmin-mode .tnum.text-4xl, .garmin-mode .tnum.text-3xl, .garmin-mode .tnum.text-2xl { font-weight: 400; }
+.garmin-mode .recharts-default-tooltip { color: #222 !important; }
+.garmin-mode .recharts-tooltip-item { color: #222 !important; }
+.garmin-mode table tr, .garmin-mode table td, .garmin-mode table th, .garmin-mode [class*="divide-"] > * { border-color: #ececec !important; }

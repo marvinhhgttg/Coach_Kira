@@ -229,3 +229,50 @@ export function Spinner({ size = 14 }: { size?: number }) {
     />
   );
 }
+
+/** Abschnitt einer Seite (Garmin-Connect-Stil: große, ruhige Überschrift). */
+export function StorySection({ titel, unter, rechts, children, id }: { titel: string; unter?: string; rechts?: ReactNode; children: ReactNode; id?: string }) {
+  return (
+    <section className="story-section" data-testid={id ? `story-${id}` : undefined}>
+      <div className="flex flex-wrap items-end justify-between gap-2 mb-3">
+        <div>
+          <h2 className="story-h2">{titel}</h2>
+          {unter && <p className="story-unter">{unter}</p>}
+        </div>
+        {rechts}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+/** Raster mit gleich hohen Karten je Zeile (spalten: 2 Standard, 4 für Kennzahlen). */
+export function StoryGrid({ spalten = 2, children }: { spalten?: 1 | 2 | 3 | 4; children: ReactNode }) {
+  const cls = spalten === 4 ? 'sm:grid-cols-2 xl:grid-cols-4' : spalten === 3 ? 'md:grid-cols-2 xl:grid-cols-3' : spalten === 2 ? 'lg:grid-cols-2' : '';
+  return <div className={`story-grid grid gap-4 grid-cols-[minmax(0,1fr)] ${cls}`}>{children}</div>;
+}
+
+/** Kennzahl-Kachel wie „Wichtigste Daten“ in Garmin Connect. */
+export function KpiKachel({ titel, wert, unter, ring, farbe = '#1976d2', symbol, testid }: { titel: string; wert: ReactNode; unter?: ReactNode; ring?: number | null; farbe?: string; symbol?: ReactNode; testid?: string }) {
+  const r = 34, u = 2 * Math.PI * r;
+  const anteil = ring != null && Number.isFinite(ring) ? Math.max(0, Math.min(100, ring)) / 100 : null;
+  return (
+    <div className="panel kpi-kachel flex flex-col items-center justify-center text-center px-3 py-4" data-testid={testid}>
+      <div className="kpi-titel">{titel}</div>
+      <div className="relative mt-2 flex items-center justify-center" style={{ width: 86, height: 86 }}>
+        {anteil != null ? (
+          <svg width="86" height="86" viewBox="0 0 86 86" className="absolute inset-0">
+            <circle cx="43" cy="43" r={r} fill="none" stroke="currentColor" strokeOpacity="0.12" strokeWidth="7" />
+            <circle cx="43" cy="43" r={r} fill="none" stroke={farbe} strokeWidth="7" strokeLinecap="round"
+              strokeDasharray={`${u * anteil} ${u}`} transform="rotate(-90 43 43)" />
+          </svg>
+        ) : symbol ? (
+          <div className="absolute inset-0 flex items-center justify-center">{symbol}</div>
+        ) : null}
+        {anteil != null && <span className="relative tnum text-2xl font-semibold text-ink">{wert}</span>}
+      </div>
+      {anteil == null && <div className="mt-1 text-lg font-semibold text-ink leading-tight">{wert}</div>}
+      {unter && <div className="mt-1 text-2xs text-ink-muted leading-snug">{unter}</div>}
+    </div>
+  );
+}

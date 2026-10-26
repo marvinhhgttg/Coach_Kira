@@ -19,7 +19,7 @@ import {
 import { fmtDateTime, fmtRelative, fmtTime, fmtNum } from '../lib/format';
 import { proxyRunConsolidatedAnalysis, proxyRunStatusAiAnalysis, proxyRunSupervisor } from '../lib/proxy';
 import { AmpelChip, AmpelDot } from '../components/Ampel';
-import { ArcGauge, ErrorBox, Modal, Panel, Skeleton, Spinner } from '../components/UI';
+import { ArcGauge, ErrorBox, Modal, Panel, Skeleton, Spinner, StorySection, StoryGrid } from '../components/UI';
 import { RecoveryPanel } from './RecoveryPanel';
 import { AnomalyPanel } from './AnomalyPanel';
 import { KiraChat } from './KiraChat';
@@ -511,17 +511,32 @@ export function CommandCenter({
   const toGaugeValue = (v: unknown) => (typeof v === 'number' ? v : Number(v));
 
   return (
-    <div className="space-y-6">
-      <RecoveryPanel token={token} toast={toast} proxyAuthenticated={proxy.authenticated} />
-      <VorausblickTile compact />
-      <div className="grid gap-4 lg:grid-cols-2 items-start">
-        <ErholungsuhrTile />
-        <SchlafkontoTile />
-      </div>
-      <div className="grid gap-4 xl:grid-cols-2 items-start">
-        <GarminNachtTile />
-        <GarminGesternTile />
-      </div>
+    <div>
+      <RecoveryPanel
+        token={token}
+        toast={toast}
+        proxyAuthenticated={proxy.authenticated}
+        fokusRechts={<GarminNachtTile />}
+        nachFokus={
+          <StorySection id="gestern" titel="Gestern" unter="Was hast du gemacht, und wie schnell bist du davon erholt?">
+            <StoryGrid>
+              <GarminGesternTile />
+              <ErholungsuhrTile />
+            </StoryGrid>
+          </StorySection>
+        }
+        nachWoche={
+          <>
+            <SchlafkontoTile />
+            <NutritionTile />
+          </>
+        }
+      />
+      <StorySection id="kommt" titel="Was kommt" unter="Fitnesstrend, Bereitschaft der nächsten Tage, Tourfenster und Frühwarnung">
+        <VorausblickTile compact />
+      </StorySection>
+      <StorySection id="kira" titel="Kiras Einordnung" unter="Scores, KI-Analysen und Auffälligkeiten">
+      <div className="space-y-4">
       <section className="panel overflow-hidden">
         <div>
           <div className="p-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -648,9 +663,13 @@ export function CommandCenter({
       )}
 
       <AnomalyPanel />
-      <NutritionTile />
-      <KiraChat />
+      </div>
+      </StorySection>
+      <StorySection id="chat" titel="Frag Kira" unter="Trainingschat mit deinen Daten">
+        <KiraChat />
+      </StorySection>
 
+      <StorySection id="technik" titel="Technik" unter="Letzter Lauf der Auswertung">
       {/* Letzter Lauf (ganz unten) */}
       <Panel title="Letzter Lauf · Heartbeat">
         {statusLoading ? (
@@ -687,9 +706,10 @@ export function CommandCenter({
         )}
       </Panel>
 
-      <p className="text-2xs text-ink-dim tnum">
+      <p className="mt-2 text-2xs text-ink-dim tnum">
         Zuletzt aktualisiert {status?.timestamp ? fmtDateTime(status.timestamp) : '—'}
       </p>
+      </StorySection>
 
       <Modal
         open={!!activeRoutine}

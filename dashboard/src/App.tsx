@@ -34,7 +34,10 @@ export function App() {
   const [proxy, setProxy] = useState({ available: false, configured: false, authenticated: false });
   const [pin, setPin] = useState('');
   const [setupPin, setSetupPin] = useState('');
-  const [themeMode, setThemeMode] = useState<ThemeMode>('dark');
+  const [themeMode, setThemeModeState] = useState<ThemeMode>(() => {
+    try { return (localStorage.getItem('ck-theme') as ThemeMode) || 'garmin'; } catch { return 'garmin'; }
+  });
+  const setThemeMode = (m: ThemeMode) => { setThemeModeState(m); try { localStorage.setItem('ck-theme', m); } catch { /* egal */ } };
 
   useEffect(() => {
     if (!toast) return;
