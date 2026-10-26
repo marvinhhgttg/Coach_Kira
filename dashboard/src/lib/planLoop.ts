@@ -9,7 +9,9 @@ import { MONOTONIE_REGEL_TEXT, monotonyPlanViolations } from './monotony';
 export type LoopDay = { date: string; day?: string; load: number; zone: string; sport: string; locked: boolean };
 export type LoopSimRow = { sim_load: number; acwr: number; monotony: number; kei?: number; ctl: number; atl: number };
 export type LoopCheck = { issues: string[]; level: 'ok' | 'warn' | 'bad'; cap?: string };
-export type LoopRound = { loads: number[]; zones: string[]; why: string[]; summary: string; violations: string[]; maxAcwr: number; restDays: number; finalCtl: number };
+export type LoopRound = { loads: number[]; zones: string[]; why: string[]; summary: string; violations: string[]; maxAcwr: number; restDays: number; finalCtl: number; sports?: string[]; training?: string[]; alt?: string[] };
+export type Llm = (msgs: LlmMsg[]) => Promise<string>;
+export const localLlm: Llm = (msgs) => localChat(msgs, { format: 'json', numCtx: 16384 });
 
 export const MAX_ROUNDS = 3;
 const ACWR_MAX = 1.3;
@@ -51,9 +53,9 @@ export function evaluate(
   return { rows, checks, violations: v, maxAcwr, restDays, finalCtl: rows[rows.length - 1]?.ctl ?? 0 };
 }
 
-function planTable(days: LoopDay[], loads: number[], zones: string[], rows: LoopSimRow[], checks: LoopCheck[]) {
+function planTable(days: LoopDay[], loads: number[], zones: string[], rows: LoopSimRow[], checks: LoopCheck[], sports?: string[]) {
   return days
-    .map((d, i) => `${d.date} ${d.day || ''} | ${d.locked || i === 0 ? 'FEST' : 'frei'} | ${loads[i]} ESS | ${zones[i] || '-'} | ACWR ${f(rows[i]?.acwr ?? 0)} | Mono ${f(rows[i]?.monotony ?? 0)}${checks[i]?.cap ? ` | erlaubt max. ${checks[i].cap}` : ''}`)
+    .map((d, i) => `${d.date} ${d.day || ''} | ${d.locked || i === 0 ? 'FEST' : 'frei'} | ${loads[i]} ESS | ${zones[i] || '-'}${sports ? ` | ${sports[i] || '-'}` : ''} | ACWR ${f(rows[i]?.acwr ?? 0)} | Mono ${f(rows[i]?.monotony ?? 0)}${checks[i]?.cap ? ` | erlaubt max. ${checks[i].cap}` : ''}`)
     .join('\n');
 }
 
@@ -63,12 +65,22 @@ export async function runPlanLoop(args: {
   check: (rows: LoopSimRow[]) => LoopCheck[];
   context: string;
   onProgress?: (msg: string) => void;
+  /** Modellaufruf – Standard: coach-kira lokal. */
+  llm?: Llm;
+  /** Wochenplan-Modus: zusätzlich Sport, Training und Alternative je Tag. */
+  sportsAllowed?: string[];
 }): Promise<{ rounds: LoopRound[]; best: LoopRound }> {
   const { days, simulate, check, context, onProgress } = args;
+  const llm = args.llm || localLlm;
+  const wp = !!args.sportsAllowed?.length;
   const base = evaluate(days, days.map((d) => d.load), days.map((d) => d.zone), simulate, check);
   const system =
-    'Du bist Coach Kira, Sportwissenschaftlerin. Du planst Marcs nächste 14 Tage konservativ und regelkonform. ' +
-    'Antworte ausschließlich als JSON: {"summary": "2-3 Sätze auf Deutsch", "days": [{"date": "YYYY-MM-DD", "load": Zahl 0-300, "zone": "Off|Z1|Z2|Z3|Z4|Z5", "why": "kurz"}]} mit genau den 14 Tagen.';
+    'Du bist Coach Kira, Sportwissenschaftlerin. Du planst Marcs nächste 14 Tage konservativ und regelkonform. Die summary sprichst du Marc per Du an und beschreibst die Idee des Plans. ' +
+    (wp
+      ? 'Antworte ausschließlich als JSON: {"summary": "2-3 Sätze auf Deutsch", "days": [{"date": "YYYY-MM-DD", "load": Zahl 0-300, "zone": "Off|Z1|Z2|Z3|Z4|Z5", "sport": "' +
+        args.sportsAllowed!.join('|') +
+        '", "training": "Einheit in max. 6 Wörtern", "alt": "Alternative in max. 5 Wörtern", "why": "max. 10 Wörter"}]} mit genau den 14 Tagen. Ruhetage: load 0, zone Off, sport Off.'
+      : 'Antworte ausschließlich als JSON: {"summary": "2-3 Sätze auf Deutsch", "days": [{"date": "YYYY-MM-DD", "load": Zahl 0-300, "zone": "Off|Z1|Z2|Z3|Z4|Z5", "why": "kurz"}]} mit genau den 14 Tagen.');
   const rules =
     `REGELN (werden nach deinem Vorschlag automatisch nachgerechnet):\n` +
     `- Tage mit FEST nicht verändern (gleiche ESS und Zone).\n` +
@@ -86,15 +98,15 @@ export async function runPlanLoop(args: {
     {
       role: 'user',
       content:
-        `${context}\n\nAKTUELLER PLAN (Simulation):\n${planTable(days, days.map((d) => d.load), days.map((d) => d.zone), base.rows, base.checks)}\n\n` +
+        `${context}\n\nAKTUELLER PLAN (Simulation):\n${planTable(days, days.map((d) => d.load), days.map((d) => d.zone), base.rows, base.checks, wp ? days.map((d) => d.sport) : undefined)}\n\n` +
         `PRÜFUNG AKTUELLER PLAN: ${base.violations.length ? base.violations.join('; ') : 'keine Verstöße'}\n\n${rules}`,
     },
   ];
   const rounds: LoopRound[] = [];
   for (let r = 1; r <= MAX_ROUNDS; r++) {
     onProgress?.(`Runde ${r}/${MAX_ROUNDS}: Kira plant…`);
-    const text = await localChat(msgs, { format: 'json', numCtx: 16384 });
-    const j = parseJsonLoose<{ summary?: string; days?: { date: string; load: number; zone: string; why?: string }[] }>(text);
+    const text = await llm(msgs);
+    const j = parseJsonLoose<{ summary?: string; days?: { date: string; load: number; zone: string; why?: string; sport?: string; training?: string; alt?: string }[] }>(text);
     const byDate = new Map((j.days || []).map((x) => [x.date, x]));
     const loads = days.map((d, i) => {
       const x = byDate.get(d.date);
@@ -107,16 +119,23 @@ export async function runPlanLoop(args: {
       return loads[i] <= 0 ? 'Off' : String(x.zone);
     });
     const why = days.map((d) => String(byDate.get(d.date)?.why || ''));
+    const sports = days.map((d, i) => {
+      const x = byDate.get(d.date);
+      if (d.locked || i === 0 || !x?.sport) return d.sport;
+      return loads[i] <= 0 ? 'Off' : String(x.sport);
+    });
+    const training = days.map((d) => String(byDate.get(d.date)?.training || ''));
+    const alt = days.map((d) => String(byDate.get(d.date)?.alt || ''));
     onProgress?.(`Runde ${r}/${MAX_ROUNDS}: Simulation prüft…`);
     const ev = evaluate(days, loads, zones, simulate, check);
-    rounds.push({ loads, zones, why, summary: String(j.summary || ''), violations: ev.violations, maxAcwr: ev.maxAcwr, restDays: ev.restDays, finalCtl: ev.finalCtl });
+    rounds.push({ loads, zones, why, summary: String(j.summary || ''), violations: ev.violations, maxAcwr: ev.maxAcwr, restDays: ev.restDays, finalCtl: ev.finalCtl, ...(wp ? { sports, training, alt } : {}) });
     if (!ev.violations.length) break;
     msgs.push({ role: 'assistant', content: text });
     msgs.push({
       role: 'user',
       content:
         `Die Simulation deines Vorschlags ergibt diese Regelverstöße:\n- ${ev.violations.join('\n- ')}\n\n` +
-        `Simulation deines Vorschlags:\n${planTable(days, loads, zones, ev.rows, ev.checks)}\n\nKorrigiere den Plan so, dass alle Regeln erfüllt sind. Gleiches JSON-Format.`,
+        `Simulation deines Vorschlags:\n${planTable(days, loads, zones, ev.rows, ev.checks, wp ? sports : undefined)}\n\nKorrigiere den Plan so, dass alle Regeln erfüllt sind. Gleiches JSON-Format. Die summary beschreibt den fertigen Plan für Marc (Wochenidee, Schwerpunkte, Entlastung) – nicht die Korrektur oder Regelverstöße.`,
     });
   }
   const best = [...rounds].sort((a, b) => a.violations.length - b.violations.length || b.finalCtl - a.finalCtl)[0];

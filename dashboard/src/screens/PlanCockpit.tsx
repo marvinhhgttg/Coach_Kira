@@ -32,7 +32,7 @@ import {
 } from '../lib/api';
 import { fmtDateShort, fmtNum, fmtSigned, fmtTime } from '../lib/format';
 import { proxyGeneratePlanBriefing, proxyRunSupervisor, proxySavePlanSimulation } from '../lib/proxy';
-import { SupervisorPlanTile } from '../components/SupervisorPlanTile';
+import { KiraWochenplanTile, loadWochenplan, type Wochenplan } from '../components/KiraWochenplanTile';
 import { AlltagCheckTile, type AlltagSwap } from '../components/AlltagCheckTile';
 import { AutopilotTile, type AutopilotTag } from '../components/AutopilotTile';
 import { DisruptionTile } from '../components/DisruptionTile';
@@ -462,6 +462,20 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
   const [lfErr, setLfErr] = useState<string | null>(null);
   // Ungespeicherte Änderungen
   const [baseline, setBaseline] = useState('');
+  const applyKiraPlan = (p: Wochenplan | null) => {
+    if (!p) return;
+    applySupPlan(
+      p.tage.map((t) => ({
+        date: t.date,
+        day: t.day,
+        recommended_load_ess: t.load,
+        original_load_ess: t.vorher,
+        recommended_zone: t.zone,
+        training_1: t.sport,
+        projected_effect: t.why,
+      })),
+    );
+  };
   const applySupPlan = (days: PlanDay[]) => {
     const today = new Date().toLocaleDateString('sv-SE');
     const list = (days || []).filter((d) => d.date && d.date >= today);
@@ -499,7 +513,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
       // Alle Requests parallel: planBriefing blockiert nicht mehr,
       // planSimulationJson bekommt einen harten 8s-Timeout (Apps Script antwortet
       // aktuell mit HTTP 404 nach ~60s, was den Fallback früher ausslösen würde).
-      const briefingP = fetchPlan().catch((): null => null);
+      const briefingP = Promise.resolve(null);
       const anchorP = fetchChartData('360d', PLAN_ANCHOR_METRICS as any).catch(
         (e): { data: any[]; timestamp?: string; _err?: unknown } => ({
           data: [],
@@ -521,9 +535,8 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
 
       const [briefingRes, anchorRes, simRes] = await Promise.all([briefingP, anchorP, simP]);
 
-      if (briefingRes && (briefingRes as any).ok) {
-        applySupPlan(((briefingRes as any).plan || []) as PlanDay[]);
-      }
+      // Wochenplan kommt direkt von Kira (KiraWochenplanTile), nicht mehr aus dem KI-Report im Sheet
+      void briefingRes;
 
       const anchorRows = dedupeByDateKeepLast((anchorRes.data as any[]) || []);
       const anchorByDate = new Map(anchorRows.map((row) => [row.date, row]));
@@ -1100,15 +1113,26 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
 
             {planTab === 'woche' && (
               <div>
-                <StorySection id="p-vorschlag" titel="Was Kira für diese Woche vorschlägt" unter="KI-Plan des Supervisors – übernehmen oder anpassen">
-                <SupervisorPlanTile
-              days={supPlan}
-              lockedDates={new Set((plan?.plan || []).filter((_, i) => locks[i]).map((d) => d.date))}
-              status={supStatus}
-              busy={supBusy}
-              onApply={applyBriefingLoads}
-              onRefresh={onRunSupervisor}
-            />
+                <StorySection id="p-vorschlag" titel="Was Kira für diese Woche vorschlägt" unter="Kira plant direkt – lokal oder in der Cloud, von der Simulation geprüft">
+                <KiraWochenplanTile
+                  sim={sim}
+                  loads={loads}
+                  zones={zones}
+                  sports={sports}
+                  locks={locks}
+                  simulateWith={simulateLoop}
+                  recGap={recGap}
+                  onPlan={applyKiraPlan}
+                  onApply={(l, z, sp) => {
+                    userEditedRef.current = true;
+                    setTeAe((old) => old.map((v, i) => (l[i] === loads[i] && z[i] === zones[i] && sp[i] === sports[i] ? v : estimateTe(l[i], sp[i] ?? '').ae)));
+                    setTeAn((old) => old.map((v, i) => (l[i] === loads[i] && z[i] === zones[i] && sp[i] === sports[i] ? v : estimateTe(l[i], sp[i] ?? '').an)));
+                    setLoads(l);
+                    setZones(z);
+                    setSports(sp);
+                    toast('info', 'Kiras Wochenplan in die Simulation übernommen (heute und gesperrte Tage unverändert). Noch nicht gespeichert.');
+                  }}
+                />
                 </StorySection>
                 <StorySection id="p-kommt" titel="Was auf dich zukommt" unter="Fitnesstrend, Bereitschaft der nächsten Tage und Tourfenster">
                 <div className="space-y-4">
