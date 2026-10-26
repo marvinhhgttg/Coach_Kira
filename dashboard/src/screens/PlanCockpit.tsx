@@ -32,6 +32,7 @@ import {
 } from '../lib/api';
 import { fmtDateShort, fmtNum, fmtSigned, fmtTime } from '../lib/format';
 import { proxyGeneratePlanBriefing, proxyRunSupervisor, proxySavePlanSimulation } from '../lib/proxy';
+import { EssRechnerTile } from '../components/EssRechnerTile';
 import { KiraWochenplanTile, loadWochenplan, type Wochenplan } from '../components/KiraWochenplanTile';
 import { AlltagCheckTile, type AlltagSwap } from '../components/AlltagCheckTile';
 import { AutopilotTile, type AutopilotTag } from '../components/AutopilotTile';
@@ -1170,6 +1171,19 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
                 <LastDauerTile vorschlag={loads[0]} />
                 </StoryGrid>
                 </div>
+                </StorySection>
+                <StorySection id="s-ess" titel="ESS-Rechner" unter="Wie viel Last bringt eine Einheit – und wie lang, schnell oder hoch muss sie für dein Ziel-ESS sein?">
+                  <EssRechnerTile
+                    tage={sim.map((r, i) => ({ date: r.date, day: r.day, load: loads[i] ?? r.sim_load, sport: sports[i] ?? r.sport, locked: !!locks[i] }))}
+                    onApply={(i, ess, sp) => {
+                      userEditedRef.current = true;
+                      setLoads((old) => old.map((v, k) => (k === i ? ess : v)));
+                      setSports((old) => old.map((v, k) => (k === i ? sp : v)));
+                      setTeAe((old) => old.map((v, k) => (k === i ? estimateTe(ess, sp).ae : v)));
+                      setTeAn((old) => old.map((v, k) => (k === i ? estimateTe(ess, sp).an : v)));
+                      toast('info', `${ess} ESS ${sp} für ${sim[i]?.day || ''} ${sim[i]?.date || ''} in die Simulation gesetzt. Noch nicht gespeichert.`);
+                    }}
+                  />
                 </StorySection>
                 <StorySection id="s-tage" titel="Tag für Tag" unter="Last, Sport und Zone je Tag verschieben – die Simulation rechnet sofort mit">
                 <div className="space-y-4">
