@@ -322,3 +322,19 @@
 .garmin-mode .recharts-default-tooltip { color: #222 !important; }
 .garmin-mode .recharts-tooltip-item { color: #222 !important; }
 .garmin-mode table tr, .garmin-mode table td, .garmin-mode table th, .garmin-mode [class*="divide-"] > * { border-color: #ececec !important; }
+
+/* Halbtransparente Hintergründe (z. B. bg-bg-panel/95) im Garmin-Modus hell */
+.garmin-mode .bg-bg-panel\/95,
+.garmin-mode .bg-bg-raised\/70 { background-color: rgba(255, 255, 255, 0.96) !important; }
+.garmin-mode .bg-bg-subtle\/40,
+.garmin-mode .bg-bg-subtle\/50,
+.garmin-mode .bg-bg-subtle\/60 { background-color: rgba(238, 241, 244, 0.8) !important; }
+.garmin-mode .hover\:bg-bg-subtle\/60:hover,
+.garmin-mode .hover\:bg-bg-subtle\/40:hover { background-color: #f1f4f8 !important; }
+
+/* Bereichs-Umschalter der Plan-Seite: aktiv weiß mit blauer Unterstreichung */
+.garmin-mode .plan-tabs { border-color: #d9d9d9 !important; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); }
+.garmin-mode .plan-tabs > button[aria-pressed="true"] { background: #ffffff !important; color: #1976d2 !important; box-shadow: inset 0 -3px 0 #1976d2; }
+.garmin-mode .plan-tabs > button[aria-pressed="true"] .text-ink-dim { color: #4a7fb5 !important; }
+.garmin-mode .plan-tabs > button[aria-pressed="false"]:hover { background: #f5f7fa !important; }
+.plan-tabs > button[aria-pressed="true"] { box-shadow: inset 0 -2px 0 #38bdf8; }

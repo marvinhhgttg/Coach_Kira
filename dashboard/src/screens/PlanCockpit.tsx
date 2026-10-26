@@ -1079,7 +1079,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
               </div>
             </div>
 
-            <nav className="md:sticky md:top-28 z-20 -mx-1 flex flex-wrap gap-1 rounded-lg border border-border bg-bg-panel/95 p-1 backdrop-blur" aria-label="Bereiche der Plan-Seite">
+            <nav className="plan-tabs md:sticky md:top-28 z-20 -mx-1 flex flex-wrap gap-1 rounded-lg border border-border bg-bg-panel/95 p-1 backdrop-blur" aria-label="Bereiche der Plan-Seite">
               {([
                 ['woche', 'Diese Woche', 'Wochenplan, Störungen, Autopilot, Alltag'],
                 ['simulation', 'Simulation', 'Tagestabelle, Slider, Prognose'],
