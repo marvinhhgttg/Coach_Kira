@@ -710,10 +710,58 @@ def cmd_telegram() -> None:
             log(f"Telegram: FEHLER {e}")
 
 
+COCKPIT_GARMIN = "https://coachkira.pplx.app/port/5000/api/garmin/anfrage"
+
+
+def _cockpit_post(url: str, obj: dict, timeout: int = 20) -> dict:
+    req = Request(
+        url,
+        data=json.dumps(obj).encode("utf-8"),
+        headers={"Content-Type": "application/json", "Origin": "https://coachkira.pplx.app", "User-Agent": "coach-kira-runner"},
+        method="POST",
+    )
+    with urlopen(req, timeout=timeout) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+def garmin_anfrage_pruefen() -> None:
+    """Knopf „Garmin jetzt abrufen“ im Cockpit: Auftrag abholen, kira_garmin.py tick --force, zurückmelden."""
+    try:
+        j = http_get_json(COCKPIT_GARMIN, timeout=15)
+    except Exception:
+        return  # Cockpit nicht erreichbar – nächster Takt
+    if not j.get("pending"):
+        return
+    try:
+        _cockpit_post(COCKPIT_GARMIN + "/status", {"phase": "abgeholt"})
+    except Exception:
+        pass
+    log("Garmin: Abruf auf Anfrage aus dem Cockpit")
+    ok, msg = False, ""
+    try:
+        r = subprocess.run(
+            ["/opt/homebrew/bin/python3", str(BASE / "kira_garmin.py"), "tick", "--force"],
+            capture_output=True, timeout=240,
+        )
+        ok = r.returncode == 0
+        msg = "fertig" if ok else (r.stderr.decode("utf-8", "replace")[-200:] or f"Exit {r.returncode}")
+    except Exception as e:
+        msg = str(e)[:200]
+    try:
+        _cockpit_post(COCKPIT_GARMIN + "/status", {"phase": "fertig", "ok": ok, "result": msg})
+    except Exception as e:
+        log(f"Garmin: Rückmeldung fehlgeschlagen: {e}")
+    log(f"Garmin: Abruf auf Anfrage {'OK' if ok else 'FEHLER ' + msg}")
+
+
 def cmd_supervisor() -> None:
     """Supervisor-Aufträge abholen; wurde ein Auftrag während der Rechnung ersetzt,
     sofort den neueren rechnen (max. 3 Runden)."""
     import fcntl
+    try:
+        garmin_anfrage_pruefen()  # vor der Sperre: auch während einer langen Supervisor-Rechnung
+    except Exception as e:
+        log(f"Garmin-Anfrage: FEHLER {e}")
     lock = open(Path.home() / "coach-kira-runner" / "supervisor.lock", "w")
     try:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)

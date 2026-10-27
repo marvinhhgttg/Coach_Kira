@@ -256,6 +256,40 @@ app.post('/api/llm', async (req, res) => {
   }
 });
 
+// Garmin-Abruf auf Knopfdruck: Cockpit legt einen Auftrag an, der Mac (Supervisor-Takt, 60 s) holt ihn ab,
+// ruft Garmin sofort ab und meldet zurück. Nur ein Flag – keine Garmin-Daten auf diesem Server.
+function garminAnfrage() {
+  try { return JSON.parse(getSetting('garmin_anfrage') || '{}'); } catch { return {}; }
+}
+app.get('/api/garmin/anfrage', (req, res) => {
+  const a = garminAnfrage();
+  res.json({ ok: true, ...a, pending: !!a.requestedAt && !(a.doneAt && a.doneAt >= a.requestedAt), now: now() });
+});
+app.post('/api/garmin/anfrage', (req, res) => {
+  if (!llmOriginOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
+  const a = garminAnfrage();
+  const pending = !!a.requestedAt && !(a.doneAt && a.doneAt >= a.requestedAt);
+  if (!pending) {
+    a.requestedAt = now();
+    a.pickedAt = null;
+    setSetting('garmin_anfrage', JSON.stringify(a));
+  }
+  res.json({ ok: true, ...a, pending: true, now: now() });
+});
+app.post('/api/garmin/anfrage/status', (req, res) => {
+  if (!llmOriginOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
+  const b = req.body || {};
+  const a = garminAnfrage();
+  if (b.phase === 'abgeholt') a.pickedAt = now();
+  if (b.phase === 'fertig') {
+    a.doneAt = now();
+    a.result = String(b.result || '').slice(0, 300);
+    a.ok = !!b.ok;
+  }
+  setSetting('garmin_anfrage', JSON.stringify(a));
+  res.json({ ok: true });
+});
+
 app.post('/api/action/:name', requireAuth, async (req, res) => {
   const params = actionToAppsScriptParams(req.params.name, req.body || {});
   if (!params) return res.status(404).json({ ok: false, error: 'unknown_action' });

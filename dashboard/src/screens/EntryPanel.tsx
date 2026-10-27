@@ -5,6 +5,7 @@ import { ApiError, fetchChartData, submitCockpitEntry, type EntryType, type Subm
 import { proxySubmitEntry } from '../lib/proxy';
 import { fmtDateShort } from '../lib/format';
 import { Panel, StorySection } from '../components/UI';
+import { garminAnfordern, garminAnfrageStatus } from '../lib/garminAnfrage';
 import { fetchExtras } from '../lib/extras';
 
 type Abschnitt = 'morgens' | 'aktivitaet' | 'abends';
@@ -169,6 +170,34 @@ export function EntryPanel({
 
   // Garmin-Daten beim Mount, per Knopf und beim Zurückkehren in den Tab laden
   const [garminReload, setGarminReload] = useState(0);
+  const [garminGeladen, setGarminGeladen] = useState('');
+  const [abruf, setAbruf] = useState<{ phase: 'idle' | 'wartet' | 'abgeholt' | 'fertig' | 'fehler'; text: string }>({ phase: 'idle', text: '' });
+  const abrufRef = useRef(0);
+  async function garminJetztAbrufen() {
+    const lauf = ++abrufRef.current;
+    setAbruf({ phase: 'wartet', text: 'Auftrag an den Mac geschickt – wartet auf Abholung (bis zu 1 Minute) …' });
+    try {
+      const a = await garminAnfordern();
+      if (!a.ok) throw new Error(a.error || 'Auftrag nicht angenommen');
+      const start = Date.now();
+      while (Date.now() - start < 240000) {
+        await new Promise((r) => setTimeout(r, 5000));
+        if (lauf !== abrufRef.current) return;
+        const st = await garminAnfrageStatus();
+        if (!st.pending && st.doneAt) {
+          setAbruf({ phase: 'fertig', text: st.result && st.result !== 'fertig' ? `Mac meldet: ${st.result}` : 'Mac hat Garmin abgerufen.' });
+          setGarminReload((n) => n + 1);
+          return;
+        }
+        if (st.pickedAt) setAbruf({ phase: 'abgeholt', text: 'Mac ruft Garmin gerade ab …' });
+        else if (Date.now() - start > 90000)
+          setAbruf({ phase: 'wartet', text: 'Mac hat den Auftrag noch nicht abgeholt – schläft er (zugeklappt im Akkubetrieb)? Der Auftrag bleibt bestehen.' });
+      }
+      setAbruf({ phase: 'fehler', text: 'Keine Rückmeldung vom Mac nach 4 Minuten. Der Auftrag bleibt bestehen und läuft, sobald der Mac wach ist.' });
+    } catch (e: any) {
+      setAbruf({ phase: 'fehler', text: `Abruf nicht möglich: ${e?.message || e}` });
+    }
+  }
   useEffect(() => {
     const onVis = () => { if (document.visibilityState === 'visible') setGarminReload((n) => n + 1); };
     document.addEventListener('visibilitychange', onVis);
@@ -192,7 +221,7 @@ export function EntryPanel({
         setGarminTimestamp(tsMap);
       })
       .catch(() => {/* still ignorieren – Patch evtl. noch nicht aktiv */})
-      .finally(() => { if (!cancelled) setGarminLoaded(true); });
+      .finally(() => { if (!cancelled) { setGarminLoaded(true); setGarminGeladen(new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })); } });
     return () => { cancelled = true; };
   }, [garminReload]);
 
@@ -404,8 +433,11 @@ export function EntryPanel({
               Garmin-Werte übernehmen
             </button>
           )}
-          <button onClick={() => setGarminReload((n) => n + 1)} className="btn btn-ghost text-xs px-2 py-1" title="Garmin-Vorschlag vom Mac neu laden">
-            Garmin neu laden
+          <button onClick={garminJetztAbrufen} disabled={abruf.phase === 'wartet' || abruf.phase === 'abgeholt'} className="btn btn-ghost text-xs px-2 py-1" title="Mac ruft Garmin sofort ab, danach wird der Vorschlag neu geladen" data-testid="garmin-abrufen">
+            {abruf.phase === 'wartet' || abruf.phase === 'abgeholt' ? 'Garmin wird abgerufen …' : 'Garmin jetzt abrufen'}
+          </button>
+          <button onClick={() => setGarminReload((n) => n + 1)} className="btn btn-ghost text-xs px-2 py-1" title="Nur den letzten Stand aus dem Sheet neu lesen (ohne Garmin-Abruf)" data-testid="garmin-reload">
+            Neu laden{garminGeladen ? ` (${garminGeladen})` : ''}
           </button>
           {type === 'Nach Aktivität' && (
             <button onClick={applyOffDay} className="btn btn-ghost text-xs px-2 py-1">
@@ -414,11 +446,14 @@ export function EntryPanel({
           )}
         </div>
         <p className="text-2xs text-ink-dim">{TYPE_HINT[type]}{type !== 'Morgens' && dayOffset === 1 ? ' Für gestern werden keine Analysen gestartet.' : ''}</p>
-        {garminLoaded && !garminVorschlag && type !== 'Morgens' && (
+        {abruf.phase !== 'idle' && (
+          <div className={`text-2xs ${abruf.phase === 'fehler' ? 'text-orange-600 dark:text-orange-300' : 'text-ink-dim'}`} data-testid="garmin-abruf-status">{abruf.text}</div>
+        )}
+        {garminLoaded && !garminVorschlag && (
           <div className="rounded border border-orange-400/40 bg-orange-500/10 px-3 py-2 text-2xs text-orange-600 dark:text-orange-300" data-testid="garmin-missing">
-            {type === 'Nach Aktivität' ? 'Noch keine Aktivität' : 'Noch keine Abendwerte'} im Garmin-Vorschlag für {fmtDateShort(date)}
-            {timeStr ? ` (letzter Abruf vom Mac: ${timeStr} Uhr)` : ' (heute noch kein Abruf vom Mac)'}. Der Mac holt die Werte alle 30 Minuten – aber nur, wenn er wach ist
-            (zugeklappt im Akkubetrieb schläft er). Mac aufwecken oder am Netzteil lassen, dann „Garmin neu laden“.
+            {type === 'Nach Aktivität' ? 'Noch keine Aktivität' : type === 'Morgens' ? 'Noch keine Morgenwerte' : 'Noch keine Abendwerte'} im Garmin-Vorschlag für {fmtDateShort(date)}
+            {timeStr ? ` (letzter Abruf vom Mac: ${timeStr} Uhr)` : ' (heute noch kein Abruf vom Mac)'}. Der Mac holt die Werte von 04:30 bis 10:00 alle 10 Minuten, danach alle 30 Minuten – aber nur, wenn er wach ist
+            (zugeklappt im Akkubetrieb schläft er).{type === 'Morgens' ? ' Schlafwerte gibt es erst, wenn die Uhr nach dem Aufwachen mit Garmin Connect synchronisiert hat.' : ''} Sofort holen: „Garmin jetzt abrufen“.
           </div>
         )}
         {garminVorschlag && (

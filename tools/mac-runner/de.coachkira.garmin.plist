@@ -13,7 +13,7 @@
     </array>
 
     <key>StartInterval</key>
-    <integer>1800</integer>
+    <integer>600</integer>
 
     <key>StandardErrorPath</key>
     <string>/Users/marc/coach-kira-runner/logs/garmin.err.log</string>

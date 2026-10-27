@@ -255,7 +255,7 @@ def test_plist_paths():
     assert "/opt/homebrew/bin/python3" in content, "Falscher Python-Pfad"
     assert "/Users/marc/coach-kira-runner/kira_garmin.py" in content, "Falscher Script-Pfad"
     assert "/de/" not in content, "'/de/' im Plist gefunden"
-    assert "<integer>1800</integer>" in content, "Interval != 1800"
+    assert "<integer>600</integer>" in content, "Interval != 600"
     assert "<key>RunAtLoad</key>\n    <false/>" in content, "RunAtLoad != false"
     assert "/Users/marc/coach-kira-runner/logs/" in content, "Log-Pfad fehlt"
     print("✅ test_plist_paths")

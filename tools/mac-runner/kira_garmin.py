@@ -1278,14 +1278,49 @@ def cmd_backfill(von=None, bis=None, probe=False, alle=False):
     return all_km_hm
 
 
-def cmd_tick():
-    """Aktuellen Stand abrufen und Vorschlag für heute+gestern senden."""
-    now = datetime.datetime.now(TZ)
-    if not (now.hour >= 5 and now.hour < 24):
-        log("[garmin] tick: Außerhalb der Zeit [05:00, 23:59]")
-        return
+# Takt: LaunchAgent startet alle 10 min. Morgens (04:30–10:00) wird jedes Mal abgerufen,
+# sonst nur, wenn der letzte Abruf mindestens 28 min her ist. Nachts (00:00–04:29) gar nicht.
+# --force (Knopf „Garmin jetzt abrufen“ im Cockpit) ignoriert Fenster und Takt.
+MORGEN_VON = (4, 30)
+MORGEN_BIS = (10, 0)
+TAKT_SONST_MIN = 28
 
+
+def cmd_tick(force: bool = False):
+    """Takt/Fenster prüfen, doppelte Läufe sperren, dann abrufen."""
+    import fcntl
+    now = datetime.datetime.now(TZ)
+    hm = (now.hour, now.minute)
+    if not force:
+        if hm < MORGEN_VON:
+            return  # nachts still – kein Log-Rauschen
+        if not (MORGEN_VON <= hm < MORGEN_BIS):
+            letzter = _laden_state().get("letzter_tick")
+            try:
+                alt = (now - datetime.datetime.fromisoformat(letzter)).total_seconds() / 60 if letzter else 1e9
+            except Exception:
+                alt = 1e9
+            if alt < TAKT_SONST_MIN:
+                return
+    lock = open(STATE_PATH.parent / "garmin_tick.lock", "w")
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        log("[garmin] tick: läuft bereits – übersprungen")
+        return
+    try:
+        log(f"[garmin] tick{' (auf Anfrage)' if force else ''} {now.strftime('%H:%M')}")
+        _cmd_tick_inner()
+    finally:
+        fcntl.flock(lock, fcntl.LOCK_UN)
+        lock.close()
+
+
+def _cmd_tick_inner():
+    """Aktuellen Stand abrufen und Vorschlag für heute+gestern senden."""
+    now = datetime.datetime.now(TZ)
     state = _laden_state()
+    state["letzter_tick"] = now.isoformat(timespec="seconds")
     state.setdefault("vorschlag", {})  # Fix Cloud-Review: Bereich vor erstem Zugriff anlegen
 
     # Fehlerzähler persistent in STATE["fehler"]
@@ -1566,7 +1601,8 @@ def main():
     p_backfill.add_argument("--alle", action="store_true")
 
     # tick
-    subparsers.add_parser("tick", help="Heute+Gestern Abruf")
+    p_tick = subparsers.add_parser("tick", help="Heute+Gestern Abruf")
+    p_tick.add_argument("--force", action="store_true", help="Fenster/Takt ignorieren (Abruf auf Anfrage)")
 
     # vorschau
     p_vorschau = subparsers.add_parser("vorschau", help="Vorschlag als JSON")
@@ -1593,7 +1629,7 @@ def main():
         elif args.command == "backfill":
             cmd_backfill(von=args.von, bis=args.bis, probe=bool(args.probe), alle=bool(args.alle))
         elif args.command == "tick":
-            cmd_tick()
+            cmd_tick(force=bool(getattr(args, "force", False)))
         elif args.command == "vorschau":
             cmd_vorschau(datum=args.datum)
         elif args.command == "ablauf":
