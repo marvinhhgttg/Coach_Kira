@@ -1,4 +1,525 @@
-// src/lib/kiraPrompts.ts
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __commonJS = (cb, mod) => function __require() {
+  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+
+// ../../../node_modules/react/cjs/react.production.js
+var require_react_production = __commonJS({
+  "../../../node_modules/react/cjs/react.production.js"(exports) {
+    "use strict";
+    var REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element");
+    var REACT_PORTAL_TYPE = Symbol.for("react.portal");
+    var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
+    var REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode");
+    var REACT_PROFILER_TYPE = Symbol.for("react.profiler");
+    var REACT_CONSUMER_TYPE = Symbol.for("react.consumer");
+    var REACT_CONTEXT_TYPE = Symbol.for("react.context");
+    var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
+    var REACT_SUSPENSE_TYPE = Symbol.for("react.suspense");
+    var REACT_MEMO_TYPE = Symbol.for("react.memo");
+    var REACT_LAZY_TYPE = Symbol.for("react.lazy");
+    var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
+    var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
+    function getIteratorFn(maybeIterable) {
+      if (null === maybeIterable || "object" !== typeof maybeIterable) return null;
+      maybeIterable = MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL] || maybeIterable["@@iterator"];
+      return "function" === typeof maybeIterable ? maybeIterable : null;
+    }
+    var ReactNoopUpdateQueue = {
+      isMounted: function() {
+        return false;
+      },
+      enqueueForceUpdate: function() {
+      },
+      enqueueReplaceState: function() {
+      },
+      enqueueSetState: function() {
+      }
+    };
+    var assign = Object.assign;
+    var emptyObject = {};
+    function Component(props, context, updater) {
+      this.props = props;
+      this.context = context;
+      this.refs = emptyObject;
+      this.updater = updater || ReactNoopUpdateQueue;
+    }
+    Component.prototype.isReactComponent = {};
+    Component.prototype.setState = function(partialState, callback) {
+      if ("object" !== typeof partialState && "function" !== typeof partialState && null != partialState)
+        throw Error(
+          "takes an object of state variables to update or a function which returns an object of state variables."
+        );
+      this.updater.enqueueSetState(this, partialState, callback, "setState");
+    };
+    Component.prototype.forceUpdate = function(callback) {
+      this.updater.enqueueForceUpdate(this, callback, "forceUpdate");
+    };
+    function ComponentDummy() {
+    }
+    ComponentDummy.prototype = Component.prototype;
+    function PureComponent(props, context, updater) {
+      this.props = props;
+      this.context = context;
+      this.refs = emptyObject;
+      this.updater = updater || ReactNoopUpdateQueue;
+    }
+    var pureComponentPrototype = PureComponent.prototype = new ComponentDummy();
+    pureComponentPrototype.constructor = PureComponent;
+    assign(pureComponentPrototype, Component.prototype);
+    pureComponentPrototype.isPureReactComponent = true;
+    var isArrayImpl = Array.isArray;
+    function noop() {
+    }
+    var ReactSharedInternals = { H: null, A: null, T: null, S: null };
+    var hasOwnProperty = Object.prototype.hasOwnProperty;
+    function ReactElement(type, key, props) {
+      var refProp = props.ref;
+      return {
+        $$typeof: REACT_ELEMENT_TYPE,
+        type,
+        key,
+        ref: void 0 !== refProp ? refProp : null,
+        props
+      };
+    }
+    function cloneAndReplaceKey(oldElement, newKey) {
+      return ReactElement(oldElement.type, newKey, oldElement.props);
+    }
+    function isValidElement(object) {
+      return "object" === typeof object && null !== object && object.$$typeof === REACT_ELEMENT_TYPE;
+    }
+    function escape(key) {
+      var escaperLookup = { "=": "=0", ":": "=2" };
+      return "$" + key.replace(/[=:]/g, function(match) {
+        return escaperLookup[match];
+      });
+    }
+    var userProvidedKeyEscapeRegex = /\/+/g;
+    function getElementKey(element, index) {
+      return "object" === typeof element && null !== element && null != element.key ? escape("" + element.key) : index.toString(36);
+    }
+    function resolveThenable(thenable) {
+      switch (thenable.status) {
+        case "fulfilled":
+          return thenable.value;
+        case "rejected":
+          throw thenable.reason;
+        default:
+          switch ("string" === typeof thenable.status ? thenable.then(noop, noop) : (thenable.status = "pending", thenable.then(
+            function(fulfilledValue) {
+              "pending" === thenable.status && (thenable.status = "fulfilled", thenable.value = fulfilledValue);
+            },
+            function(error) {
+              "pending" === thenable.status && (thenable.status = "rejected", thenable.reason = error);
+            }
+          )), thenable.status) {
+            case "fulfilled":
+              return thenable.value;
+            case "rejected":
+              throw thenable.reason;
+          }
+      }
+      throw thenable;
+    }
+    function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
+      var type = typeof children;
+      if ("undefined" === type || "boolean" === type) children = null;
+      var invokeCallback = false;
+      if (null === children) invokeCallback = true;
+      else
+        switch (type) {
+          case "bigint":
+          case "string":
+          case "number":
+            invokeCallback = true;
+            break;
+          case "object":
+            switch (children.$$typeof) {
+              case REACT_ELEMENT_TYPE:
+              case REACT_PORTAL_TYPE:
+                invokeCallback = true;
+                break;
+              case REACT_LAZY_TYPE:
+                return invokeCallback = children._init, mapIntoArray(
+                  invokeCallback(children._payload),
+                  array,
+                  escapedPrefix,
+                  nameSoFar,
+                  callback
+                );
+            }
+        }
+      if (invokeCallback)
+        return callback = callback(children), invokeCallback = "" === nameSoFar ? "." + getElementKey(children, 0) : nameSoFar, isArrayImpl(callback) ? (escapedPrefix = "", null != invokeCallback && (escapedPrefix = invokeCallback.replace(userProvidedKeyEscapeRegex, "$&/") + "/"), mapIntoArray(callback, array, escapedPrefix, "", function(c) {
+          return c;
+        })) : null != callback && (isValidElement(callback) && (callback = cloneAndReplaceKey(
+          callback,
+          escapedPrefix + (null == callback.key || children && children.key === callback.key ? "" : ("" + callback.key).replace(
+            userProvidedKeyEscapeRegex,
+            "$&/"
+          ) + "/") + invokeCallback
+        )), array.push(callback)), 1;
+      invokeCallback = 0;
+      var nextNamePrefix = "" === nameSoFar ? "." : nameSoFar + ":";
+      if (isArrayImpl(children))
+        for (var i = 0; i < children.length; i++)
+          nameSoFar = children[i], type = nextNamePrefix + getElementKey(nameSoFar, i), invokeCallback += mapIntoArray(
+            nameSoFar,
+            array,
+            escapedPrefix,
+            type,
+            callback
+          );
+      else if (i = getIteratorFn(children), "function" === typeof i)
+        for (children = i.call(children), i = 0; !(nameSoFar = children.next()).done; )
+          nameSoFar = nameSoFar.value, type = nextNamePrefix + getElementKey(nameSoFar, i++), invokeCallback += mapIntoArray(
+            nameSoFar,
+            array,
+            escapedPrefix,
+            type,
+            callback
+          );
+      else if ("object" === type) {
+        if ("function" === typeof children.then)
+          return mapIntoArray(
+            resolveThenable(children),
+            array,
+            escapedPrefix,
+            nameSoFar,
+            callback
+          );
+        array = String(children);
+        throw Error(
+          "Objects are not valid as a React child (found: " + ("[object Object]" === array ? "object with keys {" + Object.keys(children).join(", ") + "}" : array) + "). If you meant to render a collection of children, use an array instead."
+        );
+      }
+      return invokeCallback;
+    }
+    function mapChildren(children, func, context) {
+      if (null == children) return children;
+      var result = [], count = 0;
+      mapIntoArray(children, result, "", "", function(child) {
+        return func.call(context, child, count++);
+      });
+      return result;
+    }
+    function lazyInitializer(payload) {
+      if (-1 === payload._status) {
+        var ctor = payload._result;
+        ctor = ctor();
+        ctor.then(
+          function(moduleObject) {
+            if (0 === payload._status || -1 === payload._status)
+              payload._status = 1, payload._result = moduleObject;
+          },
+          function(error) {
+            if (0 === payload._status || -1 === payload._status)
+              payload._status = 2, payload._result = error;
+          }
+        );
+        -1 === payload._status && (payload._status = 0, payload._result = ctor);
+      }
+      if (1 === payload._status) return payload._result.default;
+      throw payload._result;
+    }
+    var reportGlobalError = "function" === typeof reportError ? reportError : function(error) {
+      if ("object" === typeof window && "function" === typeof window.ErrorEvent) {
+        var event = new window.ErrorEvent("error", {
+          bubbles: true,
+          cancelable: true,
+          message: "object" === typeof error && null !== error && "string" === typeof error.message ? String(error.message) : String(error),
+          error
+        });
+        if (!window.dispatchEvent(event)) return;
+      } else if ("object" === typeof process && "function" === typeof process.emit) {
+        process.emit("uncaughtException", error);
+        return;
+      }
+      console.error(error);
+    };
+    var Children = {
+      map: mapChildren,
+      forEach: function(children, forEachFunc, forEachContext) {
+        mapChildren(
+          children,
+          function() {
+            forEachFunc.apply(this, arguments);
+          },
+          forEachContext
+        );
+      },
+      count: function(children) {
+        var n = 0;
+        mapChildren(children, function() {
+          n++;
+        });
+        return n;
+      },
+      toArray: function(children) {
+        return mapChildren(children, function(child) {
+          return child;
+        }) || [];
+      },
+      only: function(children) {
+        if (!isValidElement(children))
+          throw Error(
+            "React.Children.only expected to receive a single React element child."
+          );
+        return children;
+      }
+    };
+    exports.Activity = REACT_ACTIVITY_TYPE;
+    exports.Children = Children;
+    exports.Component = Component;
+    exports.Fragment = REACT_FRAGMENT_TYPE;
+    exports.Profiler = REACT_PROFILER_TYPE;
+    exports.PureComponent = PureComponent;
+    exports.StrictMode = REACT_STRICT_MODE_TYPE;
+    exports.Suspense = REACT_SUSPENSE_TYPE;
+    exports.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE = ReactSharedInternals;
+    exports.__COMPILER_RUNTIME = {
+      __proto__: null,
+      c: function(size) {
+        return ReactSharedInternals.H.useMemoCache(size);
+      }
+    };
+    exports.cache = function(fn) {
+      return function() {
+        return fn.apply(null, arguments);
+      };
+    };
+    exports.cacheSignal = function() {
+      return null;
+    };
+    exports.cloneElement = function(element, config, children) {
+      if (null === element || void 0 === element)
+        throw Error(
+          "The argument must be a React element, but you passed " + element + "."
+        );
+      var props = assign({}, element.props), key = element.key;
+      if (null != config)
+        for (propName in void 0 !== config.key && (key = "" + config.key), config)
+          !hasOwnProperty.call(config, propName) || "key" === propName || "__self" === propName || "__source" === propName || "ref" === propName && void 0 === config.ref || (props[propName] = config[propName]);
+      var propName = arguments.length - 2;
+      if (1 === propName) props.children = children;
+      else if (1 < propName) {
+        for (var childArray = Array(propName), i = 0; i < propName; i++)
+          childArray[i] = arguments[i + 2];
+        props.children = childArray;
+      }
+      return ReactElement(element.type, key, props);
+    };
+    exports.createContext = function(defaultValue) {
+      defaultValue = {
+        $$typeof: REACT_CONTEXT_TYPE,
+        _currentValue: defaultValue,
+        _currentValue2: defaultValue,
+        _threadCount: 0,
+        Provider: null,
+        Consumer: null
+      };
+      defaultValue.Provider = defaultValue;
+      defaultValue.Consumer = {
+        $$typeof: REACT_CONSUMER_TYPE,
+        _context: defaultValue
+      };
+      return defaultValue;
+    };
+    exports.createElement = function(type, config, children) {
+      var propName, props = {}, key = null;
+      if (null != config)
+        for (propName in void 0 !== config.key && (key = "" + config.key), config)
+          hasOwnProperty.call(config, propName) && "key" !== propName && "__self" !== propName && "__source" !== propName && (props[propName] = config[propName]);
+      var childrenLength = arguments.length - 2;
+      if (1 === childrenLength) props.children = children;
+      else if (1 < childrenLength) {
+        for (var childArray = Array(childrenLength), i = 0; i < childrenLength; i++)
+          childArray[i] = arguments[i + 2];
+        props.children = childArray;
+      }
+      if (type && type.defaultProps)
+        for (propName in childrenLength = type.defaultProps, childrenLength)
+          void 0 === props[propName] && (props[propName] = childrenLength[propName]);
+      return ReactElement(type, key, props);
+    };
+    exports.createRef = function() {
+      return { current: null };
+    };
+    exports.forwardRef = function(render) {
+      return { $$typeof: REACT_FORWARD_REF_TYPE, render };
+    };
+    exports.isValidElement = isValidElement;
+    exports.lazy = function(ctor) {
+      return {
+        $$typeof: REACT_LAZY_TYPE,
+        _payload: { _status: -1, _result: ctor },
+        _init: lazyInitializer
+      };
+    };
+    exports.memo = function(type, compare) {
+      return {
+        $$typeof: REACT_MEMO_TYPE,
+        type,
+        compare: void 0 === compare ? null : compare
+      };
+    };
+    exports.startTransition = function(scope) {
+      var prevTransition = ReactSharedInternals.T, currentTransition = {};
+      ReactSharedInternals.T = currentTransition;
+      try {
+        var returnValue = scope(), onStartTransitionFinish = ReactSharedInternals.S;
+        null !== onStartTransitionFinish && onStartTransitionFinish(currentTransition, returnValue);
+        "object" === typeof returnValue && null !== returnValue && "function" === typeof returnValue.then && returnValue.then(noop, reportGlobalError);
+      } catch (error) {
+        reportGlobalError(error);
+      } finally {
+        null !== prevTransition && null !== currentTransition.types && (prevTransition.types = currentTransition.types), ReactSharedInternals.T = prevTransition;
+      }
+    };
+    exports.unstable_useCacheRefresh = function() {
+      return ReactSharedInternals.H.useCacheRefresh();
+    };
+    exports.use = function(usable) {
+      return ReactSharedInternals.H.use(usable);
+    };
+    exports.useActionState = function(action, initialState, permalink) {
+      return ReactSharedInternals.H.useActionState(action, initialState, permalink);
+    };
+    exports.useCallback = function(callback, deps) {
+      return ReactSharedInternals.H.useCallback(callback, deps);
+    };
+    exports.useContext = function(Context) {
+      return ReactSharedInternals.H.useContext(Context);
+    };
+    exports.useDebugValue = function() {
+    };
+    exports.useDeferredValue = function(value, initialValue) {
+      return ReactSharedInternals.H.useDeferredValue(value, initialValue);
+    };
+    exports.useEffect = function(create, deps) {
+      return ReactSharedInternals.H.useEffect(create, deps);
+    };
+    exports.useEffectEvent = function(callback) {
+      return ReactSharedInternals.H.useEffectEvent(callback);
+    };
+    exports.useId = function() {
+      return ReactSharedInternals.H.useId();
+    };
+    exports.useImperativeHandle = function(ref, create, deps) {
+      return ReactSharedInternals.H.useImperativeHandle(ref, create, deps);
+    };
+    exports.useInsertionEffect = function(create, deps) {
+      return ReactSharedInternals.H.useInsertionEffect(create, deps);
+    };
+    exports.useLayoutEffect = function(create, deps) {
+      return ReactSharedInternals.H.useLayoutEffect(create, deps);
+    };
+    exports.useMemo = function(create, deps) {
+      return ReactSharedInternals.H.useMemo(create, deps);
+    };
+    exports.useOptimistic = function(passthrough, reducer) {
+      return ReactSharedInternals.H.useOptimistic(passthrough, reducer);
+    };
+    exports.useReducer = function(reducer, initialArg, init) {
+      return ReactSharedInternals.H.useReducer(reducer, initialArg, init);
+    };
+    exports.useRef = function(initialValue) {
+      return ReactSharedInternals.H.useRef(initialValue);
+    };
+    exports.useState = function(initialState) {
+      return ReactSharedInternals.H.useState(initialState);
+    };
+    exports.useSyncExternalStore = function(subscribe, getSnapshot, getServerSnapshot) {
+      return ReactSharedInternals.H.useSyncExternalStore(
+        subscribe,
+        getSnapshot,
+        getServerSnapshot
+      );
+    };
+    exports.useTransition = function() {
+      return ReactSharedInternals.H.useTransition();
+    };
+    exports.version = "19.2.6";
+  }
+});
+
+// ../../../node_modules/react/index.js
+var require_react = __commonJS({
+  "../../../node_modules/react/index.js"(exports, module) {
+    "use strict";
+    if (true) {
+      module.exports = require_react_production();
+    } else {
+      module.exports = null;
+    }
+  }
+});
+
+// ../../../node_modules/react/cjs/react-jsx-runtime.production.js
+var require_react_jsx_runtime_production = __commonJS({
+  "../../../node_modules/react/cjs/react-jsx-runtime.production.js"(exports) {
+    "use strict";
+    var REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element");
+    var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
+    function jsxProd(type, config, maybeKey) {
+      var key = null;
+      void 0 !== maybeKey && (key = "" + maybeKey);
+      void 0 !== config.key && (key = "" + config.key);
+      if ("key" in config) {
+        maybeKey = {};
+        for (var propName in config)
+          "key" !== propName && (maybeKey[propName] = config[propName]);
+      } else maybeKey = config;
+      config = maybeKey.ref;
+      return {
+        $$typeof: REACT_ELEMENT_TYPE,
+        type,
+        key,
+        ref: void 0 !== config ? config : null,
+        props: maybeKey
+      };
+    }
+    exports.Fragment = REACT_FRAGMENT_TYPE;
+    exports.jsx = jsxProd;
+    exports.jsxs = jsxProd;
+  }
+});
+
+// ../../../node_modules/react/jsx-runtime.js
+var require_jsx_runtime = __commonJS({
+  "../../../node_modules/react/jsx-runtime.js"(exports, module) {
+    "use strict";
+    if (true) {
+      module.exports = require_react_jsx_runtime_production();
+    } else {
+      module.exports = null;
+    }
+  }
+});
+
+// ../../ck-repo/dashboard/src/lib/kiraPrompts.ts
 var MONOTONIE_REGEL = [
   "Monotonie-Regel: Ein einzelner hoher Monotonie-Wert ist meist kein Problem. Ma\xDFgeblich ist die rollierende 7-Tage-Monotonie (\xD8/\u03C3 der Tageslasten) im Verlauf.",
   "Zonen: < 1,5 gute Variation; 1,5\u20132,0 normal; > 2,0 aufmerksam (vor allem bei hoher Wochenlast); > 2,5 ung\xFCnstig, wenn es l\xE4nger anh\xE4lt; > 3,0 Warnzone.",
@@ -6,6 +527,11 @@ var MONOTONIE_REGEL = [
   "Steuerung: Ein hoher Wert an einem Tag ist praktisch bedeutungslos. Liegt die 7-Tage-Monotonie an 2 Tagen in Folge \xFCber etwa 2,0 und sind schon 4\u20135 fordernde Tage gesammelt \u2192 n\xE4chster Tag sehr locker oder frei. Als Entlastung z\xE4hlt ein lockerer oder freier Tag (h\xF6chstens 40 ESS bzw. 60 % der \xFCblichen Tageslast). Bleibt der Wert \xFCber 2,5 \u2192 innerhalb 24\u201348 h echter Ruhetag oder sehr kurzer Regenerationsreiz. \xDCber 3,0 \u2192 mindestens ein echter Entlastungstag oder deutliche Reduktion. Hohe Monotonie plus schlechte Erholungswerte \u2192 keine Qualit\xE4tseinheit durchdr\xFCcken.",
   "Entscheidend ist die Kombination mit der Gesamtlast (Strain = Wochenlast \xD7 Monotonie). Monotonie senkst du durch klaren Rhythmus: harte Reize klar hart, lockere Tage wirklich locker, mindestens ein echter Erholungstag bei hoher Gesamtlast \u2013 nicht durch weniger Gesamtlast."
 ].join("\n");
+function erfahrungBlock(text) {
+  const t = String(text || "").trim();
+  if (!t) return "";
+  return "\n---\n**ERFAHRUNG AUS NICHTBEFOLGUNG (aus Marcs eigenen Daten, fest berechnet \u2013 ber\xFCcksichtigen):**\n" + t + "\n---\n";
+}
 function monotonieBlock() {
   return "\n---\n**MONOTONIE-REGEL (verbindlich f\xFCr Bewertung und Plan):**\n" + MONOTONIE_REGEL + "\nBewerte die Prognose-Monotonie oben nach dieser Regel: ein einzelner hoher Tageswert ist kein Grund zum K\xFCrzen; entscheidend sind fordernde Tage ohne Entlastung, anhaltend hohe Werte und die Wochenlast.\n---\n";
 }
@@ -483,7 +1009,7 @@ DEINE ALLGEMEINEN ZIELE (KONTEXT):
 ${wetterDaten}
 ---
 ${trefferBlock(d.treffer)}
-${monotonieBlock()}
+${monotonieBlock()}${erfahrungBlock(d && d.erfahrung)}
 ${planungsBlock(d.planung)}
 
 
@@ -676,7 +1202,7 @@ ANTWORTE AUSSCHLIESSLICH IM FOLGENDEN JSON-FORMAT (ohne Markdown):
 }
 function briefingMessages(type, daten) {
   const res = briefingRoh(type, daten);
-  if (res.messages.length && res.messages[0].role === "system") res.messages[0].content = String(res.messages[0].content) + "\n\n" + MONOTONIE_REGEL;
+  if (res.messages.length && res.messages[0].role === "system") res.messages[0].content = String(res.messages[0].content) + "\n\n" + MONOTONIE_REGEL + erfahrungBlock(daten && daten.erfahrung);
   return res;
 }
 function briefingRoh(type, daten) {
@@ -798,7 +1324,7 @@ function telegramMessages(frage, ctx) {
     "Du antwortest auf Telegram: kurz (max. 6 S\xE4tze), konkret, auf Deutsch, ohne Markdown-Tabellen und ohne Emojis.",
     "Nutze die Daten unten. Erfinde keine Werte. Keine medizinischen Diagnosen.",
     MONOTONIE_REGEL
-  ].join("\n");
+  ].join("\n") + erfahrungBlock(ctx.erfahrung);
   const daten = [
     ctx.status ? "STATUS (Cockpit):\n" + JSON.stringify(ctx.status).slice(0, 6e3) : "",
     ctx.vorausblick ? "VORAUSBLICK:\n" + String(ctx.vorausblick).slice(0, 3e3) : ""
@@ -812,7 +1338,579 @@ function telegramMessages(frage, ctx) {
   return msgs;
 }
 
-// ../tools/mac-runner/kira_prompts_cli.ts
+// ../../ck-repo/dashboard/src/screens/RecoveryPanel.tsx
+var import_react7 = __toESM(require_react(), 1);
+
+// ../../ck-repo/dashboard/src/components/BefindenHinweis.tsx
+var import_react4 = __toESM(require_react(), 1);
+
+// ../../ck-repo/dashboard/src/lib/engine.ts
+var import_react3 = __toESM(require_react(), 1);
+
+// ../../ck-repo/dashboard/src/lib/garmin.ts
+var import_react = __toESM(require_react(), 1);
+var CACHE_MS = 10 * 60 * 1e3;
+
+// ../../ck-repo/dashboard/src/lib/useErfahrung.ts
+var import_react2 = __toESM(require_react(), 1);
+
+// ../../ck-repo/dashboard/src/lib/monotony.ts
+var MONO = { GUT: 1.5, NORMAL: 2, UNGUENSTIG: 2.5, WARNUNG: 3 };
+function monoStufe(v) {
+  if (v == null || !Number.isFinite(v)) return null;
+  if (v > MONO.WARNUNG) return "warnung";
+  if (v > MONO.UNGUENSTIG) return "unguenstig";
+  if (v > MONO.NORMAL) return "aufmerksam";
+  if (v >= MONO.GUT) return "normal";
+  return "gut";
+}
+function refLoad(loads) {
+  const xs = loads.slice(-28).filter((x) => Number.isFinite(x));
+  return xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0;
+}
+function isDemanding(load, ref) {
+  return load >= Math.max(60, 0.7 * ref);
+}
+var RELIEF_ANTEIL = 0.6;
+function isRelief(load, ref) {
+  return load <= Math.max(40, RELIEF_ANTEIL * ref);
+}
+var f2 = (v) => v.toFixed(2).replace(".", ",");
+function assessMonotony(inp) {
+  const loads = inp.loads.filter((x) => Number.isFinite(x));
+  const ref = refLoad(loads);
+  let streak = 0;
+  let demanding = 0;
+  for (let i = loads.length - 1; i >= 0; i--) {
+    if (isRelief(loads[i], ref)) break;
+    streak++;
+    if (isDemanding(loads[i], ref)) demanding++;
+  }
+  const hist = [...inp.monoHistory || [], inp.mono];
+  let above25 = 0;
+  for (let i = hist.length - 1; i >= 0; i--) {
+    const v = hist[i];
+    if (v == null || v <= MONO.UNGUENSTIG) break;
+    above25++;
+  }
+  const weekLoad = loads.slice(-7).reduce((a, b) => a + b, 0);
+  const four = loads.slice(-28);
+  const avgWeek = four.length >= 14 ? four.reduce((a, b) => a + b, 0) / four.length * 7 : weekLoad;
+  const weekLoadHigh = avgWeek > 0 && weekLoad >= 1.1 * avgWeek;
+  const m = inp.mono;
+  const prevMono = inp.monoHistory && inp.monoHistory.length ? inp.monoHistory[inp.monoHistory.length - 1] : null;
+  const over20 = m != null && m > MONO.NORMAL && prevMono != null && prevMono > MONO.NORMAL;
+  const stufe = monoStufe(m);
+  const strain = m != null ? Math.round(weekLoad * m) : null;
+  const base = { stufe, streakNoRelief: streak, demandingInStreak: demanding, daysAbove25: above25, weekLoad, strain, weekLoadHigh };
+  const res = (cap, rest, text) => ({ ...base, cap, restWithin48h: rest, text });
+  if (m == null) {
+    if (streak >= 5 && demanding >= 3) return res("EASY", false, `${streak} Tage ohne deutliche Entlastung \u2192 n\xE4chster Tag sehr locker oder frei.`);
+    return res(null, false, "");
+  }
+  const reliefDone = streak < 2;
+  if (m > MONO.WARNUNG && !reliefDone)
+    return res("EASY", true, `Monotonie ${f2(m)} > 3,0 (Warnzone) \u2192 echten Entlastungstag oder deutliche Reduktion einplanen.`);
+  if (m > MONO.UNGUENSTIG && (above25 >= 2 || demanding >= 4) && !reliefDone)
+    return res("EASY", true, `Monotonie bleibt \xFCber 2,5 (${above25 >= 2 ? `${above25} Tage` : `${demanding} fordernde Tage`}) \u2192 innerhalb 24\u201348 h Ruhetag oder sehr kurzer Regenerationsreiz.`);
+  if (m > MONO.UNGUENSTIG && reliefDone && (above25 >= 2 || m > MONO.WARNUNG))
+    return res("TRAIN", false, `Monotonie ${f2(m)} noch hoch, Entlastung in den letzten 48 h ist erfolgt \u2192 keine Qualit\xE4tseinheit, Rhythmus hart/locker beibehalten.`);
+  if (over20 && demanding >= 4)
+    return res("EASY", false, `Monotonie seit 2 Tagen \xFCber 2,0 (${f2(m)}) nach ${demanding} fordernden Tagen \u2192 n\xE4chster Tag sehr locker oder frei.`);
+  if (over20 && inp.recoveryBad)
+    return res("TRAIN", false, `Monotonie seit 2 Tagen \xFCber 2,0 (${f2(m)}) und Erholungswerte schlechter \u2192 keine Qualit\xE4tseinheit durchdr\xFCcken.`);
+  if (streak >= 5 && demanding >= 3)
+    return res("EASY", false, `${streak} Tage ohne deutliche Entlastung \u2192 Entlastung einplanen (Monotonie ${f2(m)}).`);
+  if (demanding >= 3 && inp.recoveryBad)
+    return res("EASY", false, `${demanding} fordernde Tage in Folge und Erholungswerte schlechter \u2192 Belastung reduzieren.`);
+  if (over20 && weekLoadHigh)
+    return res("TRAIN", false, `Monotonie seit 2 Tagen \xFCber 2,0 (${f2(m)}) bei hoher Wochenlast (Strain ${strain}) \u2192 keine zus\xE4tzliche Qualit\xE4t.`);
+  if (m > MONO.NORMAL)
+    return res(null, false, `Monotonie ${f2(m)}${over20 ? " seit 2 Tagen \xFCber 2,0" : " \u2013 erster Tag \xFCber 2,0"} \xB7 ${demanding === 1 ? "1 fordernder Tag" : `${demanding} fordernde Tage`} in Folge: beobachten, keine Einschr\xE4nkung.`);
+  return res(null, false, stufe === "normal" ? `Monotonie ${f2(m)} normal.` : "");
+}
+var MONOTONIE_REGEL_TEXT = [
+  "Monotonie-Regel: Ein einzelner hoher Monotonie-Wert ist meist kein Problem. Ma\xDFgeblich ist die rollierende 7-Tage-Monotonie (\xD8/\u03C3 der Tageslasten) im Verlauf.",
+  "Zonen: < 1,5 gute Variation; 1,5\u20132,0 normal; > 2,0 aufmerksam (vor allem bei hoher Wochenlast); > 2,5 ung\xFCnstig, wenn es l\xE4nger anh\xE4lt; > 3,0 Warnzone.",
+  "Muster: 1\u20132 \xE4hnliche Tage normal; 3\u20134 \xE4hnliche, fordernde Tage beobachten (bei schlechterem Schlaf, HRV, Ruhepuls, schweren Beinen oder weniger Motivation reduzieren); 5\u20137 Tage ohne deutliche Entlastung relevant; mehrere Wochen hohe Monotonie = Risiko f\xFCr Erm\xFCdung, Stagnation, \xDCberlastung, Infekte.",
+  "Steuerung: Ein hoher Wert an einem Tag ist praktisch bedeutungslos. Liegt die 7-Tage-Monotonie an 2 Tagen in Folge \xFCber etwa 2,0 und hast du schon 4\u20135 fordernde Tage gesammelt \u2192 n\xE4chster Tag sehr locker oder frei. Als Entlastung z\xE4hlt ein lockerer oder freier Tag (h\xF6chstens 40 ESS bzw. 60 % deiner \xFCblichen Tageslast). Bleibt der Wert \xFCber 2,5 \u2192 innerhalb 24\u201348 h echter Ruhetag oder sehr kurzer Regenerationsreiz. \xDCber 3,0 \u2192 mindestens ein echter Entlastungstag oder deutliche Reduktion. Hohe Monotonie plus schlechte Erholungswerte \u2192 keine Qualit\xE4tseinheit durchdr\xFCcken.",
+  "Entscheidend ist die Kombination mit der Gesamtlast (Strain = Wochenlast \xD7 Monotonie). Monotonie senkst du durch klaren Rhythmus: harte Reize klar hart, lockere Tage wirklich locker, mindestens ein echter Erholungstag bei hoher Gesamtlast \u2013 nicht durch weniger Gesamtlast."
+].join("\n");
+
+// ../../ck-repo/dashboard/src/lib/chatContext.ts
+var KIRA_SYSTEM = [
+  "Du bist Kira, Sportwissenschaftlerin und pers\xF6nliche Ausdauer-Trainerin von Marc (Jahrgang 1975; Rennrad, Gravel, Laufen, Bergsport).",
+  "Sprich Marc per Du an, antworte auf Deutsch, klar und konkret, ohne Emojis.",
+  "St\xFCtze dich zuerst auf die mitgelieferten Cockpit-Daten (JSON unten). Nenne die Zahlen, auf die du dich beziehst.",
+  "Erfinde keine Werte. Wenn Daten fehlen oder unklar sind, sag das offen.",
+  'Halte dich an die Regeln aus dem Feld "regeln" (Tagesentscheid, Zielbereiche).',
+  "Gib am Ende eine klare Empfehlung (z. B. Einheit, Dauer, Zone oder Pause).",
+  "Bei Schmerzen, Krankheit oder medizinischen Fragen: auf Arzt bzw. Physiotherapie verweisen."
+].join("\n");
+
+// ../../ck-repo/dashboard/src/lib/engine.ts
+var KEY = "ck_kira_engine_v2";
+function read() {
+  try {
+    const v = localStorage.getItem(KEY);
+    return v === "pplx" ? "pplx" : "local";
+  } catch {
+    return "local";
+  }
+}
+var store = read();
+
+// ../../ck-repo/dashboard/src/lib/api.ts
+function dedupeByDateKeepLast(rows) {
+  const map = /* @__PURE__ */ new Map();
+  rows.forEach((row) => map.set(row.date, row));
+  return Array.from(map.values()).sort((a, b) => a.date.localeCompare(b.date));
+}
+function toNum(v) {
+  if (v === null || v === void 0 || v === "") return null;
+  const n = typeof v === "number" ? v : Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+// ../../ck-repo/dashboard/src/components/BefindenHinweis.tsx
+var import_jsx_runtime = __toESM(require_jsx_runtime(), 1);
+
+// ../../ck-repo/dashboard/src/lib/format.ts
+function fmtNum(v, digits = 0) {
+  if (v === null || v === void 0 || !Number.isFinite(v)) return "\u2014";
+  return v.toLocaleString("de-DE", {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits
+  });
+}
+
+// ../../ck-repo/dashboard/src/components/UI.tsx
+var import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
+
+// ../../ck-repo/dashboard/src/screens/CorrelationPanel.tsx
+var import_react5 = __toESM(require_react(), 1);
+var import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
+var VARS = [
+  { key: "readiness", label: "Readiness", short: "Ready", unit: "" },
+  { key: "hrv", label: "HRV", short: "HRV", unit: "ms" },
+  { key: "rhr", label: "RHR", short: "RHR", unit: "bpm" },
+  { key: "sleepH", label: "Schlafdauer", short: "Schlaf h", unit: "h" },
+  { key: "sleepScore", label: "Schlafscore", short: "Score", unit: "" },
+  { key: "essDay", label: "Last", short: "Last", unit: "ESS" }
+];
+var VAR = Object.fromEntries(VARS.map((v) => [v.key, v]));
+
+// ../../ck-repo/dashboard/src/components/GarminSportProfilTile.tsx
+var import_react6 = __toESM(require_react(), 1);
+var import_jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
+
+// ../../ck-repo/dashboard/src/screens/RecoveryPanel.tsx
+var import_jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
+var SLEEP_GOAL_H = 7.5;
+var RHR_BASELINE_DAYS = 28;
+var RHR_BASELINE_MIN_VALUES = 7;
+var RECOVERY_FETCH_METRICS = [
+  "Garmin_Training_Readiness",
+  "rhr_bpm",
+  "sleep_hours",
+  "sleep_score_0_100",
+  "hrv_status",
+  "hrv_threshholds",
+  "load_fb_day",
+  "Monotony7",
+  "befinden_1_5",
+  "fbACWR_obs",
+  "coachE_ACWR_forecast",
+  "coachE_ESS_day",
+  "Sport_x",
+  "Zone",
+  "Target_Aerobic_TE",
+  "Target_Anaerobic_TE",
+  "activity_done",
+  "coachE_ATL_forecast",
+  "coachE_CTL_forecast",
+  "Aerobic_TE",
+  "Anaerobic_TE"
+];
+var ACWR_WARN = 1.3;
+var ACWR_HIGH = 1.5;
+var VOTE_ORDER = ["REST", "EASY", "TRAIN", "QUALITY"];
+var VOTE_LABEL = {
+  QUALITY: "Quality",
+  TRAIN: "Train",
+  EASY: "Easy",
+  REST: "Rest"
+};
+function parseThresholds(v) {
+  if (typeof v !== "string" || !v.includes(";")) return [null, null];
+  const [a, b] = v.split(";").map((x) => Number(String(x).trim().replace(",", ".")));
+  return [Number.isFinite(a) ? a : null, Number.isFinite(b) ? b : null];
+}
+function mean(values) {
+  return values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
+}
+function levelReadiness(v) {
+  if (v == null) return "leer";
+  if (v >= 75) return "gruen";
+  if (v >= 55) return "gelb";
+  if (v >= 40) return "orange";
+  return "rot";
+}
+function levelRhrDelta(d) {
+  if (d == null) return "leer";
+  if (d <= -5) return "grau";
+  if (d <= 1) return "gruen";
+  if (d < 3) return "gelb";
+  if (d < 5) return "orange";
+  return "rot";
+}
+function levelSleep(h) {
+  if (h == null) return "leer";
+  const ratio = h / SLEEP_GOAL_H;
+  if (ratio >= 0.95) return "gruen";
+  if (ratio >= 0.85) return "gelb";
+  if (ratio >= 0.8) return "orange";
+  return "rot";
+}
+function levelHrv(v, low) {
+  if (v == null || low == null) return "leer";
+  if (v < low - 2) return "rot";
+  if (v < low) return "orange";
+  return "gruen";
+}
+function levelBefinden(v) {
+  if (v == null) return "leer";
+  if (v >= 4) return "gruen";
+  if (v >= 3) return "gelb";
+  if (v >= 2) return "orange";
+  return "rot";
+}
+function capVote(vote, max) {
+  return VOTE_ORDER.indexOf(vote) > VOTE_ORDER.indexOf(max) ? max : vote;
+}
+function decideVote(d) {
+  if (d.readiness == null) return { vote: null, reasons: ["Readiness fehlt (Morgenwerte noch nicht erfasst)."], bind: null };
+  const reasons = [];
+  let vote = d.readiness >= 75 ? "QUALITY" : d.readiness >= 55 ? "TRAIN" : d.readiness >= 40 ? "EASY" : "REST";
+  reasons.push(`Readiness ${fmtNum(d.readiness)} \u2192 Basis ${VOTE_LABEL[vote]}.`);
+  let bind = "readiness";
+  const senke = (neu, grund) => {
+    if (VOTE_ORDER.indexOf(neu) < VOTE_ORDER.indexOf(vote)) bind = grund;
+    vote = neu;
+  };
+  const { rhr, sleep, hrv } = d.levels;
+  const warn = [rhr, sleep, hrv].filter((l) => l === "orange" || l === "rot").length;
+  if ([rhr, sleep, hrv].includes("rot")) {
+    const before = vote;
+    senke(capVote(vote, "TRAIN"), "rot");
+    if (vote !== before) reasons.push("Ein Einzelsignal ist rot \u2192 keine Qualit\xE4tseinheit.");
+  }
+  const sleepRatio = d.sleepH != null ? d.sleepH / SLEEP_GOAL_H : null;
+  if (d.rhrDelta != null && d.rhrDelta >= 5 && sleepRatio != null && sleepRatio < 0.8) {
+    senke(capVote(vote, "EASY"), "rhr_schlaf");
+    reasons.push("RHR \u2265 +5 bpm und Schlaf < 80 % des Ziels \u2192 maximal Easy.");
+  }
+  if (hrv === "rot") {
+    senke(capVote(vote, "EASY"), "hrv");
+    reasons.push("HRV unter dem Normalband (HRV-Alarm) \u2192 maximal Easy.");
+  }
+  if (warn >= 2) {
+    senke(capVote(vote, "EASY"), "warn2");
+    reasons.push(`${warn} Warnsignale gleichzeitig \u2192 maximal Easy.`);
+  }
+  if (d.rhrDelta != null && d.rhrDelta >= 5 && d.readiness < 55) {
+    senke("REST", "rhr_ready");
+    reasons.push("RHR \u2265 +5 bpm bei niedriger Readiness \u2192 Rest.");
+  }
+  if (d.acwr != null && d.acwr > ACWR_HIGH) {
+    const before = vote;
+    senke(capVote(vote, "EASY"), "acwr");
+    if (vote !== before) reasons.push(`ACWR ${fmtNum(d.acwr, 2)} > ${fmtNum(ACWR_HIGH, 1)} \u2192 maximal Easy.`);
+  } else if (d.acwr != null && d.acwr > ACWR_WARN) {
+    const before = vote;
+    senke(capVote(vote, "TRAIN"), "acwr");
+    if (vote !== before) reasons.push(`ACWR ${fmtNum(d.acwr, 2)} > ${fmtNum(ACWR_WARN, 1)} \u2192 keine Qualit\xE4tseinheit.`);
+  }
+  const ma = d.monoAssess;
+  if (ma && ma.cap) {
+    const before = vote;
+    senke(capVote(vote, ma.cap), "mono");
+    if (vote !== before || ma.restWithin48h) reasons.push(ma.text);
+  } else if (ma && ma.text && ma.stufe && ma.stufe !== "gut" && ma.stufe !== "normal") {
+    reasons.push(ma.text);
+  }
+  if (d.befinden != null) {
+    if (d.befinden <= 1) {
+      senke("REST", "befinden");
+      reasons.push("Befinden 1/5 \u2192 Rest.");
+    } else if (d.befinden <= 2) {
+      senke(capVote(vote, "EASY"), "befinden");
+      reasons.push("Befinden 2/5 \u2192 maximal Easy.");
+    } else if (d.befinden <= 3) {
+      const before = vote;
+      senke(capVote(vote, "TRAIN"), "befinden");
+      if (vote !== before) reasons.push("Befinden 3/5 \u2192 keine Qualit\xE4tseinheit.");
+    }
+  }
+  return { vote, reasons, bind };
+}
+function buildDays(raw) {
+  const rows = dedupeByDateKeepLast(
+    raw.filter((r) => r && typeof r.date === "string").map((r) => ({ ...r, date: String(r.date).slice(0, 10) }))
+  ).sort((a, b) => a.date < b.date ? -1 : 1);
+  return rows.map((r, idx) => {
+    const readiness = toNum(r.Garmin_Training_Readiness);
+    const rhr = toNum(r.rhr_bpm);
+    const sleepH = toNum(r.sleep_hours);
+    const sleepScore = toNum(r.sleep_score_0_100);
+    const hrvRaw = toNum(r.hrv_status);
+    const hrv = hrvRaw != null && hrvRaw >= 10 && hrvRaw <= 200 ? hrvRaw : null;
+    const [hrvLow, hrvHigh] = parseThresholds(r.hrv_threshholds);
+    const prior = rows.slice(Math.max(0, idx - RHR_BASELINE_DAYS), idx).map((p) => toNum(p.rhr_bpm)).filter((v) => v != null && v > 0);
+    const rhrBaseline = prior.length >= RHR_BASELINE_MIN_VALUES ? mean(prior) : null;
+    const rhrDelta = rhr != null && rhrBaseline != null ? rhr - rhrBaseline : null;
+    const sleepWindow = rows.slice(Math.max(0, idx - 6), idx + 1).map((p) => toNum(p.sleep_hours)).filter((v) => v != null && v > 0);
+    const sleepAvg7 = sleepWindow.length >= 3 ? mean(sleepWindow) : null;
+    const befindenRaw = toNum(r.befinden_1_5);
+    const befinden = befindenRaw != null && befindenRaw >= 1 && befindenRaw <= 5 ? Math.round(befindenRaw) : null;
+    const base = {
+      date: r.date,
+      readiness,
+      rhr,
+      rhrBaseline,
+      rhrDelta,
+      sleepH,
+      sleepScore,
+      sleepAvg7,
+      hrv,
+      hrvLow,
+      hrvHigh,
+      load: toNum(r.load_fb_day),
+      // Belastung bis GESTERN (heutige Zeile enthält bereits die heutige Einheit)
+      monotony: idx > 0 ? toNum(rows[idx - 1].Monotony7) : null,
+      monoLoads: rows.slice(Math.max(0, idx - 28), idx).map((p) => toNum(p.load_fb_day) ?? toNum(p.coachE_ESS_day) ?? 0),
+      monoHist: rows.slice(Math.max(0, idx - 8), Math.max(0, idx - 1)).map((p) => toNum(p.Monotony7)),
+      monoAssess: null,
+      acwr: idx > 0 ? toNum(rows[idx - 1].fbACWR_obs) ?? toNum(rows[idx - 1].coachE_ACWR_forecast) : null,
+      activityDone: String(r.activity_done || "").trim().toLowerCase() === "x",
+      essDay: toNum(r.coachE_ESS_day),
+      atlPost: toNum(r.coachE_ATL_forecast),
+      ctlPost: toNum(r.coachE_CTL_forecast),
+      monotonyPost: toNum(r.Monotony7),
+      acwrPost: toNum(r.fbACWR_obs) ?? toNum(r.coachE_ACWR_forecast),
+      actual: {
+        teAe: toNum(r.Aerobic_TE),
+        teAn: toNum(r.Anaerobic_TE),
+        load: toNum(r.coachE_ESS_day),
+        sport: String(r.Sport_x || ""),
+        zone: String(r.Zone || "")
+      },
+      befinden,
+      hasMorningData: readiness != null || rhr != null || sleepH != null,
+      levels: {
+        readiness: levelReadiness(readiness),
+        rhr: levelRhrDelta(rhrDelta),
+        sleep: levelSleep(sleepH),
+        hrv: levelHrv(hrv, hrvLow),
+        befinden: levelBefinden(befinden)
+      }
+    };
+    const recoveryBad = [base.levels.rhr, base.levels.sleep, base.levels.hrv].some((l) => l === "orange" || l === "rot") || base.befinden != null && base.befinden <= 2;
+    base.monoAssess = assessMonotony({ mono: base.monotony, loads: base.monoLoads, monoHistory: base.monoHist, recoveryBad });
+    const { vote, reasons, bind } = decideVote(base);
+    return { ...base, vote, reasons, bind };
+  });
+}
+function plannedDemand(p) {
+  const zone = (p.zone || "").toUpperCase();
+  const sport = (p.sport || "").toLowerCase();
+  if (p.load <= 0 || sport === "off" || zone === "OFF") return "REST";
+  if (p.teAn >= 1 || p.teAe >= 4.5 || /Z4|Z5/.test(zone) || p.load >= 200) return "QUALITY";
+  if (p.teAe >= 3 || /Z3/.test(zone) || p.load >= 120) return "TRAIN";
+  return "EASY";
+}
+function demandOf(load, sport, zone, teAe, teAn) {
+  return plannedDemand({
+    date: "",
+    load: load ?? 0,
+    sport,
+    zone,
+    teAe: teAe ?? 0,
+    teAn: teAn ?? 0,
+    locked: false
+  });
+}
+
+// ../../ck-repo/dashboard/src/lib/votumErfahrung.ts
+var GRUND_LABEL = {
+  readiness: "niedriger Bereitschaft",
+  rot: "rotes Einzelsignal",
+  rhr_schlaf: "Ruhepuls hoch + wenig Schlaf",
+  hrv: "HRV-Alarm",
+  warn2: "zwei Warnsignale",
+  rhr_ready: "Ruhepuls hoch + niedrige Bereitschaft",
+  acwr: "ACWR",
+  mono: "Monotonie",
+  befinden: "Befinden"
+};
+var SCHUTZ = ["hrv", "rhr_ready", "befinden", "rot"];
+var MIN_N = 8;
+var MIN_N_ALLE = 12;
+var pos = (v) => typeof v === "number" && Number.isFinite(v) && v > 0 ? v : null;
+var mean2 = (xs) => xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0;
+var r2 = (v) => Math.round(v * 100) / 100;
+function zeilen(days) {
+  const feld = (d, f) => d ? pos(d[f]) : null;
+  const score = (i, k) => {
+    const n = days[i + k];
+    if (!n || feld(n, "readiness") == null) return null;
+    const win = days.slice(Math.max(0, i - 6), i + 1);
+    const dl = (f) => {
+      const w = feld(n, f);
+      const b = win.map((x) => feld(x, f)).filter((v) => v != null);
+      return w != null && b.length ? w - mean2(b) : 0;
+    };
+    return dl("readiness") / 10 + dl("hrv") / 5 - dl("rhr") / 3 + dl("sleepScore") / 10;
+  };
+  const out = [];
+  days.forEach((d, i) => {
+    if (!d.vote || d.readiness == null) return;
+    const next = days[i + 1];
+    if (!next || Date.parse(next.date) - Date.parse(d.date) !== 864e5) return;
+    const last = d.actual.load ?? d.load;
+    if (last == null) return;
+    const s1 = score(i, 1);
+    if (s1 == null) return;
+    const A = demandOf(last, d.actual.sport, d.actual.zone, d.actual.teAe, d.actual.teAn);
+    const folge = days.slice(i + 1, i + 4);
+    out.push({
+      i,
+      datum: d.date,
+      V: d.vote,
+      A,
+      bind: d.bind || "readiness",
+      ready: d.readiness,
+      s: [s1, score(i, 2), score(i, 3)],
+      tief: folge.some((x) => x.readiness != null && x.readiness < 55)
+    });
+  });
+  return out;
+}
+function rng(seed) {
+  let s = seed % 2147483647;
+  return () => (s = s * 16807 % 2147483647) / 2147483647;
+}
+function bootstrap(xs, seed = 7, n = 1500) {
+  if (xs.length < 3) return [-Infinity, Infinity];
+  const r = rng(seed);
+  const m = [];
+  for (let b = 0; b < n; b++) {
+    let s = 0;
+    for (let j = 0; j < xs.length; j++) s += xs[Math.floor(r() * xs.length)];
+    m.push(s / xs.length);
+  }
+  m.sort((a, b) => a - b);
+  return [m[Math.floor(0.05 * n)], m[Math.floor(0.95 * n)]];
+}
+function klassifiziere(n, k, kLo, kHi, tiefDiff, minN = MIN_N) {
+  if (n < minN) return "unklar";
+  if (k <= -0.5 || kHi < 0 || tiefDiff >= 0.25) return "kostet";
+  if (k >= 0.3 && kLo > -0.5 && tiefDiff <= 0.15) return "vertraeglich";
+  return "unklar";
+}
+function erfahrungAusTagen(days) {
+  const z = zeilen(days);
+  const ref = z.filter((r) => VOTE_ORDER.indexOf(r.A) <= VOTE_ORDER.indexOf(r.V));
+  const haerter = z.filter((r) => VOTE_ORDER.indexOf(r.A) > VOTE_ORDER.indexOf(r.V));
+  const faelle = [];
+  for (const r of haerter) {
+    let c = [];
+    for (const w of [7, 10, 14]) {
+      c = ref.filter((x) => x.A === r.A && Math.abs(x.ready - r.ready) <= w && x.datum !== r.datum);
+      if (c.length >= 4) break;
+    }
+    if (!c.length) continue;
+    const d = [0, 1, 2].map((k) => {
+      const cs = c.map((x) => x.s[k]).filter((v) => v != null);
+      return r.s[k] != null && cs.length ? r2(r.s[k] - mean2(cs)) : null;
+    });
+    const ds = d.filter((v) => v != null);
+    faelle.push({
+      datum: r.datum,
+      votum: r.V,
+      anspruch: r.A,
+      bind: r.bind,
+      readiness: r.ready,
+      d,
+      k: r2(mean2(ds)),
+      tief: r.tief,
+      refTief: r2(mean2(c.map((x) => x.tief ? 1 : 0))),
+      nRef: c.length
+    });
+  }
+  const gruppe = (key, bind, von, nach, fs, minN) => {
+    const ks = fs.map((f) => f.k);
+    const [kLo, kHi] = bootstrap(ks, key.length * 31 + fs.length);
+    const k = mean2(ks);
+    const tief = mean2(fs.map((f) => f.tief ? 1 : 0));
+    const refTief = mean2(fs.map((f) => f.refTief));
+    const dm = (j) => {
+      const v = fs.map((f) => f.d[j]).filter((x) => x != null);
+      return v.length ? r2(mean2(v)) : null;
+    };
+    return { key, bind, von, nach, n: fs.length, d1: dm(0), d2: dm(1), d3: dm(2), k: r2(k), kLo: r2(kLo), kHi: r2(kHi), tief: r2(tief), refTief: r2(refTief), klasse: klassifiziere(fs.length, k, kLo, kHi, tief - refTief, minN) };
+  };
+  const gruppen = [];
+  const keys = /* @__PURE__ */ new Map();
+  const keysAlle = /* @__PURE__ */ new Map();
+  for (const f of faelle) {
+    const k = `${f.bind}|${f.votum}>${f.anspruch}`;
+    keys.set(k, [...keys.get(k) || [], f]);
+    if (SCHUTZ.includes(f.bind)) continue;
+    const ka = `*|${f.votum}>${f.anspruch}`;
+    keysAlle.set(ka, [...keysAlle.get(ka) || [], f]);
+  }
+  for (const [k, fs] of keys) gruppen.push(gruppe(k, fs[0].bind, fs[0].votum, fs[0].anspruch, fs, MIN_N));
+  for (const [k, fs] of keysAlle) gruppen.push(gruppe(k, "*", fs[0].votum, fs[0].anspruch, fs, MIN_N_ALLE));
+  gruppen.sort((a, b) => b.n - a.n);
+  return { stand: days.length ? days[days.length - 1].date : "", faelle, gruppen, nTage: z.length, nHaerter: faelle.length };
+}
+function erfahrungAusRohdaten(raw) {
+  return erfahrungAusTagen(buildDays(raw));
+}
+var fz = (v, d = 1) => v == null ? "\u2013" : `${v > 0 ? "+" : v < 0 ? "\u2212" : "\xB1"}${Math.abs(v).toLocaleString("de-DE", { maximumFractionDigits: d, minimumFractionDigits: d })}`;
+var pct = (v) => `${Math.round(v * 100)} %`;
+var gName = (g) => `${VOTE_LABEL[g.von]}\u2192${VOTE_LABEL[g.nach]}${g.bind === "*" ? "" : ` bei ${GRUND_LABEL[g.bind]}`}`;
+function gruppenText(g) {
+  const urteil = g.klasse === "vertraeglich" ? "vertr\xE4glich" : g.klasse === "kostet" ? "hat Erholung gekostet" : "kein klares Muster";
+  return `${gName(g)} (${g.n}\xD7): ${urteil} \u2013 Erholung Tag 1/2/3 ${fz(g.d1)}/${fz(g.d2)}/${fz(g.d3)} gegen\xFCber vergleichbaren erlaubten Tagen, Tief unter 55 in ${pct(g.tief)} der F\xE4lle (sonst ${pct(g.refTief)}).`;
+}
+function erfahrungText(e, max = 8) {
+  if (!e) return "";
+  const gs = e.gruppen.filter((g) => g.klasse !== "unklar").sort((a, b) => Math.abs(b.k) * b.n - Math.abs(a.k) * a.n).slice(0, max);
+  if (!gs.length) return "";
+  return [
+    `Stand ${e.stand}: ${e.nHaerter} Tage, an denen Marc h\xE4rter trainiert hat als das Regel-Votum, verglichen mit Tagen gleicher Einheitsstufe und \xE4hnlicher Ausgangsbereitschaft, an denen das Votum sie erlaubte.`,
+    ...gs.map((g) => "- " + gruppenText(g)),
+    "Nutze das f\xFCr Bewertung und Empfehlung: Wo H\xE4rter bei Marc vertr\xE4glich war, darfst du Spielraum nennen; wo es gekostet hat, klar warnen und die Folgetage einplanen. Schutzsignale (HRV-Alarm, Ruhepuls hoch bei niedriger Bereitschaft, Befinden \u2264 2, rotes Einzelsignal) bleiben bindend."
+  ].join("\n");
+}
+
+// ../../ck-repo/tools/mac-runner/kira_prompts_cli.ts
+var APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbxCEN11KRlFaLL7uVJyeBLCrRJVmfBWagSmqvyJ8Ci7nwxi8HbolzTy23Z-G2mivC2h/exec";
+async function erfahrung() {
+  try {
+    const ctl = new AbortController();
+    const to = setTimeout(() => ctl.abort(), 3e4);
+    const url = APPS_SCRIPT + "?mode=chartData&range=9999d&metrics=" + RECOVERY_FETCH_METRICS.join(",");
+    const j = await (await fetch(url, { redirect: "follow", signal: ctl.signal })).json();
+    clearTimeout(to);
+    const e = erfahrungAusRohdaten(j.data || []);
+    return { text: erfahrungText(e), gruppen: e.gruppen.filter((g) => g.n >= 8) };
+  } catch {
+    return { text: "", gruppen: [] };
+  }
+}
 async function lesen() {
   const teile = [];
   for await (const t of process.stdin) teile.push(t);
@@ -822,12 +1920,38 @@ async function lesen() {
   const art = process.argv[2];
   const d = JSON.parse(await lesen() || "{}");
   let out;
-  if (art === "supervisor") out = supervisorPrompt(d);
-  else if (art === "briefing") out = briefingMessages(d.type, d.daten || {});
-  else if (art === "telegram") out = { messages: telegramMessages(String(d.frage || ""), d) };
-  else throw new Error("Unbekannte Art: " + art + " (supervisor | briefing | telegram)");
+  const erf = art === "supervisor" || art === "briefing" || art === "telegram" || art === "erfahrung" ? await erfahrung() : { text: "", gruppen: [] };
+  if (art === "supervisor") out = supervisorPrompt({ ...d, erfahrung: d.erfahrung ?? erf.text });
+  else if (art === "briefing") out = briefingMessages(d.type, { ...d.daten || {}, erfahrung: (d.daten || {}).erfahrung ?? erf.text });
+  else if (art === "telegram") out = { messages: telegramMessages(String(d.frage || ""), { ...d, erfahrung: d.erfahrung ?? erf.text }) };
+  else if (art === "erfahrung") out = erf;
+  else throw new Error("Unbekannte Art: " + art + " (supervisor | briefing | telegram | erfahrung)");
   process.stdout.write(JSON.stringify(out));
 })().catch((e) => {
   process.stderr.write(String(e && e.message || e));
   process.exit(1);
 });
+/*! Bundled license information:
+
+react/cjs/react.production.js:
+  (**
+   * @license React
+   * react.production.js
+   *
+   * Copyright (c) Meta Platforms, Inc. and affiliates.
+   *
+   * This source code is licensed under the MIT license found in the
+   * LICENSE file in the root directory of this source tree.
+   *)
+
+react/cjs/react-jsx-runtime.production.js:
+  (**
+   * @license React
+   * react-jsx-runtime.production.js
+   *
+   * Copyright (c) Meta Platforms, Inc. and affiliates.
+   *
+   * This source code is licensed under the MIT license found in the
+   * LICENSE file in the root directory of this source tree.
+   *)
+*/

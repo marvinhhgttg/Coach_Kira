@@ -21,6 +21,13 @@ export const MONOTONIE_REGEL = [
   "Entscheidend ist die Kombination mit der Gesamtlast (Strain = Wochenlast × Monotonie). Monotonie senkst du durch klaren Rhythmus: harte Reize klar hart, lockere Tage wirklich locker, mindestens ein echter Erholungstag bei hoher Gesamtlast – nicht durch weniger Gesamtlast."
 ].join('\n');
 
+/** Erfahrung aus Nichtbefolgung (lib/votumErfahrung.ts, fest berechnet). Leer → Prompt unverändert. */
+export function erfahrungBlock(text?: string): string {
+  const t = String(text || '').trim();
+  if (!t) return '';
+  return '\n---\n**ERFAHRUNG AUS NICHTBEFOLGUNG (aus Marcs eigenen Daten, fest berechnet – berücksichtigen):**\n' + t + '\n---\n';
+}
+
 function monotonieBlock() {
   return '\n---\n**MONOTONIE-REGEL (verbindlich für Bewertung und Plan):**\n' + MONOTONIE_REGEL +
     '\nBewerte die Prognose-Monotonie oben nach dieser Regel: ein einzelner hoher Tageswert ist kein Grund zum Kürzen; ' +
@@ -537,7 +544,7 @@ DEINE ALLGEMEINEN ZIELE (KONTEXT):
 ${wetterDaten}
 ---
 ${trefferBlock(d.treffer)}
-${monotonieBlock()}
+${monotonieBlock()}${erfahrungBlock(d && d.erfahrung)}
 ${planungsBlock(d.planung)}
 
 
@@ -734,7 +741,7 @@ ANTWORTE AUSSCHLIESSLICH IM FOLGENDEN JSON-FORMAT (ohne Markdown):
 // ---------------------------------------------------------------------------
 export function briefingMessages(type: BriefingTyp, daten: any): { format: 'text' | 'json'; messages: KiMsg[] } {
   const res = briefingRoh(type, daten);
-  if (res.messages.length && res.messages[0].role === 'system') res.messages[0].content = String(res.messages[0].content) + '\n\n' + MONOTONIE_REGEL;
+  if (res.messages.length && res.messages[0].role === 'system') res.messages[0].content = String(res.messages[0].content) + '\n\n' + MONOTONIE_REGEL + erfahrungBlock(daten && daten.erfahrung);
   return res;
 }
 
@@ -859,13 +866,13 @@ function briefingRoh(type: BriefingTyp, daten: any): { format: 'text' | 'json'; 
 // ---------------------------------------------------------------------------
 // Telegram: freie Frage an Kira (Mac, lokal)
 // ---------------------------------------------------------------------------
-export function telegramMessages(frage: string, ctx: { status?: any; vorausblick?: string; verlauf?: { frage: string; antwort: string }[] }): KiMsg[] {
+export function telegramMessages(frage: string, ctx: { status?: any; vorausblick?: string; erfahrung?: string; verlauf?: { frage: string; antwort: string }[] }): KiMsg[] {
   const sys = [
     'Du bist Coach Kira, Marcs Sportwissenschaftlerin und Trainingscoach – wie eine gute Freundin, direkt und per Du.',
     'Du antwortest auf Telegram: kurz (max. 6 Sätze), konkret, auf Deutsch, ohne Markdown-Tabellen und ohne Emojis.',
     'Nutze die Daten unten. Erfinde keine Werte. Keine medizinischen Diagnosen.',
     MONOTONIE_REGEL,
-  ].join('\n');
+  ].join('\n') + erfahrungBlock(ctx.erfahrung);
   const daten = [
     ctx.status ? 'STATUS (Cockpit):\n' + JSON.stringify(ctx.status).slice(0, 6000) : '',
     ctx.vorausblick ? 'VORAUSBLICK:\n' + String(ctx.vorausblick).slice(0, 3000) : '',

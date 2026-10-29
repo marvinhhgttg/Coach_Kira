@@ -6,6 +6,8 @@ import { BASE_URL, fetchChartData, fetchPlanSimulationWithTimeout, toNum } from 
 import { fetchGarminTage, teLabelDe, type GarminTage } from './garmin';
 import { atlStep, ctlStep, esStep, windowMean, ES_MODEL } from './ctlModel';
 import { buildDays, localIsoDate, RECOVERY_FETCH_METRICS, VOTE_LABEL, type RecoveryDay } from '../screens/RecoveryPanel';
+import { erfahrungAn, ladeErfahrung } from './useErfahrung';
+import { erfahrungText, persoenlichesVotum } from './votumErfahrung';
 import { MONOTONIE_REGEL_TEXT } from './monotony';
 
 const EXTRA = ['fbATL_obs', 'fbCTL_obs', 'garminEnduranceScore', 'Trainingszustand'] as const;
@@ -49,7 +51,10 @@ export async function buildChatContext(): Promise<ChatContext> {
   const raw = ((chart as any).data || []) as any[];
   const days: RecoveryDay[] = buildDays(raw).filter((d) => d.date <= today);
   const byDate = new Map(raw.map((r) => [String(r.date).slice(0, 10), r]));
-  const t = days[days.length - 1];
+  const erf = await ladeErfahrung();
+  const t0 = days[days.length - 1];
+  const pv = t0 && t0.date === today && erf ? persoenlichesVotum(t0, erf, erfahrungAn()) : null;
+  const t = t0 && pv ? { ...t0, vote: pv.vote } : t0;
   const rowT = t ? byDate.get(t.date) : null;
 
   // Serien
@@ -109,7 +114,9 @@ export async function buildChatContext(): Promise<ChatContext> {
       ? {
           datum: t.date,
           tagesentscheid: t.vote ? VOTE_LABEL[t.vote] : null,
+          regel_votum: pv && pv.ruleVote ? VOTE_LABEL[pv.ruleVote] : null,
           gruende: t.reasons,
+          erfahrung_heute: pv ? pv.hinweise : [],
           aktivitaet_erledigt: t.activityDone,
           absolviert: t.activityDone ? { last_ess: t.actual.load, sport: t.actual.sport, zone: t.actual.zone, te_aerob: t.actual.teAe, te_anaerob: t.actual.teAn } : null,
           readiness: t.readiness,
@@ -138,6 +145,7 @@ export async function buildChatContext(): Promise<ChatContext> {
       erholungs_index_0_100: recIdx,
       kei_hinweis: 'KEI = CTL-Zuwachs 7 T / (max(ACWR;0,8) × (1+Monotonie))',
     },
+    erfahrung_nichtbefolgung: erfahrungText(erf) || null,
     regeln: {
       votum: 'ACWR > 1,3 → max. Train; ACWR > 1,5 → max. Easy. Monotonie siehe monotonie_regel (Verlauf statt Einzelwert).',
       monotonie_regel: MONOTONIE_REGEL_TEXT,

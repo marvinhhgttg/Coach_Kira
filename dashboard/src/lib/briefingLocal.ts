@@ -2,6 +2,8 @@
  * Briefings erzeugen: Daten vom Apps Script (mode=briefingData), Prompt aus kiraPrompts.ts (gleich wie Mac),
  * gerechnet wird mit coach-kira auf dem Mac, gespeichert wird wieder im Apps Script (mode=saveBriefing).
  */
+import { ladeErfahrung } from './useErfahrung';
+import { erfahrungText } from './votumErfahrung';
 import { BASE_URL } from './api';
 import { LOCAL_MODEL, OLLAMA_URL, pingLocal } from './chatContext';
 import { getEngine } from './engine';
@@ -59,7 +61,8 @@ export async function runLocalBriefing(type: BriefingType, onProgress?: (text: s
     dj = null; // Apps Script noch ohne briefingData (HTML-Fehlerseite ohne CORS) → alter Weg
   }
   if (dj && dj.ok && dj.daten) {
-    const b = briefingMessages(type, dj.daten);
+    const erfText = erfahrungText(await ladeErfahrung());
+    const b = briefingMessages(type, erfText ? { ...dj.daten, erfahrung: erfText } : dj.daten);
     prompt = { ok: true, format: b.format, messages: b.messages };
   } else {
     const pr = await (await fetch(`${BASE_URL}?mode=briefingPrompt&type=${type}&cb=${Date.now()}`, { redirect: 'follow' })).text();

@@ -12,6 +12,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { useErfahrung, useErfahrungAn } from '../lib/useErfahrung';
+import { persoenlichesVotum } from '../lib/votumErfahrung';
 import { ApiError, dedupeByDateKeepLast, fetchChartData, fetchPlanSimulationWithTimeout, saveWellbeing, toNum, type Range } from '../lib/api';
 import { proxySaveWellbeing } from '../lib/proxy';
 import { fmtDateShort, fmtNum } from '../lib/format';
@@ -152,6 +154,12 @@ export type RecoveryDay = {
   levels: { readiness: Level; rhr: Level; sleep: Level; hrv: Level; befinden: Level };
   vote: Vote | null;
   reasons: string[];
+  /** Grund, der das Regel-Votum zuletzt begrenzt hat */
+  bind?: VoteGrund | null;
+  /** Regel-Votum vor persönlicher Anpassung durch das Erfahrungsmodell (nur heute) */
+  ruleVote?: Vote | null;
+  /** Hinweise aus dem Erfahrungsmodell (nur heute) */
+  erfahrung?: string[];
 };
 
 export function localIsoDate(d = new Date()) {
@@ -228,70 +236,78 @@ function capVote(vote: Vote, max: Vote): Vote {
  *    Monotonie (Verlauf, lib/monotony.ts): 2 Tage > 2,0 nach 4–5 fordernden Tagen → Easy · bleibt > 2,5 → Easy + Ruhetag binnen 48 h ·
  *    > 3,0 → Easy + Entlastungstag · > 2,0 mit schlechter Erholung → keine Qualität · 5+ Tage ohne Entlastung → Easy
  */
-function decideVote(d: Omit<RecoveryDay, 'vote' | 'reasons'>): { vote: Vote | null; reasons: string[] } {
-  if (d.readiness == null) return { vote: null, reasons: ['Readiness fehlt (Morgenwerte noch nicht erfasst).'] };
+export type VoteGrund = 'readiness' | 'rot' | 'rhr_schlaf' | 'hrv' | 'warn2' | 'rhr_ready' | 'acwr' | 'mono' | 'befinden';
+
+function decideVote(d: Omit<RecoveryDay, 'vote' | 'reasons' | 'bind'>): { vote: Vote | null; reasons: string[]; bind: VoteGrund | null } {
+  if (d.readiness == null) return { vote: null, reasons: ['Readiness fehlt (Morgenwerte noch nicht erfasst).'], bind: null };
   const reasons: string[] = [];
   let vote: Vote = d.readiness >= 75 ? 'QUALITY' : d.readiness >= 55 ? 'TRAIN' : d.readiness >= 40 ? 'EASY' : 'REST';
   reasons.push(`Readiness ${fmtNum(d.readiness)} → Basis ${VOTE_LABEL[vote]}.`);
+  // bind = Grund, der das Votum zuletzt gesenkt hat (für das Erfahrungsmodell)
+  let bind: VoteGrund = 'readiness';
+  const senke = (neu: Vote, grund: VoteGrund) => {
+    if (VOTE_ORDER.indexOf(neu) < VOTE_ORDER.indexOf(vote)) bind = grund;
+    vote = neu;
+  };
 
   const { rhr, sleep, hrv } = d.levels;
   const warn = [rhr, sleep, hrv].filter((l) => l === 'orange' || l === 'rot').length;
 
   if ([rhr, sleep, hrv].includes('rot')) {
     const before = vote;
-    vote = capVote(vote, 'TRAIN');
+    senke(capVote(vote, 'TRAIN'), 'rot');
     if (vote !== before) reasons.push('Ein Einzelsignal ist rot → keine Qualitätseinheit.');
   }
   const sleepRatio = d.sleepH != null ? d.sleepH / SLEEP_GOAL_H : null;
   if (d.rhrDelta != null && d.rhrDelta >= 5 && sleepRatio != null && sleepRatio < 0.8) {
-    vote = capVote(vote, 'EASY');
+    senke(capVote(vote, 'EASY'), 'rhr_schlaf');
     reasons.push('RHR ≥ +5 bpm und Schlaf < 80 % des Ziels → maximal Easy.');
   }
   if (hrv === 'rot') {
-    vote = capVote(vote, 'EASY');
+    senke(capVote(vote, 'EASY'), 'hrv');
     reasons.push('HRV unter dem Normalband (HRV-Alarm) → maximal Easy.');
   }
   if (warn >= 2) {
-    vote = capVote(vote, 'EASY');
+    senke(capVote(vote, 'EASY'), 'warn2');
     reasons.push(`${warn} Warnsignale gleichzeitig → maximal Easy.`);
   }
   if (d.rhrDelta != null && d.rhrDelta >= 5 && d.readiness < 55) {
-    vote = 'REST';
+    senke('REST', 'rhr_ready');
     reasons.push('RHR ≥ +5 bpm bei niedriger Readiness → Rest.');
   }
   // 8a. Belastung über ACWR
   if (d.acwr != null && d.acwr > ACWR_HIGH) {
     const before = vote;
-    vote = capVote(vote, 'EASY');
+    senke(capVote(vote, 'EASY'), 'acwr');
     if (vote !== before) reasons.push(`ACWR ${fmtNum(d.acwr, 2)} > ${fmtNum(ACWR_HIGH, 1)} → maximal Easy.`);
   } else if (d.acwr != null && d.acwr > ACWR_WARN) {
     const before = vote;
-    vote = capVote(vote, 'TRAIN');
+    senke(capVote(vote, 'TRAIN'), 'acwr');
     if (vote !== before) reasons.push(`ACWR ${fmtNum(d.acwr, 2)} > ${fmtNum(ACWR_WARN, 1)} → keine Qualitätseinheit.`);
   }
   // 8b. Monotonie-Regel: Verlaufssignal statt Einzelwert
   const ma = d.monoAssess;
   if (ma && ma.cap) {
     const before = vote;
-    vote = capVote(vote, ma.cap);
+    senke(capVote(vote, ma.cap), 'mono');
     if (vote !== before || ma.restWithin48h) reasons.push(ma.text);
   } else if (ma && ma.text && ma.stufe && ma.stufe !== 'gut' && ma.stufe !== 'normal') {
     reasons.push(ma.text);
   }
   if (d.befinden != null) {
     if (d.befinden <= 1) {
-      vote = 'REST';
+      senke('REST', 'befinden');
       reasons.push('Befinden 1/5 → Rest.');
     } else if (d.befinden <= 2) {
-      vote = capVote(vote, 'EASY');
+      senke(capVote(vote, 'EASY'), 'befinden');
       reasons.push('Befinden 2/5 → maximal Easy.');
     } else if (d.befinden <= 3) {
       const before = vote;
-      vote = capVote(vote, 'TRAIN');
+      senke(capVote(vote, 'TRAIN'), 'befinden');
       if (vote !== before) reasons.push('Befinden 3/5 → keine Qualitätseinheit.');
     }
   }
-  return { vote, reasons };
+  return { vote, reasons, bind };
 }
 
 export function buildDays(raw: any[]): RecoveryDay[] {
@@ -370,8 +386,8 @@ export function buildDays(raw: any[]): RecoveryDay[] {
       [base.levels.rhr, base.levels.sleep, base.levels.hrv].some((l) => l === 'orange' || l === 'rot') ||
       (base.befinden != null && base.befinden <= 2);
     base.monoAssess = assessMonotony({ mono: base.monotony, loads: base.monoLoads, monoHistory: base.monoHist, recoveryBad });
-    const { vote, reasons } = decideVote(base);
-    return { ...base, vote, reasons };
+    const { vote, reasons, bind } = decideVote(base);
+    return { ...base, vote, reasons, bind };
   });
 }
 
@@ -1055,6 +1071,18 @@ function TodayCard({
               <li key={r}>· {r}</li>
             ))}
           </ul>
+          {!!today.erfahrung?.length && (
+            <ul className="mt-1 space-y-0.5 text-xs text-accent" data-testid="votum-erfahrung">
+              {today.erfahrung.map((r) => (
+                <li key={r}>· {r}</li>
+              ))}
+            </ul>
+          )}
+          {today.ruleVote && today.vote && today.ruleVote !== today.vote && (
+            <p className="mt-1 text-2xs text-ink-dim" data-testid="votum-regel">
+              Regel-Votum {VOTE_LABEL[today.ruleVote]} · persönlich angepasst auf {VOTE_LABEL[today.vote]} (abschaltbar unter Analyse → Was Kira gelernt hat).
+            </p>
+          )}
         </div>
         {vote && (
           <div>
@@ -1412,7 +1440,18 @@ export function RecoveryPanel({
       toast('err', `Befinden nicht gespeichert: ${e instanceof ApiError ? e.message : String(e)}`);
     }
   }
-  const days = useMemo(() => (raw ? buildDays(raw).filter((d) => d.date <= todayIso) : []), [raw, todayIso]);
+  const erfahrung = useErfahrung();
+  const [erfahrungEin] = useErfahrungAn();
+  const days = useMemo(() => {
+    const ds = raw ? buildDays(raw).filter((d) => d.date <= todayIso) : [];
+    // Erfahrungsmodell: nur das heutige Votum persönlich anpassen (Historie bleibt Regel-Votum)
+    const last = ds[ds.length - 1];
+    if (last && last.date === todayIso && erfahrung) {
+      const p = persoenlichesVotum(last, erfahrung, erfahrungEin);
+      ds[ds.length - 1] = { ...last, vote: p.vote, ruleVote: p.ruleVote, erfahrung: p.hinweise };
+    }
+    return ds;
+  }, [raw, todayIso, erfahrung, erfahrungEin]);
   const today = days.length && days[days.length - 1].date === todayIso ? days[days.length - 1] : null;
   const yesterday = today ? days[days.length - 2] || null : days[days.length - 1] || null;
   const stripDays = days.slice(-7);
