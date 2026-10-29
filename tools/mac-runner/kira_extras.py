@@ -1417,8 +1417,7 @@ def mono_verstoesse(hist: list, plan: list) -> list:
         nxt = [plan[j] for j in (i + 1, i + 2) if j < len(plan)]
         next_relief = any(is_relief(float(n["last"]), ref) for n in nxt)
         bewertbar = i + 2 < len(plan)
-        if streak == 5:
-            out.append(f"{d['datum']}: 5 Tage in Folge ohne deutliche Entlastung")
+        # 5 Tage ohne Entlastung: kein Verstoß mehr, nur Hinweis im Tagesvotum (29.10.26)
         if bewertbar and m > 3.0 and not next_relief:
             out.append(f"{d['datum']}: Monotonie {_k(m)} > 3,0 ohne Entlastung in 48 h")
         elif bewertbar and run25 == 2 and not next_relief:
@@ -1548,7 +1547,7 @@ def cmd_autopilot(force: bool = False) -> None:
               + (f"Wochenlast höchstens 10 % über {ziel_ess} ESS, gern bis 15 % darunter. " if ziel_ess else "Wochenlast etwa beibehalten (15 % weniger ist in Ordnung, höchstens 10 % mehr). ")
               + rhythmus
               + f"Kein Tag über {spitze} ESS und kein Tag mehr als 40 % über seinem bisherigen Plan. Gestrichene Last nicht auf einen Tag packen: auf zwei bis drei Tage verteilen oder die Wochenlast senken. "
-              + "Monotonie-Regel: höchstens 4 Tage in Folge ohne Entlastung (lockerer oder freier Tag, <= 40 ESS bzw. 60 % der üblichen Tageslast); nach 2 Tagen Monotonie über 2,0 und 4 fordernden Tagen ein sehr lockerer oder freier Tag; harte Tage klar hart, lockere wirklich locker. "
+              + "Monotonie-Regel: als Entlastung zählt ein lockerer oder freier Tag (<= 40 ESS bzw. 60 % der üblichen Tageslast); 5 Tage ohne Entlastung sind nur ein Hinweis; nach 2 Tagen Monotonie über 2,0 und 4 fordernden Tagen ein sehr lockerer oder freier Tag; harte Tage klar hart, lockere wirklich locker. "
               "Lange Einheiten auf Tage mit wenig Terminen und gutem Wetter. Rad draußen nicht bei Regen > 5 mm oder Wind > 40 km/h. Nur nötige Änderungen.")
     beispiel = '{"tage":[{"datum":"' + woche[0] + '","last":130,"sport":"Bike","zone":"Z2","grund":"kurz"}],"fazit":"1-2 Sätze"}'
     user = ("Plan der Woche ab " + woche[0] + ":\n" + "\n".join(zeile(p) for p in plan) + "\n\n"

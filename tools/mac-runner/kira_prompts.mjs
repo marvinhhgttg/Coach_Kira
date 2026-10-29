@@ -24,9 +24,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// ../../../node_modules/react/cjs/react.production.js
+// ../../node_modules/react/cjs/react.production.js
 var require_react_production = __commonJS({
-  "../../../node_modules/react/cjs/react.production.js"(exports) {
+  "../../node_modules/react/cjs/react.production.js"(exports) {
     "use strict";
     var REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element");
     var REACT_PORTAL_TYPE = Symbol.for("react.portal");
@@ -465,9 +465,9 @@ var require_react_production = __commonJS({
   }
 });
 
-// ../../../node_modules/react/index.js
+// ../../node_modules/react/index.js
 var require_react = __commonJS({
-  "../../../node_modules/react/index.js"(exports, module) {
+  "../../node_modules/react/index.js"(exports, module) {
     "use strict";
     if (true) {
       module.exports = require_react_production();
@@ -477,9 +477,9 @@ var require_react = __commonJS({
   }
 });
 
-// ../../../node_modules/react/cjs/react-jsx-runtime.production.js
+// ../../node_modules/react/cjs/react-jsx-runtime.production.js
 var require_react_jsx_runtime_production = __commonJS({
-  "../../../node_modules/react/cjs/react-jsx-runtime.production.js"(exports) {
+  "../../node_modules/react/cjs/react-jsx-runtime.production.js"(exports) {
     "use strict";
     var REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element");
     var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
@@ -507,9 +507,9 @@ var require_react_jsx_runtime_production = __commonJS({
   }
 });
 
-// ../../../node_modules/react/jsx-runtime.js
+// ../../node_modules/react/jsx-runtime.js
 var require_jsx_runtime = __commonJS({
-  "../../../node_modules/react/jsx-runtime.js"(exports, module) {
+  "../../node_modules/react/jsx-runtime.js"(exports, module) {
     "use strict";
     if (true) {
       module.exports = require_react_jsx_runtime_production();
@@ -519,11 +519,11 @@ var require_jsx_runtime = __commonJS({
   }
 });
 
-// ../../ck-repo/dashboard/src/lib/kiraPrompts.ts
+// dashboard/src/lib/kiraPrompts.ts
 var MONOTONIE_REGEL = [
   "Monotonie-Regel: Ein einzelner hoher Monotonie-Wert ist meist kein Problem. Ma\xDFgeblich ist die rollierende 7-Tage-Monotonie (\xD8/\u03C3 der Tageslasten) im Verlauf.",
   "Zonen: < 1,5 gute Variation; 1,5\u20132,0 normal; > 2,0 aufmerksam (vor allem bei hoher Wochenlast); > 2,5 ung\xFCnstig, wenn es l\xE4nger anh\xE4lt; > 3,0 Warnzone.",
-  "Muster: 1\u20132 \xE4hnliche Tage normal; 3\u20134 \xE4hnliche, fordernde Tage beobachten (bei schlechterem Schlaf, HRV, Ruhepuls, schweren Beinen oder weniger Motivation reduzieren); 5\u20137 Tage ohne deutliche Entlastung relevant; mehrere Wochen hohe Monotonie = Risiko f\xFCr Erm\xFCdung, Stagnation, \xDCberlastung, Infekte.",
+  "Muster: 1\u20132 \xE4hnliche Tage normal; 3\u20134 \xE4hnliche, fordernde Tage beobachten (bei schlechterem Schlaf, HRV, Ruhepuls, schweren Beinen oder weniger Motivation reduzieren); 5\u20137 Tage ohne deutliche Entlastung beobachten (nur Hinweis, senkt das Votum nicht \u2013 in Marcs Historie ohne messbare Folgen); mehrere Wochen hohe Monotonie = Risiko f\xFCr Erm\xFCdung, Stagnation, \xDCberlastung, Infekte.",
   "Steuerung: Ein hoher Wert an einem Tag ist praktisch bedeutungslos. Liegt die 7-Tage-Monotonie an 2 Tagen in Folge \xFCber etwa 2,0 und sind schon 4\u20135 fordernde Tage gesammelt \u2192 n\xE4chster Tag sehr locker oder frei. Als Entlastung z\xE4hlt ein lockerer oder freier Tag (h\xF6chstens 40 ESS bzw. 60 % der \xFCblichen Tageslast). Bleibt der Wert \xFCber 2,5 \u2192 innerhalb 24\u201348 h echter Ruhetag oder sehr kurzer Regenerationsreiz. \xDCber 3,0 \u2192 mindestens ein echter Entlastungstag oder deutliche Reduktion. Hohe Monotonie plus schlechte Erholungswerte \u2192 keine Qualit\xE4tseinheit durchdr\xFCcken.",
   "Entscheidend ist die Kombination mit der Gesamtlast (Strain = Wochenlast \xD7 Monotonie). Monotonie senkst du durch klaren Rhythmus: harte Reize klar hart, lockere Tage wirklich locker, mindestens ein echter Erholungstag bei hoher Gesamtlast \u2013 nicht durch weniger Gesamtlast."
 ].join("\n");
@@ -1338,23 +1338,23 @@ function telegramMessages(frage, ctx) {
   return msgs;
 }
 
-// ../../ck-repo/dashboard/src/screens/RecoveryPanel.tsx
+// dashboard/src/screens/RecoveryPanel.tsx
 var import_react7 = __toESM(require_react(), 1);
 
-// ../../ck-repo/dashboard/src/components/BefindenHinweis.tsx
+// dashboard/src/components/BefindenHinweis.tsx
 var import_react4 = __toESM(require_react(), 1);
 
-// ../../ck-repo/dashboard/src/lib/engine.ts
+// dashboard/src/lib/engine.ts
 var import_react3 = __toESM(require_react(), 1);
 
-// ../../ck-repo/dashboard/src/lib/garmin.ts
+// dashboard/src/lib/garmin.ts
 var import_react = __toESM(require_react(), 1);
 var CACHE_MS = 10 * 60 * 1e3;
 
-// ../../ck-repo/dashboard/src/lib/useErfahrung.ts
+// dashboard/src/lib/useErfahrung.ts
 var import_react2 = __toESM(require_react(), 1);
 
-// ../../ck-repo/dashboard/src/lib/monotony.ts
+// dashboard/src/lib/monotony.ts
 var MONO = { GUT: 1.5, NORMAL: 2, UNGUENSTIG: 2.5, WARNUNG: 3 };
 function monoStufe(v) {
   if (v == null || !Number.isFinite(v)) return null;
@@ -1403,9 +1403,9 @@ function assessMonotony(inp) {
   const stufe = monoStufe(m);
   const strain = m != null ? Math.round(weekLoad * m) : null;
   const base = { stufe, streakNoRelief: streak, demandingInStreak: demanding, daysAbove25: above25, weekLoad, strain, weekLoadHigh };
-  const res = (cap, rest, text) => ({ ...base, cap, restWithin48h: rest, text });
+  const hinweis = streak >= 5 && demanding >= 3 ? `Hinweis: ${streak} Tage ohne deutliche Entlastung \u2013 keine Einschr\xE4nkung, auf Schlaf, HRV, Ruhepuls und Beine achten.` : void 0;
+  const res = (cap, rest, text) => ({ ...base, cap, restWithin48h: rest, text, ...hinweis ? { hinweis } : {} });
   if (m == null) {
-    if (streak >= 5 && demanding >= 3) return res("EASY", false, `${streak} Tage ohne deutliche Entlastung \u2192 n\xE4chster Tag sehr locker oder frei.`);
     return res(null, false, "");
   }
   const reliefDone = streak < 2;
@@ -1419,8 +1419,6 @@ function assessMonotony(inp) {
     return res("EASY", false, `Monotonie seit 2 Tagen \xFCber 2,0 (${f2(m)}) nach ${demanding} fordernden Tagen \u2192 n\xE4chster Tag sehr locker oder frei.`);
   if (over20 && inp.recoveryBad)
     return res("TRAIN", false, `Monotonie seit 2 Tagen \xFCber 2,0 (${f2(m)}) und Erholungswerte schlechter \u2192 keine Qualit\xE4tseinheit durchdr\xFCcken.`);
-  if (streak >= 5 && demanding >= 3)
-    return res("EASY", false, `${streak} Tage ohne deutliche Entlastung \u2192 Entlastung einplanen (Monotonie ${f2(m)}).`);
   if (demanding >= 3 && inp.recoveryBad)
     return res("EASY", false, `${demanding} fordernde Tage in Folge und Erholungswerte schlechter \u2192 Belastung reduzieren.`);
   if (over20 && weekLoadHigh)
@@ -1432,12 +1430,12 @@ function assessMonotony(inp) {
 var MONOTONIE_REGEL_TEXT = [
   "Monotonie-Regel: Ein einzelner hoher Monotonie-Wert ist meist kein Problem. Ma\xDFgeblich ist die rollierende 7-Tage-Monotonie (\xD8/\u03C3 der Tageslasten) im Verlauf.",
   "Zonen: < 1,5 gute Variation; 1,5\u20132,0 normal; > 2,0 aufmerksam (vor allem bei hoher Wochenlast); > 2,5 ung\xFCnstig, wenn es l\xE4nger anh\xE4lt; > 3,0 Warnzone.",
-  "Muster: 1\u20132 \xE4hnliche Tage normal; 3\u20134 \xE4hnliche, fordernde Tage beobachten (bei schlechterem Schlaf, HRV, Ruhepuls, schweren Beinen oder weniger Motivation reduzieren); 5\u20137 Tage ohne deutliche Entlastung relevant; mehrere Wochen hohe Monotonie = Risiko f\xFCr Erm\xFCdung, Stagnation, \xDCberlastung, Infekte.",
+  "Muster: 1\u20132 \xE4hnliche Tage normal; 3\u20134 \xE4hnliche, fordernde Tage beobachten (bei schlechterem Schlaf, HRV, Ruhepuls, schweren Beinen oder weniger Motivation reduzieren); 5\u20137 Tage ohne deutliche Entlastung beobachten (nur Hinweis, senkt das Votum nicht \u2013 in Marcs Historie ohne messbare Folgen); mehrere Wochen hohe Monotonie = Risiko f\xFCr Erm\xFCdung, Stagnation, \xDCberlastung, Infekte.",
   "Steuerung: Ein hoher Wert an einem Tag ist praktisch bedeutungslos. Liegt die 7-Tage-Monotonie an 2 Tagen in Folge \xFCber etwa 2,0 und hast du schon 4\u20135 fordernde Tage gesammelt \u2192 n\xE4chster Tag sehr locker oder frei. Als Entlastung z\xE4hlt ein lockerer oder freier Tag (h\xF6chstens 40 ESS bzw. 60 % deiner \xFCblichen Tageslast). Bleibt der Wert \xFCber 2,5 \u2192 innerhalb 24\u201348 h echter Ruhetag oder sehr kurzer Regenerationsreiz. \xDCber 3,0 \u2192 mindestens ein echter Entlastungstag oder deutliche Reduktion. Hohe Monotonie plus schlechte Erholungswerte \u2192 keine Qualit\xE4tseinheit durchdr\xFCcken.",
   "Entscheidend ist die Kombination mit der Gesamtlast (Strain = Wochenlast \xD7 Monotonie). Monotonie senkst du durch klaren Rhythmus: harte Reize klar hart, lockere Tage wirklich locker, mindestens ein echter Erholungstag bei hoher Gesamtlast \u2013 nicht durch weniger Gesamtlast."
 ].join("\n");
 
-// ../../ck-repo/dashboard/src/lib/chatContext.ts
+// dashboard/src/lib/chatContext.ts
 var KIRA_SYSTEM = [
   "Du bist Kira, Sportwissenschaftlerin und pers\xF6nliche Ausdauer-Trainerin von Marc (Jahrgang 1975; Rennrad, Gravel, Laufen, Bergsport).",
   "Sprich Marc per Du an, antworte auf Deutsch, klar und konkret, ohne Emojis.",
@@ -1448,7 +1446,7 @@ var KIRA_SYSTEM = [
   "Bei Schmerzen, Krankheit oder medizinischen Fragen: auf Arzt bzw. Physiotherapie verweisen."
 ].join("\n");
 
-// ../../ck-repo/dashboard/src/lib/engine.ts
+// dashboard/src/lib/engine.ts
 var KEY = "ck_kira_engine_v2";
 function read() {
   try {
@@ -1460,7 +1458,7 @@ function read() {
 }
 var store = read();
 
-// ../../ck-repo/dashboard/src/lib/api.ts
+// dashboard/src/lib/api.ts
 function dedupeByDateKeepLast(rows) {
   const map = /* @__PURE__ */ new Map();
   rows.forEach((row) => map.set(row.date, row));
@@ -1472,10 +1470,10 @@ function toNum(v) {
   return Number.isFinite(n) ? n : null;
 }
 
-// ../../ck-repo/dashboard/src/components/BefindenHinweis.tsx
+// dashboard/src/components/BefindenHinweis.tsx
 var import_jsx_runtime = __toESM(require_jsx_runtime(), 1);
 
-// ../../ck-repo/dashboard/src/lib/format.ts
+// dashboard/src/lib/format.ts
 function fmtNum(v, digits = 0) {
   if (v === null || v === void 0 || !Number.isFinite(v)) return "\u2014";
   return v.toLocaleString("de-DE", {
@@ -1484,10 +1482,10 @@ function fmtNum(v, digits = 0) {
   });
 }
 
-// ../../ck-repo/dashboard/src/components/UI.tsx
+// dashboard/src/components/UI.tsx
 var import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
 
-// ../../ck-repo/dashboard/src/screens/CorrelationPanel.tsx
+// dashboard/src/screens/CorrelationPanel.tsx
 var import_react5 = __toESM(require_react(), 1);
 var import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
 var VARS = [
@@ -1500,11 +1498,11 @@ var VARS = [
 ];
 var VAR = Object.fromEntries(VARS.map((v) => [v.key, v]));
 
-// ../../ck-repo/dashboard/src/components/GarminSportProfilTile.tsx
+// dashboard/src/components/GarminSportProfilTile.tsx
 var import_react6 = __toESM(require_react(), 1);
 var import_jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
 
-// ../../ck-repo/dashboard/src/screens/RecoveryPanel.tsx
+// dashboard/src/screens/RecoveryPanel.tsx
 var import_jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
 var SLEEP_GOAL_H = 7.5;
 var RHR_BASELINE_DAYS = 28;
@@ -1639,6 +1637,7 @@ function decideVote(d) {
   } else if (ma && ma.text && ma.stufe && ma.stufe !== "gut" && ma.stufe !== "normal") {
     reasons.push(ma.text);
   }
+  if (ma && ma.hinweis) reasons.push(ma.hinweis);
   if (d.befinden != null) {
     if (d.befinden <= 1) {
       senke("REST", "befinden");
@@ -1741,7 +1740,7 @@ function demandOf(load, sport, zone, teAe, teAn) {
   });
 }
 
-// ../../ck-repo/dashboard/src/lib/votumErfahrung.ts
+// dashboard/src/lib/votumErfahrung.ts
 var GRUND_LABEL = {
   readiness: "niedriger Bereitschaft",
   rot: "rotes Einzelsignal",
@@ -1896,7 +1895,7 @@ function erfahrungText(e, max = 8) {
   ].join("\n");
 }
 
-// ../../ck-repo/tools/mac-runner/kira_prompts_cli.ts
+// tools/mac-runner/kira_prompts_cli.ts
 var APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbxCEN11KRlFaLL7uVJyeBLCrRJVmfBWagSmqvyJ8Ci7nwxi8HbolzTy23Z-G2mivC2h/exec";
 async function erfahrung() {
   try {

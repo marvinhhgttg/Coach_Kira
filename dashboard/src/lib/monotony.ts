@@ -14,7 +14,7 @@
  *   - bleibt > 2,5 (≥ 2 Tage) → innerhalb 24–48 h Ruhetag oder sehr kurzer Regenerationsreiz
  *   - > 3,0 → mindestens ein echter Entlastungstag bzw. deutliche Reduktion
  *   - hohe Monotonie + schlechte Erholungswerte → keine Qualitätseinheit „durchdrücken“
- *   - 5–7 Tage ohne deutliche Entlastung → Entlastung einplanen
+ *   - 5–7 Tage ohne deutliche Entlastung → nur Hinweis (keine Einschränkung)
  */
 
 export type MonoStufe = 'gut' | 'normal' | 'aufmerksam' | 'unguenstig' | 'warnung';
@@ -92,6 +92,8 @@ export interface MonoAssessment {
   strain: number | null;
   weekLoadHigh: boolean; // Wochenlast ≥ 110 % des 4-Wochen-Schnitts
   text: string; // kurze Einordnung (Deutsch)
+  /** Nur Hinweis, senkt das Votum nicht (z. B. 5 Tage ohne Entlastung) */
+  hinweis?: string;
 }
 
 const f2 = (v: number) => v.toFixed(2).replace('.', ',');
@@ -125,10 +127,13 @@ export function assessMonotony(inp: MonoInput): MonoAssessment {
   const strain = m != null ? Math.round(weekLoad * m) : null;
   const base = { stufe, streakNoRelief: streak, demandingInStreak: demanding, daysAbove25: above25, weekLoad, strain, weekLoadHigh };
 
-  const res = (cap: MonoCap, rest: boolean, text: string): MonoAssessment => ({ ...base, cap, restWithin48h: rest, text });
+  // 5 Tage ohne deutliche Entlastung: nur Hinweis (Marc, 29.10.26 – Historie zeigt keine messbaren Folgen, wenn er weitertrainiert hat)
+  const hinweis = streak >= 5 && demanding >= 3
+    ? `Hinweis: ${streak} Tage ohne deutliche Entlastung – keine Einschränkung, auf Schlaf, HRV, Ruhepuls und Beine achten.`
+    : undefined;
+  const res = (cap: MonoCap, rest: boolean, text: string): MonoAssessment => ({ ...base, cap, restWithin48h: rest, text, ...(hinweis ? { hinweis } : {}) });
 
   if (m == null) {
-    if (streak >= 5 && demanding >= 3) return res('EASY', false, `${streak} Tage ohne deutliche Entlastung → nächster Tag sehr locker oder frei.`);
     return res(null, false, '');
   }
   // Entlastung in den letzten 48 h schon erfolgt? (streak = Tage seit der letzten deutlichen Entlastung)
@@ -143,8 +148,6 @@ export function assessMonotony(inp: MonoInput): MonoAssessment {
     return res('EASY', false, `Monotonie seit 2 Tagen über 2,0 (${f2(m)}) nach ${demanding} fordernden Tagen → nächster Tag sehr locker oder frei.`);
   if (over20 && inp.recoveryBad)
     return res('TRAIN', false, `Monotonie seit 2 Tagen über 2,0 (${f2(m)}) und Erholungswerte schlechter → keine Qualitätseinheit durchdrücken.`);
-  if (streak >= 5 && demanding >= 3)
-    return res('EASY', false, `${streak} Tage ohne deutliche Entlastung → Entlastung einplanen (Monotonie ${f2(m)}).`);
   if (demanding >= 3 && inp.recoveryBad)
     return res('EASY', false, `${demanding} fordernde Tage in Folge und Erholungswerte schlechter → Belastung reduzieren.`);
   if (over20 && weekLoadHigh)
@@ -177,7 +180,7 @@ export function monotonyPlanViolations(
     run25 = d.mono != null && d.mono > MONO.UNGUENSTIG ? run25 + 1 : 0;
     const nextRelief48 = relief(i + 1) || relief(i + 2);
     const lastDays = i + 2 >= days.length; // Planende: nicht bewertbar
-    if (streak === 5) out.push(`${d.label}: 5 Tage in Folge ohne deutliche Entlastung`);
+    // 5 Tage ohne Entlastung zählt nicht mehr als Verstoß (nur Hinweis im Tagesvotum)
     if (!lastDays && d.mono != null && d.mono > MONO.WARNUNG && !nextRelief48)
       out.push(`${d.label}: Monotonie ${f2(d.mono)} > 3,0 ohne Entlastungstag in den nächsten 48 h`);
     else if (!lastDays && run25 === 2 && !nextRelief48)
@@ -198,7 +201,7 @@ export function monotonyPlanViolations(
 export const MONOTONIE_REGEL_TEXT = [
   'Monotonie-Regel: Ein einzelner hoher Monotonie-Wert ist meist kein Problem. Maßgeblich ist die rollierende 7-Tage-Monotonie (Ø/σ der Tageslasten) im Verlauf.',
   'Zonen: < 1,5 gute Variation; 1,5–2,0 normal; > 2,0 aufmerksam (vor allem bei hoher Wochenlast); > 2,5 ungünstig, wenn es länger anhält; > 3,0 Warnzone.',
-  'Muster: 1–2 ähnliche Tage normal; 3–4 ähnliche, fordernde Tage beobachten (bei schlechterem Schlaf, HRV, Ruhepuls, schweren Beinen oder weniger Motivation reduzieren); 5–7 Tage ohne deutliche Entlastung relevant; mehrere Wochen hohe Monotonie = Risiko für Ermüdung, Stagnation, Überlastung, Infekte.',
+  'Muster: 1–2 ähnliche Tage normal; 3–4 ähnliche, fordernde Tage beobachten (bei schlechterem Schlaf, HRV, Ruhepuls, schweren Beinen oder weniger Motivation reduzieren); 5–7 Tage ohne deutliche Entlastung beobachten (nur Hinweis, senkt das Votum nicht – in Marcs Historie ohne messbare Folgen); mehrere Wochen hohe Monotonie = Risiko für Ermüdung, Stagnation, Überlastung, Infekte.',
   'Steuerung: Ein hoher Wert an einem Tag ist praktisch bedeutungslos. Liegt die 7-Tage-Monotonie an 2 Tagen in Folge über etwa 2,0 und hast du schon 4–5 fordernde Tage gesammelt → nächster Tag sehr locker oder frei. Als Entlastung zählt ein lockerer oder freier Tag (höchstens 40 ESS bzw. 60 % deiner üblichen Tageslast). Bleibt der Wert über 2,5 → innerhalb 24–48 h echter Ruhetag oder sehr kurzer Regenerationsreiz. Über 3,0 → mindestens ein echter Entlastungstag oder deutliche Reduktion. Hohe Monotonie plus schlechte Erholungswerte → keine Qualitätseinheit durchdrücken.',
   'Entscheidend ist die Kombination mit der Gesamtlast (Strain = Wochenlast × Monotonie). Monotonie senkst du durch klaren Rhythmus: harte Reize klar hart, lockere Tage wirklich locker, mindestens ein echter Erholungstag bei hoher Gesamtlast – nicht durch weniger Gesamtlast.',
 ].join('\n');

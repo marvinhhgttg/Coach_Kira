@@ -294,6 +294,7 @@ function decideVote(d: Omit<RecoveryDay, 'vote' | 'reasons' | 'bind'>): { vote: 
   } else if (ma && ma.text && ma.stufe && ma.stufe !== 'gut' && ma.stufe !== 'normal') {
     reasons.push(ma.text);
   }
+  if (ma && ma.hinweis) reasons.push(ma.hinweis);
   if (d.befinden != null) {
     if (d.befinden <= 1) {
       senke('REST', 'befinden');

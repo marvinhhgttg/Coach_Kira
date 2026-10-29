@@ -69,7 +69,7 @@ export function DisruptionTile({
               `Anlass: ${anlass}\n\nPlan heute und die nächsten 7 Tage:\n${tab}\n\n` +
               'Passe den Rest-Plan an. Regeln: FEST-Tage nicht ändern. Bei Infekt-Verdacht: heute und morgen Ruhe oder höchstens 20–30 min sehr locker, danach 2–3 Tage sanfter Wiedereinstieg (≤ 60 % der normalen Last, nur Z1/Z2), keine Intensität bis die Werte normal sind. ' +
               'Bei Müdigkeit: heute locker, Qualität um 1–2 Tage schieben. Bei ausgefallenem Training: nicht nachholen, höchstens eine Einheit leicht verlängern. Bei Reise: kurze Einheiten oder Ruhetag an den Reisetagen. ' +
-              'Gesamtlast lieber senken als verdichten; Monotonie-Regel beachten (nicht 5 Tage ohne Entlastung). ' +
+              'Gesamtlast lieber senken als verdichten; Monotonie-Regel beachten. ' +
               'Antworte nur mit JSON mit ALLEN Tagen: {"tage":[{"datum":"2026-10-22","last":0,"sport":"Off","zone":"Off","grund":"…"}],"fazit":"1–2 Sätze"}',
           },
         ],
