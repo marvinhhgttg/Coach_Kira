@@ -18,6 +18,7 @@ import { buildDays, demandOf, RECOVERY_FETCH_METRICS, VOTE_LABEL, VOTE_ORDER, lo
 import { atlStep, ctlStep, windowMean } from '../lib/ctlModel';
 import { assessMonotony, monoTone } from '../lib/monotony';
 import { monotonyPlanViolations } from '../lib/monotony';
+import { EV_KEY, SC_KEY, onStrategieDaten, strategieGeaendert, strategieStart, useStratStatus, type StratStatus } from '../lib/strategieSpeicher';
 
 // ---------------------------------------------------------------------------
 // Strategische Planung für das Plan Cockpit (alles lokal, deterministisch):
@@ -95,8 +96,6 @@ export function planChecks(sim: PlanRow[], recGap: number): DayCheck[] {
 // ---------------------------------------------------------------------------
 // LocalStorage-Helfer (geräteweise; Events auch im Plan-Tabellenkopf genutzt)
 // ---------------------------------------------------------------------------
-const EV_KEY = 'ck_plan_events_v1';
-const SC_KEY = 'ck_plan_scenarios_v1';
 function readLS<T>(k: string, def: T): T {
   try {
     const v = localStorage.getItem(k);
@@ -112,14 +111,32 @@ function writeLS(k: string, v: unknown) {
   } catch {
     /* ignore */
   }
+  if (k === EV_KEY || k === SC_KEY) strategieGeaendert(); // dauerhaft im Sheet speichern
+}
+function speicherOrt(s: StratStatus): string {
+  return s === 'nur_browser' || s === 'fehler' ? 'vorerst nur in diesem Browser' : 'dauerhaft im Sheet, auf allen Geräten';
+}
+function StratStatusZeile({ s }: { s: { status: StratStatus; text: string } }) {
+  const t =
+    s.status === 'laden' ? 'Lade gespeicherte Events und Szenarien …'
+    : s.status === 'speichert' ? 'Speichert …'
+    : s.status === 'gespeichert' ? `Im Sheet gespeichert${s.text ? ' · Stand ' + new Date(s.text).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}`
+    : s.status === 'nur_browser' ? `Nur im Browser – ${s.text}`
+    : `Nur im Browser – ${s.text}`;
+  return <p data-testid="strat-status" className={`mb-2 text-2xs ${s.status === 'gespeichert' ? 'text-ink-dim' : 'text-amber-300'}`}>{t}</p>;
 }
 // Modulweiter Speicher: funktioniert auch, wenn localStorage blockiert ist (dann nur bis zum Neuladen)
 let evStore: PlanEvent[] = readLS<PlanEvent[]>(EV_KEY, []);
+onStrategieDaten((d) => {
+  evStore = [...(d.events as PlanEvent[])].sort((x, y) => x.date.localeCompare(y.date));
+  evSubs.forEach((f) => f(evStore));
+});
 const evSubs = new Set<(e: PlanEvent[]) => void>();
 export function useEvents(): [PlanEvent[], (e: PlanEvent[]) => void] {
   const [ev, setEv] = useState<PlanEvent[]>(evStore);
   useEffect(() => {
     evSubs.add(setEv);
+    void strategieStart();
     return () => {
       evSubs.delete(setEv);
     };
@@ -326,6 +343,8 @@ export function StrategyPanel({
   // ---------- 3) Szenarien ----------
   type Scen = PlanState & { name: 'A' | 'B' | 'C'; savedAt: string; startDate: string };
   const [scens, setScens] = useState<Scen[]>(() => readLS<Scen[]>(SC_KEY, []));
+  useEffect(() => onStrategieDaten((d) => setScens(d.szenarien as Scen[])), []);
+  const strat = useStratStatus();
   const saveScen = (name: 'A' | 'B' | 'C') => {
     const s: Scen = { ...state, name, savedAt: new Date().toISOString(), startDate: dates[0] };
     const next = [...scens.filter((x) => x.name !== name), s].sort((a, b) => a.name.localeCompare(b.name));
@@ -627,7 +646,7 @@ export function StrategyPanel({
         {/* 3) Szenarien */}
         <Box
           title="3 · Szenarien vergleichen"
-          hint="Aktuellen Planstand als A, B oder C merken (nur in diesem Browser). In die Timeline kommt erst, was du über „In timeline speichern“ sicherst."
+          hint={`Aktuellen Planstand als A, B oder C merken (${speicherOrt(strat.status)}). In die Timeline kommt erst, was du über „In timeline speichern“ sicherst.`}
           right={
             <div className="flex gap-1">
               {(['A', 'B', 'C'] as const).map((n) => (
@@ -765,7 +784,8 @@ export function StrategyPanel({
 
         <div className="grid gap-4 grid-cols-[minmax(0,1fr)] xl:grid-cols-2">
           {/* 6) Events */}
-          <Box title="6 · Events & Formspitze" hint="Termine merken (nur in diesem Browser). Prognose aus Plan (≤ 14 T) bzw. Horizont. Ziel am Event: Form +5 bis +15 %.">
+          <Box title="6 · Events & Formspitze" hint={`Termine merken (${speicherOrt(strat.status)}). Prognose aus Plan (≤ 14 T) bzw. Horizont. Ziel am Event: Form +5 bis +15 %.`}>
+            <StratStatusZeile s={strat} />
             <div className="flex flex-wrap items-end gap-2 text-xs">
               <input type="date" className="input" value={evDate} onChange={(e) => setEvDate(e.target.value)} />
               <input className="input flex-1 min-w-[140px]" placeholder="z. B. Gravel-Rennen" value={evLabel} onChange={(e) => setEvLabel(e.target.value)} />

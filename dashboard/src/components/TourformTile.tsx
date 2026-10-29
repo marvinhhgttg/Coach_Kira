@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ladeP4, tourform as berechneTourform, type P4Tag } from '../lib/paket4';
 import { fetchExtras } from '../lib/extras';
 import type { Ziel } from '../lib/planning';
+import { useGarminTage } from '../lib/garmin';
+import { lerneModelle } from '../lib/essRechner';
+import { tourLastPersoenlich } from '../lib/tourEss';
 
 // ── Hilfsfunktionen ────────────────────────────────────────────────
 function fmtDateShort(iso: string): string {
@@ -107,6 +110,8 @@ function TourformBody({ p4 }: { p4: P4Tag[] }) {
     })();
     return () => { cancelled = true; };
   }, []);
+  const { tage: garmin } = useGarminTage();
+  const modelle = useMemo(() => (garmin ? lerneModelle(garmin) : []), [garmin]);
 
   if (ziele.length === 0) {
     return (
@@ -135,7 +140,8 @@ function TourformBody({ p4 }: { p4: P4Tag[] }) {
       {/* Ziel-Karten */}
       <div className="mt-3 space-y-2">
         {ziele.map((z, i) => {
-          const wf = berechneTourform(p4, z);
+          const pers = modelle.length ? tourLastPersoenlich(z, modelle) : null;
+          const wf = berechneTourform(p4, z, pers?.ess);
           const wo = wochenBisZiel(z);
 
           // Prozent-Farbe: >= 80 grün, >= 60 gelb, sonst orange
@@ -192,9 +198,9 @@ function TourformBody({ p4 }: { p4: P4Tag[] }) {
 
               {/* Zahlen darunter */}
               <p className="mt-2 text-2xs text-ink-muted">
-                Wochenlast {fmtNum(wf.wochenLastIst)} von {fmtNum(wf.wochenLastZiel)} ESS ·
+                Wochenlast {fmtNum(Math.round(wf.wochenLastIst))} von {fmtNum(Math.round(wf.wochenLastZiel))} ESS ·
                 lange Tage {wf.langeTage}/{wf.langeZiel} ·
-                Tourlast ≈ {fmtNum(wf.tourLast)} ESS
+                Tourlast ≈ {fmtNum(wf.tourLast)} ESS{pers ? ' (ESS-Rechner)' : ' (Faustregel)'}
               </p>
 
               {/* Hinweise */}

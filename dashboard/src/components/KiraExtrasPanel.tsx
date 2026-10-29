@@ -4,6 +4,7 @@ import { fetchExtras } from '../lib/extras';
 import { fmtDateShort, fmtNum } from '../lib/format';
 import { VotumTrefferTile } from './VotumTrefferTile';
 import { ErfahrungTile } from './ErfahrungTile';
+import { PrognoseCheckTile } from './PrognoseCheckTile';
 
 // --- Section A: Treffsicherheit types ---
 interface TrefferTag {
@@ -280,6 +281,7 @@ export function KiraExtrasPanel() {
 
       <VotumTrefferTile />
       <ErfahrungTile />
+      <PrognoseCheckTile />
 
       {/* Section B: Selbsttest lokales Modell */}
       <div className="mt-6">

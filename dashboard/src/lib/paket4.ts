@@ -810,7 +810,7 @@ export function jahresRueckblick(t: P4Tag[], jahr: number | 'letzte365'): Rueckb
 
 // ─── Export 6: tourform() ────────────────────────────────────────
 
-export function tourform(t: P4Tag[], z: Ziel): Tourform {
+export function tourform(t: P4Tag[], z: Ziel, persTourLast?: number | null): Tourform {
   // Sort by date
   const sorted = [...t].sort((a, b) => a.date.localeCompare(b.date));
 
@@ -834,7 +834,7 @@ export function tourform(t: P4Tag[], z: Ziel): Tourform {
   }
 
   // tl = tourLast(z) using planning.tourLast
-  const tl = tpl(z, undefined);
+  const tl = persTourLast && persTourLast > 0 ? persTourLast : tpl(z, undefined); // persönlicher ESS-Rechner, sonst Faustregel
 
   // wochenLastZiel = 2 * tl
   const wochenLastZiel = 2 * tl;

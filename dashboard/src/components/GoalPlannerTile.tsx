@@ -4,6 +4,9 @@ import { deleteExtra, fetchExtras, fetchLoadFactors, saveExtra, type ExtraItem, 
 import { localChat, parseJsonLoose } from '../lib/localLLM';
 import { fmtDateShort } from '../lib/format';
 import { zielBereitschaft, type Ziel } from '../lib/planning';
+import { useGarminTage } from '../lib/garmin';
+import { lerneModelle } from '../lib/essRechner';
+import { tourLastPersoenlich } from '../lib/tourEss';
 
 interface Block { titel: string; von: string; bis: string; wochen_ess: number; schluesseleinheiten: string[] }
 interface ZielDaten { ziel: Ziel; plan?: { bloecke: Block[]; hinweise: string[]; tapering?: string; erstellt?: string } }
@@ -53,7 +56,21 @@ export function GoalPlannerTile() {
   const aktiv = items.filter((x) => x.datum >= heute());
   const vergangen = items.filter((x) => x.datum < heute());
   const cur = items.find((x) => x.datum === sel) || null;
-  const bereit = useMemo(() => (cur?.data?.ziel && hist.length ? zielBereitschaft(cur.data.ziel, hist, fakt) : null), [cur, hist, fakt]);
+  const { tage: garmin } = useGarminTage();
+  const modelle = useMemo(() => (garmin ? lerneModelle(garmin) : []), [garmin]);
+  const maxDauerH = useMemo(() => {
+    if (!garmin || !garmin.size) return null;
+    const ab = new Date(Date.now() - 56 * 86400000).toLocaleDateString('sv-SE');
+    let mx = 0;
+    for (const [d, t] of garmin) {
+      if (d < ab) continue;
+      const s = t.summe?.dauer_s ?? (t.akt || []).reduce((a, x) => a + (x.dauer_s || 0), 0);
+      if (s > mx) mx = s;
+    }
+    return Math.round((mx / 3600) * 10) / 10;
+  }, [garmin]);
+  const pers = useMemo(() => (cur?.data?.ziel && modelle.length ? tourLastPersoenlich(cur.data.ziel, modelle) : null), [cur, modelle]);
+  const bereit = useMemo(() => (cur?.data?.ziel && hist.length ? zielBereitschaft(cur.data.ziel, hist, fakt, pers, maxDauerH) : null), [cur, hist, fakt, pers, maxDauerH]);
 
   async function onSave() {
     if (!form || !form.name.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(form.datum)) {
@@ -95,7 +112,7 @@ export function GoalPlannerTile() {
       const wochen = Math.max(1, bereit.wochen);
       const user =
         `Ziel: ${z.name} am ${z.datum} (${artLabel(z.art)}), ${z.hm} Hm, ${z.dauer_h} h, ${z.distanz_km} km, Priorität ${z.prioritaet}. ${z.notiz || ''}\n` +
-        `Geschätzte Tourlast: ${bereit.tourLast} ESS. Noch ${wochen} Wochen.\n` +
+        `Geschätzte Tourlast: ${bereit.tourLast} ESS (${bereit.tourLastQuelle === 'ess-rechner' ? `aus Marcs eigenen Garmin-Einheiten, Spanne ${bereit.tourLastLo}–${bereit.tourLastHi}` : 'Faustregel'}). Noch ${wochen} Wochen.\n` +
         `Stand: ${bereit.punkte.join(' | ')}\n` +
         `Aktuelle Ø-Wochenlast: ${bereit.ctl ?? '?'} ESS. Marc trainiert Rad (Pendeln, Gravel), Lauf, Wandern, im Winter Skitour/Langlauf/Skike.\n\n` +
         'Erstelle einen Vorbereitungsplan in 2–5 Blöcken bis zum Ziel (Datum von/bis je Block, YYYY-MM-DD), mit Ziel-Wochenlast (ESS) und 2–4 Schlüsseleinheiten je Block ' +
@@ -191,6 +208,12 @@ export function GoalPlannerTile() {
             <div className="text-xs">
               <div className={`font-semibold ${ampelCls(bereit.ampel)}`}>
                 {bereit.ampel === 'gruen' ? 'Auf Kurs' : bereit.ampel === 'gelb' ? 'Machbar, Vorbereitung nötig' : 'Knapp – gezielt aufbauen'} · noch {bereit.wochen} Wochen · Tourlast ca. {bereit.tourLast} ESS
+              </div>
+              <div className="text-2xs text-ink-dim mt-0.5" data-testid="tourlast-quelle">
+                {bereit.tourLastQuelle === 'ess-rechner'
+                  ? `Tourlast aus deinem ESS-Rechner (${pers?.teile.map((t) => `${t.n} eigene Einheiten`).join(' + ')}), Spanne ${bereit.tourLastLo}–${bereit.tourLastHi} ESS · Faustregel wäre ${bereit.tourLastFaust} ESS.`
+                  : 'Tourlast nach Faustregel – für diese Tourart gibt es noch zu wenige eigene Einheiten (ab 8) im ESS-Rechner.'}
+                {pers?.hinweise.filter((h) => !/Ø HF/.test(h)).map((h, i) => <span key={i}> {h}</span>)}
               </div>
               <ul className="mt-1 list-disc pl-5 text-ink-muted">{bereit.punkte.map((p, i) => <li key={i}>{p}</li>)}</ul>
             </div>

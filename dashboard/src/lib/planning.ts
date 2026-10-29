@@ -107,8 +107,15 @@ export function tourLast(z: Ziel, faktoren?: { load: any[]; elev: any[] }) {
   return Math.round(base + (z.hm / 100) * per100);
 }
 
+/** Tourlast aus dem persönlichen ESS-Rechner (lib/tourEss.ts) – ersetzt die Faustregel, wenn vorhanden. */
+export interface TourLastPersoenlich { ess: number; lo: number; hi: number }
+
 export interface Bereitschaft {
   tourLast: number;
+  tourLastQuelle: 'ess-rechner' | 'faustregel';
+  tourLastFaust: number; // Faustregel zum Vergleich
+  tourLastLo?: number;
+  tourLastHi?: number;
   ctl: number | null; // Ø Wochenlast der letzten 4 Wochen
   ctlZiel: number; // 2 × Tourlast
   maxTag: number; // höchste Tageslast der letzten 8 Wochen
@@ -121,8 +128,15 @@ export interface Bereitschaft {
 }
 
 /** Abgleich Anforderung vs. aktueller Stand (Faustregeln, transparent) */
-export function zielBereitschaft(z: Ziel, hist: { date: string; load: number | null; elev: number | null; ctl: number | null }[], faktoren?: { load: any[]; elev: any[] }): Bereitschaft {
-  const tl = tourLast(z, faktoren);
+export function zielBereitschaft(
+  z: Ziel,
+  hist: { date: string; load: number | null; elev: number | null; ctl: number | null }[],
+  faktoren?: { load: any[]; elev: any[] },
+  pers?: TourLastPersoenlich | null,
+  maxDauerH?: number | null, // längster Tag (Summe Aktivitätszeit) der letzten 8 Wochen laut Garmin
+): Bereitschaft {
+  const faust = tourLast(z, faktoren);
+  const tl = pers && pers.ess > 0 ? pers.ess : faust;
   const last8 = hist.slice(-56);
   const maxTag = Math.max(0, ...last8.map((r) => r.load ?? 0));
   const maxHm = Math.max(0, ...last8.map((r) => r.elev ?? 0));
@@ -143,8 +157,18 @@ export function zielBereitschaft(z: Ziel, hist: { date: string; load: number | n
   if (z.hm > 0 && hmTage === 0)
     punkte.push(`Höhenmeter: in den letzten 8 Wochen nicht erfasst (Spalte elev_m_day leer) – vor der Tour mind. einmal ca. ${hmZiel} Hm am Stück einplanen`);
   else if (z.hm > 0) chk(maxHm >= hmZiel, maxHm >= hmZiel * 0.7, `Meiste Höhenmeter an einem Tag ${maxHm} Hm – vor der Tour mind. einmal ca. ${hmZiel} Hm`);
+  if (maxDauerH != null && z.dauer_h > 0) {
+    const dz = Math.round(z.dauer_h * 0.7 * 10) / 10;
+    const f = (h: number) => h.toLocaleString('de-DE', { maximumFractionDigits: 1 });
+    chk(maxDauerH >= dz, maxDauerH >= dz * 0.75, `Längster Tag der letzten 8 Wochen ${f(maxDauerH)} h unterwegs – vor der Tour mind. einmal ca. ${f(dz)} h am Stück`);
+  }
   const ampel = rot && wochen < 6 ? 'rot' : rot || gelb ? 'gelb' : 'gruen';
-  return { tourLast: tl, ctl, ctlZiel, maxTag, maxHm, langeTageZiel, hmZiel, wochen, ampel, punkte };
+  return {
+    tourLast: tl,
+    tourLastQuelle: pers && pers.ess > 0 ? 'ess-rechner' : 'faustregel',
+    tourLastFaust: faust,
+    ...(pers && pers.ess > 0 ? { tourLastLo: pers.lo, tourLastHi: pers.hi } : {}),
+    ctl, ctlZiel, maxTag, maxHm, langeTageZiel, hmZiel, wochen, ampel, punkte };
 }
 
 export interface FaktorVorschlag {

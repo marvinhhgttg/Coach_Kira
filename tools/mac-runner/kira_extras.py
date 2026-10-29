@@ -1680,6 +1680,14 @@ def _ctl_step(ctl: float, load: float, mean28: float) -> float:
     return g * (a + b * ctl + c * load) + (1 - g) * k * mean28
 
 
+_ES = (155.91432, 0.96845, 0.1537, 0.2993)  # wie ES_MODEL in lib/ctlModel.ts
+
+
+def _es_step(es: float, load: float, mean56: float) -> float:
+    a, b, c, d = _ES
+    return a + b * es + c * load + d * mean56
+
+
 def _mean(xs: list) -> float | None:
     xs = [float(x) for x in xs if x is not None]
     return sum(xs) / len(xs) if xs else None
@@ -1947,7 +1955,7 @@ def vorausblick_rechnen() -> dict:
     """Alles regelbasiert/statistisch – das Sprachmodell formuliert danach nur den Text."""
     heute = today()
     metr = ["load_fb_day", "Garmin_Training_Readiness", "hrv_status", "hrv_threshholds", "fbACWR_obs", "Monotony7",
-            "rhr_bpm", "sleep_hours", "sleep_score_0_100"]
+            "rhr_bpm", "sleep_hours", "sleep_score_0_100", "garminEnduranceScore"]
     rows = sorted(fetch_rows(200, metr), key=lambda r: r["date"])
     vor = [r for r in rows if r["date"] < heute]
     h = next((r for r in rows if r["date"] == heute), {})
@@ -2007,6 +2015,15 @@ def vorausblick_rechnen() -> dict:
         mono = mono7(serie)
         tage.append({"datum": ext_dates[i], "last": round(l), "atl": round(atl), "ctl": round(ctl), "acwr": round(acwr, 2),
                      "mono": round(min(mono, 9.99), 2)})
+    # Endurance Score (Näherung wie lib/ctlModel.ts esStep) – Startwert = letzter gemessener Wert vor heute
+    es0 = next((num(r.get("garminEnduranceScore")) for r in reversed(vor) if num(r.get("garminEnduranceScore"))), None)
+    if es0:
+        es = float(es0)
+        se = hist_loads[:]
+        for i, l in enumerate(ext_loads):
+            se.append(l)
+            es = _es_step(es, l, sum(se[-56:]) / len(se[-56:]))
+            tage[i]["es"] = round(es)
     for i, d in enumerate(plan):
         tage[i].update({"sport": d.get("sport") or "Off", "zone": d.get("zone") or "Off", "fest": bool(d.get("locked")), "tag": _dm(d["date"])})
 
@@ -2332,6 +2349,7 @@ def vorausblick_rechnen() -> dict:
         "erstellt": datetime.datetime.now(tz_local).isoformat(timespec="minutes"),
         "vorausblick": {
             "ctl_heute": c0, "ctl_7": tage[i7]["ctl"], "ctl_14": tage[i14]["ctl"], "ctl_28": c28, "trend": trend,
+            "es_heute": round(es0) if es0 else None, "es_7": tage[i7].get("es"), "es_14": tage[i14].get("es"), "es_28": tage[i28].get("es"),
             "horizont": len(tage) - 1, "ctl_ende": c_ende, "datum_ende": tage[-1]["datum"],
             "halte_tag": round(halte), "halte_woche": round(halte * 7), "szenarien": szen, "wochen": wochen,
             "basis_28": "Saisonrahmen" if saison_wo else "Ø Plan",
