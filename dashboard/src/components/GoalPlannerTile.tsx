@@ -6,7 +6,7 @@ import { fmtDateShort } from '../lib/format';
 import { zielBereitschaft, type Ziel } from '../lib/planning';
 import { useGarminTage } from '../lib/garmin';
 import { lerneModelle } from '../lib/essRechner';
-import { eigeneSkitouren, tourLastPersoenlich } from '../lib/tourEss';
+import { eigeneBergtouren, eigeneSkitouren, tourLastPersoenlich } from '../lib/tourEss';
 
 interface Block { titel: string; von: string; bis: string; wochen_ess: number; schluesseleinheiten: string[] }
 interface ZielDaten { ziel: Ziel; plan?: { bloecke: Block[]; hinweise: string[]; tapering?: string; erstellt?: string } }
@@ -69,7 +69,7 @@ export function GoalPlannerTile() {
     }
     return Math.round((mx / 3600) * 10) / 10;
   }, [garmin]);
-  const pers = useMemo(() => (cur?.data?.ziel && modelle.length ? tourLastPersoenlich(cur.data.ziel, modelle, eigeneSkitouren(garmin)) : null), [cur, modelle, garmin]);
+  const pers = useMemo(() => (cur?.data?.ziel && modelle.length ? tourLastPersoenlich(cur.data.ziel, modelle, eigeneSkitouren(garmin), eigeneBergtouren(garmin)) : null), [cur, modelle, garmin]);
   const bereit = useMemo(() => (cur?.data?.ziel && hist.length ? zielBereitschaft(cur.data.ziel, hist, fakt, pers, maxDauerH) : null), [cur, hist, fakt, pers, maxDauerH]);
 
   async function onSave() {

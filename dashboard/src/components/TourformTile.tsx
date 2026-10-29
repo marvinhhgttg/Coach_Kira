@@ -4,7 +4,7 @@ import { fetchExtras } from '../lib/extras';
 import type { Ziel } from '../lib/planning';
 import { useGarminTage } from '../lib/garmin';
 import { lerneModelle } from '../lib/essRechner';
-import { eigeneSkitouren, tourLastPersoenlich } from '../lib/tourEss';
+import { eigeneBergtouren, eigeneSkitouren, tourLastPersoenlich } from '../lib/tourEss';
 
 // ── Hilfsfunktionen ────────────────────────────────────────────────
 function fmtDateShort(iso: string): string {
@@ -140,7 +140,7 @@ function TourformBody({ p4 }: { p4: P4Tag[] }) {
       {/* Ziel-Karten */}
       <div className="mt-3 space-y-2">
         {ziele.map((z, i) => {
-          const pers = modelle.length ? tourLastPersoenlich(z, modelle, eigeneSkitouren(garmin)) : null;
+          const pers = modelle.length ? tourLastPersoenlich(z, modelle, eigeneSkitouren(garmin), eigeneBergtouren(garmin)) : null;
           const wf = berechneTourform(p4, z, pers?.ess);
           const wo = wochenBisZiel(z);
 

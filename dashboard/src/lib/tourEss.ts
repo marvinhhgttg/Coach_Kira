@@ -29,6 +29,17 @@ export function eigeneSkitouren(tage: GarminTage | null | undefined): Skitour[] 
           m.set(datum + '|' + a.dauer_s, { datum, name: a.name, min: a.dauer_s / 60, km: a.km, hm: a.hm || 0, hf: a.hf_avg, ess: a.last!, vergleichbar: true });
   return [...m.values()].sort((a, b) => a.datum.localeCompare(b.datum));
 }
+/** Eigene Bergtouren mit der aktuellen Uhr (Garmin-Tagesdetails ab 26.08.25): ≥ 700 Hm und ≥ 2 h, Wandern/Bergsteigen. */
+export interface Bergtour { datum: string; min: number; km?: number; hm: number; hf?: number; ess: number; name?: string }
+export function eigeneBergtouren(tage: GarminTage | null | undefined): Bergtour[] {
+  const out: Bergtour[] = [];
+  if (!tage) return out;
+  for (const [datum, t] of tage)
+    for (const a of t.akt || [])
+      if (/^(hiking|mountaineering)$/i.test(String(a.typ || '')) && (a.hm || 0) >= 700 && (a.dauer_s || 0) >= 7200 && (a.last || 0) > 0)
+        out.push({ datum, name: a.name, min: a.dauer_s! / 60, km: a.km, hm: a.hm!, hf: a.hf_avg, ess: a.last! });
+  return out.sort((a, b) => a.datum.localeCompare(b.datum));
+}
 const median = (x: number[]) => {
   const s = [...x].sort((a, b) => a - b);
   return s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2;
@@ -42,7 +53,7 @@ const finde = (modelle: Modell[], ...ids: ProfilId[]) => {
   return null;
 };
 
-export function tourLastPersoenlich(z: Ziel, modelle: Modell[], skitouren: Skitour[] = []): TourEss | null {
+export function tourLastPersoenlich(z: Ziel, modelle: Modell[], skitouren: Skitour[] = [], bergtouren: Bergtour[] = []): TourEss | null {
   skitouren = [...skitouren];
   if (!z || !(z.dauer_h > 0) || !modelle?.length) return null;
   const hinweise: string[] = [];
@@ -89,7 +100,25 @@ export function tourLastPersoenlich(z: Ziel, modelle: Modell[], skitouren: Skito
         const teile: TourTeil[] = [{ profil: 'hike', min: Math.round(min), km, hm: Math.round(hm), ess: f(e.ess), lo: f(e.lo), hi: f(e.hi), n: skitouren.length }];
         return { ess: f(e.ess), lo: f(e.lo), hi: f(e.hi), teile, hinweise };
       }
-    } else plan = [{ m, min, km, hm }];
+    } else {
+      // Bergtour: Wandermodell, abgeglichen an deinen eigenen Bergtouren mit der aktuellen Uhr (ab 3 Touren)
+      const e = vorwaerts(m, { min, km, hm });
+      if (!e) return null;
+      const ratios = bergtouren
+        .map((t) => ({ t, p: vorwaerts(m, { min: t.min, km: t.km, hm: t.hm }) }))
+        .filter((x) => x.p && x.p.ess > 0)
+        .map((x) => x.t.ess / x.p!.ess);
+      const k = ratios.length >= 3 ? Math.min(1.5, Math.max(0.7, median(ratios))) : 1;
+      if (ratios.length >= 3) {
+        const letzte = bergtouren[bergtouren.length - 1];
+        hinweise.push(
+          `Bergtour an ${ratios.length} eigenen Bergtouren seit 08/2025 abgeglichen (≥ 700 Hm, Faktor ${k.toLocaleString('de-DE', { maximumFractionDigits: 2 })}; zuletzt ${de(letzte.datum)}: ${(Math.round(letzte.min / 6) / 10).toLocaleString('de-DE')} h, ${letzte.hm} Hm, ${letzte.ess} ESS). ` +
+            'Ältere Bergtouren (2020–07/2025) hatten bei gleicher Tour rund 30 % weniger Garmin-Last und zählen nicht.',
+        );
+      } else hinweise.push('Bergtour über dein Wandermodell – noch zu wenige eigene Bergtouren ab 700 Hm für einen Abgleich.');
+      const f = (v: number) => Math.round(v * k);
+      return { ess: f(e.ess), lo: f(e.lo), hi: f(e.hi), teile: [{ profil: 'hike', min: Math.round(min), km, hm: Math.round(hm), ess: f(e.ess), lo: f(e.lo), hi: f(e.hi), n: m.n }], hinweise: [...hinweise, ...e.hinweise.filter((h) => !hinweise.includes(h))] };
+    }
   } else if (z.art === 'bike_hike') {
     const rad = finde(modelle, 'bike_gravel', 'bike_road');
     const geh = finde(modelle, 'hike');
