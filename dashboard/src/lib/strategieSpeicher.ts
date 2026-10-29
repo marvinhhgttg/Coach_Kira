@@ -81,16 +81,31 @@ export async function strategieStart() {
   try {
     const items = await fetchExtras<StratDaten>('strategie', 1);
     const srv = items.find((x) => x.datum === STRAT_DATUM)?.data;
-    if (srv && Array.isArray(srv.events) && (!lokal.stand || (srv.stand || '') >= lokal.stand)) {
-      schreib(EV_KEY, srv.events);
-      schreib(SC_KEY, srv.szenarien || []);
-      schreib(STAND_KEY, srv.stand || '');
-      datenSubs.forEach((f) => f({ events: srv.events, szenarien: srv.szenarien || [], stand: srv.stand || '' }));
-      setStatus('gespeichert', srv.stand || '');
+    const sEv = Array.isArray(srv?.events) ? (srv!.events as any[]) : [];
+    const sSc = Array.isArray(srv?.szenarien) ? (srv!.szenarien as any[]) : [];
+    // Zusammenführen statt Überschreiben: Events je id vereinigen, Szenarien je Name – das jüngere gewinnt.
+    const ev = new Map<string, any>();
+    for (const e of [...sEv, ...(lokal.events as any[])]) if (e && e.id != null && !ev.has(String(e.id))) ev.set(String(e.id), e);
+    const sc = new Map<string, any>();
+    for (const x of [...sSc, ...(lokal.szenarien as any[])]) {
+      if (!x || !x.name) continue;
+      const alt = sc.get(x.name);
+      if (!alt || String(x.savedAt || '') > String(alt.savedAt || '')) sc.set(x.name, x);
+    }
+    // Nur wenn der Browser bewusst neuer ist (Stand gesetzt und jünger), dürfen Löschungen aus dem Browser gelten.
+    const browserNeuer = !!lokal.stand && (!srv?.stand || lokal.stand > srv.stand);
+    const events = browserNeuer ? (lokal.events as any[]) : [...ev.values()].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+    const szenarien = browserNeuer ? (lokal.szenarien as any[]) : [...sc.values()].sort((a, b) => String(a.name).localeCompare(String(b.name)));
+    schreib(EV_KEY, events);
+    schreib(SC_KEY, szenarien);
+    const gleich = srv && JSON.stringify(events) === JSON.stringify(sEv) && JSON.stringify(szenarien) === JSON.stringify(sSc);
+    datenSubs.forEach((f) => f({ events, szenarien, stand: srv?.stand || lokal.stand }));
+    if (gleich) {
+      schreib(STAND_KEY, srv!.stand || '');
+      setStatus('gespeichert', srv!.stand || '');
     } else {
-      // Browser-Altbestand, neuerer Browser-Stand oder noch nichts im Sheet → hochladen (prüft zugleich, ob der Patch aktiv ist)
-      if (!lokal.stand) schreib(STAND_KEY, new Date().toISOString());
-      await hochladen();
+      schreib(STAND_KEY, new Date().toISOString());
+      await hochladen(); // prüft zugleich, ob der Patch aktiv ist
     }
   } catch {
     setStatus('fehler', 'Sheet nicht erreichbar – Änderungen bleiben vorerst im Browser');

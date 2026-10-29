@@ -6,7 +6,7 @@ import { fmtDateShort } from '../lib/format';
 import { zielBereitschaft, type Ziel } from '../lib/planning';
 import { useGarminTage } from '../lib/garmin';
 import { lerneModelle } from '../lib/essRechner';
-import { tourLastPersoenlich } from '../lib/tourEss';
+import { eigeneSkitouren, tourLastPersoenlich } from '../lib/tourEss';
 
 interface Block { titel: string; von: string; bis: string; wochen_ess: number; schluesseleinheiten: string[] }
 interface ZielDaten { ziel: Ziel; plan?: { bloecke: Block[]; hinweise: string[]; tapering?: string; erstellt?: string } }
@@ -69,7 +69,7 @@ export function GoalPlannerTile() {
     }
     return Math.round((mx / 3600) * 10) / 10;
   }, [garmin]);
-  const pers = useMemo(() => (cur?.data?.ziel && modelle.length ? tourLastPersoenlich(cur.data.ziel, modelle) : null), [cur, modelle]);
+  const pers = useMemo(() => (cur?.data?.ziel && modelle.length ? tourLastPersoenlich(cur.data.ziel, modelle, eigeneSkitouren(garmin)) : null), [cur, modelle, garmin]);
   const bereit = useMemo(() => (cur?.data?.ziel && hist.length ? zielBereitschaft(cur.data.ziel, hist, fakt, pers, maxDauerH) : null), [cur, hist, fakt, pers, maxDauerH]);
 
   async function onSave() {
@@ -211,9 +211,9 @@ export function GoalPlannerTile() {
               </div>
               <div className="text-2xs text-ink-dim mt-0.5" data-testid="tourlast-quelle">
                 {bereit.tourLastQuelle === 'ess-rechner'
-                  ? `Tourlast aus deinem ESS-Rechner (${pers?.teile.map((t) => `${t.n} eigene Einheiten`).join(' + ')}), Spanne ${bereit.tourLastLo}–${bereit.tourLastHi} ESS · Faustregel wäre ${bereit.tourLastFaust} ESS.`
+                  ? `Tourlast aus deinem ESS-Rechner (${cur?.data?.ziel.art === 'skitour' ? 'Wandermodell + eigene Skitouren' : pers?.teile.map((t) => `${t.n} eigene Einheiten`).join(' + ')}), Spanne ${bereit.tourLastLo}–${bereit.tourLastHi} ESS · Faustregel wäre ${bereit.tourLastFaust} ESS.`
                   : 'Tourlast nach Faustregel – für diese Tourart gibt es noch zu wenige eigene Einheiten (ab 8) im ESS-Rechner.'}
-                {pers?.hinweise.filter((h) => !/Ø HF/.test(h)).map((h, i) => <span key={i}> {h}</span>)}
+                {pers?.hinweise.filter((h) => !/Mit deiner Ø HF|liegt über deinem üblichen|liegt unter deinem üblichen/.test(h)).map((h, i) => <span key={i}> {h}</span>)}
               </div>
               <ul className="mt-1 list-disc pl-5 text-ink-muted">{bereit.punkte.map((p, i) => <li key={i}>{p}</li>)}</ul>
             </div>
