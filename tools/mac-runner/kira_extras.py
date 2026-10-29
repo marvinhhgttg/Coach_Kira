@@ -914,9 +914,9 @@ def cmd_snapshot() -> None:
         log(f"snapshot: Zeitfenster {now_h()}h nicht erfüllt (5-10) – übersprungen")
         return
 
-    # Nur die 60 neuesten Tage behalten
+    # Empfehlungen der ganzen Historie behalten (Obergrenze nur als Schutz)
     if rec:
-        keys = sorted(rec.keys(), reverse=True)[:60]
+        keys = sorted(rec.keys(), reverse=True)[:1000]
         st["rec"] = {k: rec[k] for k in keys}
 
     save_x(st)
@@ -997,7 +997,7 @@ def treffer_fuer(datum: str, rec: dict, rows_by_date: dict) -> dict | None:
 
 def cmd_treffer(backfill_file: str | None = None) -> None:
     """Verarbeitet Treffer für alle noch nicht erledigten Tage."""
-    rows = fetch_rows(90, METRICS_T)
+    rows = fetch_rows(370, METRICS_T)  # ganze Historie (Schnittstelle liefert max. ca. 365 Tage)
     rows_by_date: dict[str, dict] = {r["date"]: r for r in rows if r.get("date")}
 
     st = load_x()
@@ -1012,7 +1012,9 @@ def cmd_treffer(backfill_file: str | None = None) -> None:
                     rec[d] = {
                         "empfohlen": v["empfohlen"],
                         "plan": v.get("plan"),
+                        "zone": v.get("zone", ""),
                         "quelle": "plan-briefing",
+                        "stand": v.get("stand"),
                     }
         except Exception as e:
             log(f"treffer: FEHLER beim Laden von backfill_file – {e}")
@@ -1034,14 +1036,14 @@ def cmd_treffer(backfill_file: str | None = None) -> None:
             st.setdefault("treffer", {})
             treffer_dict = st.get("treffer", {})
             treffer_dict[datum] = t
-            # max. 90 behalten
-            if len(treffer_dict) > 90:
-                keys_sorted = sorted(treffer_dict.keys(), reverse=True)[:90]
+            # ganze Historie behalten (Obergrenze nur als Schutz)
+            if len(treffer_dict) > 1000:
+                keys_sorted = sorted(treffer_dict.keys(), reverse=True)[:1000]
                 st["treffer"] = {k: treffer_dict[k] for k in keys_sorted}
 
             if datum not in st.get("treffer_done", []):
                 treffer_done.append(datum)
-            st["treffer_done"] = treffer_done[-200:]
+            st["treffer_done"] = treffer_done[-1000:]
             neu += 1
             save_x(st)
 

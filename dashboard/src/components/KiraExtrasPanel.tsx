@@ -76,6 +76,7 @@ export function KiraExtrasPanel() {
   const [trefferWocheItems, setTrefferWocheItems] = useState<ExtraItem[]>([]);
   const [selbsttestItems, setSelbsttestItems] = useState<ExtraItem[]>([]);
   const [errTag, setErrTag] = useState<string | null>(null);
+  const [fenster, setFenster] = useState<'90' | '180' | 'alles'>('alles');
   const [errWoche, setErrWoche] = useState<string | null>(null);
   const [errTest, setErrTest] = useState<string | null>(null);
 
@@ -86,7 +87,7 @@ export function KiraExtrasPanel() {
     async function loadAll() {
       // Section A: treffer_tag (14 entries)
       try {
-        const items = await fetchExtras(['treffer_tag'], 90);
+        const items = await fetchExtras(['treffer_tag'], 1000);
         if (!cancelled) setTrefferTagItems(items);
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
@@ -120,7 +121,19 @@ export function KiraExtrasPanel() {
   }, []);
 
   // Section A: parse data
-  const trefferTage = useMemo(() => trefferTagItems.map(parseTrefferTag), [trefferTagItems]);
+  const alleTrefferTage = useMemo(() => {
+    // je Datum nur den neuesten Eintrag, absteigend sortiert
+    const m = new Map<string, ReturnType<typeof parseTrefferTag>>();
+    for (const t of trefferTagItems.map(parseTrefferTag)) if (t.datum && !m.has(t.datum)) m.set(t.datum, t);
+    return [...m.values()].sort((a, b) => (a.datum < b.datum ? 1 : -1));
+  }, [trefferTagItems]);
+  const trefferTage = useMemo(() => {
+    if (fenster === 'alles') return alleTrefferTage;
+    const grenze = new Date(Date.now() - Number(fenster) * 86400000).toISOString().slice(0, 10);
+    return alleTrefferTage.filter((t) => t.datum >= grenze);
+  }, [alleTrefferTage, fenster]);
+  const zeitraum = trefferTage.length ? `${fmtDateShort(trefferTage[trefferTage.length - 1].datum)}–${fmtDateShort(trefferTage[0].datum)}` : '';
+  const nachgetragen = trefferTage.filter((t) => t.quelle === 'plan-briefing').length;
   const wocheEintraege = useMemo(() => trefferWocheItems.map(parseTrefferWoche), [trefferWocheItems]);
   const selbsttestEintraege = useMemo(() => selbsttestItems.map(parseSelbsttest), [selbsttestItems]);
 
@@ -161,7 +174,14 @@ export function KiraExtrasPanel() {
     <div className="panel-raised p-4">
       {/* Section A: Kira-Treffsicherheit */}
       <div className="label">Coach Kira · Treffsicherheit</div>
-      <p className="text-2xs text-ink-dim mt-1">Wie hat dein Körper reagiert, wenn du Kiras Empfehlung gefolgt bist – und wenn nicht? Stand: letzte 90 Tage.</p>
+      <p className="text-2xs text-ink-dim mt-1">Wie hat dein Körper reagiert, wenn du Kiras Empfehlung gefolgt bist – und wenn nicht?</p>
+      <div className="mt-2 flex flex-wrap items-center gap-2 text-2xs" data-testid="treffer-fenster">
+        {([['90', '90 Tage'], ['180', '180 Tage'], ['alles', 'Alles']] as const).map(([k, l]) => (
+          <button key={k} onClick={() => setFenster(k)} className={`btn btn-ghost px-2 py-0.5 text-2xs ${fenster === k ? 'border-accent text-ink' : 'text-ink-dim'}`}>{l}</button>
+        ))}
+        {zeitraum && <span className="text-ink-dim">{zeitraum} · {trefferTage.length} Tage{nachgetragen ? ` · davon ${nachgetragen} aus Kiras Plan-Briefings nachgetragen` : ''}</span>}
+      </div>
+      <p className="text-2xs text-ink-dim mt-1">Ausgewertet werden alle Tage mit gespeicherter Kira-Empfehlung (seit Mai 2026). Für die Zeit davor gibt es keine gespeicherten Empfehlungen – in der Timeline ist die Soll-Last vergangener Tage durch die Ist-Last ersetzt.</p>
 
       {(errTag || errWoche) && (
         <p className="mt-2 text-xs text-orange-300">
@@ -246,7 +266,7 @@ export function KiraExtrasPanel() {
                           </span>
                         ) : '—'}
                       </td>
-                      <td className="pt-1 text-ink-dim">{t.quelle === 'plan-briefing' ? 'briefing' : t.quelle}</td>
+                      <td className="pt-1 text-ink-dim">{t.quelle === 'plan-briefing' ? 'nachgetragen' : t.quelle}</td>
                     </tr>
                   ))}
                 </tbody>
