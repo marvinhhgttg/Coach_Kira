@@ -1357,8 +1357,11 @@ def is_demanding(l: float, ref: float) -> bool:
     return l >= max(60.0, 0.7 * ref)
 
 
+RELIEF_ANTEIL = 0.6  # Entlastung = lockerer oder freier Tag: <= 40 ESS bzw. <= 60 % der Referenz-Tageslast
+
+
 def is_relief(l: float, ref: float) -> bool:
-    return l <= max(40.0, 0.5 * ref)
+    return l <= max(40.0, RELIEF_ANTEIL * ref)
 
 
 def mono7(w: list) -> float:
@@ -1387,6 +1390,7 @@ def mono_verstoesse(hist: list, plan: list) -> list:
     run25 = 0
     for i, d in enumerate(plan):
         last = float(d["last"])
+        prev_m = mono7(allv) if len(allv) >= 7 else 0.0  # Monotonie des Vortags
         allv.append(last)
         streak = 0 if is_relief(last, ref) else streak + 1
         m = mono7(allv)
@@ -1400,7 +1404,7 @@ def mono_verstoesse(hist: list, plan: list) -> list:
             out.append(f"{d['datum']}: Monotonie {_k(m)} > 3,0 ohne Entlastung in 48 h")
         elif bewertbar and run25 == 2 and not next_relief:
             out.append(f"{d['datum']}: Monotonie seit 2 Tagen > 2,5 ohne Ruhetag in 48 h")
-        if i + 1 < len(plan) and m > 2.0:
+        if i + 1 < len(plan) and m > 2.0 and prev_m > 2.0:  # ein einzelner Tag über 2,0 ist bedeutungslos
             dem = 0
             for x in reversed(allv):
                 if is_relief(x, ref):
@@ -1409,8 +1413,8 @@ def mono_verstoesse(hist: list, plan: list) -> list:
                     dem += 1
             n = plan[i + 1]
             nl = float(n["last"])
-            if dem >= 4 and not n.get("fest") and not is_relief(nl, ref) and nl > 0.6 * ref:
-                out.append(f"{n['datum']}: sollte nach Monotonie {_k(m)} und {dem} fordernden Tagen sehr locker oder frei sein")
+            if dem >= 4 and not n.get("fest") and not is_relief(nl, ref):
+                out.append(f"{n['datum']}: sollte nach 2 Tagen Monotonie über 2,0 ({_k(m)}) und {dem} fordernden Tagen sehr locker oder frei sein")
     return out
 
 
@@ -1525,7 +1529,7 @@ def cmd_autopilot(force: bool = False) -> None:
               + (f"Wochenlast höchstens 10 % über {ziel_ess} ESS, gern bis 15 % darunter. " if ziel_ess else "Wochenlast etwa beibehalten (15 % weniger ist in Ordnung, höchstens 10 % mehr). ")
               + rhythmus
               + f"Kein Tag über {spitze} ESS und kein Tag mehr als 40 % über seinem bisherigen Plan. Gestrichene Last nicht auf einen Tag packen: auf zwei bis drei Tage verteilen oder die Wochenlast senken. "
-              + "Monotonie-Regel: höchstens 4 Tage in Folge ohne deutliche Entlastung (<= 40 ESS); harte Tage klar hart, lockere wirklich locker. "
+              + "Monotonie-Regel: höchstens 4 Tage in Folge ohne Entlastung (lockerer oder freier Tag, <= 40 ESS bzw. 60 % der üblichen Tageslast); nach 2 Tagen Monotonie über 2,0 und 4 fordernden Tagen ein sehr lockerer oder freier Tag; harte Tage klar hart, lockere wirklich locker. "
               "Lange Einheiten auf Tage mit wenig Terminen und gutem Wetter. Rad draußen nicht bei Regen > 5 mm oder Wind > 40 km/h. Nur nötige Änderungen.")
     beispiel = '{"tage":[{"datum":"' + woche[0] + '","last":130,"sport":"Bike","zone":"Z2","grund":"kurz"}],"fazit":"1-2 Sätze"}'
     user = ("Plan der Woche ab " + woche[0] + ":\n" + "\n".join(zeile(p) for p in plan) + "\n\n"

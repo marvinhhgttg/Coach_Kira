@@ -86,7 +86,7 @@ export async function runPlanLoop(args: {
     `- Tage mit FEST nicht verändern (gleiche ESS und Zone).\n` +
     `- ACWR an jedem Tag zwischen ${f(ACWR_MIN, 1)} und ${f(ACWR_MAX, 1)}.\n` +
     `- ${MONOTONIE_REGEL_TEXT.replace(/\n/g, '\n- ')}\n` +
-    `- Geprüft wird: höchstens 4 Tage in Folge ohne deutliche Entlastung (≤ 40 ESS); nach Monotonie > 2,0 und 4 fordernden Tagen folgt ein sehr lockerer oder freier Tag; bleibt die Monotonie 2 Tage über 2,5 oder steigt über 3,0, kommt innerhalb von 48 h ein Ruhetag.\n` +
+    `- Geprüft wird: höchstens 4 Tage in Folge ohne Entlastung (Entlastung = lockerer oder freier Tag mit höchstens 40 ESS bzw. 60 % der üblichen Tageslast); liegt die Monotonie 2 Tage in Folge über 2,0 und gab es 4 fordernde Tage, folgt ein sehr lockerer oder freier Tag; bleibt die Monotonie 2 Tage über 2,5 oder steigt über 3,0, kommt innerhalb von 48 h ein Ruhetag.\n` +
     `- CTL am Tag 14 höchstens ${CTL_MAX_LOSS * 100} % unter der heutigen CTL.\n` +
     `- Mindestens ${MIN_REST} Ruhetage mit 0 ESS (Zone Off).\n` +
     `- Anspruch einer Einheit: REST = 0 ESS/Off; EASY = unter 120 ESS und nur Z1/Z2; TRAIN = 120–199 ESS oder Z3; QUALITY = ab 200 ESS oder Z4/Z5.\n` +

@@ -1,9 +1,9 @@
-// ../../ck-repo/dashboard/src/lib/kiraPrompts.ts
+// src/lib/kiraPrompts.ts
 var MONOTONIE_REGEL = [
   "Monotonie-Regel: Ein einzelner hoher Monotonie-Wert ist meist kein Problem. Ma\xDFgeblich ist die rollierende 7-Tage-Monotonie (\xD8/\u03C3 der Tageslasten) im Verlauf.",
   "Zonen: < 1,5 gute Variation; 1,5\u20132,0 normal; > 2,0 aufmerksam (vor allem bei hoher Wochenlast); > 2,5 ung\xFCnstig, wenn es l\xE4nger anh\xE4lt; > 3,0 Warnzone.",
   "Muster: 1\u20132 \xE4hnliche Tage normal; 3\u20134 \xE4hnliche, fordernde Tage beobachten (bei schlechterem Schlaf, HRV, Ruhepuls, schweren Beinen oder weniger Motivation reduzieren); 5\u20137 Tage ohne deutliche Entlastung relevant; mehrere Wochen hohe Monotonie = Risiko f\xFCr Erm\xFCdung, Stagnation, \xDCberlastung, Infekte.",
-  "Steuerung: \xDCber etwa 2,0 und schon 4\u20135 fordernde Tage \u2192 n\xE4chster Tag sehr locker oder frei. Bleibt der Wert \xFCber 2,5 \u2192 innerhalb 24\u201348 h echter Ruhetag oder sehr kurzer Regenerationsreiz. \xDCber 3,0 \u2192 mindestens ein echter Entlastungstag oder deutliche Reduktion. Hohe Monotonie plus schlechte Erholungswerte \u2192 keine Qualit\xE4tseinheit durchdr\xFCcken.",
+  "Steuerung: Ein hoher Wert an einem Tag ist praktisch bedeutungslos. Liegt die 7-Tage-Monotonie an 2 Tagen in Folge \xFCber etwa 2,0 und sind schon 4\u20135 fordernde Tage gesammelt \u2192 n\xE4chster Tag sehr locker oder frei. Als Entlastung z\xE4hlt ein lockerer oder freier Tag (h\xF6chstens 40 ESS bzw. 60 % der \xFCblichen Tageslast). Bleibt der Wert \xFCber 2,5 \u2192 innerhalb 24\u201348 h echter Ruhetag oder sehr kurzer Regenerationsreiz. \xDCber 3,0 \u2192 mindestens ein echter Entlastungstag oder deutliche Reduktion. Hohe Monotonie plus schlechte Erholungswerte \u2192 keine Qualit\xE4tseinheit durchdr\xFCcken.",
   "Entscheidend ist die Kombination mit der Gesamtlast (Strain = Wochenlast \xD7 Monotonie). Monotonie senkst du durch klaren Rhythmus: harte Reize klar hart, lockere Tage wirklich locker, mindestens ein echter Erholungstag bei hoher Gesamtlast \u2013 nicht durch weniger Gesamtlast."
 ].join("\n");
 function monotonieBlock() {
@@ -812,7 +812,7 @@ function telegramMessages(frage, ctx) {
   return msgs;
 }
 
-// ../../ck-repo/tools/mac-runner/kira_prompts_cli.ts
+// ../tools/mac-runner/kira_prompts_cli.ts
 async function lesen() {
   const teile = [];
   for await (const t of process.stdin) teile.push(t);

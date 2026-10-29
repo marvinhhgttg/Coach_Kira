@@ -54,9 +54,10 @@ export function refLoad(loads: number[]): number {
 export function isDemanding(load: number, ref: number) {
   return load >= Math.max(60, 0.7 * ref);
 }
-/** Deutliche Entlastung: höchstens 40 ESS oder höchstens 50 % der Referenz-Tageslast */
+/** Entlastung (lockerer oder freier Tag): höchstens 40 ESS oder höchstens 60 % der Referenz-Tageslast */
+export const RELIEF_ANTEIL = 0.6;
 export function isRelief(load: number, ref: number) {
-  return load <= Math.max(40, 0.5 * ref);
+  return load <= Math.max(40, RELIEF_ANTEIL * ref);
 }
 
 /** 7-Tage-Monotonie wie im Sheet: Ø / σ (Population) der letzten 7 Tageslasten */
@@ -117,6 +118,9 @@ export function assessMonotony(inp: MonoInput): MonoAssessment {
   const avgWeek = four.length >= 14 ? (four.reduce((a, b) => a + b, 0) / four.length) * 7 : weekLoad;
   const weekLoadHigh = avgWeek > 0 && weekLoad >= 1.1 * avgWeek;
   const m = inp.mono;
+  // Ein einzelner Tag über 2,0 ist bedeutungslos: die 2,0-Regeln greifen erst, wenn auch der Vortag über 2,0 lag
+  const prevMono = inp.monoHistory && inp.monoHistory.length ? inp.monoHistory[inp.monoHistory.length - 1] : null;
+  const over20 = m != null && m > MONO.NORMAL && prevMono != null && prevMono > MONO.NORMAL;
   const stufe = monoStufe(m);
   const strain = m != null ? Math.round(weekLoad * m) : null;
   const base = { stufe, streakNoRelief: streak, demandingInStreak: demanding, daysAbove25: above25, weekLoad, strain, weekLoadHigh };
@@ -135,18 +139,18 @@ export function assessMonotony(inp: MonoInput): MonoAssessment {
     return res('EASY', true, `Monotonie bleibt über 2,5 (${above25 >= 2 ? `${above25} Tage` : `${demanding} fordernde Tage`}) → innerhalb 24–48 h Ruhetag oder sehr kurzer Regenerationsreiz.`);
   if (m > MONO.UNGUENSTIG && reliefDone && (above25 >= 2 || m > MONO.WARNUNG))
     return res('TRAIN', false, `Monotonie ${f2(m)} noch hoch, Entlastung in den letzten 48 h ist erfolgt → keine Qualitätseinheit, Rhythmus hart/locker beibehalten.`);
-  if (m > MONO.NORMAL && demanding >= 4)
-    return res('EASY', false, `Monotonie ${f2(m)} > 2,0 nach ${demanding} fordernden Tagen → nächster Tag sehr locker oder frei.`);
-  if (m > MONO.NORMAL && inp.recoveryBad)
-    return res('TRAIN', false, `Monotonie ${f2(m)} > 2,0 und Erholungswerte schlechter → keine Qualitätseinheit durchdrücken.`);
+  if (over20 && demanding >= 4)
+    return res('EASY', false, `Monotonie seit 2 Tagen über 2,0 (${f2(m)}) nach ${demanding} fordernden Tagen → nächster Tag sehr locker oder frei.`);
+  if (over20 && inp.recoveryBad)
+    return res('TRAIN', false, `Monotonie seit 2 Tagen über 2,0 (${f2(m)}) und Erholungswerte schlechter → keine Qualitätseinheit durchdrücken.`);
   if (streak >= 5 && demanding >= 3)
     return res('EASY', false, `${streak} Tage ohne deutliche Entlastung → Entlastung einplanen (Monotonie ${f2(m)}).`);
   if (demanding >= 3 && inp.recoveryBad)
     return res('EASY', false, `${demanding} fordernde Tage in Folge und Erholungswerte schlechter → Belastung reduzieren.`);
-  if (m > MONO.NORMAL && weekLoadHigh)
-    return res('TRAIN', false, `Monotonie ${f2(m)} > 2,0 bei hoher Wochenlast (Strain ${strain}) → keine zusätzliche Qualität.`);
+  if (over20 && weekLoadHigh)
+    return res('TRAIN', false, `Monotonie seit 2 Tagen über 2,0 (${f2(m)}) bei hoher Wochenlast (Strain ${strain}) → keine zusätzliche Qualität.`);
   if (m > MONO.NORMAL)
-    return res(null, false, `Monotonie ${f2(m)} – ${demanding === 1 ? '1 fordernder Tag' : `${demanding} fordernde Tage`} in Folge: beobachten, keine Einschränkung.`);
+    return res(null, false, `Monotonie ${f2(m)}${over20 ? ' seit 2 Tagen über 2,0' : ' – erster Tag über 2,0'} · ${demanding === 1 ? '1 fordernder Tag' : `${demanding} fordernde Tage`} in Folge: beobachten, keine Einschränkung.`);
   return res(null, false, stufe === 'normal' ? `Monotonie ${f2(m)} normal.` : '');
 }
 
@@ -167,6 +171,7 @@ export function monotonyPlanViolations(
   let run25 = 0;
   for (let i = 0; i < days.length; i++) {
     const d = days[i];
+    const prevMono = (i > 0 ? days[i - 1].mono : null) ?? monotony7(all); // Monotonie des Vortags
     all.push(d.load);
     streak = isRelief(d.load, ref) ? 0 : streak + 1;
     run25 = d.mono != null && d.mono > MONO.UNGUENSTIG ? run25 + 1 : 0;
@@ -177,13 +182,13 @@ export function monotonyPlanViolations(
       out.push(`${d.label}: Monotonie ${f2(d.mono)} > 3,0 ohne Entlastungstag in den nächsten 48 h`);
     else if (!lastDays && run25 === 2 && !nextRelief48)
       out.push(`${d.label}: Monotonie seit 2 Tagen > 2,5 ohne Ruhetag in den nächsten 48 h`);
-    if (i + 1 < days.length && d.mono != null && d.mono > MONO.NORMAL) {
+    if (i + 1 < days.length && d.mono != null && d.mono > MONO.NORMAL && prevMono != null && prevMono > MONO.NORMAL) {
       // fordernde Tage bis hier zählen
       let dem = 0;
       for (let k = all.length - 1; k >= 0 && !isRelief(all[k], ref); k--) if (isDemanding(all[k], ref)) dem++;
       const nxt = days[i + 1];
-      if (dem >= 4 && !nxt.locked && !isRelief(nxt.load, ref) && !(nxt.load <= 0.6 * ref))
-        out.push(`${nxt.label}: nach Monotonie ${f2(d.mono)} und ${dem} fordernden Tagen sollte dieser Tag sehr locker oder frei sein`);
+      if (dem >= 4 && !nxt.locked && !isRelief(nxt.load, ref))
+        out.push(`${nxt.label}: nach 2 Tagen Monotonie über 2,0 (${f2(d.mono)}) und ${dem} fordernden Tagen sollte dieser Tag sehr locker oder frei sein`);
     }
   }
   return out;
@@ -194,6 +199,6 @@ export const MONOTONIE_REGEL_TEXT = [
   'Monotonie-Regel: Ein einzelner hoher Monotonie-Wert ist meist kein Problem. Maßgeblich ist die rollierende 7-Tage-Monotonie (Ø/σ der Tageslasten) im Verlauf.',
   'Zonen: < 1,5 gute Variation; 1,5–2,0 normal; > 2,0 aufmerksam (vor allem bei hoher Wochenlast); > 2,5 ungünstig, wenn es länger anhält; > 3,0 Warnzone.',
   'Muster: 1–2 ähnliche Tage normal; 3–4 ähnliche, fordernde Tage beobachten (bei schlechterem Schlaf, HRV, Ruhepuls, schweren Beinen oder weniger Motivation reduzieren); 5–7 Tage ohne deutliche Entlastung relevant; mehrere Wochen hohe Monotonie = Risiko für Ermüdung, Stagnation, Überlastung, Infekte.',
-  'Steuerung: Über etwa 2,0 und schon 4–5 fordernde Tage → nächster Tag sehr locker oder frei. Bleibt der Wert über 2,5 → innerhalb 24–48 h echter Ruhetag oder sehr kurzer Regenerationsreiz. Über 3,0 → mindestens ein echter Entlastungstag oder deutliche Reduktion. Hohe Monotonie plus schlechte Erholungswerte → keine Qualitätseinheit durchdrücken.',
+  'Steuerung: Ein hoher Wert an einem Tag ist praktisch bedeutungslos. Liegt die 7-Tage-Monotonie an 2 Tagen in Folge über etwa 2,0 und hast du schon 4–5 fordernde Tage gesammelt → nächster Tag sehr locker oder frei. Als Entlastung zählt ein lockerer oder freier Tag (höchstens 40 ESS bzw. 60 % deiner üblichen Tageslast). Bleibt der Wert über 2,5 → innerhalb 24–48 h echter Ruhetag oder sehr kurzer Regenerationsreiz. Über 3,0 → mindestens ein echter Entlastungstag oder deutliche Reduktion. Hohe Monotonie plus schlechte Erholungswerte → keine Qualitätseinheit durchdrücken.',
   'Entscheidend ist die Kombination mit der Gesamtlast (Strain = Wochenlast × Monotonie). Monotonie senkst du durch klaren Rhythmus: harte Reize klar hart, lockere Tage wirklich locker, mindestens ein echter Erholungstag bei hoher Gesamtlast – nicht durch weniger Gesamtlast.',
 ].join('\n');

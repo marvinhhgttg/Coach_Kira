@@ -225,7 +225,7 @@ function capVote(vote: Vote, max: Vote): Vote {
  * 6. ΔRHR ≥ +5 bpm und Readiness < 55 → Rest
  * 7. Befinden 3 → max. Train · 2 → max. Easy · 1 → Rest
  * 8. Belastung: ACWR > 1,3 → max. Train · ACWR > 1,5 → max. Easy
- *    Monotonie (Verlauf, lib/monotony.ts): > 2,0 nach 4–5 fordernden Tagen → Easy · bleibt > 2,5 → Easy + Ruhetag binnen 48 h ·
+ *    Monotonie (Verlauf, lib/monotony.ts): 2 Tage > 2,0 nach 4–5 fordernden Tagen → Easy · bleibt > 2,5 → Easy + Ruhetag binnen 48 h ·
  *    > 3,0 → Easy + Entlastungstag · > 2,0 mit schlechter Erholung → keine Qualität · 5+ Tage ohne Entlastung → Easy
  */
 function decideVote(d: Omit<RecoveryDay, 'vote' | 'reasons'>): { vote: Vote | null; reasons: string[] } {
@@ -1461,7 +1461,7 @@ export function RecoveryPanel({
             <RecoveryStrip days={stripDays} todayIso={todayIso} />
             <p className="mt-2 text-2xs text-ink-dim">
               RHR-Baseline = Ø der vorherigen {RHR_BASELINE_DAYS} Tage · Schlafziel {fmtHm(SLEEP_GOAL_H)} h · Belastung jeweils Stand Vortag: ACWR über {fmtNum(ACWR_WARN, 1)} keine Qualität,
-              über {fmtNum(ACWR_HIGH, 1)} max. Easy. Monotonie zählt als Verlauf (über 2,0 nach 4–5 fordernden Tagen sehr locker oder frei, über 2,5 Ruhetag binnen 24–48 h, über 3,0 echter Entlastungstag).
+              über {fmtNum(ACWR_HIGH, 1)} max. Easy. Monotonie zählt als Verlauf (2 Tage über 2,0 nach 4–5 fordernden Tagen sehr locker oder frei, über 2,5 Ruhetag binnen 24–48 h, über 3,0 echter Entlastungstag).
             </p>
           </div>
           <StoryGrid>
@@ -1528,7 +1528,7 @@ export function RecoveryPanel({
               <p className="text-2xs text-ink-dim">
                 RHR-Baseline = Ø der vorherigen {RHR_BASELINE_DAYS} Tage · Schlafziel {fmtHm(SLEEP_GOAL_H)} h · Werte ≥ 5 bpm
                 unter Baseline werden grau (atypisch) statt grün markiert. Belastung jeweils Stand Vortag: ACWR über {fmtNum(ACWR_WARN, 1)} keine
-                Qualität, über {fmtNum(ACWR_HIGH, 1)} max. Easy. Monotonie zählt als Verlauf: über 2,0 nach 4–5 fordernden Tagen sehr locker oder frei,
+                Qualität, über {fmtNum(ACWR_HIGH, 1)} max. Easy. Monotonie zählt als Verlauf: 2 Tage über 2,0 nach 4–5 fordernden Tagen sehr locker oder frei,
                 bleibt sie über 2,5 Ruhetag binnen 24–48 h, über 3,0 echter Entlastungstag; ein einzelner hoher Wert schränkt nicht ein.
               </p>
               <div className="grid gap-3 sm:grid-cols-2 pt-1">
