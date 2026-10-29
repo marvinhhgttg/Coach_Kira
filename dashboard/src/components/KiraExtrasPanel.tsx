@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { ExtraItem } from '../lib/extras';
 import { fetchExtras } from '../lib/extras';
 import { fmtDateShort, fmtNum } from '../lib/format';
+import { VotumTrefferTile } from './VotumTrefferTile';
 
 // --- Section A: Treffsicherheit types ---
 interface TrefferTag {
@@ -275,6 +276,8 @@ export function KiraExtrasPanel() {
           )}
         </div>
       )}
+
+      <VotumTrefferTile />
 
       {/* Section B: Selbsttest lokales Modell */}
       <div className="mt-6">

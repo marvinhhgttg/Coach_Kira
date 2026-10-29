@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
+import re
 import os
 import sys
 import time
@@ -642,11 +643,24 @@ def cmd_selbsttest(force: bool = False) -> None:
                     "detail": str(e), "sekunden": 0, "tps": None}
 
     # T4 'Werte auslesen'
+    def _stunden(v) -> float:
+        """Zahl oder Text wie '7h 24min', '7 h 24 min', '7:24', '7,4' in Dezimalstunden."""
+        if isinstance(v, (int, float)):
+            return float(v)
+        t = str(v).strip().lower().replace(",", ".")
+        m = re.match(r"^(\d+):(\d{1,2})$", t)
+        if m:
+            return int(m.group(1)) + int(m.group(2)) / 60
+        m = re.match(r"^(\d+(?:\.\d+)?)\s*(?:h|std\.?|stunden?)?\s*(?:(\d+)\s*(?:m|min\.?|minuten?))?$", t)
+        if m:
+            return float(m.group(1)) + (int(m.group(2)) / 60 if m.group(2) else 0)
+        return float(t)
+
     def test_4() -> dict:
         prompt_text = "Heute Nacht 7 h 24 min geschlafen, Schlafscore 81. Ruhepuls 46, HRV 50 ms, Trainingsbereitschaft 77."
         messages = [
             {"role": "system", "content": "Du bist ein exakter Datenassistent. Antworte nur mit JSON."},
-            {"role": "user", "content": f"Aus dem Text extrahieren:\n{prompt_text}\nAufgabe: JSON {{\"sleep_hours\",\"sleep_score\",\"rhr\",\"hrv\",\"readiness\"}}"},
+            {"role": "user", "content": f"Aus dem Text extrahieren:\n{prompt_text}\nAufgabe: JSON {{\"sleep_hours\",\"sleep_score\",\"rhr\",\"hrv\",\"readiness\"}}. Alle Werte als Zahlen ohne Einheit; sleep_hours als Dezimalzahl in Stunden (z. B. 6 h 30 min = 6.5)."},
         ]
         try:
             t0 = datetime.datetime.now(tz_local).timestamp()
@@ -656,7 +670,10 @@ def cmd_selbsttest(force: bool = False) -> None:
             ok = True
             detail = ""
 
-            sh_val = float(data.get("sleep_hours", -999))
+            sh_raw = data.get("sleep_hours", -999)
+            sh_val = _stunden(sh_raw)
+            if not isinstance(sh_raw, (int, float)):
+                detail += f"sleep_hours als Text geliefert ({sh_raw!r}), umgerechnet\n"
             if abs(sh_val - 7.4) > 0.01:
                 ok = False
                 detail += f"sleep_hours {sh_val} statt 7.4\n"
