@@ -65,7 +65,7 @@ export async function fetchCalendarDays(days = 14): Promise<CalendarDay[]> {
 }
 
 /** Alltag-Check: nur Marcs eigene Kalender, ganztägige Termine zählen nicht. */
-export const ALLTAG_KALENDER = ['Marc', 'Marc (geteilt)', 'Marc & Natalia'];
+export const ALLTAG_KALENDER = ['Marc', 'Marc (geteilt)', 'Natalia & Marc'];
 
 export async function fetchCalendarDaysGefiltert(
   days = 14,

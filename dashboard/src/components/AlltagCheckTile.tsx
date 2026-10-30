@@ -190,7 +190,7 @@ export function AlltagCheckTile({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="label">Coach Kira · Alltag-Check</div>
-          <p className="text-2xs text-ink-dim mt-1">Passt der Plan zu deinen Terminen und zum Wetter? Nur die Kalender Marc, Marc (geteilt) und Marc & Natalia, ohne ganztägige Termine und ohne Termintitel. Wetter für Kadeltshofen.</p>
+          <p className="text-2xs text-ink-dim mt-1">Passt der Plan zu deinen Terminen und zum Wetter? Nur die Kalender Marc, Marc (geteilt) und Natalia & Marc, ohne ganztägige Termine und ohne Termintitel. Wetter für Kadeltshofen.</p>
         </div>
         <button className="btn btn-primary text-xs px-2 py-1" onClick={run} disabled={phase !== 'idle' || !rows.length}>
           {phase === 'laden' ? 'Lade Kalender und Wetter…' : phase === 'ki' ? 'Kira prüft…' : 'Prüfen'}
