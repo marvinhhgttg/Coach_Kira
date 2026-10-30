@@ -14,7 +14,7 @@ export type Gelaende = 'flach' | 'berg';
 export type Untergrund = 'alle' | 'strasse' | 'gravel';
 export type Kennzahl = 'hf' | 'leistung';
 
-export const LAUF_TYPEN = new Set(['running', 'trail_running']);
+export const LAUF_TYPEN = new Set(['running']); // Trail bewusst nicht: Untergrund verzerrt HF und Leistung je Tempo
 export const RAD_TYPEN = new Set(['road_biking', 'cycling', 'gravel_cycling', 'mountain_biking']);
 const STRASSE = new Set(['road_biking', 'cycling']);
 
