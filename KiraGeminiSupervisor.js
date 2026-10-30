@@ -9983,7 +9983,13 @@ function ckX_calendar_(p) {
     const reise = /reise|flug|flight|hotel|dienstreise|messe|zug nach|bahn/i;
     const frei = /urlaub|ferien|frei\b|vacation/i;
     const krank = /krank|arzt|zahnarzt|physio|op\b/i;
-    const cals = CalendarApp.getAllCalendars().filter(function (c) { return !skip.test(c.getName()); });
+    // optional: nur bestimmte Kalender (kal=Name|Name|…, exakter Name ohne Groß/Klein) und ganztag=0 = ganztägige Termine ignorieren
+    const nurKal = String(p.kal || '').split('|').map(function (x) { return x.trim().toLowerCase(); }).filter(String);
+    const ohneGanztag = String(p.ganztag) === '0';
+    const cals = CalendarApp.getAllCalendars().filter(function (c) {
+      const n = String(c.getName() || '').trim().toLowerCase();
+      return nurKal.length ? nurKal.indexOf(n) >= 0 : !skip.test(c.getName());
+    });
     const start = new Date(); start.setHours(0, 0, 0, 0);
     const out = [];
     for (let d = 0; d < days; d++) {
@@ -10000,6 +10006,7 @@ function ckX_calendar_(p) {
       cals.forEach(function (c) {
         c.getEvents(a, b).forEach(function (ev) {
           if (/^\\[coach kira\\]/i.test(ev.getTitle())) return;
+          if (ohneGanztag && ev.isAllDayEvent()) return;
           const t = ev.getTitle() || '';
           // gleicher Termin in mehreren Kalendern nur einmal zählen
           const key = t + '|' + ev.getStartTime().getTime() + '|' + ev.getEndTime().getTime();
@@ -10042,7 +10049,8 @@ function ckX_calendar_(p) {
         gesundheit: isKrank
       });
     }
-    return ckDash_json_({ ok: true, timestamp: ckDash_now_(), calendars: cals.length, days: out });
+    return ckDash_json_({ ok: true, timestamp: ckDash_now_(), calendars: cals.length, days: out,
+      filter: { kalender: nurKal.length ? cals.map(function (c) { return c.getName(); }) : null, ganztaegig: !ohneGanztag } });
   } catch (err) {
     return ckDash_json_({ ok: false, timestamp: ckDash_now_(), error: String(err && err.message ? err.message : err) });
   }

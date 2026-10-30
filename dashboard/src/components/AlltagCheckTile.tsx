@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { fetchCalendarDays, fetchWeather, saveExtra, type CalendarDay, type WeatherDay } from '../lib/extras';
+import { ALLTAG_KALENDER, fetchCalendarDaysGefiltert, fetchWeather, saveExtra, type CalendarDay, type WeatherDay } from '../lib/extras';
 import { localChat, parseJsonLoose } from '../lib/localLLM';
 import { fmtDateShort } from '../lib/format';
 
@@ -84,7 +84,16 @@ export function AlltagCheckTile({
     setInfo(null);
     setPhase('laden');
     const n: string[] = [];
-    const [c, w] = await Promise.allSettled([fetchCalendarDays(14), fetchWeather(14)]);
+    const [c0, w] = await Promise.allSettled([fetchCalendarDaysGefiltert(14, { kalender: ALLTAG_KALENDER, ohneGanztag: true }), fetchWeather(14)]);
+    const c = c0.status === 'fulfilled' ? ({ status: 'fulfilled', value: c0.value.days } as const) : c0;
+    if (c0.status === 'fulfilled') {
+      const k = c0.value;
+      if (!k.filterAktiv) n.push('Kalenderfilter noch nicht aktiv (Apps-Script-Patch „Alltag-Kalender“) – es zählen noch alle Kalender, ganztägige Termine sind herausgerechnet.');
+      else {
+        const fehlt = ALLTAG_KALENDER.filter((x) => !(k.kalender || []).some((y) => y.trim().toLowerCase() === x.toLowerCase()));
+        if (fehlt.length) n.push(`Kalender nicht gefunden: ${fehlt.join(', ')} (Name in Google Kalender prüfen).`);
+      }
+    }
     const calMap: Record<string, CalendarDay> = {};
     const wetMap: Record<string, WeatherDay> = {};
     if (c.status === 'fulfilled') c.value.forEach((x) => (calMap[x.date] = x));
@@ -181,7 +190,7 @@ export function AlltagCheckTile({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="label">Coach Kira · Alltag-Check</div>
-          <p className="text-2xs text-ink-dim mt-1">Passt der Plan zu deinen Terminen und zum Wetter? Kalender ohne Termintitel, Wetter für Kadeltshofen.</p>
+          <p className="text-2xs text-ink-dim mt-1">Passt der Plan zu deinen Terminen und zum Wetter? Nur die Kalender Marc, Marc (geteilt) und Marc & Natalia, ohne ganztägige Termine und ohne Termintitel. Wetter für Kadeltshofen.</p>
         </div>
         <button className="btn btn-primary text-xs px-2 py-1" onClick={run} disabled={phase !== 'idle' || !rows.length}>
           {phase === 'laden' ? 'Lade Kalender und Wetter…' : phase === 'ki' ? 'Kira prüft…' : 'Prüfen'}

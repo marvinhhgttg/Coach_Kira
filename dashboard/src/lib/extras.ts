@@ -61,9 +61,26 @@ export interface CalendarDay {
 }
 
 export async function fetchCalendarDays(days = 14): Promise<CalendarDay[]> {
-  const j = await getJson(`${BASE_URL}?mode=calendarDays&days=${days}&cb=${Date.now()}`);
+  return (await fetchCalendarDaysGefiltert(days)).days;
+}
+
+/** Alltag-Check: nur Marcs eigene Kalender, ganztägige Termine zählen nicht. */
+export const ALLTAG_KALENDER = ['Marc', 'Marc (geteilt)', 'Marc & Natalia'];
+
+export async function fetchCalendarDaysGefiltert(
+  days = 14,
+  opt: { kalender?: string[]; ohneGanztag?: boolean } = {},
+): Promise<{ days: CalendarDay[]; kalender: string[] | null; filterAktiv: boolean }> {
+  const q = new URLSearchParams({ mode: 'calendarDays', days: String(days), cb: String(Date.now()) });
+  if (opt.kalender?.length) q.set('kal', opt.kalender.join('|'));
+  if (opt.ohneGanztag) q.set('ganztag', '0');
+  const j = await getJson(`${BASE_URL}?${q.toString()}`);
   if (!j || !j.ok) throw new Error((j && j.error) || 'Kalender nicht lesbar');
-  return j.days || [];
+  const f = j.filter;
+  let ds: CalendarDay[] = j.days || [];
+  // Apps Script ohne Filter-Patch: ganztägige wenigstens aus der Zählung nehmen
+  if (!f && opt.ohneGanztag) ds = ds.map((d) => ({ ...d, termine: Math.max(0, d.termine - (d.ganztaegig || 0)), ganztaegig: 0 }));
+  return { days: ds, kalender: f && Array.isArray(f.kalender) ? f.kalender : null, filterAktiv: !!f };
 }
 
 export interface PhysBaseline {
