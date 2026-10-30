@@ -4,7 +4,8 @@ const SOURCE_TIMELINE_SHEET = 'timeline'; // NEU: Das Blatt mit Formeln
 const TIMELINE_SHEET_NAME = 'KK_TIMELINE'; // Zielblatt für Werte
 // --- PlanApp Snapshot (SG Stabilität) ---
 const PLANAPP_SNAPSHOT_KEY = 'PLANAPP_SNAPSHOT_V1';
-const KK_BUILD_ID = '2026-01-26__charts_fix_01';
+const KK_BUILD_ID = '2026-10-17__kira_chat';
+
 
 function debugDump(options) {
   const opt = Object.assign({
@@ -172,6 +173,7 @@ const BASELINE_SHEET_NAME = 'phys_baseline';
 const OUTPUT_STATUS_SHEET = 'AI_REPORT_STATUS'; 
 const OUTPUT_PLAN_SHEET = 'AI_REPORT_PLAN';
 const LOG_SHEET_NAME = 'AI_LOG'; 
+const AI_LOG_ENABLED = false; // (2026-09-28) Schreiben ins Blatt AI_LOG abgeschaltet; Blatt bleibt bestehen
 const BACKUP_SHEET_NAME = 'AI_PLAN_BACKUP'; // <-- NEU (V35)
 const OUTPUT_HISTORY_SHEET = 'AI_DATA_HISTORY';
 const OUTPUT_FORECAST_SHEET = 'AI_DATA_FORECAST';
@@ -333,20 +335,12 @@ function onOpen() {
     // MODIFIZIERT (V10)
     .addItem('KI-Planung & Charts starten (v10)', 'runKiraGeminiSupervisor')
     .addSeparator() // Trennlinie
-    .addItem('Aktivitäts-Review starten', 'generateActivityReview') // Neuer Eintrag
-    .addSeparator() 
-    .addItem('Historien-Analyse starten', 'runHistoricalAnalysis') 
-    .addSeparator() // <-- NEU
     .addItem('Tageswechsel (is_today -> +1 Tag)', 'advanceTodayFlag') // <-- NEU
     .addSeparator() // <-- NEU
     .addItem('KI-PLAN ANWENDEN', 'applyKiraPlanToTimeline') // <-- NEU
     .addToUi();
 }
 
-/**
- * (V47.2 - Log-Cleaner): Schreibt eine Log-Zeile in das 'AI_LOG'-Blatt.
- * Fügt OBEN ein und löscht UNTEN alles über 500 Zeilen weg (Selbstreinigung).
- */
 function logToSheet(level, message) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -359,29 +353,28 @@ function logToSheet(level, message) {
       logSheet.setFrozenRows(1); // Friere die Kopfzeile
     }
 
-    const timestamp = new Date();
-    let logMessage = (typeof message === 'object') ? JSON.stringify(message) : message;
+    let logMessage = (typeof message === 'object') ? JSON.stringify(message) : String(message);
+    if (logMessage.length > 45000) logMessage = logMessage.slice(0, 45000) + ' …(gekürzt)';
 
-    // 1. Neue Zeile OBEN einfügen (Zeile 2) - Das Neueste steht oben
-    logSheet.appendRow([timestamp, level, logMessage]);
+    // Neue Zeile unten anhängen; Platz schaffen, falls das Blatt voll ist
+    const next = logSheet.getLastRow() + 1;
+    if (next > logSheet.getMaxRows()) logSheet.insertRowsAfter(logSheet.getMaxRows(), 100);
+    logSheet.getRange(next, 1, 1, 3).setValues([[new Date(), String(level || ''), logMessage]]);
 
-
-    // --- CLEANER: nur die letzten 500 Logs behalten (appendRow-kompatibel) ---
-const MAX_ROWS = 500;
-const lastRow = logSheet.getLastRow(); // inkl. Header
-
-// Header (1) + 500 Logs = 501 Zeilen
-if (lastRow > MAX_ROWS + 1) {
-  const numRowsToDelete = lastRow - (MAX_ROWS + 1);
-  // Lösche die ÄLTESTEN Logs direkt unter dem Header (Zeile 2 ...)
-  logSheet.deleteRows(2, numRowsToDelete);
-}
-
+    // CLEANER: ab 600 Einträgen auf die letzten 500 kürzen (in Blöcken, spart Laufzeit)
+    const MAX_ROWS = 500;
+    const lastRow = logSheet.getLastRow(); // inkl. Header
+    if (lastRow > MAX_ROWS + 101) logSheet.deleteRows(2, lastRow - (MAX_ROWS + 1));
 
   } catch (e) {
     Logger.log(`Konnte nicht ins Log-Sheet schreiben: ${e.message}`);
+    try {
+      PropertiesService.getScriptProperties().setProperty('CK_LOG_LAST_ERROR',
+        new Date().toISOString() + ' ' + String(e && e.message ? e.message : e).slice(0, 400));
+    } catch (x) {}
   }
 }
+
 
 function copyTimelineData() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -641,7 +634,9 @@ function runKiraGeminiSupervisor() {
   
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const HB_RUN_ID = Utilities.getUuid().slice(0, 8);
+  if (!ckSup_begin_(HB_RUN_ID)) return; // läuft schon – Nachlauf ist vorgemerkt
   hb_(ss, HB_RUN_ID, "START", "Supervisor gestartet");
+
 
 
   // 1. Start-Signal
@@ -799,8 +794,8 @@ if (datenPaket?.heute) {
     const subScores = calculateSubScores(fitnessScores);
     const scoreResult = calculateGesamtScore(alleScores);
     
-    // Prompt erstellen
-    const prompt = createMasterGeminiPrompt(
+    // KI-frei (Stufe 3): nur Daten – den Prompt baut der Mac (kira_prompts)
+    const promptData = ckSup_promptData_(
       datenPaket,
       fitnessScores, 
       nutritionScore,
@@ -813,90 +808,26 @@ if (datenPaket?.heute) {
       wetterDaten
     );
 
-    let apiResponse = null;
-    try {
-        hb_(ss, HB_RUN_ID, "AI_CALL", "OpenAI Request raus");
-        logToSheet('INFO', '📞 Rufe OpenAI (GPT-4o) mit JSON-Schema auf...');
-        apiResponse = callOpenAI(prompt);
-    } catch (apiError) {
-        logToSheet('ERROR', `API Fehler: ${apiError.message}`);
-        throw apiError; 
-    }
+    // Lokal-Modus: Auftrag an den Mac geben und hier beenden (Ergebnis kommt per saveSupervisor)
+    const ckSupCtx = { fitnessScores: fitnessScores, nutritionScore: nutritionScore, scoreResult: scoreResult, subScores: subScores, teResult: teResult };
+    // KI-frei (2026-10-26): Der Auftrag geht immer an den Mac. Das Ergebnis kommt per saveSupervisor zurück.
+    ckSup_enqueue_(promptData, ckSupCtx, HB_RUN_ID);
+    hb_(ss, HB_RUN_ID, "AI_WAIT_LOCAL", "Wartet auf Mac (coach-kira)");
+    logToSheet('INFO', '[Supervisor] Auftrag für den Mac bereitgestellt.');
+    ckSup_end_();
+    return;
 
-    logToSheet('INFO', 'Antwort erhalten.');
-    hb_(ss, HB_RUN_ID, "AI_OK", "OpenAI Antwort da");
-    hb_(ss, HB_RUN_ID, "WRITE", "writeOutputToSheets startet");
 
-    // ------------------------------------------------------------
-    // SCHRITT 4: SPEICHERN (Hier schreibt die KI den Text in F11!)
-    // ------------------------------------------------------------
-    writeOutputToSheets(
-        ss, 
-        apiResponse, 
-        fitnessScores, 
-        nutritionScore, 
-        scoreResult.num, 
-        scoreResult.ampel, 
-        subScores.recoveryScore, 
-        subScores.recoveryAmpel, 
-        subScores.trainingScore, 
-        subScores.trainingAmpel
-    );
-
-    // +++ ANZEIGE-FIX (NUR FORMAT & AMPEL) +++
-    // Wir lassen den Text in F11 (den die KI gerade geschrieben hat) in Ruhe!
-    try {
-       const statusSheet = ss.getSheetByName('AI_REPORT_STATUS');
-       if (statusSheet && teResult.val > 0) {
-           // Wir fixieren nur die Zahl als Text-Format (gegen "0,106...")
-           statusSheet.getRange("D11").setNumberFormat("@").setValue(teResult.text);
-           
-           // Wir fixieren Score & Ampel (falls writeOutput geschlampt hat)
-           let ampel = (teResult.val >= 0.2) ? "LILA" : (teResult.val >= 0.1) ? "GRÜN" : "ROT";
-           let score = (teResult.val >= 0.2) ? 100 : (teResult.val >= 0.1) ? 80 : 25;
-           
-           statusSheet.getRange("C11").setValue(ampel);
-           statusSheet.getRange("E11").setValue(score);
-           
-           // WICHTIG: KEIN setValue für F11 hier!
-       }
-    } catch(e) { console.log("Cell Fix Fehler: " + e.message); }
-
-    logToSheet('INFO', `Berichte & Scores gespeichert.`);
-
-    // ------------------------------------------------------------
-    // SCHRITT 5: NACHARBEIT
-    // ------------------------------------------------------------
-    try {
-       const uhrzeit = new Date().toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
-       const appUrl = "https://script.google.com/macros/s/AKfycbxCEN11KRlFaLL7uVJyeBLCrRJVmfBWagSmqvyJ8Ci7nwxi8HbolzTy23Z-G2mivC2h/exec"; 
-       const configSheet = ss.getSheetByName("KK_CONFIG");
-       if (configSheet) configSheet.getRange("B9").setValue(appUrl);
-       if (typeof sendTelegram === 'function') {
-         try {
-            sendTelegram(`🫡 Commander, Analyse fertig (${uhrzeit})!\n📱 Dashboard: ${appUrl}`);
-         } catch(e) { Utilities.sleep(1000); sendTelegram("🫡 Analyse fertig (Retry)"); }
-       }
-    } catch(e) {}
-
-    // ------------------------------------------------------------
-    // SCHRITT 6: NACHARBEIT (ASYNC)
-    // ------------------------------------------------------------
-    // Diese Schritte können (je nach Datenmenge) viel Zeit kosten. Damit der Supervisor
-    // schneller fertig ist, laufen sie asynchron in einem Trigger.
-    schedulePostWork_();
-
-    Logger.log("✅ Supervisor-Prozess komplett abgeschlossen.");
-    logToSheet('INFO', `✅ KI-Bewertung V137 erfolgreich.`);
-    hb_(ss, HB_RUN_ID, "END_OK", "Supervisor fertig");
 
 
   } catch (e) {
     hb_(ss, HB_RUN_ID, "END_ERROR", e && e.message ? e.message : String(e));
     logToSheet('ERROR', `🛑 FEHLER im Supervisor: ${e.message}`);
     logToSheet('ERROR', `Stack: ${e.stack}`);
+    ckSup_end_();
   }
 }
+
 
 
 /**
@@ -1566,632 +1497,11 @@ function getGesamtAmpel(score) {
  * Enthält die wichtigsten Definitionen aus den Firstbeat Whitepapers 
  * als "Quelle der Wahrheit" für die KI-Analysen.
  */
-const WISSENSBLOCK_V105 = `
---- KERNWISSEN (Firstbeat Whitepapers) ---
-Du (Kira) musst diese Definitionen als "Quelle der Wahrheit" für deine Analysen verwenden.
+// KI-frei (Stufe 3): WISSENSBLOCK_V105 entfernt – liegt in kira_prompts (Fallback, falls KK_WISSEN fehlt).
 
-1.  **Training Effect (TE) Skala (0.0-5.0)[cite: 1799, 2123]:**
-    * **Basis:** Basiert auf EPOC (Excess Post-Exercise Oxygen Consumption)[cite: 1667, 2102].
-    * **EPOC:** Misst die Störung der Homöostase (also den Erholungsbedarf) durch das Training[cite: 1721, 2102, 3460].
-    * **TE 1.0-1.9 (Minor):** Erhält die Grundlagenausdauer oder fördert die Erholung[cite: 1809, 2123].
-    * **TE 2.0-2.9 (Maintaining):** Hält die aktuelle kardiorespiratorische Fitness[cite: 1811, 2123].
-    * **TE 3.0-3.9 (Improving):** Verbessert die kardiorespiratorische Fitness (empfohlen 2-4x pro Woche)[cite: 1813, 2123].
-    * **TE 4.0-4.9 (Highly Improving):** Verbessert stark (empfohlen 1-2x pro Woche), erfordert mehr Aufmerksamkeit bei der Erholung[cite: 1815, 2123].
-    * **TE 5.0 (Overreaching):** Extremer Reiz ("Overreaching")[cite: 1817, 2123]. Führt nur mit ausreichender Erholung zur Verbesserung[cite: 2123].
+// KI-frei (Stufe 3): createMasterGeminiPrompt entfernt – Prompt-Bau liegt in kira_prompts (Cockpit/Mac).
 
-
-2.  **Training Load & ACWR (Belastungssteuerung):**
-    * **Acute Load (ATL):** Die Summe des TRIMP der letzten 7 Tage.
-    * **Chronic Load (CTL):** Der Durchschnitts-TRIMP der letzten 28 Tage.
-    * **ACWR (Acute:Chronic Workload Ratio):** Das Verhältnis von Akut zu Chronisch.
-    * **Zielzone ("Sweet Spot"):** ACWR zwischen **0.8 und 1.2**.
-    * **Untertraining (ACWR < 0.8):** Deutet auf **Formverlust / Detraining** hin (NICHT auf Überforderung!).
-    * **Überlastung (ACWR > 1.5):** Gefahrenzone! Verletzungsrisiko steigt signifikant.
-    * **WICHTIG:** Es gibt **keine** mathematische Korrelation zwischen ACWR (Last) und HRV (Stress). Behandle sie als separate Signale.
-// ...
-
-3.  **HRV (Stress & Erholung)[cite: 1026]:**
-    * **Grundlage:** Die HRV-Analyse spiegelt das Autonome Nervensystem (ANS) wider[cite: 1044, 1164, 1435].
-    * **Stress-Reaktion:** Wird durch Dominanz des **Sympathischen Nervensystems** (fight or flight) angezeigt (HR steigt, HRV sinkt)[cite: 1033, 1154, 1304].
-    * **Erholung:** Wird durch Dominanz des **Parasympathischen (Vagalen) Nervensystems** (rest and digest) angezeigt (HR sinkt, HRV steigt)[cite: 1034, 1158, 1298].
-    * **Schlechte Erholung / Ermüdung:** Zeigt sich, wenn die sympathische Dominanz (Stress) *auch in Ruhephasen* (z.B. Schlaf) anhält[cite: 2669, 2898, 2901].
-
-4.  **VO2max:**
-    * **Definition:** Die "goldene Standardmessung" für die aerobe Fitness[cite: 3042, 3047].
---- ENDE KERNWISSEN ---
-`;
-
-/**
- * V145-SMART-ENTRY: Intelligenter RTP-Einstieg.
- * Formel: RTP-Startpunkt = 10 - Krankheitstage.
- * Kurze Krankheit -> Später Einstieg (kurzes RTP). Lange Krankheit -> Start bei 1.
- */
-function createMasterGeminiPrompt(data, fitnessScores, nutritionScore, gesamtScoreNum, gesamtScoreAmpel, zoneFactors, elevFactors, weekConfigCSV, isActivityDone, wetterDaten) {
-  
-  const alleScores = fitnessScores.concat([nutritionScore]);
-  const { heute, zukunft, baseline, history, monotony_varianz, rtp_status } = data; 
-
-  // --- ACWR FIX: einzig wahre Quelle für Text_Info = coachE_ACWR_forecast (HEUTE) ---
-const acwrRawHeute = (heute?.coachE_ACWR_forecast ?? heute?.coache_acwr_forecast);
-const acwrForecastNum = parseGermanFloat_(acwrRawHeute);
-
-const acwrFix = Number.isFinite(acwrForecastNum)
-  ? acwrForecastNum.toFixed(2).replace('.', ',')  // "1,13"
-  : String(acwrRawHeute ?? '').trim();
-
-const acwrFixDot = acwrFix.replace(',', '.');      // "1.13" (falls du es numerisch brauchst)
-
-
-
-  // --- FIX V179: TE-Balance aus HEUTIGER Forecast-Zeile (is_today/date), sonst monotony_varianz ---
-  const fallbackTeBalanceHeute = (monotony_varianz * 100).toFixed(1).replace('.', ',') + "%";
-  let teBalanceHeute = fallbackTeBalanceHeute;
-  try {
-    const fcSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('AI_DATA_FORECAST');
-    if (fcSheet && fcSheet.getLastRow() > 1) {
-      const fcData = fcSheet.getDataRange().getValues();
-      const fcHeaders = fcData[0].map(h => h.toString().trim());
-      const fcHeadersLc = fcHeaders.map(h => h.toLowerCase());
-
-      const teIdx = fcHeadersLc.indexOf('te balance') > -1
-        ? fcHeadersLc.indexOf('te balance')
-        : fcHeadersLc.indexOf('te balance (% intensiv)');
-
-      if (teIdx !== -1) {
-        const tz = Session.getScriptTimeZone();
-        const todayKey = Utilities.formatDate(new Date(), tz, "yyyy-MM-dd");
-        let todayRowIdx = -1;
-
-        // 1) Bevorzugt: is_today == 1
-        const isTodayIdx = fcHeadersLc.indexOf('is_today');
-        if (isTodayIdx !== -1) {
-          for (let r = 1; r < fcData.length; r++) {
-            if (parseGermanFloat(fcData[r][isTodayIdx]) === 1) {
-              todayRowIdx = r;
-              break;
-            }
-          }
-        }
-
-        // 2) Fallback: Datum == heute
-        if (todayRowIdx === -1) {
-          const dateIdx = fcHeadersLc.indexOf('datum') > -1
-            ? fcHeadersLc.indexOf('datum')
-            : fcHeadersLc.indexOf('date');
-
-          if (dateIdx !== -1) {
-            for (let r = 1; r < fcData.length; r++) {
-              const rawDate = fcData[r][dateIdx];
-              const dObj = rawDate instanceof Date ? rawDate : new Date(rawDate);
-              if (dObj instanceof Date && !isNaN(dObj.getTime())) {
-                const rowKey = Utilities.formatDate(dObj, tz, "yyyy-MM-dd");
-                if (rowKey === todayKey) {
-                  todayRowIdx = r;
-                  break;
-                }
-              }
-            }
-          }
-        }
-
-        if (todayRowIdx !== -1) {
-          let teRaw = fcData[todayRowIdx][teIdx];
-          let teNum = Number.NaN;
-
-          if (typeof teRaw === 'number') {
-            teNum = teRaw;
-          } else {
-            teNum = parseGermanFloat(String(teRaw).replace('%', ''));
-          }
-
-          if (Number.isFinite(teNum)) {
-            if (Math.abs(teNum) <= 1.0 && teNum !== 0) teNum = teNum * 100;
-            teBalanceHeute = teNum.toFixed(1).replace('.', ',') + "%";
-          }
-        }
-      }
-    }
-  } catch(e) {
-    teBalanceHeute = fallbackTeBalanceHeute;
-  }
-
-  // --- 1. DEFINITIONEN & DATUM FIX ---
-  const dynamicKnowledge = getDeepKnowledgeBase();
-  
-  const timeZone = Session.getScriptTimeZone();
-  let heuteDateObj = heute['date'];
-  if (!(heuteDateObj instanceof Date)) heuteDateObj = new Date(heuteDateObj);
-
-  const cleanDate = Utilities.formatDate(heuteDateObj, timeZone, "yyyy-MM-dd");
-  let cleanTag = heute['date.2'];
-  if (!cleanTag || cleanTag === "") {
-      const days = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
-      cleanTag = days[heuteDateObj.getDay()];
-  }
-  
-  let heuteString = `- ${cleanDate} (${cleanTag}): `; 
-
-  const heutigerIstLoad = parseGermanFloat(heute['load_fb_day']);
-  const isActivityDone_Text = isActivityDone ? "true" : "false";
-  const heutigerSollLoad = parseGermanFloat(heute['coachE_ESS_day']); 
-  
-  // Kontext-Header
-  let statusHeuteHeader = isActivityDone 
-      ? `✅ TRAINING HEUTE BEREITS ABSOLVIERT (Ist-Load: ${heutigerIstLoad})`
-      : `⏳ TRAINING HEUTE NOCH OFFEN (Soll-Load: ${heutigerSollLoad})`;
-
-  let scoresText = "";
-  alleScores.forEach(s => { 
-      // FIX ACWR: Komma zu Punkt, damit die KI die Zahl versteht (1.30 statt 1,30)
-      let cleanVal = String(s.raw_wert).replace(',', '.');
-      
-      // FIX ACWR: Wenn Wert hoch ist (>0.8) aber Score 0 (weil rot), 
-      // dann sag der KI explizit "RISIKO", sonst denkt sie "Daten fehlen".
-      let scoreInfo = s.num_score;
-      if (s.metrik.includes("ACWR") && parseFloat(cleanVal) > 0.8 && s.num_score < 10) {
-         scoreInfo = `${s.num_score} (ACHTUNG: HOCHRISIKO-BEREICH!)`; 
-      }
-      
-      scoresText += `- ${s.metrik}: ${cleanVal} (Score: ${scoreInfo}, ${s.ampel})\n`; 
-  });
-  const metricsChecklist = alleScores.map(s => `"${s.metrik}"`).join(', ');
-  const keiMetricFromFitnessScores = fitnessScores.find(s => s && s.metrik === "KEI");
-  const keiPromptValue = keiMetricFromFitnessScores ? String(keiMetricFromFitnessScores.raw_wert || "—") : "—";
-
-  // -----------------------------------------------------------
-  // 2. RTP INTELLIGENZ: MATRIX-BERECHNUNG
-  // -----------------------------------------------------------
-  const isRTP = (rtp_status && rtp_status.includes("RTP"));
-  
-  // A) Phase extrahieren
-  let daysSinceHealthy = 0;
-  if (isRTP) {
-      try { daysSinceHealthy = parseInt(rtp_status.split('_')[2]); } catch (e) { daysSinceHealthy = 0; }
-  }
-
-  // B) Schweregrad ermitteln (Krankheitstage zählen)
-  let sickDaysCount = 0;
-  if (isRTP && history) {
-      const rows = history.split('\n');
-      for (let i = rows.length - 1; i >= 0; i--) {
-          const rowStr = rows[i].toLowerCase();
-          if (rowStr.includes("krank") || rowStr.includes("sick") || rowStr.includes("infekt")) {
-              sickDaysCount++;
-          } else if (sickDaysCount > 0 && rowStr.includes(",")) { 
-              break; 
-          }
-      }
-  }
-  
-  // C) FALLBACK
-  if (isRTP && sickDaysCount === 0) {
-      sickDaysCount = 7; 
-      logToSheet('WARN', '[RTP] Konnte Krankheitstage nicht in History finden. Setze Fallback auf 7 Tage.');
-  }
-
-  // D) Smart Offset Berechnung (Start = 10 - Krank)
-  let protocolOffset = 0;
-  if (sickDaysCount < 9) {
-      protocolOffset = 9 - sickDaysCount;
-      if (protocolOffset < 0) protocolOffset = 0;
-  }
-
-  logToSheet('INFO', `[RTP-Smart] Krank: ${sickDaysCount}d | Seit Gesund: ${daysSinceHealthy}d | Offset: +${protocolOffset} Steps`);
-
-  // E) Helper: Effektiven Tag berechnen
-  const getEffectiveDay = (dayIndexFromNow) => {
-      if (!isRTP) return 0;
-      const arrayIndex = (daysSinceHealthy - 1) + protocolOffset + dayIndexFromNow; 
-      const effectiveDay = arrayIndex + 1; 
-      return (effectiveDay <= 9) ? effectiveDay : 0; 
-  };
-
-  // RTP RAMPE (9 Tage)
-  const rtpRamp = [10, 30, 60, 0, 60, 0, 70, 80, 0]; 
-
-  // -----------------------------------------------------------
-  // 3. HEUTE: WAS IST DRAN?
-  // -----------------------------------------------------------
-  let todayPlan_LoadRec = 0;
-  let todayPlan_Zone = "Ruhetag (Fixed)";
-  let todayPlan_Sport1 = "Geplanter Ruhetag";
-  let todayPlan_Sport2 = "Yoga / Stretching";
-  let todayPlan_Text = "Regeneration.";
-  let heuteZusatzInfo = "";
-
-  const todayEffectiveDay = isRTP ? getEffectiveDay(0) : 0;
-
-  if (todayEffectiveDay > 0) {
-      const rtpLoad = rtpRamp[todayEffectiveDay - 1]; 
-      
-      if (isActivityDone) {
-          heuteZusatzInfo = ` -> ✅ RTP TAG ${todayEffectiveDay}/9 ERLEDIGT.`;
-          todayPlan_LoadRec = heutigerIstLoad; 
-          todayPlan_Text = `RTP (Tag ${todayEffectiveDay}/9). Einheit absolviert.`;
-          todayPlan_Zone = "Erledigt";
-          todayPlan_Sport1 = "Absolviert";
-      } else {
-          heuteZusatzInfo = ` -> ⚠️ RTP TAG ${todayEffectiveDay}/9 (Smart Entry). Load: ${rtpLoad}.`;
-          todayPlan_LoadRec = rtpLoad;
-          todayPlan_Text = `RTP-Schutz (Tag ${todayEffectiveDay}/9). Protokoll aktiv.`;
-
-          switch (todayEffectiveDay) {
-              case 1: todayPlan_Zone="Z1/Rek"; todayPlan_Sport1="Spaziergang"; break;
-              case 2: todayPlan_Zone="Z1 (Bike)"; todayPlan_Sport1="Diagnose-Rolle"; break;
-              case 3: todayPlan_Zone="Z2 (Bike)"; todayPlan_Sport1="Rolle Intensiv"; break;
-              case 4: todayPlan_Zone="Ruhetag"; todayPlan_Sport1="Integration (Ruhe)"; break;
-              case 5: todayPlan_Zone="Z2 (Run)"; todayPlan_Sport1="Lauf (kurz)"; break;
-              case 6: todayPlan_Zone="Ruhetag"; todayPlan_Sport1="Integration (Ruhe)"; break;
-              case 7: todayPlan_Zone="Z2 (Run)"; todayPlan_Sport1="Lauf (Steigerung)"; break;
-              case 8: todayPlan_Zone="Z2 (Bike)"; todayPlan_Sport1="Lange Rolle"; break;
-              case 9: todayPlan_Zone="Ruhetag"; todayPlan_Sport1="Abschluss"; break;
-          }
-      }
-  }
-
-  let heutigerFixMarker = (heute['fix'] || ' ').toString().trim();
-  let prognoseLoadText = "Original Load (ESS):\n";
-  prognoseLoadText += `${heuteString}${heutigerSollLoad}${heuteZusatzInfo}\n`;
-  let prognoseFixText = "Fixed Tage (fix='x'):\n" + `${heuteString}${heutigerFixMarker}\n`; 
-  let prognoseMonoText = "Prognose Monotonie (Load):\n" + `${heuteString}${heute['Monotony7']} (Belastungsfokus Ratio: ${(monotony_varianz * 100).toFixed(1)}%)\n`; 
-  let prognoseAcwrText = "Prognose ACWR:\n" + `${heuteString}${acwrFix}\n`;
-
-  // -----------------------------------------------------------
-  // 4. ZIELWERT BERECHNEN
-  // -----------------------------------------------------------
-  let peakCTL = 0;
-  try {
-      if (history) {
-          const histLines = history.split('\n');
-          for (let i = histLines.length - 1; i > 0; i--) {
-              const parts = histLines[i].split(',').map(s => s.replace(/"/g, '').trim());
-              const histCTL = parseFloat(parts[5]); 
-              if (!isNaN(histCTL) && histCTL > peakCTL) peakCTL = histCTL;
-          }
-      }
-  } catch(e) {}
-  const currentCTL = parseGermanFloat(heute['coachE_CTL_forecast']) || parseGermanFloat(heute['fbCTL_obs']) || 60;
-  const anchorCTL = (peakCTL > 0) ? peakCTL : currentCTL;
-  const targetRecoveryLoad = Math.round(anchorCTL * 0.6);
-
-  // -----------------------------------------------------------
-  // 5. DATEN & FAKTOREN
-  // -----------------------------------------------------------
-  const resting_calories_raw = baseline?.['Resting_Calories (kcal)'];
-const resting_calories_num = parseGermanFloat(resting_calories_raw);
-const resting_calories = Number.isFinite(resting_calories_num) ? resting_calories_num : 0;
-
-  const rhr_default = getBaselineNumber_(baseline, ['RHR_default (bpm)', 'RHR_default(bpm)', 'rhr_default (bpm)', 'rhr_default_bpm', 'rhr_default']);
-  const vo2max = parseGermanFloat(baseline['VO2max (mg/kg/min)']);
-  const ftp_rad = parseGermanFloat(baseline['FTP_Rad (W/kg)']);
-  const hill_score = parseGermanFloat(baseline['Hill_Score (0-100)']);
-  const run_econ = parseGermanFloat(baseline['Running_Economy (184-225)']);
-  
-  const allgemeineZiele = baseline['Allgemeine Ziele'] || "Keine Ziele definiert.";
-
-  let ernaehrungLabel = "";
-  const rawDeficit = parseFloat(nutritionScore.raw_wert);
-  if (rawDeficit > 0) ernaehrungLabel = "DEFIZIT";
-  else if (rawDeficit < 0) ernaehrungLabel = "ÜBERSCHUSS";
-  else ernaehrungLabel = "AUSGEGLICHEN";
-
-  const problemScores = alleScores.filter(s => s.num_score < 80)
-                                   .map(s => `${s.metrik}: ${s.raw_wert} (${s.ampel}/${s.num_score})`)
-                                   .join('; ');
-
-  const isRecoveryCritical = alleScores.some(s => 
-      (s.metrik === "HRV Status" || s.metrik === "Training Readiness" || s.metrik === "RHR") && s.num_score < 40
-  );
-  const isRecoveryBad = alleScores.some(s => 
-      (s.metrik === "HRV Status" || s.metrik === "Training Readiness" || s.metrik === "RHR") && s.num_score < 80
-  );
-  const isRecoverySuper = alleScores.every(s => 
-      (s.metrik !== "HRV Status" && s.metrik !== "Training Readiness") || s.num_score >= 90
-  );
-
-  // -----------------------------------------------------------
-  // 6. LOOP DURCH ZUKUNFT (AB MORGEN)
-  // -----------------------------------------------------------
-  zukunft.plan.forEach((tag, i) => { 
-    let tagString = `${tag.datum} (${tag.tag})`; 
-    let phase = (tag.week_phase) ? String(tag.week_phase).trim().toUpperCase() : "A"; 
-    let phaseMarker = "🚀 [PHASE A: AUFBAU]";
-    let loadInstruction = `Geplanter Load: ${tag.original_load_ess}`; 
-
-    if (phase === "E") {
-        phaseMarker = "🛑 [PHASE E: ENTLASTUNG]";
-        loadInstruction = `Original Plan: ${tag.original_load_ess} -> ZIEL: Reduzieren auf ca. ${targetRecoveryLoad}`;
-    }
-
-    if (phase === "E") {
-    phaseMarker = "🛑 [PHASE E: ENTLASTUNG]";
-    loadInstruction = `Original Plan: ${tag.original_load_ess} -> ZIEL: Reduzieren auf ca. ${targetRecoveryLoad}`;
-} else if (phase.startsWith("A") && phase !== "A") {
-    // macht A1/A2/A3 im Text sichtbar, A bleibt wie bisher
-    phaseMarker = `🚀 [PHASE ${phase}: AUFBAU]`;
-}
-
-
-    // RTP OVERRIDE
-    if (isRTP) {
-        const futureEffDay = getEffectiveDay(i + 1); 
-
-        if (futureEffDay > 0) {
-            phaseMarker = `🚑 [RTP TAG ${futureEffDay}/9]`;
-            
-            const isDone = (tag.original_act_load && tag.original_act_load > 5);
-            if (isDone) {
-                 loadInstruction = `✅ ERLEDIGT (Ist: ${tag.original_act_load}). [ORIGINAL-PLAN: ${tag.original_load_ess}]`;
-            } else {
-                const baseInst = `[ORIGINAL-PLAN: ${tag.original_load_ess}] (IGNORIEREN!) -> ⚠️ RTP VORGABE: `;
-                switch (futureEffDay) {
-                    case 1: loadInstruction = `${baseInst}Ziel ~10 (Walk). Zone: 'Z1/Rek'.`; break;
-                    case 2: loadInstruction = `${baseInst}Ziel ~30 (Bike). Zone: 'Z1 (Bike)'.`; break;
-                    case 3: loadInstruction = `${baseInst}Ziel ~60 (Bike). Zone: 'Z2 (Bike)'.`; break;
-                    case 4: loadInstruction = `${baseInst}RUHETAG. Zone: 'Ruhetag'.`; break;
-                    case 5: loadInstruction = `${baseInst}Ziel ~60 (Run). Zone: 'Z2 (Run)'.`; break;
-                    case 6: loadInstruction = `${baseInst}RUHETAG. Zone: 'Ruhetag'.`; break;
-                    case 7: loadInstruction = `${baseInst}Ziel ~70 (Run). Zone: 'Z2 (Run)'.`; break;
-                    case 8: loadInstruction = `${baseInst}Ziel ~80 (Bike). Zone: 'Z2 (Bike)'.`; break;
-                    case 9: loadInstruction = `${baseInst}RUHETAG. Zone: 'Ruhetag'.`; break;
-                    default: loadInstruction = `RTP Fehler.`;
-                }
-            }
-        } 
-    }
-
-    prognoseLoadText += `${phaseMarker} - ${tagString}: ${loadInstruction}\n`;
-    prognoseFixText += `- ${tagString}: ${tag.original_fix_marker || ' '}\n`; 
-    prognoseMonoText += `- ${tagString}: ${tag.original_monotony}\n`;
-    prognoseAcwrText += `- ${tagString}: ${tag.original_acwr}\n`;
-  });
-
-
-
-  // --- PROMPT ZUSAMMENBAU ---
-  let prompt = `Du bist Coach Kira, eine erfahrene KI-Sportwissenschaftlerin und Fitnessexpertin.
-Analysiere **deine (Marcs)** Daten. Ich habe die Scores (0-100) berechnet.
-Deine Aufgabe ist es, im JSON-Format Folgendes zu liefern:
-1. 'empfehlung_zukunft': Eine ausführliche textliche Gesamtbewertung ("text") und einen Plan-Status ("plan_status").
-2. 'bewertung_ernaehrung_7d': Eine **kurze (max. 2 Sätze)** textliche Bewertung der Ernährungsbilanz ("text").
-3. 'empfohlener_plan': Einen angepassten 8-TAGE-PLAN (HEUTE + 7 TAGE ZUKUNFT).
-4. 'einzelscore_kommentare': Ein Array von Objekten für JEDEN der 10 FITNESS-SCORES (NICHT Ernährung), mit "metrik" und "text_info".
-**WICHTIG: Formuliere alle deine Analysen sehr detailliert und kontextbezogen ('text', 'text_info', 'prognostizierte_auswirkung', 'wetterempfehlung') direkt an **dich (Marc)** und verwende die 'Du'-Anrede.**
-
-${dynamicKnowledge}
-
---- 🎯 DER ABSOLUTE DATEN-ANKER FÜR HEUTE (${cleanDate}) ---
-! WICHTIG: Falls Historien-Tabellen abweichende Werte enthalten: IGNORIEREN !
-! NUR DIESE WERTE SIND DIE WAHRHEIT FÜR DEINEN TEXT !
-- Ruhepuls (RHR) heute: ${heute['rhr_bpm']} bpm
-- HRV-Status heute: ${heute['hrv_status']} ms (Bereich: ${heute['hrv_threshholds']})
-- Schlaf: ${heute['sleep_hours']}h (Score: ${heute['sleep_score_0_100']}/100)
-- Trainingszustand: ${heute['trainingszustand']}
-- Aktueller ACWR (Forecast): ${acwrFix}  (WERT IST FIX, genau so verwenden)
-- Heutige Belastung (IST): ${heutigerIstLoad} ESS
-- Heutige Belastung (SOLL laut Plan): ${heutigerSollLoad} ESS
-- TE-Balance (% Intensiv): ${teBalanceHeute} %
-- KEI (aus fitnessScores): ${keiPromptValue}
-- Protein-Zufuhr: ${heute['protein_g']}g
-- Energie-Bilanz (Ø 7 Tage): ${nutritionScore.raw_wert} kcal
-- RTP-STATUS (System-Schutz): ${rtp_status}
------------------------------------------------------------
-
----
-**STATUS HEUTE: ${statusHeuteHeader}**
-(Nutze diese Info zwingend für die Perspektive deiner Analyse!)
----
-
----
-DEINE ALLGEMEINEN ZIELE (KONTEXT):
-**${allgemeineZiele}**
----
-
----
-**DEIN IDEALER WOCHENPLAN (ALS HINWEIS, NIEDRIGE PRIORITÄT)**
-(CSV: day_of_week,load,sport,zone)
-**${weekConfigCSV}**
----
-
----
-**NEU (V42): WETTER PROGNOSE (HEUTE & MORGEN):**
-${wetterDaten}
----
-
----
-**DEINE SCHÄTZ-FAKTOREN (ZUM BERECHNEN VON BEISPIELEN):**
-Zonen-Faktoren (Punkte pro Stunde): ${JSON.stringify(zoneFactors)}
-Höhen-Faktoren (Punkte pro 100hm): ${JSON.stringify(elevFactors)}
-**FORMEL: Load = (Minuten / 60) * ZonenFaktor + (Höhenmeter / 100) * HöhenFaktor**
----
-
-DATEN-BASELINE (PHYSIOLOGISCHES PROFIL)
-- Ruheumsatz: ${resting_calories.toFixed(0)} kcal/Tag
-- RHR-Basis: ${rhr_default} bpm
-- VO2max: ${vo2max} (mg/kg/min)
-- FTP (Rad): ${ftp_rad} (W/kg)
-- Hill Score: ${hill_score} / 100
-- Running Economy: ${run_econ} (niedriger ist besser)
-
----
-**VERGANGENE 14 TAGE (HISTORIE & KONTEXT):**
-(Zeigt den IST-Load (Actual_Load) und die Training Effect (TE) Verteilung)
-${history}
----
-
-BERECHNETER GESAMTSTATUS (HEUTE: ${cleanDate})
-- Gesamtscore: ${gesamtScoreNum} / 100 (${gesamtScoreAmpel})
-- HEUTIGER Original-Load (ESS): ${heutigerSollLoad}
-- HEUTIGER IST-Load (load_fb_day): ${heutigerIstLoad}
-- HEUTIGER Wochentag: ${cleanTag}
-- HEUTIGE Monotonie (Load): ${heute['Monotony7']}
-- HEUTIGE TE Balance: ${(monotony_varianz * 100).toFixed(1)}% (Dies ist das Ratio Intensiv/Basis)
-- V106-INFO: isRecoveryCritical == ${isRecoveryCritical} (mindestens ein Bio-Marker < 40/ROT)
-- V106-INFO: isRecoveryBad == ${isRecoveryBad} (mindestens ein Bio-Marker < 80/GELB)
-- V106-INFO: isRecoverySuper == ${isRecoverySuper} (Bio-Marker Top > 90)
-- **RTP-STATUS (Krankheit): ${rtp_status}** (Wenn != HEALTHY -> ALARM!)
-- **RTP-SCHWEREGRAD:** ${sickDaysCount} Tage krank -> Start bei Tag ${todayEffectiveDay}/9.
-- Problem-Scores (heute): ${problemScores || 'Keine'}
-
----
-BERECHNETE EINZELSCORES (HEUTE):
-${scoresText}
----
-GEPLANTER TRAININGSPLAN & PROGNOSE (HEUTE + 7 TAGE)
-(Dies ist der *alte* Plan. Du sollst ihn verbessern. Achte auf [FIXED] Marker!)
-${prognoseLoadText}
-${prognoseFixText}
-${prognoseMonoText}
-${prognoseAcwrText}
----
-DEINE AUFGABE (MAXIMALER KONTEXT & SPORTWISSENSCHAFTLICHE ANALYSE):
-
-**Berücksichtige bei allen Empfehlungen die 'Allgemeinen Ziele' UND die 'Vergangene 14 Tage (Historie)', um konsistent zu planen.**
-
-1.  **ANALYSIERE ERNÄHRUNG ('bewertung_ernaehrung_7d'):**
-    * Bewerte die 7-Tage-Bilanz (Score ${nutritionScore.num_score}, Wert ${nutritionScore.raw_wert} kcal) **in maximal 2 Sätzen**.
-    * (REGEL: Der Wert ${nutritionScore.raw_wert} kcal ist ein ${ernaehrungLabel}).
-
-2.  **ANALYSIERE GESAMTSTATUS & LEITE PLANSTATUS AB ('empfehlung_zukunft'):**
-        * **AUFTRAG:** Schreibe eine **umfassende, tiefgehende Analyse (mindestens 150-200 Wörter)**.
-        * **STRUKTUR (Halte dich grob daran):**
-          A) **Status Quo (Der Ist-Zustand):** Wie stehen deine Bio-Marker (HRV/RHR/Schlaf) im Vergleich zur Basis? Was ist der Haupttreiber für den aktuellen Gesamtscore (${gesamtScoreAmpel})?
-          B) **Die Verbindung (Korrelation):** Erkläre das "Warum". 
-          C) **Strategie & Ausblick:** Was bedeutet das konkret für die nächsten 3-4 Tage? Beziehe die **Wochen-Phase** (Aufbau vs. Entlastung) und die **TE-Balance** mit ein.
-          D) **ACWR-Kontext-Check (WICHTIG):**
-             - Bewerte einen niedrigen ACWR (< 0.8) **NIEMALS** als "Überforderung". Das ist technisch falsch.
-             - **Szenario 1 (Schlechte Bio-Marker / Krank):** Ein niedriger ACWR ist hier **GUT und ERWARTET** (notwendige Erholung). Lobe die Disziplin zur Pause.
-             - **Szenario 2 (Gute Bio-Marker / Fit):** Ein niedriger ACWR ist hier **SCHLECHT** (Formverlust/Untertraining). Warne davor, dass wir Potenziale verschenken.
-
-        * **STIL:** Sprich wie ein erfahrener Performance-Coach. Analytisch, präzise, aber motivierend. Keine Floskeln, sondern Fakten aus den Daten.
-    
-    **WICHTIG - KONTEXT-WEICHE:**
-    * **FALL A (TRAINING BEREITS ABSOLVIERT):** Bewerte die durchgeführte Einheit rückblickend! War sie für deinen heutigen Zustand (HRV/Readiness) angemessen? War sie vielleicht zu hart? Oder genau richtig? Beachte, dass dadurch auch die Training Readiness naturgemäß niedrig ist. Richte den Blick dann auf die Regeneration für morgen.
-    * **FALL B (TRAINING NOCH OFFEN):**
-      Gib eine klare Handlungsanweisung und Motivation für das anstehende Training.
-
-3.  **PASSE 8-TAGE-PLAN AN & VALIDIERE ('empfohlener_plan'):**
-    * Erstelle einen **VOLLSTÄNDIGEN 8-TAGE-PLAN** (heute + 7 Folgetage).
-    * **Entferne Kcal/Makros.** Der Plan enthält nur die Felder aus dem JSON-Beispiel unten.
-    * **WICHTIG (V56-FIX):** Das Feld 'original_load_ess' in deinem JSON MUSS exakt mit dem 'Original Load (ESS)' aus dem Prognose-Block übereinstimmen.
-    
-    * **(V136-MOD) UNVERHANDELBARE REGELN (HIERARCHIE IST WICHTIG):**
-
-      *** WICHTIGSTE REGEL (PRIORITÄT 1): PERIODISIERUNG & PHASEN-DISZIPLIN ***
-      Schau dir für JEDEN EINZELNEN TAG im Abschnitt 'GEPLANTER TRAININGSPLAN' den Marker an.
-      Der Marker entscheidet über Load-Strategie UND Text-Label.
-      
-      * **WENN '🚀 [PHASE A: AUFBAU - REIZ SETZEN!]':**
-        * **TEXT-REGEL (STRENG):** Du darfst das Wort "Entlastungswoche" NIEMALS verwenden. Auch nicht, wenn der Gesamtstatus "VORSICHT" ist.
-        * **LOAD-REGEL:** Du sollst "normale" Reize (Z3, Z4, Intervalle) planen.
-        * **CAUTION-EXCEPTION:** Falls der Gesamtstatus "ANPASSUNG VORSICHT" ist, darfst du den Load leicht reduzieren (max. -20%), aber du darfst NICHT in den "Tapering/Recovery"-Modus wechseln. Nenne es "Angepasster Aufbau" oder "Moderater Reiz", aber NICHT Entlastung.
-        
-      * **WENN '🛑 [PHASE E: ENTLASTUNG - FÜSSE HOCH!]':**
-        * **TEXT-REGEL:** Der Text MUSS zwingend mit "Entlastungswoche." beginnen.
-        * **LOAD-REGEL:** Du MUSST den Load drastisch senken (Zielwert im Schnitt ca. ${targetRecoveryLoad}).
-        * **VERBOT:** Plane KEINE hohen Reize (Z4/Z5) und keine langen Einheiten, egal wie gut die Readiness ist.
-
-      * **REGEL 0: FIXED DAYS (PRIO 0):**
-      * Tage mit 'x' sind unveränderlich. Übernimm den 'original_load_ess'.
-
-      * **REGEL 0.8: KRANKHEITS-RÜCKKEHR (RETURN-TO-PLAY - HÖCHSTE SICHERHEIT):**
-        * Status: **${rtp_status}**
-        * **WICHTIG:** Wenn der Status 'RTP_PHASE_X' ist, gilt das Protokoll. Wir steigen SMART ein (basierend auf Krankheitsdauer).
-        * **DEINE PFLICHT:**
-          1. **DATEN-INTEGRITÄT (EXTREM WICHTIG):** Das Feld 'original_load_ess' darf NIEMALS verändert werden! Es MUSS exakt der Wert sein, der oben im Text hinter "[ORIGINAL-PLAN: ...]" steht.
-          2. Schreibe den RTP-Zielwert AUSSCHLIESSLICH in das Feld 'empfohlener_load_ess'.
-          3. **RAMP-UP LOGIK (ZWINGEND):** Halte dich strikt an die Anweisungen im Abschnitt 'GEPLANTER TRAININGSPLAN' oben (z.B. RTP Tag 8 -> Bike Load 80).
-          4. **WICHTIG:** Wenn in der Anweisung oben steht "Setze Zone X", dann DARFST du in 'empfohlene_zone' NICHT 'Ruhetag' schreiben (außer es ist wirklich ein Ruhetag)!
-          5. Begründung MUSS lauten: "RTP-Schutz (Tag X/9). Protokoll aktiv."
-        * Ein Plan mit Z4 oder hohem Load in dieser Phase ist ein FEHLER von dir!
-
-      * **REGEL 1: HEUTIGER STATUS (isActivityDone == ${isActivityDone_Text}):**
-      * WENN 'true': Setze 'empfohlener_load_ess' auf **${heutigerIstLoad}**. Tag ist vorbei.
-
-      * **REGEL 2: PROBLEMLÖSUNG (PRIO 4):**
-      * -> **PRIO A (PHYSIO-VETO - KRITISCH):**
-        * Gilt, wenn 'isRecoveryCritical == true' (siehe Info oben). 
-        * **AKTION:** Load drastisch senken (Max 30% des Originals). Begründung: "Physio-Veto".
-      
-      * -> **PRIO B (TE BALANCE ZU NIEDRIG < 30%):**
-        * Wenn Veto inaktiv: Schlage Intensität vor (Z4/Z5).
-
-      * -> **PRIO C (ACWR ZU HOCH > 1.5):**
-        * Reduziere Load.
-
-      * **REGEL 7: DETAIL-TIEFE & BEGRÜNDUNG ('prognostizierte_auswirkung'):**
-        * Sei nicht wortkarg!
-        * **Inhalt:** Erkläre den physiologischen Nutzen (z.B. Mitochondrien, Laktattoleranz).
-        
-        * **ABWEICHUNGS-CHECK (WICHTIG):**
-          * Vergleiche deinen 'empfohlener_load_ess' mit dem 'original_load_ess'.
-          * Ist dein Vorschlag **> 20% niedriger** als das Original?
-          * **DANN MUSS** der Text mit der Begründung beginnen!
-        
-        * **In PHASE E:** Text MUSS mit "Entlastungswoche." beginnen.
-        * **In PHASE A:** Text darf NICHT "Entlastungswoche" enthalten.
-
-4.  **ANALYSIERE EINZELSCORES ('einzelscore_kommentare'):**
-      * Erstelle ein Array von Objekten für **JEDEN** der 10 Fitness-Scores.
-      * **WICHTIG (V110):** Du MUSST für **JEDEN** der folgenden Keys einen Kommentar liefern (exakte Schreibweise):
-      * [${metricsChecklist}]
-      
-      *** SPEZIAL-BRIEFING "KEI" (Der Wahrheits-Detektor): ***
-    * Dieser Wert misst: "Fitness-Gewinn (CTL-Trend) MINUS Aufwand (Strain)".
-    * **INTERPRETATIONSHILFE FÜR DICH (KEI-LEGENDEN-SKALA):**
-      * **Wert >= 8:** "High Efficiency" (sehr effizient, loben).
-      * **Wert 3 bis < 8:** "Productive" (solider Aufbau).
-      * **Wert 0 bis < 3:** "Maintenance / Transition" (Erhalt/Übergang).
-      * **Wert < 0:** Ineffizienter Reiz / Warnsignal.
-        -> Schreib klar: "Aufwand hoch, Ertrag niedrig. Plan anpassen."
-    * Gib für jeden Score einen **aussagekräftigen Kommentar (1-2 Sätze)**.
-
-REGELN FÜR 'plan_status':
-- 'INTERVENTION': Wenn 'isRecoveryCritical == true' ODER RTP_STATUS aktiv.
-- 'BEOBACHTUNG': Wenn 'isRecoveryBad == true' ODER ACWR > 1.3.
-- 'FREIGABE': Wenn alle Scores GRÜN sind.
-
-ANTWORTE AUSSCHLIESSLICH IM FOLGENDEN JSON-FORMAT (ohne Markdown):
-{
-  "empfehlung_zukunft": {
-    "plan_status": "FREIGABE | BEOBACHTUNG | INTERVENTION", 
-    "text": "DEINE AUSFÜHRLICHE GESAMTBEWERTUNG..."
-  },
-  "bewertung_ernaehrung_7d": {
-    "text": "DEINE KURZE (MAX 2 SÄTZE) BEWERTUNG DER ERNÄHRUNG..."
-  },
-  "einzelscore_kommentare": [
-    { "metrik": "RHR", "text_info": "Dein Kommentar zu RHR..." },
-    { "metrik": "ACWR (Forecast)", "text_info": "Dein Kommentar zum ACWR..." }
-    /* ... und ALLE anderen aus der Liste ... */
-  ],
-  "empfohlener_plan": [
-    {
-      "datum": "${cleanDate}",
-      "tag": "${cleanTag}",
-      "original_load_ess": 0, // KOPIERE HIER STUMPFE DEN WERT AUS "[ORIGINAL-PLAN: ...]"! NICHT ÄNDERN!
-      "empfohlener_load_ess": ${todayPlan_LoadRec},
-      "empfohlene_zone": "${todayPlan_Zone}", 
-      "beispiel_training_1": "${todayPlan_Sport1}",
-      "beispiel_training_2": "${todayPlan_Sport2}",
-      "prognostizierte_auswirkung": "${todayPlan_Text}",
-      "wetterempfehlung": "Wetter egal."
-    }
-    /* ... 7 weitere Tage ... */
-  ]
-}
-`;
-  return prompt;
-}
-
-/**
- * Baut den detaillierten Text-Prompt (V42 - mit Wetter)
- * Ruft die Master-Prompt-Funktion auf und übergibt alle Argumente.
- */
-function buildGeminiPrompt(data, fitnessScores, nutritionScore, gesamtScoreNum, gesamtScoreAmpel, zoneFactors, elevFactors, weekConfigCSV, isActivityDone, wetterDaten) { // <-- NEU (V42)
-  // Ruft die EINE Master-Funktion auf
-  return createMasterGeminiPrompt(data, fitnessScores, nutritionScore, gesamtScoreNum, gesamtScoreAmpel, zoneFactors, elevFactors, weekConfigCSV, isActivityDone, wetterDaten); // <-- NEU (V42)
-}
+// KI-frei (Stufe 3): buildGeminiPrompt entfernt – Prompt-Bau liegt in kira_prompts (Cockpit/Mac).
 
 /**
  * V154-PERCENT-FIX: Speicher-Funktion.
@@ -2966,48 +2276,8 @@ function cleanNumberFromKI(text) {
  * Holt den API-Key ausschließlich aus den Script Properties.
  */
 function callGeminiAPI(promptText) {
-  // 1. Key sicher laden
-  const API_KEY = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
-  
-  if (!API_KEY) {
-    throw new Error("CRITICAL: Kein API-Key gefunden! Bitte in Projekteinstellungen -> Skripteigenschaften als 'GEMINI_API_KEY' hinterlegen.");
-  }
-
-  const MODEL_ID = 'gemini-2.5-pro';
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_ID}:generateContent?key=${API_KEY}`;
-
-  // 2. Sauberes JSON Payload (Verhindert "Ungültiges Argument" Fehler bei langen Texten)
-  const payload = {
-    "contents": [{
-      "parts": [{"text": promptText}]
-    }],
-    "generationConfig": {
-      "temperature": 0.7,
-      "response_mime_type": "application/json" 
-    }
-  };
-
-  const options = {
-    'method': 'post',
-    'contentType': 'application/json',
-    'payload': JSON.stringify(payload),
-    'muteHttpExceptions': true
-  };
-
-  try {
-    const response = UrlFetchApp.fetch(API_URL, options);
-    const json = JSON.parse(response.getContentText());
-
-    if (json.error) {
-      throw new Error("Gemini API Error: " + json.error.message);
-    }
-
-    // Antwort extrahieren
-    return json.candidates[0].content.parts[0].text;
-
-  } catch (e) {
-    throw new Error("Verbindungsfehler: " + e.message);
-  }
+  // KI-frei (2026-10-26): Gemini-Aufrufe entfernt.
+  throw new Error('callGeminiAPI: KI läuft nicht mehr im Apps Script – lokal (Mac) oder Cloud über das Cockpit.');
 }
 
 function clearMemory() {
@@ -3016,6 +2286,101 @@ function clearMemory() {
 }
 
 function doGet(e) {
+  e = e || { parameter: {} };
+  const p = e.parameter || {};
+
+  // Briefings lokal (Cockpit + Ollama)
+  if (p.mode === 'briefingPrompt') return ckDash_briefingPrompt_(p);
+  if (p.mode === 'briefingData') return ckDash_briefingData_(p);
+  if (p.mode === 'telegramJobs') return ckTg_jobs_();
+  if (p.mode === 'briefingSources') return ckDash_briefingSources_();
+  if (p.mode === 'activityReviews') return ckDash_activityReviews_(p);
+  if (p.mode === 'supervisorJob') return ckSup_getJob_();
+  if (p.mode === 'diag') return ckDash_diag_();
+  // KI-Extras (Treffsicherheit, Selbsttest, Plausibilität, Ernährung, Alltag-Check)
+  if (p.mode === 'extras') return ckX_get_(p);
+  if (p.mode === 'calendarDays') return ckX_calendar_(p);
+  if (p.mode === 'physBaseline') return ckX_phys_();
+  if (p.mode === 'loadFactors') return ckX_loadFactors_();
+
+
+
+  // ============================================================
+  // Coach Kira Dashboard API – minimalinvasive Zusatzrouten
+  // ============================================================
+  if (p.mode === 'status') {
+    return ckDash_status_();
+  }
+
+if (p.mode === 'consolidatedAnalysis') {
+  return ckDash_consolidatedAnalysis_();
+}
+
+if (p.action === 'runConsolidatedAnalysis') {
+  return ckDash_runConsolidatedAnalysis_(p);
+}
+
+  if (p.mode === 'planSimulationJson') {
+  return ckDash_planSimulationJson_();
+}
+
+if (p.mode === 'planBriefing') {
+  return ckDash_planBriefing_();
+}
+
+if (p.action === 'generatePlanBriefing') {
+  return ckDash_generatePlanBriefing_(p);
+}
+
+if (p.mode === 'statusAiAnalysis') {
+  return ckDash_statusAiAnalysis_();
+}
+
+if (p.action === 'saveSimulatedPlan') {
+  return ckDash_saveSimulatedPlan_(p);
+}
+
+if (p.action === 'saveWellbeing') {
+  return ckDash_saveWellbeing_(p);
+}
+
+if (p.action === 'submitCockpitEntry') {
+  return ckDash_submitCockpitEntry_(p);
+}
+
+
+if (p.action === 'runStatusAiAnalysis') {
+  return ckDash_runStatusAiAnalysis_(p);
+}
+
+  if (p.mode === 'planJson') {
+    return ckDash_planJson_();
+  }
+
+  if (p.mode === 'planJsonV2') {
+  return ckDash_planJsonV2_();
+}
+
+  if (p.mode === 'chartData') {
+    return ckDash_chartData_(p);
+  }
+
+  if (p.mode === 'runStatus') {
+    return ckDash_runStatus_(p);
+  }
+
+  if (p.mode === 'logs') {
+    return ckDash_logs_(p);
+  }
+
+  if (p.action === 'runSupervisor') {
+    return ckDash_queueAction_(p, 'runKiraGeminiSupervisor');
+  }
+
+  if (p.action === 'generateFuturePlan') {
+    return ckDash_queueAction_(p, 'generateOptimized14DayPlan');
+  }
+
   const cache = CacheService.getUserCache();
   const lock  = LockService.getScriptLock();
 
@@ -3253,8 +2618,40 @@ function getTelegramConfig_() {
 }
 
 function doPost(e) {
+  // Coach-Kira-Chat aus dem Dashboard (vor dem Telegram-Webhook)
+  const ckBody = (e && e.postData && e.postData.contents) || '';
+  if ((e && e.parameter && e.parameter.mode === 'saveBriefing') || /"kind"\s*:\s*"saveBriefing"/.test(ckBody)) {
+    return ckDash_saveBriefing_(e);
+  }
+  if ((e && e.parameter && e.parameter.mode === 'saveActivityReview') || /"kind"\s*:\s*"saveActivityReview"/.test(ckBody)) {
+    return ckDash_saveActivityReview_(e);
+  }
+  if ((e && e.parameter && e.parameter.mode === 'saveSupervisor') || /"kind"\s*:\s*"saveSupervisor"/.test(ckBody)) {
+    return ckSup_save_(e);
+  }
+  if ((e && e.parameter && e.parameter.mode === 'saveExtra') || /"kind"\s*:\s*"saveExtra"/.test(ckBody)) {
+    return ckX_save_(e);
+  }
+  if (/"kind"\s*:\s*"saveDayMetrics"/.test(ckBody)) {
+    return ckGA_saveDays_(e);
+  }
+
+  if (/"kind"\s*:\s*"telegramAnswer"/.test(ckBody)) {
+    return ckTg_answer_(e);
+  }
+  if ((e && e.parameter && e.parameter.mode === 'chatLog') || /"kind"\s*:\s*"chatLog"/.test(ckBody)) {
+    return ckDash_chatLog_(e);
+  }
+
+  const ckIsChat =
+    (e && e.parameter && e.parameter.mode === 'chat') ||
+    (/"messages"\s*:/.test(ckBody) && !/"update_id"/.test(ckBody));
+  if (ckIsChat) {
+    return ckDash_chat_(e);
+  }
   try {
     // Optional webhook key guard (only enforced if TELEGRAM_WEBHOOK_KEY is set)
+
     const props = PropertiesService.getScriptProperties();
     const expectedKey = String(props.getProperty('TELEGRAM_WEBHOOK_KEY') || '').trim();
     if (expectedKey) {
@@ -3322,6 +2719,12 @@ function handleCommand(contents) {
   const chatId = contents.message.chat.id;
   const text = contents.message.text || "";
   const user = contents.message.from.first_name || "Commander";
+
+  // KI-frei (Stufe 3): freie Fragen beantwortet Kira lokal auf dem Mac
+  if (text && !text.startsWith('/')) {
+    ckTg_enqueue_(chatId, text, user);
+    return;
+  }
 
   if (text.startsWith("/status")) {
     sendTelegramMessage(chatId, "Befehl erhalten. System-Scan läuft... 📡");
@@ -3520,297 +2923,13 @@ function onOpen() {
  * Entfernt veraltete URL-Konstruktionen, die Fehler verursachten.
  */
 function runHistoricalAnalysis(e) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-
-  try {
-    sendTelegram("📜 Commander, ich analysiere jetzt die Historien-Daten...");
-  } catch(e) { console.log("Telegram Fehler: " + e.message); }
-
-  logToSheet('INFO', '[History] Starte Historien-Analyse (V57-FIX-3)...');
-
-  try {
-    // 1. Daten laden (KK_TIMELINE)
-    const timelineSheet = ss.getSheetByName(TIMELINE_SHEET_NAME);
-    if (!timelineSheet) throw new Error(`Blatt '${TIMELINE_SHEET_NAME}' nicht gefunden.`);
-
-    // Baseline Ziele laden
-    const baselineSheet = ss.getSheetByName(BASELINE_SHEET_NAME);
-    if (!baselineSheet) throw new Error(`Blatt '${BASELINE_SHEET_NAME}' nicht gefunden.`);
-    const baselineValues = baselineSheet.getDataRange().getValues();
-    const baselineData = arrayToObject(baselineValues[0], baselineValues[1]);
-    const allgemeineZiele = baselineData['Allgemeine Ziele'] || "Keine Ziele definiert.";
-    logToSheet('DEBUG', `[History] Allgemeine Ziele geladen: ${allgemeineZiele.substring(0, 50)}...`);
-
-    const allData = timelineSheet.getDataRange().getDisplayValues();
-    const headers = allData[0];
-
-    // 2. Spaltenindizes finden
-    const indices = {
-      date: headers.indexOf('date'),
-      is_today: headers.indexOf('is_today'),
-      load_fb_day: headers.indexOf('load_fb_day'),
-      Sport_x: headers.indexOf('Sport_x'),
-      Zone: headers.indexOf('Zone'),
-      fbACWR_obs: headers.indexOf('fbACWR_obs'),
-      fbCTL_obs: headers.indexOf('fbCTL_obs'),
-      garminEnduranceScore: headers.indexOf('garminEnduranceScore'),
-      sleep_hours: headers.indexOf('sleep_hours'),
-      sleep_score_0_100: headers.indexOf('sleep_score_0_100'),
-      rhr_bpm: headers.indexOf('rhr_bpm'),
-      hrv_status: headers.indexOf('hrv_status'),
-      hrv_threshholds: headers.indexOf('hrv_threshholds'),
-      deficit: headers.indexOf('deficit'),
-      carb_g: headers.indexOf('carb_g'),
-      protein_g: headers.indexOf('protein_g'),
-      fat_g: headers.indexOf('fat_g'),
-      week_phase: headers.indexOf('Week_Phase')
-    };
-
-    // 3. Daten filtern (Historie vor Heute)
-    let historyData = [];
-    let isTodayFound = false;
-
-    // Header für KI
-    const kiHeaders = [
-      'date', 'load_fb_day', 'Sport_x', 'Zone', 'fbCTL_obs', 'fbACWR_obs', 'garminEnduranceScore',
-      'sleep_hours', 'sleep_score_0_100', 'rhr_bpm', 'hrv_status',
-      'deficit', 'carb_g', 'protein_g', 'fat_g'
-    ];
-    historyData.push(kiHeaders.join(',')); 
-
-    for (let i = 1; i < allData.length; i++) {
-      const row = allData[i];
-      if (parseGermanFloat(row[indices.is_today]) === 1) {
-        isTodayFound = true;
-        break; // Stop bei Heute
-      }
-
-      // HRV Text Logik
-      let hrv_text = "N/A";
-      try {
-        const hrv_val = parseGermanFloat(row[indices.hrv_status]);
-        const hrv_thresh = row[indices.hrv_threshholds];
-        if (typeof hrv_val === 'number' && hrv_thresh && hrv_thresh.includes(';')) {
-          const [min, max] = hrv_thresh.split(';').map(val => parseGermanFloat(val));
-          if (hrv_val >= min && hrv_val <= max) hrv_text = "Ausgeglichen";
-          else if (hrv_val < min) hrv_text = "Niedrig";
-          else hrv_text = "Unausgeglichen";
-        } else if (typeof row[indices.hrv_status] === 'string' && row[indices.hrv_status].length > 2) {
-          hrv_text = row[indices.hrv_status];
-        }
-      } catch (e) { hrv_text = "Fehler"; }
-
-      const kiRow = [
-        row[indices.date],
-        parseGermanFloat(row[indices.load_fb_day]),
-        row[indices.Sport_x],
-        row[indices.Zone],
-        parseGermanFloat(row[indices.fbCTL_obs]),
-        parseGermanFloat(row[indices.fbACWR_obs]),
-        parseGermanFloat(row[indices.garminEnduranceScore]),
-        parseGermanFloat(row[indices.sleep_hours]),
-        parseGermanFloat(row[indices.sleep_score_0_100]),
-        parseGermanFloat(row[indices.rhr_bpm]),
-        hrv_text,
-        parseGermanFloat(row[indices.deficit]),
-        parseGermanFloat(row[indices.carb_g]),
-        parseGermanFloat(row[indices.protein_g]),
-        parseGermanFloat(row[indices.fat_g])
-      ];
-      historyData.push(kiRow.map(val => `"${val}"`).join(','));
-    }
-
-    if (!isTodayFound) logToSheet('WARN', '[History] is_today=1 nicht gefunden. Analysiere alles.');
-
-    // --- NEU: LIMITER EINFÜGEN (V57-FIX-4) ---
-    const HISTORY_DAYS = 90; // Wie weit schauen wir zurück?
-    
-    if (historyData.length > (HISTORY_DAYS + 1)) { // +1 wegen Header
-        const header = historyData[0]; // Header sichern
-        const rawRows = historyData.slice(1); // Nur die Datenzeilen
-        // Wir nehmen nur die letzten X Zeilen (die neusten vor Heute)
-        const slicedRows = rawRows.slice(-HISTORY_DAYS); 
-        
-        historyData = [header, ...slicedRows]; // Zusammenbauen
-        logToSheet('INFO', `[History] Daten auf die letzten ${HISTORY_DAYS} Tage begrenzt.`);
-    }
-    // ------------------------------------------
-
-    if (historyData.length <= 1) throw new Error("Keine Verlaufsdaten vorhanden.");
-
-    const historyCSV = historyData.join('\n');
-    logToSheet('INFO', `[History] Sende ${historyData.length - 1} Datensätze an KI...`);
-
-    // 4. Prompt bauen & KI aufrufen (KORRIGIERT)
-    const prompt = buildHistoryPrompt(historyCSV, allgemeineZiele);
-    
-    // ACHTUNG: Wir rufen jetzt nur noch callGeminiAPI(prompt) auf.
-    // Die Funktion kümmert sich selbst um den Key und die URL!
-    let apiResponseText = callGeminiAPI(prompt);
-
-    // JSON Parsen (Robust)
-    let apiResponse;
-    try {
-        const jsonStart = apiResponseText.indexOf('{');
-        const jsonEnd = apiResponseText.lastIndexOf('}') + 1;
-        if(jsonStart >= 0 && jsonEnd > jsonStart) {
-            apiResponse = JSON.parse(apiResponseText.substring(jsonStart, jsonEnd));
-        } else {
-            throw new Error("Kein JSON gefunden");
-        }
-    } catch(e) {
-        logToSheet('ERROR', `[History] Konnte Antwort nicht parsen: ${apiResponseText.substring(0, 100)}...`);
-        throw new Error("KI-Antwort war kein gültiges JSON.");
-    }
-
-    if (!apiResponse || !apiResponse.analyse_leistung) {
-        throw new Error("KI-JSON hat falsches Format (analyse_leistung fehlt).");
-    }
-
-    logToSheet('INFO', '[History] KI-Analyse erfolgreich empfangen.');
-
-    // 5. Ergebnis in Blatt schreiben
-    let outputSheet = ss.getSheetByName('AI_REPORT_HISTORY');
-    if (!outputSheet) outputSheet = ss.insertSheet('AI_REPORT_HISTORY');
-    
-    outputSheet.clear();
-    outputSheet.getRange(1, 1, 1, 3).setValues([['Kategorie', 'Ampel', 'KI-Analyse (Langzeit-Trend)']]).setFontWeight('bold');
-
-    const outputData = [
-      ['Leistungsfähigkeit', apiResponse.analyse_leistung.ampel, apiResponse.analyse_leistung.text],
-      ['Erholung', apiResponse.analyse_erholung.ampel, apiResponse.analyse_erholung.text],
-      ['Ernährung', apiResponse.analyse_ernaehrung.ampel, apiResponse.analyse_ernaehrung.text]
-    ];
-
-    outputSheet.getRange(2, 1, outputData.length, 3).setValues(outputData).setWrap(true).setVerticalAlignment('top');
-    outputSheet.setColumnWidth(1, 150);
-    outputSheet.setColumnWidth(2, 80);
-    outputSheet.setColumnWidth(3, 600);
-
-    // Zeitstempel
-    const timestampCell = outputSheet.getRange("A6");
-    const ts = new Date();
-    timestampCell.setValue(`Stand: ${Utilities.formatDate(ts, Session.getScriptTimeZone(), "dd.MM.yyyy HH:mm:ss")}`);
-
-    logToSheet('INFO', `[History] Report fertig in 'AI_REPORT_HISTORY'.`);
-  sendTelegram("✅ Historien-Analyse abgeschlossen. Der Report ist im Dashboard bereit."); // <-- NEU
-
-    // Feedback nur, wenn manuell ausgelöst (e ist undefined beim Klick im Editor, aber da beim Menü)
-    if (!e || e.authMode) { 
-      // SpreadsheetApp.getUi().alert("Historien-Analyse fertig!"); // Optional, stört WebApp nicht
-    }
-
-  } catch (e) {
-    logToSheet('ERROR', `[History] FEHLER: ${e.message}`);
-    // Kein UI Alert hier, um WebApp nicht zu blockieren
-  }
+  // KI-frei (2026-10-26): Historien-Analyse (Gemini) entfernt.
+  logToSheet('INFO', '[History] Historien-Analyse ist entfernt (KI läuft nicht mehr im Apps Script).');
 }
 
-/**
- * NEU (V13.7 - mit "Allgemeinen Zielen"): Baut den Prompt für die Historien-Analyse.
- */
-function buildHistoryPrompt(historyCSV, allgemeineZiele) { // <-- NEU (V13.7)
-  
-  let prompt = `Du bist Coach Kira, eine erfahrene KI-Sportwissenschaftlerin und Datenanalystin. Verwende die Basis, Metriken und Erkenntnisse von Firstbeat/Garmin.
-Hier ist **dein** gesamte Trainingsverlauf (von Marc) (alle Tage vor heute) im CSV-Format. "NaN", "null" oder leere Felder bedeuten "Keine Daten".
+// KI-frei (2026-10-26): buildHistoryPrompt entfernt (Prompt-Bau liegt nicht mehr im Apps Script).
 
-**WICHTIG: Formuliere alle deine Analysen ('text') direkt an **dich (Marc)** und verwende die 'Du'-Anrede (z.B. "Deine Leistungsfähigkeit zeigt...", "Du warst...").**
-
----
-**DEINE ALLGEMEINEN ZIELE (KONTEXT):**
-**${allgemeineZiele}**
----
-
-DATEN:
-${historyCSV}
-
-DEINE AUFGABE:
-Analysiere die **Trends** in diesen Daten **im Kontext deiner 'Allgemeinen Ziele'** und erstelle einen "Historien-Report" mit drei Kategorien.
-Für jede Kategorie:
-1.  Vergib eine **Ampelfarbe** ("GRÜN", "GELB", "ROT") basierend auf deiner sportwissenschaftlichen Einschätzung der Trends.
-    * **GRÜN:** Klare positive Trends, gute Steuerung, Ziele erreicht (z.B. CTL steigt, RHR sinkt, Schlaf ist gut).
-    * **GELB:** Gemischte Ergebnisse, Stagnation oder kleinere Warnsignale (z.B. hohes ACWR in Phasen, Defizit trotz hohem Load).
-    * **ROT:** Deutlich negative Trends, chronische Probleme (z.B. dauerhaft schlechter Schlaf, fallende CTL, ständige Überlastung).
-2.  Schreibe eine **detaillierte textliche Analyse** (als "text"), die deine Ampel-Bewertung begründet. Sei präzise und beziehe dich auf die Daten (z.B. "**Deine** CTL stieg von X auf Y", "**Dein** ACWR war oft über 1.2").
-
----
-DETAIL-ANFORDERUNGEN:
-
-1.  **Deine Leistungsfähigkeit-Analyse (fbCTL_obs, fbACWR_obs, garminEnduranceScore):**
-    * Wie hat sich **deine** Fitness (fbCTL_obs) entwickelt?
-    * Wie stabil war **deine** Belungssteuerung (fbACWR_obs)? Gab es Phasen mit hohem Risiko?
-    * **NEU: Analysiere die Varianz:** Bewerte die Verteilung **deiner** Aktivitäten (Sport_x) **UND deiner Trainingszonen (Zone)**. War **dein** Training abwechslungsreich (z.B. Mix aus Run/Bike, Z2/Z4) oder sehr monoton (z.B. nur Bike in Z2)? Wie beeinflusst das **deine** CTL-Entwicklung im Hinblick auf **deine 'Allgemeinen Ziele' (z.B. Bergtouren)**?
-    * Wie ist der Trend **deines** garminEnduranceScore (falls Daten vorhanden)?
-
-2.  **Deine Erholungs-Analyse (sleep_hours, sleep_score_0_100, rhr_bpm, hrv_status):**
-    * **WICHTIGSTE AUFGABE:** Finde **deinen** "Leading Indicator" (Frühwarnindikator).
-    * Analysiere die Tage mit **hoher Belastung** (z.B. load_fb_day > 120). Wie waren **deine** Biomarker (Schlaf, RHR, HRV) an diesen Tagen?
-    * Analysiere die Tage mit **niedriger Belastung** oder Ruhetagen (load_fb_day < 50).
-    * **Korrelation:** Welcher Biomarker war der *zuverlässigste Indikator* für einen guten, belastbaren Tag? (z.B. "**Du** konntest fast immer hart trainieren, wenn **deine** HRV 'Ausgeglichen' war...")
-    * **Warnung:** Welcher Biomarker hat **bei dir** am stärksten vor Erschöpfung gewarnt? (z.B. "Phasen mit 'Unausgeglichener' HRV korrelierten **bei dir** stark mit den darauf folgenden Ruhetagen...")
-    * Bewerte auch die allgemeinen Trends bei Schlaf, RHR und HRV.
-
-3.  **Deine Ernährungs-Analyse (deficit, carb_g, protein_g):**
-    * Wie war **deine** durchschnittliche Energiebilanz (deficit)? (Positive Zahlen = Defizit).
-    * Wie war **deine** Proteinzufuhr (protein_g)?
-    * Gab es Zusammenhänge zwischen hohem Defizit und schlechter Erholung **bei dir**?
-
----
-Antworte AUSSCHLIESSLICH im folgenden JSON-Format (ohne Markdown):
-
-{
-  "analyse_leistung": {
-    "ampel": "GRÜN|GELB|ROT",
-    "text": "DEIN DETAILLIERTER TEXT ZU DEINER LEISTUNGSFÄHIGKEIT..."
-  },
-  "analyse_erholung": {
-    "ampel": "GRÜN|GELB|ROT",
-    "text": "DEIN DETAILLIERTER TEXT ZU DEINER ERHOLUNG..."
-  },
-  "analyse_ernaehrung": {
-    "ampel": "GRÜN|GELB|ROT",
-    "text": "DEIN DETAILLIERTER TEXT ZU DEINER ERNÄHRUNG..."
-  }
-}
-`;
-  return prompt;
-}
-
-/**
- * NEU (V29): Baut den "intelligenten" Prompt für den Activity Review.
- * Vergleicht SOLL-Plan (inkl. Beispiel) mit IST-Werten.
- */
-function buildActivityReviewPrompt(todayData, planData) {
-  let prompt = `Du bist Coach Kira, eine erfahrene KI-Sportwissenschaftlerin. Analysiere die gerade abgeschlossene Aktivität von Marc im "Du"-Stil.
-  
-**DEINE PLANVORGABE FÜR HEUTE WAR:**
-- Geplanter Load (ESS): ${planData.load}
-- Geplante Zone: ${planData.zone}
-- Beispiel 1: ${planData.beispiel_1}
-- Beispiel 2: ${planData.beispiel_2}
-
-**TATSÄCHLICH DURCHGEFÜHRT (IST-WERTE):**
-- Aktivität: ${todayData.sport_x}
-- Dauer: ${todayData.duration} min
-- Zone(n) (gemeldet): ${todayData.zone}
-- Load (IST): ${todayData.load_fb_day}
-- ATL (IST): ${todayData.fbATL_obs}
-- CTL (IST): ${todayData.fbCTL_obs}
-- ACWR (IST): ${todayData.fbACWR_obs}
-
-**DEINE AUFGABE (MAX. 3 SÄTZE):**
-1.  Vergleiche SOLL (Planvorgabe) mit IST (Durchgeführt).
-2.  Bewerte die Abweichung (positiv, negativ, neutral).
-3.  Gib einen kurzen, motivierenden Kommentar. (z.B. "Perfekt getroffen!", "Gute Anpassung an das Wetter!", "Etwas zu hart, achte morgen auf Erholung.").
-
-REGEL:
-  - Antworte NUR mit dem Text. 
-  - KEINE Anführungszeichen am Anfang/Ende.
-  - KEIN JSON. KEIN "Hier ist deine Analyse:".
-  - Fang direkt mit dem Satz an.
-  `;
-  return prompt;
-}
+// KI-frei (2026-10-26): buildActivityReviewPrompt entfernt (Prompt-Bau liegt nicht mehr im Apps Script).
 
 // --- NEU (V11): GOOGLE KALENDER SYNCHRONISIERUNG ---
 
@@ -4140,9 +3259,9 @@ function advanceTodayFlag() {
 }
 
 /**
- * NEU (V13.1 - Silent): Setzt den 'is_today'-Marker (1) eine Zeile nach unten.
- * DIESE VERSION IST "STILL" (ohne UI-Alerts) und für Trigger (z.B. onFormSubmit) gedacht.
- * Sie gibt true (Erfolg) oder false (Fehler) zurück.
+ * (V2 2026-09-27) Setzt 'is_today' in 'timeline' auf die Zeile mit dem HEUTIGEN Datum.
+ * Idempotent: mehrfacher Aufruf am selben Tag ändert nichts. Wird von onFormSubmit ("Morgens") genutzt.
+ * @returns {boolean} true, wenn die heutige Zeile gefunden und markiert wurde.
  */
 function advanceTodayFlag_silent() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -4152,78 +3271,57 @@ function advanceTodayFlag_silent() {
     return false;
   }
 
-  const data = sheet.getDataRange().getValues();
-  const headers = data[0];
-  const isTodayIndex = headers.indexOf('is_today'); 
-
-  if (isTodayIndex === -1) {
-    logToSheet('ERROR', `[advanceTodayFlag_silent] Spalte 'is_today' nicht in '${SOURCE_TIMELINE_SHEET}' gefunden.`);
+  const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h).trim().toLowerCase());
+  const isTodayIdx = headers.indexOf('is_today');
+  const dateIdx = headers.indexOf('date');
+  if (isTodayIdx < 0 || dateIdx < 0) {
+    logToSheet('ERROR', `[advanceTodayFlag_silent] Spalte 'is_today' oder 'date' fehlt in '${SOURCE_TIMELINE_SHEET}'.`);
     return false;
   }
 
-  let currentRowArrayIndex = -1; // 0-basierter Zeilen-Index im Array
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][isTodayIndex] == 1) {
-      currentRowArrayIndex = i;
-      break;
-    }
-  }
+  const tz = Session.getScriptTimeZone() || 'Europe/Berlin';
+  const todayKey = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
+  const dates = sheet.getRange(2, dateIdx + 1, lastRow - 1, 1).getValues();
+  const flags = sheet.getRange(2, isTodayIdx + 1, lastRow - 1, 1).getValues();
 
-  if (currentRowArrayIndex === -1) {
-    logToSheet('ERROR', `[advanceTodayFlag_silent] Keine Zeile mit 'is_today=1' gefunden.`);
+  let todayRow = -1;
+  let oldRow = -1;
+  for (let i = 0; i < dates.length; i++) {
+    const d = dates[i][0];
+    const key = (d instanceof Date) ? Utilities.formatDate(d, tz, 'yyyy-MM-dd') : String(d || '').trim().slice(0, 10);
+    if (key === todayKey) todayRow = i + 2;
+    if (Number(String(flags[i][0]).replace(',', '.')) === 1 && oldRow < 0) oldRow = i + 2;
+  }
+  if (todayRow < 0) {
+    logToSheet('ERROR', `[advanceTodayFlag_silent] Keine Zeile für heute (${todayKey}) in '${SOURCE_TIMELINE_SHEET}'.`);
     return false;
   }
-
-  if (currentRowArrayIndex + 1 >= data.length) {
-    logToSheet('ERROR', `[advanceTodayFlag_silent] 'is_today=1' ist bereits in der letzten Zeile. Kann nicht verschoben werden.`);
-    return false;
+  if (oldRow === todayRow) {
+    logToSheet('INFO', `[advanceTodayFlag_silent] 'is_today' steht bereits auf heute (Zeile ${todayRow}) – keine Änderung.`);
+    return true;
   }
-
-  const oldSheetRow = currentRowArrayIndex + 1; // 1-basierte Zeile
-  const newSheetRow = oldSheetRow + 1;         
-  const sheetCol = isTodayIndex + 1;         
 
   try {
-    sheet.getRange(oldSheetRow, sheetCol).setValue(0);
-    sheet.getRange(newSheetRow, sheetCol).setValue(1);
-
-    const newDate = sheet.getRange(newSheetRow, headers.indexOf('date') + 1).getDisplayValue();
-    logToSheet('INFO', `[advanceTodayFlag_silent] 'is_today' erfolgreich von Zeile ${oldSheetRow} auf ${newSheetRow} (Datum: ${newDate}) verschoben.`);
-    return true; // Erfolg
-
+    const out = flags.map((_, i) => [i + 2 === todayRow ? 1 : 0]);
+    sheet.getRange(2, isTodayIdx + 1, out.length, 1).setValues(out);
+    logToSheet('INFO', `[advanceTodayFlag_silent] 'is_today' von Zeile ${oldRow} auf ${todayRow} (${todayKey}) gesetzt.`);
+    return true;
   } catch (e) {
-    logToSheet('ERROR', `[advanceTodayFlag_silent] Fehler beim Schreiben der Werte: ${e.message}`);
-    return false; // Fehler
+    logToSheet('ERROR', `[advanceTodayFlag_silent] Fehler beim Schreiben: ${e.message}`);
+    return false;
   }
 }
+
 
 /**
  * NEU (V13.5): Startet die Historien-Analyse (langer Lauf) in 10 Sekunden.
  * (Wird von der Web App aufgerufen, um das 30s-Limit zu umgehen)
  */
 function triggerHistoryAnalysis_WebApp() {
-  try {
-    // Lösche alte Trigger, falls vorhanden
-    const triggers = ScriptApp.getProjectTriggers();
-    for (const trigger of triggers) {
-      if (trigger.getHandlerFunction() === "runHistoricalAnalysis") {
-        ScriptApp.deleteTrigger(trigger);
-      }
-    }
-    
-    // Erstelle einen neuen Trigger, der in 10 Sekunden einmalig läuft
-    ScriptApp.newTrigger("runHistoricalAnalysis")
-      .timeBased()
-      .after(10 * 1000) // 10 Sekunden
-      .create();
-      
-    logToSheet('INFO', '[WebApp] Asynchroner Trigger für runHistoricalAnalysis in 10s erstellt.');
-    return "Langzeit-Analyse in 10 Sekunden gestartet. Ergebnisse erscheinen in Kürze in 'AI_REPORT_HISTORY'.";
-      
-  } catch (e) {
-    logToSheet('ERROR', `[WebApp] Fehler beim Erstellen des Historien-Triggers: ${e.message}`);
-    return `Fehler beim Starten der Analyse: ${e.message}`;
-  }
+  // KI-frei (2026-10-26): Historien-Analyse (Gemini) entfernt.
+  return 'Die Historien-Analyse läuft nicht mehr im Apps Script. Langzeit-Auswertungen findest du im Cockpit (Analyse, Berichte).';
 }
 
 
@@ -4481,29 +3579,9 @@ function copyObservedToForecast(rowIndex) {
  * Wird von onFormSubmit aufgerufen, um Timeouts beim Formular-Senden zu vermeiden.
  */
 function triggerActivityReview() {
-  try {
-    // Lösche alte Trigger, falls vorhanden
-    const triggers = ScriptApp.getProjectTriggers();
-    for (const trigger of triggers) {
-      if (trigger.getHandlerFunction() === "generateActivityReview") {
-        ScriptApp.deleteTrigger(trigger);
-      }
-    }
-    
-    // Starte den Review in 15 Sekunden.
-    // (Wir geben dem 10-Sekunden-Haupt-KI-Lauf einen kleinen Vorsprung)
-    ScriptApp.newTrigger("generateActivityReview")
-      .timeBased()
-      .after(15 * 1000) // 15 Sekunden
-      .create();
-      
-    logToSheet('INFO', '[WebApp] Asynchroner Trigger für generateActivityReview in 15s erstellt.');
-    return true; // Wichtig für das Form-Skript
-      
-  } catch (e) {
-    logToSheet('ERROR', `[WebApp] Fehler beim Erstellen des ActivityReview-Triggers: ${e.message}`);
-    return false;
-  }
+  // KI-frei (2026-10-26): Den Aktivitätskommentar schreibt der Mac (coach-kira) selbst.
+  logToSheet('INFO', '[ActivityReview] Läuft lokal auf dem Mac – kein Apps-Script-Trigger mehr.');
+  return true; // Wichtig für das Form-Skript
 }
 
 /**
@@ -4617,125 +3695,7 @@ function applyKiraPlanToTimeline() {
   }
 }
 
-/**
- * V41-CONTEXT: Erstellt den Prompt für das Dashboard.
- * Korrektur: Bei "Activity Done" wird nun die physiologische Passung bewertet,
- * statt eines sinnlosen Soll/Ist-Zahlenvergleichs.
- */
-function createDashboardPrompt_V39(isActivityDone) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-
-  // 1. STATUS DATEN
-  let statusInfo = "";
-  const statusSheet = ss.getSheetByName('AI_REPORT_STATUS');
-  if (statusSheet) {
-    const data = statusSheet.getDataRange().getValues();
-    for (let i = 1; i < data.length; i++) {
-      const met = String(data[i][1] || "");
-      const val = String(data[i][3] || "");
-      if(met) statusInfo += `- ${met}: ${val}\n`;
-    }
-  }
-
-  // 2. PLAN DATEN
-  let planInfo = "";
-  // KORREKTUR: Nutze globale Konstante oder Fallback
-  const sheetName = (typeof SOURCE_TIMELINE_SHEET !== 'undefined') ? SOURCE_TIMELINE_SHEET : 'timeline';
-  const timelineSheet = ss.getSheetByName(sheetName); 
-  
-  if (timelineSheet) {
-    const data = timelineSheet.getDataRange().getValues();
-    const headers = data[0];
-    const today = new Date();
-    today.setHours(0,0,0,0);
-
-    const dateIdx = headers.indexOf('date');
-    const loadIdx = headers.indexOf('coachE_ESS_day');
-    const loadIstIdx = headers.indexOf('load_fb_day');
-    const sportIdx = headers.indexOf('Sport_x');
-    const zoneIdx = headers.indexOf('Zone');
-
-    if (dateIdx > -1) {
-      let startIndex = -1;
-      for(let i=1; i<data.length; i++) {
-        let d = data[i][dateIdx];
-        if (typeof d === 'string') d = new Date(d);
-        if (d instanceof Date && d.setHours(0,0,0,0) === today.getTime()) {
-          startIndex = i;
-          break;
-        }
-      }
-
-      if (startIndex > -1) {
-        for (let i = 0; i < 5; i++) {
-          let r = startIndex + i;
-          if (r < data.length) {
-            const row = data[r];
-            const sport = String(row[sportIdx] || "Ruhe");
-            const loadSoll = String(row[loadIdx] || "0");
-            const zone = String(row[zoneIdx] || "-");
-            
-            let loadInfo = `Soll ${loadSoll}`;
-            if (i === 0 && isActivityDone) {
-                 const loadIst = String(row[loadIstIdx] || "0");
-                 // Wir markieren es im Text, damit Kira weiß, was passiert ist
-                 loadInfo = `ABSOLVIERT: ${loadIst} (Soll-Wert im Plan ist angepasst)`;
-            }
-
-            let dStr = (i===0) ? "HEUTE" : (i===1) ? "MORGEN" : "Tag "+i;
-            planInfo += `${dStr}: ${sport} (${zone}, ${loadInfo})\n`;
-          }
-        }
-      }
-    }
-  }
-
-  // 3. KONTEXT-STEUERUNG (HIER IST DIE ÄNDERUNG)
-  let aufgabeText = "";
-  if (isActivityDone) {
-      aufgabeText = `
-      3. Das Training für HEUTE ist bereits **ERLEDIGT**.
-      - **WICHTIG:** Bewerte NICHT, ob "Soll" und "Ist" übereinstimmen (die Zahlen sind oft synchronisiert).
-      - **ANALYSIERE STATTDESSEN:** War diese absolvierte Einheit physiologisch sinnvoll angesichts des aktuellen Status (HRV, Readiness, Recovery)?
-      - War es vielleicht zu viel für die heutige HRV? Oder genau richtig zur Erholung?
-      - Gib einen kurzen Ausblick auf die Erholung für MORGEN.
-      - Bewerte die zukünftige Treiningsplanung (nächte 3-4 Tage)`;
-  } else {
-      aufgabeText = `
-      3. Das Training für HEUTE steht noch an.
-      - Gib eine **klare Handlungsanweisung** für das heutige Training.
-      - Motiviere den Athleten, den Plan einzuhalten (oder anzupassen, falls Status kritisch).`;
-  }
-
-  // 4. PROMPT ZUSAMMENBAUEN
-  const systemInstruction = `
-    Du bist Coach Kira.
-    
-    **AUFTRAG:**
-    Erstelle eine **tiefgehende Analyse** (6-8 Sätze) im Stil eines professionellen Trainers.
-    Nutze Fettdruck für wichtige Punkte.
-
-    **DATEN:**
-    ${statusInfo}
-
-    **VERLAUF:**
-    ${planInfo}
-
-    **FOKUS:**
-    1. Kontext herstellen (Verbindung Gestern -> Heute).
-    2. Status bewerten.
-    3. Zukünftige Aktivitäten bewerten
-    ${aufgabeText}
-
-    **WICHTIG - FORMAT:**
-    Antworte AUSSCHLIESSLICH als JSON-Objekt mit dem Key "analysis":
-    {
-      "analysis": "Hier dein ausführlicher Analyse-Text..."
-    }
-  `;
-
-  return systemInstruction;
-}
+// KI-frei (Stufe 3): createDashboardPrompt_V39 entfernt – Prompt-Bau liegt in kira_prompts (Cockpit/Mac).
 
 /**
  * (V108-FIX): Ersetzt die V42 Open-Meteo-Funktion, die Fehler meldet.
@@ -4827,173 +3787,11 @@ function getWetterdaten() {
  * V46: Chat-Backend mit Gedächtnis (Read & Write).
  */
 function askKira(frage) {
-  if (!frage || frage.trim().length === 0) return "Bitte stelle eine Frage.";
-
-  // 1. User-Frage speichern (WICHTIG: Zuerst speichern, damit sie Teil der History ist? 
-  // Nein, besser erst History laden, DANN User-Frage anhängen, sonst liest die KI ihre Antwort auf die Frage schon vorweg.)
-  // Wir speichern die Frage erst ganz am Ende oder separat, aber für den Kontext 
-  // ist es besser, die "Vergangenheit" zu laden und die "Jetzige Frage" als Trigger zu nutzen.
-  
-  // Speichern für das Logbuch
-  logChatMessage('Commander', frage); 
-  
-  try {
-    copyTimelineData();
-    const wetterDaten = getWetterdaten();
-    const datenPaket = getSheetData();
-    if (datenPaket === null) throw new Error("Datenpaket Fehler.");
-
-    const heutigerLoad = parseGermanFloat(datenPaket.heute.load_fb_day);
-                   // NEU: Auch hier auf 'x' prüfen
-                   const activityDoneMarker = (datenPaket.heute['activity_done'] || "").toString().toLowerCase();
-    const isActivityDone = (activityDoneMarker === 'x' || heutigerLoad > 0);
-
-    const fitnessScores = calculateFitnessMetrics(datenPaket);
-    const nutritionScore = calculateNutritionScore(datenPaket);
-    const alleScores = fitnessScores.concat([nutritionScore]);
-
-    // Score Berechnung (gekürzt für Übersicht)
-    let totalScore = 0, totalWeight = 0;
-    alleScores.forEach(s => { /* ... wie gehabt ... */ }); 
-    // (Hier kannst du deinen bestehenden Score-Loop lassen oder kopieren)
-    // ... der Einfachheit halber nutzen wir calculateGesamtScore falls vorhanden, sonst Loop:
-    alleScores.forEach(s => {
-        const sc = s.num_score || 0;
-        const w = (s.metrik === "Training Readiness" || s.metrik === "HRV Status") ? 2 : 1;
-        totalScore += sc * w; totalWeight += w;
-    });
-    const gesamtScoreNum = (totalWeight > 0) ? (totalScore / totalWeight).toFixed(0) : 0;
-    const gesamtScoreAmpel = getGesamtAmpel(gesamtScoreNum);
-    const weekConfigCSV = getWeekConfig();
-
-    // --- NEU (V46): Chat-Historie laden ---
-    // Wir laden die letzten 10 Nachrichten (OHNE die gerade gestellte Frage, 
-    // da logChatMessage diese ans Ende gesetzt hat. 
-    // Trick: Wir lesen ALLES ausser der allerletzten Zeile, oder wir übergeben die History explizit.)
-    
-    // Einfacher: Wir laden die letzten Nachrichten. Da wir oben schon geloggt haben, 
-    // ist die aktuelle Frage schon im Sheet. Das ist okay, Kira sieht dann:
-    // [18:00] Commander: Wie gehts? (Letzte Zeile)
-    // Und antwortet darauf.
-    const chatHistory = getRecentChatHistory(10); 
-    // --------------------------------------
-
-    // 3. Chat-Prompt bauen (Jetzt mit History!)
-    const prompt = createChatPrompt_V45(
-      datenPaket, fitnessScores, nutritionScore, gesamtScoreNum, gesamtScoreAmpel,
-      weekConfigCSV, isActivityDone, wetterDaten, frage, chatHistory // <-- NEU: History übergeben
-    );
-
-    // 4. KI aufrufen
-    const API_KEY = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
-    const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=" + API_KEY;
-    
-    const payload = { "contents": [ { "parts": [ { "text": prompt } ] } ] };
-    const options = { 'method': 'post', 'contentType': 'application/json', 'payload': JSON.stringify(payload), 'muteHttpExceptions': true };
-
-    const response = UrlFetchApp.fetch(API_URL, options);
-    
-    if (response.getResponseCode() === 200) {
-      const json = JSON.parse(response.getContentText());
-      const kiText = json.candidates[0].content.parts[0].text;
-      
-      // Antwort speichern
-      logChatMessage('Kira', kiText); 
-      return kiText; 
-    } else {
-      throw new Error(`KI-Fehler: ${response.getContentText()}`);
-    }
-
-  } catch (e) {
-    logToSheet('ERROR', `[Chat] Fehler: ${e.message}`);
-    return `Fehler: ${e.message}`;
-  }
+  // KI-frei (2026-10-26): Gemini-Aufrufe entfernt. Fragen: Cockpit-Chat oder Telegram (lokal auf dem Mac).
+  return 'KI läuft nicht mehr im Apps Script – lokal (Mac) oder Cloud über das Cockpit.';
 }
 
-/**
- * (V115-MOD + V46-MOD): Chat Prompt mit Gedächtnis.
- * Passt Erklärung für TE-Balance Ratio an und integriert die Chat-Historie.
- */
-// KORREKTUR: 'chatHistory' als letztes Argument hinzugefügt!
-function createChatPrompt_V45(data, fitnessScores, nutritionScore, gesamtScoreNum, gesamtScoreAmpel, weekConfigCSV, isActivityDone, wetterDaten, frage, chatHistory) {
-
-  const alleScores = fitnessScores.concat([nutritionScore]);
-  const { heute, zukunft, baseline, history, monotony_varianz } = data; 
-  const heutigerIstLoad = parseGermanFloat(heute['load_fb_day']);
-  const isActivityDone_Text = isActivityDone ? "true" : "false";
-  const heutigerSollLoad = parseGermanFloat(heute['coachE_ESS_day']); 
-  
-  let scoresText = "";
-  alleScores.forEach(s => {
-    scoresText += `- ${s.metrik}: ${s.raw_wert} (Score: ${s.num_score}, ${s.ampel})\n`;
-  });
-
-  let prognoseMorgen = "Keine Daten für morgen.";
-  let prognoseRest = "Keine weiteren Prognosen.";
-  try {
-    if (zukunft.plan && zukunft.plan[0]) {
-      const tag = zukunft.plan[0];
-      let fixInfo = (tag.original_fix_marker === 'x') ? ` [FIXED at ${tag.original_load_ess}]` : "";
-      prognoseMorgen = `- Datum: ${tag.datum} (${tag.tag})\n`;
-      prognoseMorgen += `- Geplanter Load: ${tag.original_load_ess}${fixInfo}\n`;
-      prognoseMorgen += `- Prognose ACWR: ${tag.original_acwr}\n`;
-      prognoseMorgen += `- Prognose Monotonie: ${tag.original_monotony}\n`;
-    }
-    
-    if (zukunft.plan && zukunft.plan.length > 1) {
-      prognoseRest = "";
-      for (let i = 1; i < zukunft.plan.length; i++) {
-        const tag = zukunft.plan[i];
-        let fixInfo = (tag.original_fix_marker === 'x') ? ` [FIXED at ${tag.original_load_ess}]` : "";
-        prognoseRest += `- ${tag.datum} (${tag.tag}): Orig. Load ${tag.original_load_ess}${fixInfo} (Prognose: ACWR ${tag.original_acwr}, Mono ${tag.original_monotony})\n`;
-      }
-    }
-  } catch (e) {
-    logToSheet('ERROR', `[Chat V105] Fehler beim Bauen der Prognose-Strings: ${e.message}`);
-  }
-  
-  const allgemeineZiele = baseline['Allgemeine Ziele'] || "Keine Ziele definiert.";
-  
-  const isRecoveryCritical = alleScores.some(s => 
-      (s.metrik === "HRV Status" || s.metrik === "Training Readiness" || s.metrik === "RHR") && s.num_score < 40
-  );
-
-  let prompt = `Du bist Coach Kira, eine erfahrene KI-Sportwissenschaftlerin.
-Du chattest mit Marc ("Du").
-
---- KONTEXT: UNSER BISHERIGES GESPRÄCH (Gedächtnis) ---
-${chatHistory}
--------------------------------------------------------
-
-Analysiere den folgenden DATENKONTEXT (Live-Daten) und antworte auf die NEUESTE FRAGE.
-
---- WETTER ---
-${wetterDaten}
-
---- STATUS HEUTE (${heute['date']}) ---
-- Gesamtscore: ${gesamtScoreNum} (${gesamtScoreAmpel})
-- Load heute: ${heute['load_fb_day'] || 0} (Geplant: ${heute['coachE_ESS_day']})
-- TE Balance: ${(monotony_varianz * 100).toFixed(1)}%
-- Recovery Critical? ${alleScores.some(s=>s.num_score<40 && ["HRV Status","RHR","Training Readiness"].includes(s.metrik))}
-
---- SCORES ---
-${scoresText}
-
---- HISTORIE (Letzte 14 Tage) ---
-${history}
-
-DEINE AUFGABE:
-Antworte auf Marcs letzte Nachricht (siehe oben im Verlauf oder hier unten).
-Beziehe dich auf das bisherige Gespräch, wenn sinnvoll (z.B. "Wie ich vorhin schon sagte...").
-Nutze die Daten für Fakten.
-
-FRAGE / NACHRICHT VON MARC:
-"${frage}"
-
-ANTWORTE NUR ALS REINER TEXT.`;
-
-  return prompt;
-}
+// KI-frei (2026-10-26): createChatPrompt_V45 entfernt (Prompt-Bau liegt nicht mehr im Apps Script).
 
 /**
  * NEU (V128): Berechnet Recovery- und Training-Subscores.
@@ -5674,244 +4472,11 @@ function getPlanDataForUIV76(datenPaket, isActivityDone, kiLoadMap) {
  * FEATURES: Phasen-Check (A/E) + Kontext-Check (Was liegt VOR der Lücke?).
  */
 function getNext3DaySuggestions() {
-  logToSheet('INFO', '🚀 getNext3DaySuggestions gestartet (Lückensuche + Kontext)...');
-
-  try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheetName = (typeof SOURCE_TIMELINE_SHEET !== 'undefined') ? SOURCE_TIMELINE_SHEET : 'timeline';
-    const timelineSheet = ss.getSheetByName(sheetName); 
-    
-    if (!timelineSheet) throw new Error(`Blatt '${sheetName}' nicht gefunden.`);
-
-    const data = timelineSheet.getDataRange().getValues();
-    const headers = data[0];
-
-    // Spalten-Indizes
-    const dateIdx = headers.indexOf('date');
-    const loadIdx = headers.indexOf('coachE_ESS_day');
-    const isTodayIdx = headers.indexOf('is_today');
-    const phaseIdx = headers.indexOf('Week_Phase'); 
-    // NEU: Für den Kontext davor
-    const sportIdx = headers.indexOf('Sport_x');
-    const zoneIdx = headers.indexOf('Zone');
-
-    if (dateIdx === -1 || loadIdx === -1) {
-      throw new Error(`Kritische Spalten fehlen in '${sheetName}'.`);
-    }
-
-    // 1. "Heute" finden
-    let todayRowIndex = -1;
-    for (let i = 1; i < data.length; i++) {
-        if (data[i][isTodayIdx] == 1) {
-            todayRowIndex = i;
-            break;
-        }
-    }
-    
-    if (todayRowIndex === -1) { 
-        todayRowIndex = 1; 
-    }
-    
-    // 2. Suche die erste LEERE Zelle
-    let startDate = null;
-    let gapRowIndex = -1; 
-
-    for (let i = todayRowIndex; i < data.length; i++) {
-        const cellValue = data[i][loadIdx];
-        if (cellValue === "" || cellValue === null) {
-            const dateVal = data[i][dateIdx];
-            if (dateVal instanceof Date && !isNaN(dateVal.getTime())) {
-                startDate = dateVal;
-                gapRowIndex = i; 
-                logToSheet('DEBUG', `-> Lücke gefunden in Zeile ${i + 1} (Datum: ${Utilities.formatDate(dateVal, Session.getScriptTimeZone(), "yyyy-MM-dd")})`);
-                break;
-            }
-        }
-    }
-
-    // 3. Fallback
-    if (!startDate) {
-        logToSheet('WARN', 'Keine Lücke gefunden. Nehme Ende.');
-        const lastRowDate = data[data.length - 1][dateIdx];
-        if (lastRowDate instanceof Date) {
-            startDate = new Date(lastRowDate);
-            startDate.setDate(startDate.getDate() + 1);
-        } else {
-            startDate = new Date();
-            startDate.setDate(startDate.getDate() + 1);
-        }
-    }
-
-    // --- NEU: KONTEXT (Was passiert VOR der Lücke?) ---
-    let contextPrevDays = "";
-    if (gapRowIndex > 1) {
-        // Wir schauen bis zu 3 Tage zurück vor die Lücke
-        for (let back = 3; back >= 1; back--) {
-            let checkIdx = gapRowIndex - back;
-            if (checkIdx > 0) {
-                let pDate = data[checkIdx][dateIdx];
-                let pLoad = data[checkIdx][loadIdx]; // Geplanter Load davor
-                let pSport = (sportIdx > -1) ? data[checkIdx][sportIdx] : "";
-                let pZone = (zoneIdx > -1) ? data[checkIdx][zoneIdx] : "";
-                
-                if (pDate instanceof Date) pDate = Utilities.formatDate(pDate, Session.getScriptTimeZone(), "yyyy-MM-dd");
-                
-                contextPrevDays += `- ${pDate}: ${pSport} (${pZone}) | Load: ${pLoad}\n`;
-            }
-        }
-    }
-    if (contextPrevDays === "") contextPrevDays = "(Keine Daten unmittelbar davor)";
-    // --------------------------------------------------
-
-    // 4. Kontext laden
-    const statusData = getDashboardDataV76(); 
-    const weekConfig = getWeekConfig(); 
-
-    const userStatus = `
-      Aktueller CTL: ${statusData.trainingScore}
-      Aktueller Recovery Status: ${statusData.recoveryScore}
-    `;
-
-    // 5. Die 3 Tage definieren
-    let futureDaysContext = "Plane folgende Tage (Lücke füllen):\n";
-    const suggestionDates = [];
-
-    for (let i = 0; i < 3; i++) {
-      let loopDate = new Date(startDate);
-      loopDate.setDate(startDate.getDate() + i);
-      let dString = Utilities.formatDate(loopDate, Session.getScriptTimeZone(), "yyyy-MM-dd");
-      let wDay = Utilities.formatDate(loopDate, Session.getScriptTimeZone(), "EEE");
-
-      let phase = "A"; 
-      if (gapRowIndex !== -1 && (gapRowIndex + i) < data.length) {
-          const rowPhase = (phaseIdx !== -1) ? data[gapRowIndex + i][phaseIdx] : "";
-          if (rowPhase) phase = String(rowPhase).trim().toUpperCase();
-      }
-      
-      let phaseInfo = (phase === "E" || phase === "ENTLASTUNG") ? "⚠️ PHASE E (ENTLASTUNG)" : "🚀 PHASE A (AUFBAU)";
-
-      futureDaysContext += `- Tag ${i+1}: ${dString} (${wDay}) -> ${phaseInfo}\n`;
-      suggestionDates.push({date: dString, weekday: wDay});
-    }
-
-    // 6. Prompt bauen
-    const prompt = `
-      Du bist Coach Kira.
-      **SITUATION:**
-      Wir füllen eine Planungslücke in der Zukunft.
-      
-      **1. LEITFADEN (IDEALER WOCHENPLAN):**
-      ${weekConfig}
-
-      **2. KONTEXT (UNMITTELBAR DAVOR - WICHTIG!):**
-      Das steht bereits fest im Plan VOR der Lücke. Achte auf den Übergang!
-      ${contextPrevDays}
-
-      **3. AUFGABE:**
-      Erstelle Vorschläge für diese 3 Tage:
-      ${futureDaysContext}
-
-      ${CONST_TE_GUIDELINES}
-
-      **REGELN:**
-      1. **ÜBERGANG:** Wenn der letzte Tag davor (siehe Kontext) sehr hart war (Load > 120), starte Tag 1 eher moderat/locker.
-      2. **PHASE:** - **PHASE A:** Orientiere dich stark am IDEALEN WOCHENPLAN.
-         - **PHASE E:** Halbiere den Load aus dem Idealplan (-50%).
-      3. Sei nicht übervorsichtig, außer der Kontext davor verlangt Erholung.
-
-      **FORMAT (JSON Array):**
-      [
-        {
-          "date": "YYYY-MM-DD",
-          "weekday": "Mo/Di/...",
-          "sport": "Run",
-          "zone": "Z2",
-          "load": 140, 
-          "te_aerobic_target": 3.0,
-          "te_anaerobic_target": 0.0,
-          "reason": "Anschluss an den Vortag, Phase A"
-        }
-      ]
-    `;
-
-    // 7. API Call
-    logToSheet('DEBUG', '-> Sende Prompt an Gemini...');
-    const response = callGeminiAPI(prompt);
-    
-    // 8. JSON parsen
-    const jsonMatch = response.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) throw new Error("Kein JSON-Array in der Antwort gefunden.");
-
-    const suggestions = JSON.parse(jsonMatch[0]);
-
-    suggestions.forEach((s, index) => {
-      if(index < suggestionDates.length) {
-        s.date = suggestionDates[index].date; 
-        s.weekday = suggestionDates[index].weekday;
-      }
-    });
-
-    logToSheet('INFO', `✅ 3 Vorschläge erfolgreich generiert.`);
-    return suggestions;
-
-  } catch (e) {
-    logToSheet('ERROR', `🛑 Fehler in getNext3DaySuggestions: ${e.message}`);
-    return { error: "KI Fehler: " + e.message };
-  }
+  // KI-frei (2026-10-26): 3-Tage-Vorschläge (Gemini) entfernt – Wochenplan im Cockpit nutzen.
+  return { success: false, error: 'KI läuft nicht mehr im Apps Script – lokal (Mac) oder Cloud über das Cockpit.' };
 }
 
-/**
- * V3.2 (Clean & Centralized): Erstellt den Prompt für die nächsten 3 Tage.
- * Nutzt jetzt die globale Konstante CONST_TE_GUIDELINES für Regeln & Sportarten.
- */
-function buildNext3DayPrompt(lastDaysContext, futureDaysContext, userStatus, weatherInfo) {
-
-  const systemInstruction = `
-  Du bist Coach Kira, ein elite Performance-Coach für Ausdauersport (Laufen/Radfahren/Rudern).
-  
-  **DEINE AUFGABE:**
-  Plane das Training für die nächsten 3 Tage basierend auf dem aktuellen Status, der Historie und dem Wetter.
-  
-  ${CONST_TE_GUIDELINES}
-
-  **REGELN FÜR 'sport' UND 'zone' (STRIKT!):**
-  1. **Sport:** Nur die Sportart! (z.B. "Run", "Bike", "Row", "HIIT", "Off").
-     - VERBOTEN: "Swim", "Run (Z2)", "Bike Z3".
-     - ERLAUBT: "Run", "Bike", "Row", "Hike", "Walk", "HIIT".
-  2. **Zone:** Hier gehört die Intensität hin (z.B. "Z2", "Recovery", "Intervalle", "Mix").
-
-  **AKTUELLE SITUATION:**
-  ${userStatus}
-
-  **WETTERVORHERSAGE:**
-  ${weatherInfo}
-  
-  **HISTORIE (Letzte Tage):**
-  ${lastDaysContext}
-  
-  **BEREITS GEPLANT (Zukunft):**
-  ${futureDaysContext}
-
-  **JSON-FORMAT (ANTWORTE NUR HIERMIT):**
-  {
-    "plan": [
-      {
-        "date": "YYYY-MM-DD",
-        "weekday": "Wochentag",
-        "sport": "Run",             // NUR die Sportart (Run, Bike, Row...)
-        "zone": "Z2",               // Die Intensitätszone
-        "load": 60,                 // Geplanter Load
-        "te_aerobic_target": 3.0,   // Ziel Aerob (Float)
-        "te_anaerobic_target": 0.0, // Ziel Anaerob (Float)
-        "reason": "Kurze Begründung..."
-      }
-      // ... für alle 3 Tage
-    ]
-  }
-  `;
-
-  return systemInstruction;
-}
+// KI-frei (2026-10-26): buildNext3DayPrompt entfernt (Prompt-Bau liegt nicht mehr im Apps Script).
 
 
 /**
@@ -6444,224 +5009,16 @@ function sendTelegram(message) {
  * Damit sind Fließtext-Antworten technisch unmöglich.
  */
 function callGeminiStructured(promptText) {
-  const API_KEY = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
-  const MODEL_ID = 'gemini-2.5-pro'; 
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_ID}:generateContent?key=${API_KEY}`;
-
-  // DAS SCHEMA (Die "Handschellen" für die KI)
-  const schema = {
-    "type": "OBJECT",
-    "properties": {
-      "empfehlung_zukunft": {
-        "type": "OBJECT",
-        "properties": {
-          "plan_status": {"type": "STRING", "enum": ["GO", "ANPASSUNG VORSICHT", "ANPASSUNG STOP", "OK"]},
-          "text": {"type": "STRING"}
-        },
-        "required": ["text"]
-      },
-      "bewertung_ernaehrung_7d": {
-        "type": "OBJECT",
-        "properties": {
-          "text": {"type": "STRING"}
-        }
-      },
-      "einzelscore_kommentare": {
-        "type": "ARRAY",
-        "items": {
-          "type": "OBJECT",
-          "properties": {
-            "metrik": {"type": "STRING"},
-            "text_info": {"type": "STRING"}
-          },
-          "required": ["metrik", "text_info"]
-        }
-      },
-      "empfohlener_plan": {
-        "type": "ARRAY",
-        "items": {
-          "type": "OBJECT",
-          "properties": {
-            "datum": {"type": "STRING"},
-            "tag": {"type": "STRING"},
-            "original_load_ess": {"type": "NUMBER"},
-            "empfohlener_load_ess": {"type": "NUMBER"},
-            "empfohlene_zone": {"type": "STRING"},
-            "beispiel_training_1": {"type": "STRING"},
-            "beispiel_training_2": {"type": "STRING"},
-            "prognostizierte_auswirkung": {"type": "STRING"},
-            "wetterempfehlung": {"type": "STRING"}
-          }
-        }
-      }
-    },
-    "required": ["empfehlung_zukunft", "einzelscore_kommentare"]
-  };
-
-  const payload = {
-    "contents": [{ "parts": [{"text": promptText}] }],
-    "generationConfig": {
-      "temperature": 0.4, // Niedrig für Präzision
-      "response_mime_type": "application/json",
-      "response_schema": schema // <-- HIER IST DER ZWANG!
-    }
-  };
-
-  const options = {
-    'method': 'post',
-    'contentType': 'application/json',
-    'payload': JSON.stringify(payload),
-    'muteHttpExceptions': true
-  };
-
-  try {
-    const response = UrlFetchApp.fetch(API_URL, options);
-    const json = JSON.parse(response.getContentText());
-
-    if (response.getResponseCode() !== 200) {
-      throw new Error(`API Fehler (${response.getResponseCode()}): ${json.error?.message || 'Unbekannt'}`);
-    }
-    
-    // Wir geben direkt das JSON zurück, kein Text-Parsing mehr nötig!
-    return json.candidates[0].content.parts[0].text;
-
-  } catch (e) {
-    throw new Error("Strukturierter Abruf gescheitert: " + e.message);
-  }
+  // KI-frei (2026-10-26): Gemini-Aufrufe entfernt.
+  throw new Error('callGeminiStructured: KI läuft nicht mehr im Apps Script – lokal (Mac) oder Cloud über das Cockpit.');
 }
 
 /**
  * V3-OPENAI-ROBUST: Mit Fehler-Handling für HTML-Antworten.
  */
 function callOpenAI(promptText) {
-  const API_KEY = PropertiesService.getScriptProperties().getProperty('OPENAI_API_KEY');
-  if (!API_KEY) throw new Error("Kein OPENAI_API_KEY in den Skripteigenschaften gefunden!");
-
-  const API_URL = "https://api.openai.com/v1/chat/completions";
-  const MODEL = "gpt-4o-2024-08-06"; 
-
-  const reportSchema = {
-    "name": "fitness_report",
-    "strict": true,
-    "schema": {
-      "type": "object",
-      "properties": {
-        "empfehlung_zukunft": {
-          "type": "object",
-          "properties": {
-            // HIER DIE ALTEN BEGRIFFE RAUSWERFEN:
-            "plan_status": { "type": "string", "enum": ["FREIGABE", "BEOBACHTUNG", "INTERVENTION"] },
-            "text": { "type": "string", "description": "Ausführliche Gesamtanalyse" }
-          },
-          "required": ["plan_status", "text"],
-          "additionalProperties": false
-        },
-        "bewertung_ernaehrung_7d": {
-          "type": "object",
-          "properties": {
-            "text": { "type": "string", "description": "Kurzbewertung Ernährung" }
-          },
-          "required": ["text"],
-          "additionalProperties": false
-        },
-        "einzelscore_kommentare": {
-          "type": "array",
-          "description": "Liste der Kommentare für jeden einzelnen Score",
-          "items": {
-            "type": "object",
-            "properties": {
-              "metrik": { "type": "string" },
-              "text_info": { "type": "string", "description": "Kurzer Kommentar (1 Satz)" }
-            },
-            "required": ["metrik", "text_info"],
-            "additionalProperties": false
-          }
-        },
-        "empfohlener_plan": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "datum": { "type": "string" },
-              "tag": { "type": "string" },
-              "original_load_ess": { "type": "number" },
-              "empfohlener_load_ess": { "type": "number" },
-              "empfohlene_zone": { "type": "string" },
-              "beispiel_training_1": { "type": "string" },
-              "beispiel_training_2": { "type": "string" },
-              "prognostizierte_auswirkung": { 
-                "type": "string", 
-                "description": "Detaillierte Erklärung." 
-              },
-              "wetterempfehlung": { "type": "string" }
-            },
-            "required": ["datum", "tag", "original_load_ess", "empfohlener_load_ess", "empfohlene_zone", "beispiel_training_1", "beispiel_training_2", "prognostizierte_auswirkung", "wetterempfehlung"],
-            "additionalProperties": false
-          }
-        }
-      },
-      "required": ["empfehlung_zukunft", "bewertung_ernaehrung_7d", "einzelscore_kommentare", "empfohlener_plan"],
-      "additionalProperties": false
-    }
-  };
-
-  const payload = {
-    "model": MODEL,
-    "messages": [
-      { 
-        "role": "system", 
-        "content": "Du bist ein präziser Daten-Analyst. Deine Aufgabe ist es, die Daten zu analysieren und NUR das angeforderte JSON zu füllen." 
-      },
-      { 
-        "role": "user", 
-        "content": promptText 
-      }
-    ],
-    "response_format": {
-      "type": "json_schema",
-      "json_schema": reportSchema 
-    },
-    "temperature": 0.7
-  };
-
-  const options = {
-    "method": "post",
-    "contentType": "application/json",
-    "headers": {
-      "Authorization": "Bearer " + API_KEY
-    },
-    "payload": JSON.stringify(payload),
-    "muteHttpExceptions": true // WICHTIG: Damit wir den Fehlercode sehen!
-  };
-
-  try {
-    const response = UrlFetchApp.fetch(API_URL, options);
-    const responseCode = response.getResponseCode();
-    const contentText = response.getContentText();
-
-    // 1. Check auf HTTP Fehler (z.B. 500, 404, 401)
-    if (responseCode !== 200) {
-        logToSheet('ERROR', `OpenAI HTTP Fehler ${responseCode}: ${contentText.substring(0, 200)}...`);
-        throw new Error(`OpenAI Server Fehler (${responseCode})`);
-    }
-
-    // 2. Check auf HTML statt JSON
-    if (contentText.trim().startsWith("<")) {
-        logToSheet('ERROR', `OpenAI lieferte HTML statt JSON: ${contentText.substring(0, 200)}...`);
-        throw new Error("OpenAI lieferte ungültiges Format (HTML). Evtl. Server down?");
-    }
-
-    const json = JSON.parse(contentText);
-
-    if (json.error) {
-      throw new Error(`OpenAI API Fehler: ${json.error.message}`);
-    }
-
-    return json.choices[0].message.content;
-
-  } catch (e) {
-    throw new Error("OpenAI Verbindung gescheitert: " + e.message);
-  }
+  // KI-frei (2026-10-26): OpenAI-Aufrufe entfernt. Der Supervisor läuft auf dem Mac (coach-kira).
+  throw new Error('callOpenAI: KI läuft nicht mehr im Apps Script – lokal (Mac) oder Cloud über das Cockpit.');
 }
 
 /**
@@ -6848,34 +5205,7 @@ function debugChatLog() {
   }
 }
 
-/**
- * Liest das Expertenwissen aus dem Sheet 'KK_WISSEN'.
- * Nur Zeilen, bei denen in Spalte B ein 'x' steht.
- */
-function getDeepKnowledgeBase() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName('KK_WISSEN');
-  
-  // Fallback, falls Sheet noch nicht existiert (nutzt den alten Konstanten-String)
-  if (!sheet) return WISSENSBLOCK_V105; 
-
-  const data = sheet.getDataRange().getValues();
-  let fullKnowledgeText = "--- EXPERTEN-WISSENSDATENBANK (KIRA SYSTEM) ---\n";
-  
-  // Start bei Zeile 2 (Index 1), um Header zu überspringen
-  for (let i = 1; i < data.length; i++) {
-    const activeMarker = String(data[i][1]).toLowerCase(); // Spalte B
-    const content = data[i][2]; // Spalte C
-    
-    // Nur aktive Blöcke ('x') aufnehmen
-    if (activeMarker === 'x' && content) {
-      fullKnowledgeText += content + "\n\n";
-    }
-  }
-  
-  fullKnowledgeText += "--- ENDE WISSENSDATENBANK ---\n";
-  return fullKnowledgeText;
-}
+// KI-frei (Stufe 3): getDeepKnowledgeBase entfernt – Prompt-Bau liegt in kira_prompts (Cockpit/Mac).
 
 // --- PINNWAND / NOTIZEN FUNKTIONEN ---
 
@@ -8363,57 +6693,8 @@ function runPlanCalendarSyncAsync_() {
  * V172: Strategische Projektion mit konkreten Last-Empfehlungen
  */
 function getStrategicKiraBriefing(simData) {
-  try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const base = getLabBaselines(); 
-    
-    // 1. Kontext laden
-    const statusSheet = ss.getSheetByName('AI_REPORT_STATUS');
-    let currentStatusText = "...";
-    if (statusSheet) {
-      const statusData = statusSheet.getDataRange().getValues();
-      const gesamtRow = statusData.find(r => r[1] === "Gesamtscore");
-      currentStatusText = gesamtRow ? gesamtRow[5] : "";
-    }
-
-    // 2. Deine Standard-Woche als Orientierung für Kira
-    const weekConfig = ss.getSheetByName('week_config').getDataRange().getValues();
-    const weekPattern = weekConfig.slice(1).map(r => `${r[0]}: ${r[1]} ESS (${r[2]})`).join(", ");
-
-    const prompt = `
-      Du bist Coach Kira. Analysiere das 14-Tage-Szenario und erstelle eine GEGEN-PLANUNG.
-      
-      STARTPUNKT: "${currentStatusText}"
-      DEINE BASIS-STRATEGIE (Standardwoche): ${weekPattern}
-      
-      SIMULATION DES COMMANDERS:
-      ${JSON.stringify(simData)}
-      
-      DEIN AUFTRAG:
-      1. Schreibe eine kurze, kecke Analyse (max 4 Sätze).
-      2. Erstelle eine Liste von EXAKT 14 Zahlen (nur ESS-Werte), die du für diese 14 Tage empfehlen würdest, um den Commander optimal und sicher ans Ziel zu bringen.
-      
-      ANTWORTE AUSSCHLIESSLICH IM FOLGENDEN JSON-FORMAT:
-      {
-        "briefing": "Dein Text...",
-        "recommendations": [wert1, wert2, ..., wert14]
-      }
-    `;
-
-    let response = askKira(prompt); 
-    // Säuberung, falls Kira doch Markdowns mitschickt
-    response = response.replace(/```json|```/g, "").trim();
-
-    // In AI_FUTURE_STATUS speichern
-    const futureSheet = ss.getSheetByName('AI_FUTURE_STATUS');
-    if (futureSheet) {
-      futureSheet.clear();
-      futureSheet.getRange(1, 1).setValue(response);
-    }
-    return response;
-  } catch(e) {
-    return JSON.stringify({ briefing: "Fehler: " + e.message, recommendations: Array(14).fill(0) });
-  }
+  // KI-frei (2026-10-26): Gemini-Briefing entfernt – Plan-Briefing im Cockpit nutzen.
+  return { success: false, error: 'KI läuft nicht mehr im Apps Script – lokal (Mac) oder Cloud über das Cockpit.' };
 }
 
 /**
@@ -9017,8 +7298,15 @@ function getWetterdatenCached_() {
   return val;
 }
 
-function hb_(stage, extra) {
+function hb_(a, b, c, d) {
   try {
+    // Zwei Aufrufformen: hb_(stage, extra) und hb_(ss, runId, stage, extra) (Supervisor)
+    let stage, extra, runIdArg = null;
+    if (a && typeof a === 'object' && typeof a.getSheetByName === 'function') {
+      runIdArg = b; stage = c; extra = d;
+    } else {
+      stage = a; extra = b;
+    }
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sh = ss.getSheetByName("AI_HEARTBEAT") || ss.insertSheet("AI_HEARTBEAT");
 
@@ -9028,23 +7316,21 @@ function hb_(stage, extra) {
       sh.setFrozenRows(1);
     }
 
-    const runId = PropertiesService.getScriptProperties().getProperty("HB_RUN_ID") ||
-      ("RUN_" + Utilities.getUuid().slice(0, 8));
-
-    PropertiesService.getScriptProperties().setProperty("HB_RUN_ID", runId);
+    let runId = runIdArg ? String(runIdArg) : PropertiesService.getScriptProperties().getProperty("HB_RUN_ID");
+    if (!runId) {
+      runId = "RUN_" + Utilities.getUuid().slice(0, 8);
+      PropertiesService.getScriptProperties().setProperty("HB_RUN_ID", runId);
+    }
 
     // In feste Zellen schreiben (übersichtlich)
-    sh.getRange("A2").setValue(new Date());
-    sh.getRange("B2").setValue(stage || "");
-    sh.getRange("C2").setValue(runId);
-    sh.getRange("D2").setValue(extra || "");
-
+    sh.getRange("A2:D2").setValues([[new Date(), String(stage || ""), runId, String(extra || "").slice(0, 500)]]);
     SpreadsheetApp.flush(); // damit du es sofort siehst
   } catch (e) {
     // Herzschlag darf nie den Job killen
     Logger.log("HB ERROR: " + (e && e.stack ? e.stack : e));
   }
 }
+
 
 function hbStart_(name) {
   PropertiesService.getScriptProperties().setProperty("HB_RUN_ID", "RUN_" + Utilities.getUuid().slice(0, 8));
@@ -9594,93 +7880,8 @@ function _isBadRhrFlag_(rhrSeries, i, lookbackDays, deltaBpm) {
  * Erwartet simLast = das Objekt, das du in charts.html persistierst.
  */
 function getCoachKiraAnalysis(simLast) {
-  // Robust: simLast kann als Object oder als JSON-String reinkommen
-  let payloadObj = simLast;
-  if (typeof simLast === "string") {
-    try { payloadObj = JSON.parse(simLast); } catch (e) { payloadObj = { raw: simLast }; }
-  }
-
-  // Minimal sanity: große Objekte können Token sprengen → notfalls kürzen
-  // (Du kannst das später feiner machen; erstmal sicher und stabil.)
-  const slim = slimSimLast_(payloadObj);
-
-  const schema = {
-    schemaVersion: "1.0",
-    generatedAt: "ISO-8601",
-    status: {
-      ampel: "GREEN|YELLOW|RED",
-      oneLiner: "string"
-    },
-    keyFindings: [
-      { title: "string", evidence: ["string"], impact: "string" }
-    ],
-    recommendations: [
-      { title: "string", why: "string", action: "string", horizonDays: 7 }
-    ],
-    risks: [
-      { title: "string", trigger: "string", mitigation: "string", severity: "LOW|MEDIUM|HIGH" }
-    ],
-    loadAdjustments: [
-      { dayIndex: 0, label: "string", load: 0, delta: 0, reason: "string" }
-    ],
-    metricsSnapshot: {
-      sg0: 0, tsb0: 0, acwr0: 0, ctl0: 0, atl0: 0
-    }
-  };
-
-  const prompt =
-`Du bist "Coach-Kira", ein nüchterner Fitness-Coach und Analyst.
-Du MUSST ausschließlich gültiges JSON ausgeben. KEIN Markdown. KEINE Erklärtexte.
-Regeln:
-- Output MUSS ein einziges JSON-Objekt sein (kein Array außen).
-- Keine Codefences.
-- Nur ASCII-Anführungszeichen ".
-- Keine trailing commas.
-- Zahlen als Zahlen, keine Strings.
-- Felder exakt wie im Schema, keine Zusatzfelder.
-- Arrays: maximal 4 keyFindings, 5 recommendations, 4 risks, 7 loadAdjustments.
-- loadAdjustments nur für die nächsten 7 Tage (dayIndex 0..6) und nur wenn sinnvoll; sonst leeres Array.
-
-Stilvorgaben (verbindlich):
-
-- Schreibe sachlich, ruhig und neutral.
-- Keine moralischen Bewertungen (z. B. „Missachtung“, „Sabotage“, „inakzeptabel“).
-- Keine Katastrophensprache („Systemausfall“, „Notfall“, „indiskutabel“).
-- Formuliere wie ein erfahrener Sportwissenschaftler oder Coach.
-- Fokus auf Risiko, Wahrscheinlichkeit und Nutzenabwägung.
-- Empfehlungen als Optionen, nicht als Befehle.
-
-Schema (Beispielstruktur, nicht ausfüllen mit Beispieltext):
-${JSON.stringify(schema, null, 2)}
-
-Daten (JSON):
-${JSON.stringify(slim)}
-`.trim();
-
-  const raw = askKira(prompt);
-
-  // Strikt: wir parsen / extrahieren und geben garantiert parsebares JSON zurück
-  const obj = coerceStrictJson_(raw);
-
-  // Notfalls: wenn Modell Unsinn liefert, wenigstens ein parsebares Fehlerobjekt
-  if (!obj || typeof obj !== "object") {
-    return JSON.stringify({
-      schemaVersion: "1.0",
-      generatedAt: new Date().toISOString(),
-      status: { ampel: "YELLOW", oneLiner: "Analyse nicht parsebar – bitte erneut versuchen." },
-      keyFindings: [],
-      recommendations: [],
-      risks: [],
-      loadAdjustments: [],
-      metricsSnapshot: { sg0: 0, tsb0: 0, acwr0: 0, ctl0: 0, atl0: 0 }
-    });
-  }
-
-  // generatedAt setzen, falls fehlt
-  if (!obj.generatedAt) obj.generatedAt = new Date().toISOString();
-  if (!obj.schemaVersion) obj.schemaVersion = "1.0";
-
-  return JSON.stringify(obj);
+  // KI-frei (2026-10-26): Gemini-Analyse entfernt – Cockpit nutzen.
+  return { success: false, error: 'KI läuft nicht mehr im Apps Script – lokal (Mac) oder Cloud über das Cockpit.' };
 }
 
 
@@ -9762,3 +7963,2312 @@ function extractFirstJsonObject_(s) {
   }
   return null;
 }
+
+// ============================================================
+// Coach Kira Dashboard API – Minimalendpunkte für pptx.app
+// Stand: MVP
+// ============================================================
+
+function ckDash_json_(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj, null, 2))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function ckDash_now_() {
+  return Utilities.formatDate(
+    new Date(),
+    Session.getScriptTimeZone() || 'Europe/Berlin',
+    "yyyy-MM-dd'T'HH:mm:ssXXX"
+  );
+}
+
+/**
+ * (2026-09-28) Token-Schutz auf Wunsch deaktiviert.
+ * Wieder einschalten: Prüfung gegen ScriptProperty DASHBOARD_ACTION_TOKEN zurückholen (siehe unten).
+ */
+function ckDash_requireToken_(p) {
+  return { ok: true };
+}
+
+
+function ckDash_getSheet_(name) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sh = ss.getSheetByName(name);
+
+  if (!sh) {
+    throw new Error('Sheet nicht gefunden: ' + name);
+  }
+
+  return sh;
+}
+
+function ckDash_readKeyValueRows_(sheetName, keyCol, valueCol, maxRows) {
+  const sh = ckDash_getSheet_(sheetName);
+  const lastRow = Math.min(sh.getLastRow(), maxRows || sh.getLastRow());
+  const values = sh.getRange(1, 1, lastRow, sh.getLastColumn()).getValues();
+
+  return values.map(function(row, i) {
+    return {
+      row: i + 1,
+      key: row[keyCol - 1],
+      value: row[valueCol - 1],
+      raw: row
+    };
+  });
+}
+
+function ckDash_status_() {
+  try {
+    const heartbeat = ckDash_getHeartbeat_();
+    const report = ckDash_getReportStatusSummary_();
+
+    return ckDash_json_({
+      ok: true,
+      timestamp: ckDash_now_(),
+      heartbeat: heartbeat,
+      summary: report
+    });
+  } catch (err) {
+    return ckDash_json_({
+      ok: false,
+      timestamp: ckDash_now_(),
+      error: String(err && err.message ? err.message : err)
+    });
+  }
+}
+
+function ckDash_getHeartbeat_() {
+  const sh = ckDash_getSheet_('AI_HEARTBEAT');
+  const values = sh.getDataRange().getValues();
+
+  if (values.length < 2) {
+    return null;
+  }
+
+  const header = values[0];
+  const row = values[values.length - 1];
+
+  return {
+    timestamp: row[0],
+    stage: row[1],
+    runId: row[2],
+    extra: row[3],
+    header: header
+  };
+}
+
+function ckDash_getReportStatusSummary_() {
+  const sh = ckDash_getSheet_('AI_REPORT_STATUS');
+  const values = sh.getDataRange().getValues();
+
+  const out = {
+    gesamtAmpel: null,
+    gesamtScore: null,
+    recoveryScore: null,
+    trainingScore: null,
+    planStatus: null,
+    items: []
+  };
+
+  for (let i = 1; i < values.length; i++) {
+    const row = values[i];
+
+    const kategorie = row[0];
+    const metrik = row[1];
+    const ampel = row[2];
+    const wert = row[3];
+    const score = row[4];
+    const text = row[5];
+
+    if (!metrik) continue;
+
+    out.items.push({
+      kategorie: kategorie,
+      metrik: metrik,
+      ampel: ampel,
+      wert: wert,
+      score: score,
+      text: text
+    });
+
+    if (metrik === 'Gesamtscore') {
+      out.gesamtAmpel = ampel;
+      out.gesamtScore = score || wert;
+    }
+
+    if (metrik === 'Recovery Score') {
+      out.recoveryScore = score || wert;
+    }
+
+    if (metrik === 'Training Score') {
+      out.trainingScore = score || wert;
+    }
+
+    if (metrik === 'Plan Status') {
+      out.planStatus = text || wert || ampel;
+    }
+  }
+
+  return out;
+}
+
+function ckDash_planJson_() {
+  try {
+    const sh = ckDash_getSheet_('AI_REPORT_PLAN');
+    const values = sh.getDataRange().getValues();
+
+    if (values.length < 2) {
+      return ckDash_json_({
+        ok: true,
+        timestamp: ckDash_now_(),
+        plan: []
+      });
+    }
+
+    const headers = values[0];
+
+    const plan = values.slice(1)
+      .filter(function(row) {
+        return row[0];
+      })
+      .map(function(row, idx) {
+        const obj = {
+          index: idx + 1
+        };
+
+        headers.forEach(function(h, colIdx) {
+          if (h) obj[h] = row[colIdx];
+        });
+
+        return obj;
+      });
+
+    return ckDash_json_({
+      ok: true,
+      timestamp: ckDash_now_(),
+      rows: plan.length,
+      plan: plan
+    });
+  } catch (err) {
+    return ckDash_json_({
+      ok: false,
+      timestamp: ckDash_now_(),
+      error: String(err && err.message ? err.message : err)
+    });
+  }
+}
+
+function ckDash_chartData_(p) {
+  try {
+    const rangeParam = p.range || '28d';
+    const metricsParam = p.metrics || 'load_fb_day,fbATL_obs,fbCTL_obs,fbACWR_obs,sleep_hours,sleep_score_0_100,rhr_bpm,Garmin_Training_Readiness';
+
+    const days = ckDash_parseDays_(rangeParam);
+    const requestedMetrics = metricsParam.split(',')
+      .map(function(s) { return String(s).trim(); })
+      .filter(Boolean);
+
+    const sh = ckDash_getSheet_('KK_TIMELINE');
+    const values = sh.getDataRange().getValues();
+
+    if (values.length < 2) {
+      return ckDash_json_({
+        ok: true,
+        timestamp: ckDash_now_(),
+        rows: 0,
+        data: []
+      });
+    }
+
+    const headers = values[0].map(function(h) {
+      return String(h || '').trim();
+    });
+
+    const dateIdx = headers.indexOf('date');
+    if (dateIdx < 0) {
+      throw new Error('Spalte date nicht gefunden in KK_TIMELINE');
+    }
+
+    const metricIndexes = requestedMetrics.map(function(m) {
+      return {
+        name: m,
+        index: headers.indexOf(m)
+      };
+    }).filter(function(x) {
+      return x.index >= 0;
+    });
+
+    const tz = Session.getScriptTimeZone() || 'Europe/Berlin';
+
+    const todayKey = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
+
+    const todayDate = new Date(todayKey + 'T23:59:59');
+    const minDate = new Date(todayDate.getTime() - (days - 1) * 24 * 60 * 60 * 1000);
+
+    const data = [];
+
+    for (let i = 1; i < values.length; i++) {
+  const row = values[i];
+  const d = row[dateIdx];
+
+  if (!d || !(d instanceof Date)) continue;
+  if (d < minDate) continue;
+  if (d > todayDate) continue;
+
+  const obj = {
+    row: i + 1,
+    date: Utilities.formatDate(d, tz, 'yyyy-MM-dd')
+  };
+
+  metricIndexes.forEach(function(m) {
+    obj[m.name] = row[m.index];
+  });
+
+  data.push(obj);
+}
+
+    return ckDash_json_({
+      ok: true,
+      timestamp: ckDash_now_(),
+      range: rangeParam,
+      requestedMetrics: requestedMetrics,
+      returnedMetrics: metricIndexes.map(function(m) { return m.name; }),
+      rows: data.length,
+      data: data
+    });
+
+  } catch (err) {
+    return ckDash_json_({
+      ok: false,
+      timestamp: ckDash_now_(),
+      error: String(err && err.message ? err.message : err)
+    });
+  }
+}
+
+function ckDash_parseDays_(rangeParam) {
+  const s = String(rangeParam || '28d').toLowerCase();
+  const m = s.match(/^(\d+)d$/);
+
+  if (m) {
+    return Math.max(1, Math.min(365, Number(m[1])));
+  }
+
+  return 28;
+}
+
+function ckDash_queueAction_(p, functionName) {
+  try {
+    const auth = ckDash_requireToken_(p);
+
+    if (!auth.ok) {
+      return ckDash_json_({
+        ok: false,
+        timestamp: ckDash_now_(),
+        error: auth.error
+      });
+    }
+
+    const allowed = {
+      runKiraGeminiSupervisor: true,
+      generateOptimized14DayPlan: true
+    };
+
+    if (!allowed[functionName]) {
+      return ckDash_json_({
+        ok: false,
+        timestamp: ckDash_now_(),
+        error: 'action_not_allowed',
+        functionName: functionName
+      });
+    }
+
+    // KI-frei (Stufe 3): gewünschte KI (lokal/Cloud) für den nächsten Supervisor-Auftrag merken
+    if (functionName === 'runKiraGeminiSupervisor') {
+      PropertiesService.getScriptProperties().setProperty('CK_SUP_ENGINE_NEXT', String(p.engine || '') === 'cloud' ? 'cloud' : 'local');
+    }
+
+    const lock = LockService.getScriptLock();
+
+    if (!lock.tryLock(5000)) {
+      return ckDash_json_({
+        ok: false,
+        timestamp: ckDash_now_(),
+        error: 'lock_busy'
+      });
+    }
+
+    try {
+      const runId = 'DASH_' + Utilities.getUuid().slice(0, 8);
+
+      PropertiesService
+        .getScriptProperties()
+        .setProperty('DASH_LAST_QUEUED_RUN_ID', runId);
+
+      PropertiesService
+        .getScriptProperties()
+        .setProperty('DASH_LAST_QUEUED_FUNCTION', functionName);
+
+      PropertiesService
+        .getScriptProperties()
+        .setProperty('DASH_LAST_QUEUED_AT', ckDash_now_());
+
+      ckDash_deleteTriggersForFunction_(functionName);
+
+      ScriptApp
+        .newTrigger(functionName)
+        .timeBased()
+        .after(1000)
+        .create();
+
+      try {
+        logToSheet('INFO', '[Dashboard] Queued ' + functionName + ' runId=' + runId);
+      } catch (logErr) {
+        // Logging darf nie den Start verhindern.
+      }
+
+      return ckDash_json_({
+        ok: true,
+        timestamp: ckDash_now_(),
+        queued: true,
+        functionName: functionName,
+        runId: runId
+      });
+
+    } finally {
+      lock.releaseLock();
+    }
+
+  } catch (err) {
+    return ckDash_json_({
+      ok: false,
+      timestamp: ckDash_now_(),
+      error: String(err && err.message ? err.message : err)
+    });
+  }
+}
+
+function ckDash_deleteTriggersForFunction_(functionName) {
+  const triggers = ScriptApp.getProjectTriggers();
+
+  triggers.forEach(function(trigger) {
+    if (trigger.getHandlerFunction && trigger.getHandlerFunction() === functionName) {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  });
+}
+
+function ckDash_runStatus_(p) {
+  try {
+    const props = PropertiesService.getScriptProperties();
+
+    return ckDash_json_({
+      ok: true,
+      timestamp: ckDash_now_(),
+      requestedRunId: p.runId || null,
+      lastQueued: {
+        runId: props.getProperty('DASH_LAST_QUEUED_RUN_ID'),
+        functionName: props.getProperty('DASH_LAST_QUEUED_FUNCTION'),
+        queuedAt: props.getProperty('DASH_LAST_QUEUED_AT')
+      },
+      heartbeat: ckDash_getHeartbeat_()
+    });
+
+  } catch (err) {
+    return ckDash_json_({
+      ok: false,
+      timestamp: ckDash_now_(),
+      error: String(err && err.message ? err.message : err)
+    });
+  }
+}
+
+function ckDash_logs_(p) {
+  try {
+    const limit = Math.max(1, Math.min(100, Number(p.limit || 25)));
+    const sh = ckDash_getSheet_('AI_LOG');
+
+    const lastRow = sh.getLastRow();
+    const lastCol = sh.getLastColumn();
+
+    if (lastRow < 1) {
+      return ckDash_json_({
+        ok: true,
+        timestamp: ckDash_now_(),
+        logs: []
+      });
+    }
+
+    const startRow = Math.max(1, lastRow - limit + 1);
+    const numRows = lastRow - startRow + 1;
+
+    const values = sh.getRange(startRow, 1, numRows, lastCol).getValues();
+
+    const logs = values.map(function(row, idx) {
+      return {
+        row: startRow + idx,
+        timestamp: row[0],
+        level: row[1],
+        message: row[2],
+        raw: row
+      };
+    });
+
+    return ckDash_json_({
+      ok: true,
+      timestamp: ckDash_now_(),
+      rows: logs.length,
+      logs: logs
+    });
+
+  } catch (err) {
+    return ckDash_json_({
+      ok: false,
+      timestamp: ckDash_now_(),
+      error: String(err && err.message ? err.message : err)
+    });
+  }
+}
+
+function ckDash_planJsonV2_() {
+  try {
+    const sh = ckDash_getSheet_('AI_REPORT_PLAN');
+    const values = sh.getDataRange().getValues();
+
+    if (values.length < 2) {
+      return ckDash_json_({
+        ok: true,
+        timestamp: ckDash_now_(),
+        rows: 0,
+        plan: []
+      });
+    }
+
+    const plan = values.slice(1)
+      .filter(function(row) {
+        return row[0];
+      })
+      .map(function(row, idx) {
+        const d = row[0];
+
+        return {
+          index: idx + 1,
+          date: d instanceof Date
+            ? Utilities.formatDate(d, Session.getScriptTimeZone() || 'Europe/Berlin', 'yyyy-MM-dd')
+            : String(d || ''),
+          day: row[1] || '',
+          original_load_ess: Number(row[2] || 0),
+          recommended_load_ess: Number(row[3] || 0),
+          recommended_zone: row[4] || '',
+          training_1: row[5] || '',
+          training_2: row[6] || '',
+          projected_effect: row[7] || '',
+          weather_recommendation: row[8] || ''
+        };
+      });
+
+    return ckDash_json_({
+      ok: true,
+      timestamp: ckDash_now_(),
+      rows: plan.length,
+      plan: plan
+    });
+
+  } catch (err) {
+    return ckDash_json_({
+      ok: false,
+      timestamp: ckDash_now_(),
+      error: String(err && err.message ? err.message : err)
+    });
+  }
+}
+
+
+function ckDash_planSimulationJson_() {
+  var CACHE_KEY = 'ckDash_planSimulationJson_v1';
+  var CACHE_TTL = 60;
+  var DEPLOY_MARKER = 'v2-cache-2026-09-18';
+
+  try {
+    var cache = CacheService.getScriptCache();
+    var hit = cache.get(CACHE_KEY);
+    if (hit) {
+      return ContentService
+        .createTextOutput(hit)
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (typeof getSimStartValues !== 'function') {
+      throw new Error('getSimStartValues() nicht gefunden.');
+    }
+
+    var base = getSimStartValues();
+    var tz = Session.getScriptTimeZone() || 'Europe/Berlin';
+
+    var startDate = base.startDate
+      ? new Date(base.startDate)
+      : new Date();
+
+    var dayNames = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+
+    var fmtDate = function(d) {
+      return Utilities.formatDate(d, tz, 'yyyy-MM-dd');
+    };
+
+    var toNum = function(v, def) {
+      var n = parseFloat(String(v).replace(',', '.'));
+      return isFinite(n) ? n : (def || 0);
+    };
+
+    var days = [];
+    for (var i = 0; i < 14; i++) {
+      var d = new Date(startDate.getTime());
+      d.setDate(startDate.getDate() + i);
+
+      days.push({
+        index: i + 1,
+        date: fmtDate(d),
+        day: dayNames[d.getDay()],
+        phase: (base.phases && base.phases[i]) || 'E',
+        load: toNum(base.plannedLoads && base.plannedLoads[i], 0),
+        sport: (base.plannedSports && base.plannedSports[i]) || '',
+        zone: (base.plannedZones && base.plannedZones[i]) || '',
+        te_ae: toNum(base.plannedTeAe && base.plannedTeAe[i], 0),
+        te_an: toNum(base.plannedTeAn && base.plannedTeAn[i], 0),
+        locked: !!(base.lockedDays && base.lockedDays[i])
+      });
+    }
+
+    var payload = {
+      ok: true,
+      timestamp: ckDash_now_(),
+      source: 'getSimStartValues',
+      cached: false,
+      deployMarker: DEPLOY_MARKER,
+      base: {
+        atl: toNum(base.atl, 0),
+        ctl: toNum(base.ctl, 0),
+        ctlHistory: Array.isArray(base.ctlHistoryYesterday)
+          ? base.ctlHistoryYesterday
+          : (Array.isArray(base.ctlHistory) ? base.ctlHistory : []),
+        config: base.config || {},
+        todayIsClosed: !!base.todayIsClosed,
+        startDate: fmtDate(startDate),
+        todayRowIndex: base.todayRowIndex,
+        startRowIndex: base.startRowIndex,
+        snapshotActive: !!base.snapshotActive
+      },
+      days: days
+    };
+
+    var json = JSON.stringify(payload, null, 2);
+
+    if (json.length < 95 * 1024) {
+      try { cache.put(CACHE_KEY, json, CACHE_TTL); } catch (_) { /* ignore */ }
+    }
+
+    return ContentService
+      .createTextOutput(json)
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    return ckDash_json_({
+      ok: false,
+      timestamp: ckDash_now_(),
+      error: String(err && err.message ? err.message : err)
+    });
+  }
+}
+
+function ckDash_statusAiAnalysis_() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sh = ss.getSheetByName('AI_STATUS_ANALYSIS');
+    if (!sh || sh.getLastRow() < 2) {
+      return ckDash_json_({
+        ok: true,
+        timestamp: ckDash_now_(),
+        analysis: null
+      });
+    }
+
+    const row = sh.getRange(sh.getLastRow(), 1, 1, 3).getValues()[0];
+    return ckDash_json_({
+      ok: true,
+      timestamp: ckDash_now_(),
+      analysisTimestamp: row[0],
+      analysis: row[1]
+    });
+
+  } catch (err) {
+    return ckDash_json_({
+      ok: false,
+      timestamp: ckDash_now_(),
+      error: String(err && err.message ? err.message : err)
+    });
+  }
+}
+
+function ckDash_writeStatusAiAnalysis_(analysis, raw) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName('AI_STATUS_ANALYSIS');
+  if (!sh) {
+    sh = ss.insertSheet('AI_STATUS_ANALYSIS');
+    sh.getRange(1, 1, 1, 3).setValues([['timestamp', 'analysis', 'raw']]);
+  }
+  sh.appendRow([new Date(), analysis, raw || '']);
+}
+
+// ============================================================
+// Coach Kira Dashboard API – Iteration 3 Zusatzfunktionen
+// Plan Save + Perplexity Status-AI
+// Am Ende von KiraGeminiSupervisor.gs einfügen
+// ============================================================
+
+function ckDash_parseJsonArray_(raw, fallback) {
+  if (!raw) return fallback || [];
+  try {
+    const v = JSON.parse(raw);
+    return Array.isArray(v) ? v : (fallback || []);
+  } catch (e) {
+    return fallback || [];
+  }
+}
+
+function ckDash_saveSimulatedPlan_(p) {
+  try {
+    const auth = ckDash_requireToken_(p);
+    if (!auth.ok) {
+      return ckDash_json_({
+        ok: false,
+        timestamp: ckDash_now_(),
+        error: auth.error
+      });
+    }
+
+    if (typeof saveSimulatedPlan !== 'function') {
+      throw new Error('saveSimulatedPlan(...) nicht gefunden.');
+    }
+
+    const loads = ckDash_parseJsonArray_(p.loads, []);
+    const teAe = ckDash_parseJsonArray_(p.teAe, []);
+    const teAn = ckDash_parseJsonArray_(p.teAn, []);
+    const sports = ckDash_parseJsonArray_(p.sports, []);
+    const zones = ckDash_parseJsonArray_(p.zones, []);
+    const locks = ckDash_parseJsonArray_(p.locks, []);
+
+    if (!loads.length) throw new Error('loads ist leer.');
+
+    const raw = saveSimulatedPlan(loads, teAe, teAn, sports, zones, locks);
+    const ok = String(raw || '').indexOf('✅') === 0;
+
+    try {
+      logToSheet('INFO', '[Dashboard] saveSimulatedPlan via cockpit: ' + String(raw));
+    } catch (e) {}
+
+    return ckDash_json_({
+      ok: ok,
+      timestamp: ckDash_now_(),
+      message: String(raw || ''),
+      raw: String(raw || '')
+    });
+
+  } catch (err) {
+    return ckDash_json_({
+      ok: false,
+      timestamp: ckDash_now_(),
+      error: String(err && err.message ? err.message : err)
+    });
+  }
+}
+
+function ckDash_runStatusAiAnalysis_(p) {
+  // KI-frei (2026-10-26): Statusanalyse wird im Cockpit erstellt (lokal oder Cloud) und per saveBriefing gespeichert.
+  return ckDash_json_({ ok: false, timestamp: ckDash_now_(), error: 'KI läuft nicht mehr im Apps Script – lokal (Mac) oder Cloud über das Cockpit.' });
+}
+
+function ckDash_statusAiAnalysis_() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sh = ss.getSheetByName('AI_STATUS_ANALYSIS');
+
+    if (!sh || sh.getLastRow() < 2) {
+      return ckDash_json_({
+        ok: true,
+        timestamp: ckDash_now_(),
+        analysis: null
+      });
+    }
+
+    const row = sh.getRange(sh.getLastRow(), 1, 1, 3).getValues()[0];
+
+    return ckDash_json_({
+      ok: true,
+      timestamp: ckDash_now_(),
+      analysisTimestamp: row[0],
+      analysis: row[1]
+    });
+
+  } catch (err) {
+    return ckDash_json_({
+      ok: false,
+      timestamp: ckDash_now_(),
+      error: String(err && err.message ? err.message : err)
+    });
+  }
+}
+
+function ckDash_writeStatusAiAnalysis_(analysis, raw) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName('AI_STATUS_ANALYSIS');
+
+  if (!sh) {
+    sh = ss.insertSheet('AI_STATUS_ANALYSIS');
+    sh.getRange(1, 1, 1, 3).setValues([
+      ['timestamp', 'analysis', 'raw']
+    ]);
+  }
+
+  sh.appendRow([
+    new Date(),
+    analysis,
+    raw || ''
+  ]);
+}
+
+function ckDash_planBriefing_() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sh = ss.getSheetByName('AI_PLAN_BRIEFING');
+
+    if (!sh || sh.getLastRow() < 2) {
+      return ckDash_json_({
+        ok: true,
+        timestamp: ckDash_now_(),
+        briefing: null,
+        recommendations: null
+      });
+    }
+
+    const row = sh.getRange(sh.getLastRow(), 1, 1, 4).getValues()[0];
+    let recommendations = null;
+
+    try {
+      recommendations = row[2] ? JSON.parse(row[2]) : null;
+    } catch (e) {
+      recommendations = null;
+    }
+
+    return ckDash_json_({
+      ok: true,
+      timestamp: ckDash_now_(),
+      briefingTimestamp: row[0],
+      briefing: row[1],
+      recommendations: recommendations,
+      raw: row[3] || ''
+    });
+
+  } catch (err) {
+    return ckDash_json_({
+      ok: false,
+      timestamp: ckDash_now_(),
+      error: String(err && err.message ? err.message : err)
+    });
+  }
+}
+
+function ckDash_generatePlanBriefing_(p) {
+  // KI-frei (2026-10-26): Plan-Briefing wird im Cockpit erstellt (lokal oder Cloud) und per saveBriefing gespeichert.
+  return ckDash_json_({ ok: false, timestamp: ckDash_now_(), error: 'KI läuft nicht mehr im Apps Script – lokal (Mac) oder Cloud über das Cockpit.' });
+}
+
+function ckDash_collectPlanBriefingContext_() {
+  const sim = typeof getSimStartValues === 'function' ? getSimStartValues() : {};
+  const tz = Session.getScriptTimeZone() || 'Europe/Berlin';
+  const startDate = sim.startDate ? new Date(sim.startDate) : new Date();
+  const dayNames = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+  const toNum = function(v, def) {
+    const n = parseFloat(String(v).replace(',', '.'));
+    return Number.isFinite(n) ? n : (def || 0);
+  };
+  const fmtDate = function(d) {
+    return Utilities.formatDate(d, tz, 'yyyy-MM-dd');
+  };
+
+  const days = [];
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(startDate.getTime());
+    d.setDate(startDate.getDate() + i);
+    days.push({
+      index: i + 1,
+      date: fmtDate(d),
+      day: dayNames[d.getDay()],
+      phase: (sim.phases && sim.phases[i]) || '',
+      current_load_ess: toNum(sim.plannedLoads && sim.plannedLoads[i], 0),
+      sport: (sim.plannedSports && sim.plannedSports[i]) || '',
+      zone: (sim.plannedZones && sim.plannedZones[i]) || '',
+      te_ae: toNum(sim.plannedTeAe && sim.plannedTeAe[i], 0),
+      te_an: toNum(sim.plannedTeAn && sim.plannedTeAn[i], 0),
+      locked: !!(sim.lockedDays && sim.lockedDays[i])
+    });
+  }
+
+  return {
+    base: {
+      atl: toNum(sim.atl, 0),
+      ctl: toNum(sim.ctl, 0),
+      todayIsClosed: !!sim.todayIsClosed,
+      startDate: fmtDate(startDate),
+      config: sim.config || {}
+    },
+    days: days
+  };
+}
+
+function ckDash_parsePlanBriefingContent_(content) {
+  let txt = String(content || '').trim();
+  txt = txt.replace(/^```json\\s*/i, '').replace(/^```\\s*/i, '').replace(/```$/i, '').trim();
+
+  try {
+    const parsed = JSON.parse(txt);
+    return {
+      briefing: String(parsed.briefing || ''),
+      recommendations: Array.isArray(parsed.recommendations) ? parsed.recommendations : []
+    };
+  } catch (e) {
+    return {
+      briefing: txt,
+      recommendations: []
+    };
+  }
+}
+
+function ckDash_writePlanBriefing_(briefing, recommendations, raw) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName('AI_PLAN_BRIEFING');
+
+  if (!sh) {
+    sh = ss.insertSheet('AI_PLAN_BRIEFING');
+    sh.getRange(1, 1, 1, 4).setValues([
+      ['timestamp', 'briefing', 'recommendations_json', 'raw']
+    ]);
+  }
+
+  sh.appendRow([
+    new Date(),
+    briefing || '',
+    JSON.stringify(recommendations || []),
+    raw || ''
+  ]);
+}
+
+function ckDash_consolidatedAnalysis_() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sh = ss.getSheetByName('AI_CONSOLIDATED_ANALYSIS');
+    if (!sh || sh.getLastRow() < 2) {
+      return ckDash_json_({
+        ok: true,
+        timestamp: ckDash_now_(),
+        analysis: null
+      });
+    }
+
+    const row = sh.getRange(sh.getLastRow(), 1, 1, 3).getValues()[0];
+    return ckDash_json_({
+      ok: true,
+      timestamp: ckDash_now_(),
+      analysisTimestamp: row[0],
+      analysis: row[1],
+      raw: row[2] || ''
+    });
+
+  } catch (err) {
+    return ckDash_json_({
+      ok: false,
+      timestamp: ckDash_now_(),
+      error: String(err && err.message ? err.message : err)
+    });
+  }
+}
+
+function ckDash_runConsolidatedAnalysis_(p) {
+  // KI-frei (2026-10-26): Konsolidierte Analyse wird im Cockpit erstellt (lokal oder Cloud) und per saveBriefing gespeichert.
+  return ckDash_json_({ ok: false, timestamp: ckDash_now_(), error: 'KI läuft nicht mehr im Apps Script – lokal (Mac) oder Cloud über das Cockpit.' });
+}
+
+function ckDash_collectConsolidatedContext_() {
+  const status = ckDash_getReportStatusSummary_();
+  const planBriefing = ckDash_getLatestSheetJsonLike_('AI_PLAN_BRIEFING', 4);
+  const sim = typeof getSimStartValues === 'function' ? getSimStartValues() : {};
+  const history = ckDash_readTailObjects_('AI_DATA_HISTORY', 21);
+  const forecast = ckDash_readTailObjects_('AI_DATA_FORECAST', 21);
+  const activityReviews = ckDash_readTailObjects_('AI_ACTIVITY_REVIEWS', 10);
+
+  return {
+    generatedAt: ckDash_now_(),
+    status: status,
+    planBriefing: planBriefing,
+    planSimulation: ckDash_slimSimStartValues_(sim),
+    historyTail: history,
+    forecastTail: forecast,
+    activityReviewsTail: activityReviews
+  };
+}
+
+function ckDash_slimSimStartValues_(sim) {
+  const toNum = function(v, def) {
+    const n = parseFloat(String(v).replace(',', '.'));
+    return Number.isFinite(n) ? n : (def || 0);
+  };
+  const days = [];
+  const tz = Session.getScriptTimeZone() || 'Europe/Berlin';
+  const startDate = sim.startDate ? new Date(sim.startDate) : new Date();
+  const dayNames = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+  const fmtDate = function(d) { return Utilities.formatDate(d, tz, 'yyyy-MM-dd'); };
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(startDate.getTime());
+    d.setDate(startDate.getDate() + i);
+    days.push({
+      date: fmtDate(d),
+      day: dayNames[d.getDay()],
+      load: toNum(sim.plannedLoads && sim.plannedLoads[i], 0),
+      sport: (sim.plannedSports && sim.plannedSports[i]) || '',
+      zone: (sim.plannedZones && sim.plannedZones[i]) || '',
+      te_ae: toNum(sim.plannedTeAe && sim.plannedTeAe[i], 0),
+      te_an: toNum(sim.plannedTeAn && sim.plannedTeAn[i], 0),
+      locked: !!(sim.lockedDays && sim.lockedDays[i])
+    });
+  }
+  return {
+    base: {
+      atl: toNum(sim.atl, 0),
+      ctl: toNum(sim.ctl, 0),
+      todayIsClosed: !!sim.todayIsClosed
+    },
+    days: days
+  };
+}
+
+function ckDash_getLatestSheetJsonLike_(sheetName, columns) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sh = ss.getSheetByName(sheetName);
+    if (!sh || sh.getLastRow() < 2) return null;
+    const row = sh.getRange(sh.getLastRow(), 1, 1, columns || sh.getLastColumn()).getValues()[0];
+    return row;
+  } catch (e) {
+    return null;
+  }
+}
+
+function ckDash_readTailObjects_(sheetName, limit) {
+  try {
+    const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+    if (!sh || sh.getLastRow() < 2) return [];
+    const lastRow = sh.getLastRow();
+    const lastCol = sh.getLastColumn();
+    const start = Math.max(2, lastRow - (limit || 10) + 1);
+    const headers = sh.getRange(1, 1, 1, lastCol).getValues()[0];
+    const rows = sh.getRange(start, 1, lastRow - start + 1, lastCol).getValues();
+    return rows.map(function(row) {
+      const obj = {};
+      headers.forEach(function(h, i) {
+        if (h) obj[h] = row[i];
+      });
+      return obj;
+    });
+  } catch (e) {
+    return [];
+  }
+}
+
+function ckDash_writeConsolidatedAnalysis_(analysis, raw) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName('AI_CONSOLIDATED_ANALYSIS');
+  if (!sh) {
+    sh = ss.insertSheet('AI_CONSOLIDATED_ANALYSIS');
+    sh.getRange(1, 1, 1, 3).setValues([
+      ['timestamp', 'analysis', 'raw']
+    ]);
+  }
+  sh.appendRow([new Date(), analysis || '', raw || '']);
+}
+
+/**
+ * saveWellbeing — speichert das morgendliche Befinden (1–5) für heute oder gestern.
+ * Schreibt in 'timeline' (Quelle) UND 'KK_TIMELINE' (Spiegel), Spalte 'befinden_1_5'.
+ * Parameter: token, date (yyyy-MM-dd), value (1–5)
+ */
+function ckDash_saveWellbeing_(p) {
+  var COL_NAME = 'befinden_1_5';
+  var lock = LockService.getScriptLock();
+  try {
+    var auth = ckDash_requireToken_(p);
+    if (!auth.ok) {
+      return ckDash_json_({ ok: false, timestamp: ckDash_now_(), error: auth.error });
+    }
+
+    var value = parseInt(String(p.value || '').trim(), 10);
+    if (!(value >= 1 && value <= 5)) throw new Error('value muss 1–5 sein.');
+
+    var tz = Session.getScriptTimeZone() || 'Europe/Berlin';
+    var todayKey = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
+    var y = new Date();
+    y.setDate(y.getDate() - 1);
+    var yesterdayKey = Utilities.formatDate(y, tz, 'yyyy-MM-dd');
+
+    var dateKey = String(p.date || todayKey).trim().slice(0, 10);
+    if (dateKey !== todayKey && dateKey !== yesterdayKey) {
+      throw new Error('Nur heute oder gestern speicherbar (' + dateKey + ').');
+    }
+
+    lock.waitLock(10000);
+
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var written = [];
+    ['timeline', 'KK_TIMELINE'].forEach(function(name) {
+      var sh = ss.getSheetByName(name);
+      if (!sh) throw new Error('Blatt ' + name + ' nicht gefunden.');
+
+      var lastCol = sh.getLastColumn();
+      var headers = sh.getRange(1, 1, 1, lastCol).getValues()[0].map(function(h) {
+        return String(h || '').trim().toLowerCase();
+      });
+      var colIdx = headers.indexOf(COL_NAME);
+      var dateIdx = headers.indexOf('date');
+      if (colIdx < 0) throw new Error('Spalte ' + COL_NAME + ' fehlt in ' + name + '.');
+      if (dateIdx < 0) throw new Error('Spalte date fehlt in ' + name + '.');
+
+      var lastRow = sh.getLastRow();
+      var dates = sh.getRange(2, dateIdx + 1, lastRow - 1, 1).getValues();
+      var row = -1;
+      for (var i = 0; i < dates.length; i++) {
+        var d = dates[i][0];
+        var key = (d instanceof Date)
+          ? Utilities.formatDate(d, tz, 'yyyy-MM-dd')
+          : String(d || '').trim().slice(0, 10);
+        if (key === dateKey) { row = i + 2; break; }
+      }
+      if (row < 0) throw new Error('Datum ' + dateKey + ' nicht in ' + name + ' gefunden.');
+
+      sh.getRange(row, colIdx + 1).setValue(value);
+      written.push(name + '!R' + row);
+    });
+
+    SpreadsheetApp.flush();
+    try { logToSheet('INFO', '[Dashboard] saveWellbeing ' + dateKey + ' = ' + value + ' → ' + written.join(', ')); } catch (_) {}
+
+    return ckDash_json_({
+      ok: true,
+      timestamp: ckDash_now_(),
+      date: dateKey,
+      value: value,
+      written: written
+    });
+
+  } catch (err) {
+    return ckDash_json_({
+      ok: false,
+      timestamp: ckDash_now_(),
+      error: String(err && err.message ? err.message : err)
+    });
+  } finally {
+    if (lock.hasLock()) lock.releaseLock();
+  }
+}
+
+/**
+ * submitCockpitEntry — Cockpit-Eingabe anstelle des Google-Formulars.
+ * Baut ein Formular-Event (namedValues) und ruft die UNVERÄNDERTE onFormSubmit(e) auf.
+ * Damit laufen Schreiben, Tageswechsel, IST→SOLL, Activity Review und KI-Report wie beim Formular.
+ * Parameter: token, type (Morgens | Nach Aktivität | Abends), date (yyyy-MM-dd), values (JSON-Objekt)
+ */
+function ckDash_submitCockpitEntry_(p) {
+  const ALLOWED = {
+    'Morgens': ['garminATL', 'garminCTL', 'garminACWR', 'sleep_hours', 'sleep_score_0_100', 'rhr_bpm',
+                'hrv_status', 'hrv_threshholds', 'Garmin_Training_Readiness', 'Trainingszustand'],
+    'Nach Aktivität': ['load_fb_day', 'fbATL_obs', 'fbCTL_obs', 'fbACWR_obs', 'garminEnduranceScore',
+                       'Sport_x', 'Zone', 'fb_TR_obs', 'Aerobic_TE', 'Anaerobic_TE'],
+    'Abends': ['kcal_in', 'kcal_out', 'deficit', 'carb_g', 'protein_g', 'fat_g', 'fiber_g']
+  };
+  const TEXT_COLS = ['Sport_x', 'Zone', 'hrv_threshholds', 'Trainingszustand'];
+  const lock = LockService.getDocumentLock();
+  const started = Date.now();
+
+  try {
+    const auth = ckDash_requireToken_(p);
+    if (!auth.ok) return ckDash_json_({ ok: false, timestamp: ckDash_now_(), error: auth.error });
+
+    const type = String(p.type || '').trim();
+    if (!ALLOWED[type]) throw new Error('Unbekannter Typ: ' + type);
+    if (typeof onFormSubmit !== 'function') throw new Error('onFormSubmit() nicht gefunden.');
+
+    const tz = Session.getScriptTimeZone() || 'Europe/Berlin';
+    const now = new Date();
+    const todayKey = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
+    const y = new Date(now.getTime()); y.setDate(y.getDate() - 1);
+    const yesterdayKey = Utilities.formatDate(y, tz, 'yyyy-MM-dd');
+    const dateKey = String(p.date || todayKey).trim().slice(0, 10);
+    if (type === 'Morgens' && dateKey !== todayKey) throw new Error('Morgenwerte nur für heute (' + todayKey + ').');
+    if (dateKey !== todayKey && dateKey !== yesterdayKey) throw new Error('Nur heute oder gestern erlaubt (' + dateKey + ').');
+
+    let values = {};
+    try { values = JSON.parse(String(p.values || '{}')); } catch (_) { throw new Error('values ist kein gültiges JSON.'); }
+
+    const [yy, mm, dd] = dateKey.split('-');
+    const namedValues = {
+      'Zeitstempel': [Utilities.formatDate(now, tz, 'dd.MM.yyyy HH:mm:ss')],
+      'Was willst Du eingeben?': [type],
+      'Datum': [dd + '.' + mm + '.' + yy]
+    };
+    const used = [];
+    ALLOWED[type].forEach(function(col) {
+      if (!Object.prototype.hasOwnProperty.call(values, col)) return;
+      let v = values[col];
+      if (v === null || v === undefined || String(v).trim() === '') return;
+      v = TEXT_COLS.indexOf(col) >= 0 ? String(v).trim() : String(v).trim().replace('.', ','); // wie Formular: Dezimalkomma
+      namedValues[col] = [v];
+      used.push(col);
+    });
+    if (!used.length) throw new Error('Keine Werte übergeben.');
+
+    lock.waitLock(30000);
+    onFormSubmit({ namedValues: namedValues, values: [], source: 'cockpit' });
+    SpreadsheetApp.flush();
+
+    // Rücklesen zur Bestätigung
+    const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SOURCE_TIMELINE_SHEET);
+    const lastCol = sh.getLastColumn();
+    const headers = sh.getRange(1, 1, 1, lastCol).getValues()[0].map(function(h) { return String(h).trim(); });
+    const dateIdx = headers.indexOf('date');
+    const dates = sh.getRange(2, dateIdx + 1, sh.getLastRow() - 1, 1).getValues();
+    let row = -1;
+    for (let i = 0; i < dates.length; i++) {
+      const d = dates[i][0];
+      const k = (d instanceof Date) ? Utilities.formatDate(d, tz, 'yyyy-MM-dd') : String(d || '').slice(0, 10);
+      if (k === dateKey) { row = i + 2; break; }
+    }
+    const readback = {};
+    if (row > 0) {
+      const rowVals = sh.getRange(row, 1, 1, lastCol).getValues()[0];
+      used.forEach(function(col) {
+        const idx = headers.indexOf(col);
+        if (idx >= 0) readback[col] = rowVals[idx] instanceof Date ? String(rowVals[idx]) : rowVals[idx];
+      });
+    }
+
+    // Protokoll
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let log = ss.getSheetByName('COCKPIT_ENTRIES');
+    if (!log) {
+      log = ss.insertSheet('COCKPIT_ENTRIES');
+      log.getRange(1, 1, 1, 5).setValues([['timestamp', 'type', 'date', 'row', 'values_json']]).setFontWeight('bold');
+    }
+    log.appendRow([namedValues['Zeitstempel'][0], type, dateKey, row, JSON.stringify(values)]);
+    try { logToSheet('INFO', '[Dashboard] submitCockpitEntry ' + type + ' ' + dateKey + ' → Zeile ' + row + ' (' + used.join(', ') + ')'); } catch (_) {}
+
+    return ckDash_json_({
+      ok: true,
+      timestamp: ckDash_now_(),
+      type: type,
+      date: dateKey,
+      row: row,
+      written: used,
+      readback: readback,
+      triggersStarted: dateKey === todayKey,
+      durationMs: Date.now() - started
+    });
+  } catch (err) {
+    return ckDash_json_({
+      ok: false,
+      timestamp: ckDash_now_(),
+      error: String(err && err.message ? err.message : err)
+    });
+  } finally {
+    if (lock.hasLock()) lock.releaseLock();
+  }
+}
+
+// ============================================================================
+// Kira-Chat (Dashboard, Heute-Seite) – Perplexity sonar-pro
+// ============================================================================
+const CK_CHAT_MODEL = 'sonar-pro';
+const CK_CHAT_DAILY_LIMIT = 50;
+
+function ckDash_chat_(e) {
+  // KI-frei (2026-10-26): Der Chat läuft im Cockpit (lokal oder Cloud über den Cockpit-Server). Ablage weiter per chatLog.
+  return ckDash_json_({ ok: false, error: 'KI läuft nicht mehr im Apps Script – lokal (Mac) oder Cloud über das Cockpit.' });
+}
+
+// Protokoll lokaler Kira-Antworten (Ollama auf dem Mac) in AI_CHAT_LOG
+function ckDash_chatLog_(e) {
+  try {
+    const b = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    const q = String(b.question || '').slice(0, 4000).trim();
+    const a = String(b.answer || '').slice(0, 8000).trim();
+    const m = String(b.model || 'lokal').replace(/[^\w:.\-]/g, '').slice(0, 40);
+    const eng = String(b.engine || 'local') === 'cloud' ? 'Cloud' : 'lokal';
+    if (!q || !a) return ckDash_json_({ ok: false, error: 'Frage oder Antwort fehlt.' });
+    logChatMessage('Marc (Cockpit)', q);
+    logChatMessage('Kira (' + eng + ', ' + m + ')', a);
+    return ckDash_json_({ ok: true });
+  } catch (err) {
+    return ckDash_json_({ ok: false, error: String(err && err.message ? err.message : err) });
+  }
+}
+
+// KI-frei (Stufe 3): ckDash_buildBriefingMessages_ entfernt – Prompt-Bau liegt in kira_prompts (Cockpit/Mac).
+
+function ckDash_briefingPrompt_(p) {
+  // KI-frei (Stufe 3): Prompt-Bau liegt in kira_prompts (Cockpit/Mac). Daten: mode=briefingData.
+  return ckDash_json_({ ok: false, timestamp: ckDash_now_(), error: 'briefingPrompt entfällt – bitte mode=briefingData nutzen.' });
+}
+
+/** KI-frei (Stufe 3): Daten für Status-, Plan- und konsolidiertes Briefing. */
+function ckDash_briefingData_(p) {
+  try {
+    const type = String((p && p.type) || '');
+    let daten;
+    if (type === 'status') daten = { status: ckDash_getReportStatusSummary_() };
+    else if (type === 'plan') daten = { status: ckDash_getReportStatusSummary_(), sim: ckDash_collectPlanBriefingContext_() };
+    else if (type === 'consolidated') daten = { context: ckDash_collectConsolidatedContext_() };
+    else throw new Error('Unbekannter Briefing-Typ: ' + type);
+    return ckDash_json_({ ok: true, timestamp: ckDash_now_(), type: type, daten: JSON.parse(JSON.stringify(daten)) });
+  } catch (err) {
+    return ckDash_json_({ ok: false, timestamp: ckDash_now_(), error: String(err && err.message ? err.message : err) });
+  }
+}
+
+function ckDash_parseBriefingJsonLocal_(content) {
+  let txt = String(content || '').trim();
+  txt = txt.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
+  try {
+    const parsed = JSON.parse(txt);
+    return {
+      briefing: String(parsed.briefing || ''),
+      recommendations: Array.isArray(parsed.recommendations) ? parsed.recommendations : []
+    };
+  } catch (e) {
+    return { briefing: txt, recommendations: [] };
+  }
+}
+
+function ckDash_saveBriefing_(e) {
+  try {
+    const b = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    const type = String(b.type || '');
+    const text = String(b.text || '').slice(0, 30000).trim();
+    const model = String(b.model || 'lokal').replace(/[^\w:.\-]/g, '').slice(0, 40);
+    if (!text) throw new Error('Kein Briefing-Text übermittelt.');
+    const engine = String(b.engine || 'local') === 'cloud' ? 'cloud' : 'local';
+    const raw = JSON.stringify({ engine: engine, model: model, savedAt: ckDash_now_() });
+
+    if (type === 'status') {
+      ckDash_writeStatusAiAnalysis_(text, raw);
+      return ckDash_json_({ ok: true, timestamp: ckDash_now_(), analysis: text });
+    }
+    if (type === 'consolidated') {
+      ckDash_writeConsolidatedAnalysis_(text, raw);
+      return ckDash_json_({ ok: true, timestamp: ckDash_now_(), analysis: text });
+    }
+    if (type === 'plan') {
+      const parsed = ckDash_parseBriefingJsonLocal_(text);
+      ckDash_writePlanBriefing_(parsed.briefing, parsed.recommendations, raw);
+      return ckDash_json_({ ok: true, timestamp: ckDash_now_(), briefing: parsed.briefing, recommendations: parsed.recommendations });
+    }
+    throw new Error('Unbekannter Briefing-Typ: ' + type);
+  } catch (err) {
+    return ckDash_json_({ ok: false, timestamp: ckDash_now_(), error: String(err && err.message ? err.message : err) });
+  }
+}
+
+function ckDash_briefingSources_() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const defs = [
+      ['status', 'AI_STATUS_ANALYSIS', 3],
+      ['consolidated', 'AI_CONSOLIDATED_ANALYSIS', 3],
+      ['plan', 'AI_PLAN_BRIEFING', 4]
+    ];
+    const out = {};
+    defs.forEach(function (d) {
+      const sh = ss.getSheetByName(d[1]);
+      if (!sh || sh.getLastRow() < 2) { out[d[0]] = null; return; }
+      const row = sh.getRange(sh.getLastRow(), 1, 1, d[2]).getValues()[0];
+      let engine = 'cloud';
+      let model = null;
+      try {
+        const r = JSON.parse(String(row[d[2] - 1] || '{}'));
+        if (r && r.engine === 'local') engine = 'local';
+        model = (r && r.model) ? String(r.model) : null;
+      } catch (e) {}
+      out[d[0]] = { engine: engine, model: model, timestamp: row[0] };
+    });
+    return ckDash_json_({ ok: true, timestamp: ckDash_now_(), sources: out });
+  } catch (err) {
+    return ckDash_json_({ ok: false, timestamp: ckDash_now_(), error: String(err && err.message ? err.message : err) });
+  }
+}
+
+// ============================================================================
+// Aktivitäts-Kommentare lokal (Mac-Dienst) – speichern und lesen
+// ============================================================================
+function ckDash_activitySheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName('AI_ACTIVITY_REVIEWS');
+  if (!sh) {
+    sh = ss.insertSheet('AI_ACTIVITY_REVIEWS');
+    sh.getRange(1, 1, 1, 10).setValues([[
+      'Datum', 'Load (IST)', 'Load (SOLL)', 'ATL (IST)', 'ATL (SOLL)',
+      'CTL (IST)', 'CTL (SOLL)', 'ACWR (IST)', 'ACWR (SOLL)', 'KI Review Text'
+    ]]);
+  }
+  if (String(sh.getRange(1, 11).getValue() || '') === '') {
+    sh.getRange(1, 11).setValue('Quelle');
+  }
+  return sh;
+}
+
+function ckDash_saveActivityReview_(e) {
+  try {
+    const b = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    const date = String(b.date || '');
+    const m = date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) throw new Error('date fehlt oder ist nicht YYYY-MM-DD.');
+    const text = String(b.text || '').slice(0, 4000).trim();
+    if (!text) throw new Error('Kein Kommentar-Text übermittelt.');
+    const model = String(b.model || 'lokal').replace(/[^\w:.\-]/g, '').slice(0, 40);
+    const ist = b.ist || {};
+    const soll = b.soll || {};
+    const val = function (v) { return (v === null || v === undefined || v === '') ? 'N/A' : v; };
+    const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0);
+
+    const sh = ckDash_activitySheet_();
+    sh.appendRow([
+      d,
+      val(ist.load), val(soll.load),
+      val(ist.atl), val(soll.atl),
+      val(ist.ctl), val(soll.ctl),
+      val(ist.acwr), val(soll.acwr),
+      text,
+      JSON.stringify({ engine: 'local', model: model, savedAt: ckDash_now_() })
+    ]);
+    sh.getRange(sh.getLastRow(), 1).setNumberFormat('dd.MM.yyyy');
+    return ckDash_json_({ ok: true, timestamp: ckDash_now_(), date: date });
+  } catch (err) {
+    return ckDash_json_({ ok: false, timestamp: ckDash_now_(), error: String(err && err.message ? err.message : err) });
+  }
+}
+
+function ckDash_activityReviews_(p) {
+  try {
+    const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('AI_ACTIVITY_REVIEWS');
+    if (!sh || sh.getLastRow() < 2) return ckDash_json_({ ok: true, timestamp: ckDash_now_(), reviews: [] });
+    const tz = Session.getScriptTimeZone() || 'Europe/Berlin';
+    const lastCol = Math.max(10, Math.min(11, sh.getLastColumn()));
+    const rows = sh.getRange(2, 1, sh.getLastRow() - 1, lastCol).getValues();
+    const byDate = {};
+    rows.forEach(function (r) {
+      if (!(r[0] instanceof Date)) return;
+      const date = Utilities.formatDate(r[0], tz, 'yyyy-MM-dd');
+      let text = String(r[9] || '').trim();
+      if (!text) return;
+      if (text.charAt(0) === '{') {
+        try { const j = JSON.parse(text); text = String(j.coach_feedback || j.review || j.text || text); } catch (x) {}
+      }
+      let engine = 'cloud';
+      let model = 'gemini';
+      try {
+        const q = JSON.parse(String(r[10] || '{}'));
+        if (q && q.engine === 'local') engine = 'local';
+        if (q && q.model) model = String(q.model);
+      } catch (x) {}
+      byDate[date] = {
+        date: date, text: text, engine: engine, model: model,
+        loadIst: r[1], loadSoll: r[2], acwrIst: r[7]
+      };
+    });
+    const limit = Math.max(1, Math.min(2000, parseInt((p && p.limit) || '500', 10) || 500));
+    const reviews = Object.keys(byDate).sort().slice(-limit).map(function (k) { return byDate[k]; });
+    return ckDash_json_({ ok: true, timestamp: ckDash_now_(), reviews: reviews });
+  } catch (err) {
+    return ckDash_json_({ ok: false, timestamp: ckDash_now_(), error: String(err && err.message ? err.message : err) });
+  }
+}
+
+// ============================================================================
+// Supervisor lokal (Mac-Dienst, coach-kira) – Auftrag ablegen, abholen, speichern
+// ============================================================================
+function ckSup_engine_() {
+  return 'local'; // KI-frei (2026-10-26): Supervisor-KI läuft immer auf dem Mac (lokal oder Cloud über den Cockpit-Server).
+}
+
+// KI-frei (Stufe 3): ckSup_schema_ entfernt – Prompt-Bau liegt in kira_prompts (Cockpit/Mac).
+
+function ckSup_promptData_(data, fitnessScores, nutritionScore, gesamtScoreNum, gesamtScoreAmpel, zoneFactors, elevFactors, weekConfigCSV, isActivityDone, wetterDaten) {
+  const heute = (data && data.heute) || {};
+  const tz = Session.getScriptTimeZone();
+
+  // TE-Balance heute aus AI_DATA_FORECAST (null = nicht gefunden → Prompt nutzt Monotonie-Varianz)
+  let teBalanceHeute = null;
+  try {
+    const fcSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('AI_DATA_FORECAST');
+    if (fcSheet && fcSheet.getLastRow() > 1) {
+      const fcData = fcSheet.getDataRange().getValues();
+      const fcHeaders = fcData[0].map(h => h.toString().trim());
+      const fcHeadersLc = fcHeaders.map(h => h.toLowerCase());
+
+      const teIdx = fcHeadersLc.indexOf('te balance') > -1
+        ? fcHeadersLc.indexOf('te balance')
+        : fcHeadersLc.indexOf('te balance (% intensiv)');
+
+      if (teIdx !== -1) {
+        const tz = Session.getScriptTimeZone();
+        const todayKey = Utilities.formatDate(new Date(), tz, "yyyy-MM-dd");
+        let todayRowIdx = -1;
+
+        // 1) Bevorzugt: is_today == 1
+        const isTodayIdx = fcHeadersLc.indexOf('is_today');
+        if (isTodayIdx !== -1) {
+          for (let r = 1; r < fcData.length; r++) {
+            if (parseGermanFloat(fcData[r][isTodayIdx]) === 1) {
+              todayRowIdx = r;
+              break;
+            }
+          }
+        }
+
+        // 2) Fallback: Datum == heute
+        if (todayRowIdx === -1) {
+          const dateIdx = fcHeadersLc.indexOf('datum') > -1
+            ? fcHeadersLc.indexOf('datum')
+            : fcHeadersLc.indexOf('date');
+
+          if (dateIdx !== -1) {
+            for (let r = 1; r < fcData.length; r++) {
+              const rawDate = fcData[r][dateIdx];
+              const dObj = rawDate instanceof Date ? rawDate : new Date(rawDate);
+              if (dObj instanceof Date && !isNaN(dObj.getTime())) {
+                const rowKey = Utilities.formatDate(dObj, tz, "yyyy-MM-dd");
+                if (rowKey === todayKey) {
+                  todayRowIdx = r;
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        if (todayRowIdx !== -1) {
+          let teRaw = fcData[todayRowIdx][teIdx];
+          let teNum = Number.NaN;
+
+          if (typeof teRaw === 'number') {
+            teNum = teRaw;
+          } else {
+            teNum = parseGermanFloat(String(teRaw).replace('%', ''));
+          }
+
+          if (Number.isFinite(teNum)) {
+            if (Math.abs(teNum) <= 1.0 && teNum !== 0) teNum = teNum * 100;
+            teBalanceHeute = teNum.toFixed(1).replace('.', ',') + "%";
+          }
+        }
+      }
+    }
+  } catch (e) {
+    teBalanceHeute = null;
+  }
+
+  // Datum und Wochentag von heute
+  let heuteDateObj = heute['date'];
+  if (!(heuteDateObj instanceof Date)) heuteDateObj = new Date(heuteDateObj);
+  const heuteDatum = Utilities.formatDate(heuteDateObj, tz, "yyyy-MM-dd");
+  let heuteTag = heute['date.2'];
+  if (!heuteTag || heuteTag === "") heuteTag = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"][heuteDateObj.getDay()];
+
+  // Wissensbasis KK_WISSEN: aktive Inhalte (Spalte B = 'x', Spalte C = Text); null = Blatt fehlt
+  let wissen = null;
+  const wSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('KK_WISSEN');
+  if (wSheet) {
+    wissen = [];
+    const w = wSheet.getDataRange().getValues();
+    for (let i = 1; i < w.length; i++) {
+      if (String(w[i][1]).toLowerCase() === 'x' && w[i][2]) wissen.push(String(w[i][2]));
+    }
+  }
+
+  // Treffsicherheit (letzte Wochen-Auswertung) und Planung (Ziele, Saisonrahmen) aus den KI-Extras
+  let treffer = null;
+  let planung = null;
+  try {
+    const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CKX_SHEET);
+    if (sh && sh.getLastRow() >= 2) {
+      const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 4).getDisplayValues();
+      for (let i = rows.length - 1; i >= 0; i--) {
+        if (rows[i][1] === 'treffer_woche' && rows[i][2]) { treffer = { datum: rows[i][0], text: String(rows[i][2]) }; break; }
+      }
+      const heuteKey = Utilities.formatDate(new Date(), tz || 'Europe/Berlin', 'yyyy-MM-dd');
+      const ziele = [];
+      let saison = null;
+      rows.forEach(function (r) {
+        if (r[1] === 'ziel' && r[0] >= heuteKey) ziele.push({ datum: r[0], text: String(r[2]) });
+        if (r[1] === 'saison' && (!saison || r[0] > saison[0])) saison = r;
+      });
+      let wochen = [];
+      if (saison && saison[3]) { try { wochen = JSON.parse(saison[3]).wochen || []; } catch (e) {} }
+      planung = { heute: heuteKey, ziele: ziele, wochen: wochen };
+    }
+  } catch (e) {}
+
+  // JSON-sicher (Date → ISO-Text), wie es der Mac per supervisorJob bekommt
+  return JSON.parse(JSON.stringify({
+    v: 1,
+    heute: heute,
+    heute_datum: heuteDatum,
+    heute_tag: heuteTag,
+    zukunft_plan: (data && data.zukunft && data.zukunft.plan) || [],
+    baseline: (data && data.baseline) || {},
+    history: (data && data.history) || '',
+    monotony_varianz: data ? data.monotony_varianz : 0,
+    rtp_status: data ? data.rtp_status : '',
+    fitnessScores: fitnessScores,
+    nutritionScore: nutritionScore,
+    gesamtScoreNum: gesamtScoreNum,
+    gesamtScoreAmpel: gesamtScoreAmpel,
+    zoneFactors: zoneFactors,
+    elevFactors: elevFactors,
+    weekConfigCSV: weekConfigCSV,
+    isActivityDone: !!isActivityDone,
+    wetterDaten: wetterDaten,
+    teBalanceHeute: teBalanceHeute,
+    wissen: wissen,
+    treffer: treffer,
+    planung: planung
+  }));
+}
+
+function ckSup_enqueue_(promptData, ctx, runId) {
+  const cache = CacheService.getScriptCache();
+  const props = PropertiesService.getScriptProperties();
+  const engine = String(props.getProperty('CK_SUP_ENGINE_NEXT') || 'local') === 'cloud' ? 'cloud' : 'local';
+  props.deleteProperty('CK_SUP_ENGINE_NEXT');
+  const job = {
+    id: String(runId) + '-' + Date.now(),
+    runId: String(runId),
+    createdAt: ckDash_now_(),
+    engine: engine,
+    data: promptData,
+    ctx: ctx
+  };
+  const s = JSON.stringify(job);
+  const size = 90000;
+  const parts = {};
+  const n = Math.ceil(s.length / size);
+  for (let i = 0; i < n; i++) parts['ckSup_job_' + i] = s.substr(i * size, size);
+  parts['ckSup_job_n'] = String(n);
+  parts['ckSup_job_id'] = job.id;
+  cache.putAll(parts, 21600); // 6 Stunden
+}
+
+function ckSup_readJob_() {
+  const cache = CacheService.getScriptCache();
+  const n = parseInt(cache.get('ckSup_job_n') || '0', 10);
+  if (!n) return null;
+  const keys = [];
+  for (let i = 0; i < n; i++) keys.push('ckSup_job_' + i);
+  const got = cache.getAll(keys);
+  let s = '';
+  for (let i = 0; i < n; i++) {
+    if (got['ckSup_job_' + i] == null) return null;
+    s += got['ckSup_job_' + i];
+  }
+  try { return JSON.parse(s); } catch (e) { return null; }
+}
+
+function ckSup_clearJob_() {
+  const cache = CacheService.getScriptCache();
+  const n = parseInt(cache.get('ckSup_job_n') || '0', 10);
+  const keys = ['ckSup_job_n', 'ckSup_job_id'];
+  for (let i = 0; i < n; i++) keys.push('ckSup_job_' + i);
+  cache.removeAll(keys);
+}
+
+function ckSup_getJob_() {
+  try {
+    const job = ckSup_readJob_();
+    if (!job) return ckDash_json_({ ok: true, timestamp: ckDash_now_(), engine: ckSup_engine_(), job: null });
+    return ckDash_json_({
+      ok: true, timestamp: ckDash_now_(), engine: ckSup_engine_(),
+      job: { id: job.id, createdAt: job.createdAt, engine: job.engine || 'local', data: job.data || null }
+    });
+  } catch (err) {
+    return ckDash_json_({ ok: false, timestamp: ckDash_now_(), error: String(err && err.message ? err.message : err) });
+  }
+}
+
+function ckSup_save_(e) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let runId = 'local';
+  try {
+    const b = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    const job = ckSup_readJob_();
+    if (!job) throw new Error('Kein offener Supervisor-Auftrag (abgelaufen oder schon gespeichert).');
+    if (String(b.id || '') !== job.id) throw new Error('Auftrags-ID passt nicht (neuerer Auftrag vorhanden).');
+    const content = String(b.content || '').trim();
+    if (!content) throw new Error('Leeres Ergebnis.');
+    runId = job.runId || runId;
+    ckSup_clearJob_();
+    logToSheet('INFO', '[Supervisor] Lokales Ergebnis empfangen (' + String(b.model || 'coach-kira').slice(0, 40) + ').');
+    ckSup_finish_(ss, content, job.ctx, runId);
+    return ckDash_json_({ ok: true, timestamp: ckDash_now_(), id: job.id });
+  } catch (err) {
+    try { hb_(ss, runId, "END_ERROR", String(err && err.message ? err.message : err)); } catch (x) {}
+    try { logToSheet('ERROR', '[Supervisor] Lokal speichern fehlgeschlagen: ' + (err && err.message ? err.message : err)); } catch (x) {}
+    return ckDash_json_({ ok: false, timestamp: ckDash_now_(), error: String(err && err.message ? err.message : err) });
+  }
+}
+
+/** Speicherteil des Supervisors – unverändert aus runKiraGeminiSupervisor übernommen. */
+function ckSup_finish_(ss, apiResponse, ctx, HB_RUN_ID) {
+  const fitnessScores = ctx.fitnessScores;
+  const nutritionScore = ctx.nutritionScore;
+  const scoreResult = ctx.scoreResult;
+  const subScores = ctx.subScores;
+  const teResult = ctx.teResult;
+
+  // Original-Load nicht der KI überlassen: fest aus der timeline übernehmen
+  try { apiResponse = ckSup_fixOriginalLoads_(ss, apiResponse); } catch (e) { logToSheet('WARN', '[Supervisor] Original-Load nicht korrigiert: ' + e.message); }
+
+  // AI_REPORT_PLAN wieder aktuell halten (wird von Kalender, „KI-Plan anwenden“ und Plan-Daten gelesen)
+  try { ckSup_writeReportPlan_(ss, apiResponse); } catch (e) { logToSheet('WARN', '[Supervisor] AI_REPORT_PLAN nicht geschrieben: ' + e.message); }
+
+
+
+    hb_(ss, HB_RUN_ID, "AI_OK", "OpenAI Antwort da");
+    hb_(ss, HB_RUN_ID, "WRITE", "writeOutputToSheets startet");
+
+    // ------------------------------------------------------------
+    // SCHRITT 4: SPEICHERN (Hier schreibt die KI den Text in F11!)
+    // ------------------------------------------------------------
+    writeOutputToSheets(
+        ss, 
+        apiResponse, 
+        fitnessScores, 
+        nutritionScore, 
+        scoreResult.num, 
+        scoreResult.ampel, 
+        subScores.recoveryScore, 
+        subScores.recoveryAmpel, 
+        subScores.trainingScore, 
+        subScores.trainingAmpel
+    );
+
+    // +++ ANZEIGE-FIX (NUR FORMAT & AMPEL) +++
+    // Wir lassen den Text in F11 (den die KI gerade geschrieben hat) in Ruhe!
+    try {
+       const statusSheet = ss.getSheetByName('AI_REPORT_STATUS');
+       if (statusSheet && teResult.val > 0) {
+           // Wir fixieren nur die Zahl als Text-Format (gegen "0,106...")
+           statusSheet.getRange("D11").setNumberFormat("@").setValue(teResult.text);
+           
+           // Wir fixieren Score & Ampel (falls writeOutput geschlampt hat)
+           let ampel = (teResult.val >= 0.2) ? "LILA" : (teResult.val >= 0.1) ? "GRÜN" : "ROT";
+           let score = (teResult.val >= 0.2) ? 100 : (teResult.val >= 0.1) ? 80 : 25;
+           
+           statusSheet.getRange("C11").setValue(ampel);
+           statusSheet.getRange("E11").setValue(score);
+           
+           // WICHTIG: KEIN setValue für F11 hier!
+       }
+    } catch(e) { console.log("Cell Fix Fehler: " + e.message); }
+
+    logToSheet('INFO', `Berichte & Scores gespeichert.`);
+
+    // ------------------------------------------------------------
+    // SCHRITT 5: NACHARBEIT
+    // ------------------------------------------------------------
+    try {
+       const uhrzeit = new Date().toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
+       const appUrl = "https://script.google.com/macros/s/AKfycbxCEN11KRlFaLL7uVJyeBLCrRJVmfBWagSmqvyJ8Ci7nwxi8HbolzTy23Z-G2mivC2h/exec"; 
+       const configSheet = ss.getSheetByName("KK_CONFIG");
+       if (configSheet) configSheet.getRange("B9").setValue(appUrl);
+       if (typeof sendTelegram === 'function') {
+         try {
+            sendTelegram(`🫡 Commander, Analyse fertig (${uhrzeit})!\n📱 Dashboard: ${appUrl}`);
+         } catch(e) { Utilities.sleep(1000); sendTelegram("🫡 Analyse fertig (Retry)"); }
+       }
+    } catch(e) {}
+
+    // ------------------------------------------------------------
+    // SCHRITT 6: NACHARBEIT (ASYNC)
+    // ------------------------------------------------------------
+    // Diese Schritte können (je nach Datenmenge) viel Zeit kosten. Damit der Supervisor
+    // schneller fertig ist, laufen sie asynchron in einem Trigger.
+    schedulePostWork_();
+
+    Logger.log("✅ Supervisor-Prozess komplett abgeschlossen.");
+    logToSheet('INFO', `✅ KI-Bewertung V137 erfolgreich.`);
+    hb_(ss, HB_RUN_ID, "END_OK", "Supervisor fertig");
+
+}
+// ============================================================================
+// Wartung 19.10.2026: Doppelstarts verhindern, AI_REPORT_PLAN schreiben, Diagnose
+// ============================================================================
+/** true = dieser Lauf darf starten. Läuft schon einer (< 6 min), wird ein Nachlauf vorgemerkt. */
+function ckSup_begin_(runId) {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) return true; // im Zweifel laufen lassen
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const running = Number(props.getProperty('CK_SUP_RUNNING') || 0);
+    if (running && Date.now() - running < 6 * 60 * 1000) {
+      props.setProperty('CK_SUP_RERUN', '1');
+      try { logToSheet('INFO', '[Supervisor] Läuft bereits – Nachlauf vorgemerkt (' + runId + ').'); } catch (x) {}
+      return false;
+    }
+    props.setProperty('CK_SUP_RUNNING', String(Date.now()));
+    return true;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** Lauf beendet: Sperre lösen; war ein Nachlauf vorgemerkt, einmal neu starten (frische Daten). */
+function ckSup_end_() {
+  try {
+    const props = PropertiesService.getScriptProperties();
+    props.deleteProperty('CK_SUP_RUNNING');
+    if (props.getProperty('CK_SUP_RERUN')) {
+      props.deleteProperty('CK_SUP_RERUN');
+      ScriptApp.getProjectTriggers().forEach(function (t) {
+        if (t.getHandlerFunction() === 'runKiraGeminiSupervisor' && t.getEventType() === ScriptApp.EventType.CLOCK) {
+          try { ScriptApp.deleteTrigger(t); } catch (x) {}
+        }
+      });
+      ScriptApp.newTrigger('runKiraGeminiSupervisor').timeBased().after(5000).create();
+      try { logToSheet('INFO', '[Supervisor] Nachlauf gestartet.'); } catch (x) {}
+    }
+  } catch (e) {
+    try { logToSheet('WARN', '[Supervisor] ckSup_end_: ' + e.message); } catch (x) {}
+  }
+}
+
+/** Schreibt empfohlener_plan aus der KI-Antwort nach AI_REPORT_PLAN (gleiche Spalten wie früher). */
+function ckSup_writeReportPlan_(ss, apiResponse) {
+  let data = apiResponse;
+  if (typeof data === 'string') {
+    const s = data.replace(/`{3}(?:json)?/g, '').trim();
+    try { data = JSON.parse(s); } catch (e) { data = JSON.parse(s.substring(s.indexOf('{'), s.lastIndexOf('}') + 1)); }
+  }
+  const plan = (data && Array.isArray(data.empfohlener_plan)) ? data.empfohlener_plan : [];
+  if (!plan.length) {
+    // Kein KI-Plan mehr (Plan-Briefing übernimmt): altes Blatt leeren, damit nichts Veraltetes gelesen wird
+    const old = ss.getSheetByName(OUTPUT_PLAN_SHEET);
+    if (old && old.getLastRow() > 1) old.getRange(2, 1, old.getLastRow() - 1, Math.max(9, old.getLastColumn())).clearContent();
+    return;
+  }
+  const toDate = function (v) {
+    const t = String(v || '').trim();
+    let m = t.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0);
+    m = t.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+    if (m) return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]), 12, 0, 0);
+    return t;
+  };
+  const header = ['Datum', 'Tag', 'Original Load (ESS)', 'Empfohlener Load (ESS)', 'Empfohlene Zone (KI)',
+    'Beispiel-Training 1 (KI)', 'Beispiel-Training 2 (KI)', 'Prognostizierte Auswirkung (KI)', 'Wetterempfehlung'];
+  const rows = plan.map(function (d) {
+    return [toDate(d.datum), d.tag || '', Number(d.original_load_ess) || 0, Number(d.empfohlener_load_ess) || 0,
+      d.empfohlene_zone || '', d.beispiel_training_1 || '', d.beispiel_training_2 || '',
+      d.prognostizierte_auswirkung || '', d.wetterempfehlung || ''];
+  });
+  let sh = ss.getSheetByName(OUTPUT_PLAN_SHEET);
+  if (!sh) sh = ss.insertSheet(OUTPUT_PLAN_SHEET);
+  const lr = sh.getLastRow();
+  if (lr > 1) sh.getRange(2, 1, lr - 1, Math.max(9, sh.getLastColumn())).clearContent();
+  sh.getRange(1, 1, 1, 9).setValues([header]);
+  sh.getRange(2, 1, rows.length, 9).setValues(rows);
+  sh.getRange(2, 1, rows.length, 1).setNumberFormat('yyyy-MM-dd');
+  logToSheet('INFO', '[Supervisor] AI_REPORT_PLAN aktualisiert (' + rows.length + ' Tage ab ' + String(plan[0].datum) + ').');
+}
+
+/** Diagnose für Wartung: welche Funktionen sind aktiv, Log-Zustand, Trigger. Schreibt einen Testeintrag. */
+function ckDash_diag_() {
+  const out = { ok: true, timestamp: ckDash_now_() };
+  try {
+    const props = PropertiesService.getScriptProperties();
+    out.logToSheetHead = String(logToSheet).slice(0, 220);
+    out.hbHead = String(hb_).slice(0, 120);
+    out.logSheetName = LOG_SHEET_NAME;
+    const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(LOG_SHEET_NAME);
+    out.logSheet = sh ? { lastRow: sh.getLastRow(), maxRows: sh.getMaxRows(), lastCol: sh.getLastColumn() } : null;
+    const before = sh ? sh.getLastRow() : 0;
+    logToSheet('DEBUG', '[Diag] Testeintrag');
+    const sh2 = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(LOG_SHEET_NAME);
+    out.testLogWritten = sh2 ? (sh2.getLastRow() !== before || String(sh2.getRange(sh2.getLastRow(), 3).getValue()).indexOf('[Diag]') >= 0) : false;
+    out.lastLogError = props.getProperty('CK_LOG_LAST_ERROR');
+    out.supRunning = props.getProperty('CK_SUP_RUNNING');
+    out.supRerun = props.getProperty('CK_SUP_RERUN');
+    out.supervisorEngine = props.getProperty('SUPERVISOR_ENGINE');
+    out.triggers = ScriptApp.getProjectTriggers().map(function (t) {
+      return { fn: t.getHandlerFunction(), type: String(t.getEventType()), source: String(t.getTriggerSource()) };
+    });
+  } catch (e) {
+    out.ok = false;
+    out.error = String(e && e.message ? e.message : e);
+  }
+  return ckDash_json_(out);
+}
+/** Setzt original_load_ess im KI-Plan auf den geplanten Wert aus der timeline (coachE_ESS_day). */
+function ckSup_fixOriginalLoads_(ss, apiResponse) {
+  let data = apiResponse;
+  const wasString = (typeof data === 'string');
+  if (wasString) {
+    const s = data.replace(/`{3}(?:json)?/g, '').trim();
+    try { data = JSON.parse(s); } catch (e) { data = JSON.parse(s.substring(s.indexOf('{'), s.lastIndexOf('}') + 1)); }
+  }
+  const plan = (data && Array.isArray(data.empfohlener_plan)) ? data.empfohlener_plan : [];
+  if (!plan.length) return apiResponse;
+
+  const sh = ss.getSheetByName('timeline');
+  if (!sh) return apiResponse;
+  const head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(function (h) { return String(h).trim(); });
+  const dIdx = head.indexOf('date');
+  const eIdx = head.indexOf('coachE_ESS_day');
+  const fIdx = head.indexOf('fix');
+  const zIdx = head.indexOf('Zone');
+  const sIdx = head.indexOf('Sport_x');
+  if (dIdx < 0 || eIdx < 0) return apiResponse;
+
+  const n = sh.getLastRow() - 1;
+  const dates = sh.getRange(2, dIdx + 1, n, 1).getValues();
+  const ess = sh.getRange(2, eIdx + 1, n, 1).getValues();
+  const fix = fIdx >= 0 ? sh.getRange(2, fIdx + 1, n, 1).getValues() : null;
+  const zon = zIdx >= 0 ? sh.getRange(2, zIdx + 1, n, 1).getDisplayValues() : null;
+  const spo = sIdx >= 0 ? sh.getRange(2, sIdx + 1, n, 1).getDisplayValues() : null;
+  const locked = {};
+
+  const tz = Session.getScriptTimeZone() || 'Europe/Berlin';
+  const map = {};
+  for (let i = 0; i < n; i++) {
+    const d = dates[i][0];
+    if (!(d instanceof Date)) continue;
+    const k = Utilities.formatDate(d, tz, 'yyyy-MM-dd');
+    map[k] = Number(String(ess[i][0]).replace(',', '.')) || 0;
+    if (fix && String(fix[i][0]).trim().toLowerCase() === 'x') {
+      locked[k] = { zone: zon ? String(zon[i][0] || '') : '', sport: spo ? String(spo[i][0] || '') : '' };
+    }
+  }
+  let changed = 0;
+  plan.forEach(function (day) {
+    const key = String(day.datum || '').slice(0, 10);
+    if (key in map && Number(day.original_load_ess) !== map[key]) { day.original_load_ess = map[key]; changed++; }
+    // Gesperrte Tage (fix = x) bleiben wie geplant – die KI darf sie nicht verändern
+    if (locked[key]) {
+      const lk = locked[key];
+      if (Number(day.empfohlener_load_ess) !== map[key]) { day.empfohlener_load_ess = map[key]; changed++; }
+      day.empfohlene_zone = map[key] > 0 ? (lk.zone || day.empfohlene_zone || '') : 'Ruhetag (Fixed)';
+      if (map[key] <= 0) { day.beispiel_training_1 = 'Geplanter Ruhetag'; day.beispiel_training_2 = 'Mobility / Spaziergang'; }
+      else if (lk.sport) day.beispiel_training_1 = lk.sport + ' (fest geplant)';
+    }
+  });
+
+  if (changed) logToSheet('INFO', '[Supervisor] Original-Load an ' + changed + ' Tag(en) aus der timeline übernommen.');
+  return wasString ? JSON.stringify(data) : data;
+}
+
+// ============================================================
+// Coach Kira – KI-Extras (Treffsicherheit, Selbsttest, Plausibilität,
+// Ernährung, Alltag-Check) · Speicher: Blatt AI_KIRA_EXTRAS
+// ============================================================
+const CKX_SHEET = 'AI_KIRA_EXTRAS';
+const CKX_TYPES = ['treffer_tag', 'treffer_woche', 'selbsttest', 'plausi', 'ernaehrung', 'alltag', 'workout',
+  'ziel', 'saison', 'autopilot', 'umplanung', 'lastfaktoren', 'prognose', 'ereignis', 'garmin_api', 'garmin_tag'];
+
+
+function ckX_sheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(CKX_SHEET);
+  if (!sh) {
+    sh = ss.insertSheet(CKX_SHEET);
+    sh.getRange(1, 1, 1, 6).setValues([['Datum', 'Typ', 'Text', 'Daten (JSON)', 'Quelle', 'Gespeichert']]);
+    sh.setFrozenRows(1);
+    sh.getRange('A:A').setNumberFormat('@');
+  }
+  return sh;
+}
+
+/** POST kind=saveExtra · {typ, datum:'YYYY-MM-DD', text, data, quelle} · ersetzt Eintrag mit gleichem Typ+Datum */
+function ckX_save_(e) {
+  try {
+    const b = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    const typ = String(b.typ || '');
+    if (CKX_TYPES.indexOf(typ) < 0) throw new Error('Unbekannter Typ: ' + typ);
+    const datum = String(b.datum || '');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(datum)) throw new Error('datum fehlt oder ist nicht YYYY-MM-DD.');
+    const text = String(b.text || '').slice(0, 6000);
+    const data = b.data === undefined ? '' : JSON.stringify(b.data).slice(0, 40000);
+    const quelle = String(b.quelle || 'lokal').replace(/[^\w:.\- ]/g, '').slice(0, 60);
+    const lock = LockService.getScriptLock();
+    lock.waitLock(20000);
+    try {
+      const sh = ckX_sheet_();
+      const row = [datum, typ, text, data, quelle, ckDash_now_()];
+      const n = sh.getLastRow() - 1;
+      // Eintrag löschen (z. B. ein Ziel entfernen): {typ, datum, loeschen:true}
+      if (b.loeschen === true) {
+        if (n > 0) {
+          const keys0 = sh.getRange(2, 1, n, 2).getDisplayValues();
+          for (let i = n - 1; i >= 0; i--) {
+            if (keys0[i][0] === datum && keys0[i][1] === typ) sh.deleteRow(i + 2);
+          }
+        }
+        return ckDash_json_({ ok: true, timestamp: ckDash_now_(), deleted: true });
+      }
+
+      if (n > 0) {
+        const keys = sh.getRange(2, 1, n, 2).getDisplayValues();
+        for (let i = n - 1; i >= 0; i--) {
+          if (keys[i][0] === datum && keys[i][1] === typ) {
+            sh.getRange(i + 2, 1, 1, 6).setValues([row]);
+            return ckDash_json_({ ok: true, timestamp: ckDash_now_(), updated: true });
+          }
+        }
+      }
+      sh.appendRow(row);
+    } finally {
+      lock.releaseLock();
+    }
+    return ckDash_json_({ ok: true, timestamp: ckDash_now_(), updated: false });
+  } catch (err) {
+    return ckDash_json_({ ok: false, timestamp: ckDash_now_(), error: String(err && err.message ? err.message : err) });
+  }
+}
+
+/** GET mode=extras&typ=a,b&n=30 · neueste zuerst */
+function ckX_get_(p) {
+  try {
+    const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CKX_SHEET);
+    if (!sh || sh.getLastRow() < 2) return ckDash_json_({ ok: true, timestamp: ckDash_now_(), items: [] });
+    const types = String(p.typ || '').split(',').map(function (s) { return s.trim(); }).filter(String);
+    const n = Math.max(1, Math.min(1000, Number(p.n) || 30));
+    const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 6).getDisplayValues();
+    const items = [];
+    for (let i = rows.length - 1; i >= 0 && items.length < n; i--) {
+      const r = rows[i];
+      if (types.length && types.indexOf(r[1]) < 0) continue;
+      let data = null;
+      if (r[3]) { try { data = JSON.parse(r[3]); } catch (x) { data = null; } }
+      items.push({ datum: r[0], typ: r[1], text: r[2], data: data, quelle: r[4], gespeichert: r[5] });
+    }
+    items.sort(function (a, b) { return a.datum < b.datum ? 1 : a.datum > b.datum ? -1 : 0; });
+    return ckDash_json_({ ok: true, timestamp: ckDash_now_(), items: items });
+  } catch (err) {
+    return ckDash_json_({ ok: false, timestamp: ckDash_now_(), error: String(err && err.message ? err.message : err) });
+  }
+}
+
+/**
+ * GET mode=calendarDays&days=14 · nur Belegung, KEINE Termintitel
+ * (die Web-App ist öffentlich erreichbar).
+ */
+function ckX_calendar_(p) {
+  try {
+    const days = Math.max(1, Math.min(21, Number(p.days) || 14));
+    const tz = Session.getScriptTimeZone() || 'Europe/Berlin';
+    const skip = /coach\s*kira|feiertag|holiday|geburtstag|birthday|wochennummer|week numbers/i;
+    const reise = /reise|flug|flight|hotel|dienstreise|messe|zug nach|bahn/i;
+    const frei = /urlaub|ferien|frei\b|vacation/i;
+    const krank = /krank|arzt|zahnarzt|physio|op\b/i;
+    // optional: nur bestimmte Kalender (kal=Name|Name|…, exakter Name ohne Groß/Klein) und ganztag=0 = ganztägige Termine ignorieren
+    const nurKal = String(p.kal || '').split('|').map(function (x) { return x.trim().toLowerCase(); }).filter(String);
+    const ohneGanztag = String(p.ganztag) === '0';
+    const cals = CalendarApp.getAllCalendars().filter(function (c) {
+      const n = String(c.getName() || '').trim().toLowerCase();
+      return nurKal.length ? nurKal.indexOf(n) >= 0 : !skip.test(c.getName());
+    });
+    const start = new Date(); start.setHours(0, 0, 0, 0);
+    const out = [];
+    for (let d = 0; d < days; d++) {
+      // Kalendertage statt fester 24 h (sonst doppelter Tag bei der Zeitumstellung)
+      const a = new Date(start.getFullYear(), start.getMonth(), start.getDate() + d, 0, 0, 0);
+      const b = new Date(start.getFullYear(), start.getMonth(), start.getDate() + d + 1, 0, 0, 0);
+      const dayStart = new Date(a.getFullYear(), a.getMonth(), a.getDate(), 6, 0, 0);
+      const dayEnd = new Date(a.getFullYear(), a.getMonth(), a.getDate(), 22, 0, 0);
+
+      let allDay = 0, evening = false, morning = false, isReise = false, isFrei = false, isKrank = false, count = 0;
+      const iv = [];
+      const seen = {};
+      let first = null, last = null;
+      cals.forEach(function (c) {
+        c.getEvents(a, b).forEach(function (ev) {
+          if (/^\\[coach kira\\]/i.test(ev.getTitle())) return;
+          if (ohneGanztag && ev.isAllDayEvent()) return;
+          const t = ev.getTitle() || '';
+          // gleicher Termin in mehreren Kalendern nur einmal zählen
+          const key = t + '|' + ev.getStartTime().getTime() + '|' + ev.getEndTime().getTime();
+          if (seen[key]) return;
+          seen[key] = true;
+          count++;
+          if (reise.test(t)) isReise = true;
+          if (frei.test(t)) isFrei = true;
+          if (krank.test(t)) isKrank = true;
+          if (ev.isAllDayEvent()) { allDay++; return; }
+          const s = new Date(Math.max(ev.getStartTime().getTime(), dayStart.getTime()));
+          const e2 = new Date(Math.min(ev.getEndTime().getTime(), dayEnd.getTime()));
+          if (e2 > s) iv.push([s.getTime(), e2.getTime()]);
+          if (ev.getEndTime().getHours() >= 18 || ev.getStartTime().getHours() >= 17) evening = true;
+          if (ev.getStartTime().getHours() < 8) morning = true;
+          if (!first || ev.getStartTime() < first) first = ev.getStartTime();
+          if (!last || ev.getEndTime() > last) last = ev.getEndTime();
+        });
+      });
+      // Überschneidungen zusammenfassen
+      iv.sort(function (x, y) { return x[0] - y[0]; });
+      let busyMin = 0, curS = null, curE = null;
+      iv.forEach(function (x) {
+        if (curE === null || x[0] > curE) { if (curE !== null) busyMin += (curE - curS) / 60000; curS = x[0]; curE = x[1]; }
+        else if (x[1] > curE) curE = x[1];
+      });
+      if (curE !== null) busyMin += (curE - curS) / 60000;
+      out.push({
+
+        date: Utilities.formatDate(a, tz, 'yyyy-MM-dd'),
+        termine: count,
+        ganztaegig: allDay,
+        belegt_h: Math.round(Math.min(busyMin, 16 * 60) / 6) / 10,
+        frueh: morning,
+        abends: evening,
+        von: first ? Utilities.formatDate(first, tz, 'HH:mm') : '',
+        bis: last ? Utilities.formatDate(last, tz, 'HH:mm') : '',
+        reise: isReise,
+        frei: isFrei,
+        gesundheit: isKrank
+      });
+    }
+    return ckDash_json_({ ok: true, timestamp: ckDash_now_(), calendars: cals.length, days: out,
+      filter: { kalender: nurKal.length ? cals.map(function (c) { return c.getName(); }) : null, ganztaegig: !ohneGanztag } });
+  } catch (err) {
+    return ckDash_json_({ ok: false, timestamp: ckDash_now_(), error: String(err && err.message ? err.message : err) });
+  }
+}
+
+/** GET mode=physBaseline · Gewicht, Max-HF, Laktatschwelle, FTP … aus phys_baseline */
+function ckX_phys_() {
+  try {
+    const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('phys_baseline');
+    if (!sh) throw new Error('Blatt phys_baseline fehlt.');
+    const v = sh.getRange(1, 1, 2, sh.getLastColumn()).getValues();
+    const o = {};
+    v[0].forEach(function (h, i) { if (String(h).trim()) o[String(h).trim()] = v[1][i]; });
+    return ckDash_json_({ ok: true, timestamp: ckDash_now_(), baseline: o });
+  } catch (err) {
+    return ckDash_json_({ ok: false, timestamp: ckDash_now_(), error: String(err && err.message ? err.message : err) });
+  }
+}
+
+// KI-frei (Stufe 3): ckX_trefferPromptBlock_ entfernt – Prompt-Bau liegt in kira_prompts (Cockpit/Mac).
+
+// KI-frei (Stufe 3): ckRegel_monotonie_ entfernt – Prompt-Bau liegt in kira_prompts (Cockpit/Mac).
+
+// KI-frei (Stufe 3): ckRegel_monotonieBlock_ entfernt – Prompt-Bau liegt in kira_prompts (Cockpit/Mac).
+
+/** GET mode=loadFactors · KK_LOAD_FACTORS (ESS pro Stunde je Sport/Zone) und KK_ELEV_FACTORS (nur lesen) */
+function ckX_loadFactors_() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const read = function (name) {
+      const sh = ss.getSheetByName(name);
+      if (!sh || sh.getLastRow() < 2) return [];
+      const v = sh.getRange(1, 1, sh.getLastRow(), sh.getLastColumn()).getValues();
+      const h = v[0].map(function (x) { return String(x).trim(); });
+      return v.slice(1).filter(function (r) { return String(r[0]).trim(); }).map(function (r) {
+        const o = {}; h.forEach(function (k, i) { if (k) o[k] = r[i]; }); return o;
+      });
+    };
+    return ckDash_json_({ ok: true, timestamp: ckDash_now_(), load: read('KK_LOAD_FACTORS'), elev: read('KK_ELEV_FACTORS') });
+  } catch (err) {
+    return ckDash_json_({ ok: false, timestamp: ckDash_now_(), error: String(err && err.message ? err.message : err) });
+  }
+}
+
+// KI-frei (Stufe 3): ckX_planungsBlock_ entfernt – Prompt-Bau liegt in kira_prompts (Cockpit/Mac).
+
+// ============================================================
+// Coach Kira – Garmin km/hm (Mac-Dienst kira_garmin.py, Garmin Personal API)
+// POST kind=saveDayMetrics · {rows:[{datum:'YYYY-MM-DD', km, hm}], modus:'leer'|'alle', probe:true|false}
+// Schreibt distance_km_day / elev_m_day in 'timeline' (Quelle) und 'KK_TIMELINE' (Spiegel).
+// modus 'leer' (Standard): nur leere Zellen füllen · 'alle': vorhandene Werte überschreiben
+// probe: nichts schreiben, nur zählen
+// ============================================================
+function ckGA_saveDays_(e) {
+  const lock = LockService.getScriptLock();
+  let gesperrt = false;
+  try {
+    const b = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    const rows = Array.isArray(b.rows) ? b.rows : [];
+    if (!rows.length) return ckDash_json_({ ok: false, timestamp: ckDash_now_(), error: 'rows fehlt' });
+    if (rows.length > 400) return ckDash_json_({ ok: false, timestamp: ckDash_now_(), error: 'max 400 Tage je Aufruf' });
+    const modus = b.modus === 'alle' ? 'alle' : 'leer';
+    const probe = b.probe === true;
+    const tz = Session.getScriptTimeZone() || 'Europe/Berlin';
+    const heute = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
+
+    const tage = {};
+    let verworfen = 0;
+    rows.forEach(function (r) {
+      const datum = String((r && r.datum) || '');
+      const km = Number(r && r.km);
+      const hm = Number(r && r.hm);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(datum) || datum > heute ||
+          !isFinite(km) || km < 0 || km > 1000 || !isFinite(hm) || hm < 0 || hm > 20000) {
+        verworfen++;
+        return;
+      }
+      tage[datum] = { km: Math.round(km * 100) / 100, hm: Math.round(hm) };
+    });
+
+    lock.waitLock(20000);
+    gesperrt = true;
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const leer = function (x) { return x === '' || x === null; };
+    const blaetter = {};
+
+    ['timeline', 'KK_TIMELINE'].forEach(function (name) {
+      const sh = ss.getSheetByName(name);
+      if (!sh) throw new Error("Blatt '" + name + "' nicht gefunden.");
+      const head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(function (h) { return String(h).trim(); });
+      const cD = head.indexOf('date'), cK = head.indexOf('distance_km_day'), cH = head.indexOf('elev_m_day');
+      [['date', cD], ['distance_km_day', cK], ['elev_m_day', cH]].forEach(function (p) {
+        if (p[1] < 0) throw new Error("Spalte '" + p[0] + "' fehlt in Blatt '" + name + "'.");
+      });
+      const n = sh.getLastRow() - 1;
+      const st = { geschrieben: 0, unveraendert: 0, behalten: 0, ohne_zeile: 0 };
+      if (n < 1) { st.ohne_zeile = Object.keys(tage).length; blaetter[name] = st; return; }
+
+      const rK = sh.getRange(2, cK + 1, n, 1), rH = sh.getRange(2, cH + 1, n, 1);
+      const fK = rK.getFormulas(), fH = rH.getFormulas();
+      for (let i = 0; i < n; i++) {
+        if (fK[i][0]) throw new Error("Formel in Spalte 'distance_km_day' von Blatt '" + name + "' (Zeile " + (i + 2) + ').');
+        if (fH[i][0]) throw new Error("Formel in Spalte 'elev_m_day' von Blatt '" + name + "' (Zeile " + (i + 2) + ').');
+      }
+      const dates = sh.getRange(2, cD + 1, n, 1).getValues();
+      const vK = rK.getValues(), vH = rH.getValues();
+      const zeilen = {};
+      for (let i = 0; i < n; i++) {
+        const d = dates[i][0];
+        const key = d instanceof Date ? Utilities.formatDate(d, tz, 'yyyy-MM-dd') : String(d || '').slice(0, 10);
+        if (key) (zeilen[key] = zeilen[key] || []).push(i);
+      }
+
+      Object.keys(tage).forEach(function (datum) {
+        const idx = zeilen[datum];
+        if (!idx) { st.ohne_zeile++; return; }
+        const w = tage[datum];
+        idx.forEach(function (i) {
+          const aK = vK[i][0], aH = vH[i][0];
+          if (aK === w.km && aH === w.hm) { st.unveraendert++; return; }
+          if (modus !== 'alle' && (!leer(aK) || !leer(aH))) { st.behalten++; return; }
+          vK[i][0] = w.km;
+          vH[i][0] = w.hm;
+          st.geschrieben++;
+        });
+      });
+
+      if (!probe && st.geschrieben > 0) {
+        rK.setValues(vK);
+        rH.setValues(vH);
+      }
+      blaetter[name] = st;
+    });
+
+    return ckDash_json_({
+      ok: true, timestamp: ckDash_now_(), modus: modus, probe: probe,
+      tage: Object.keys(tage).length, verworfen: verworfen, blaetter: blaetter,
+    });
+  } catch (err) {
+    try { logToSheet('ERROR', '[ckGA_saveDays_] ' + err); } catch (e2) {}
+    return ckDash_json_({ ok: false, timestamp: ckDash_now_(), error: String(err && err.message ? err.message : err) });
+  } finally {
+    if (gesperrt) lock.releaseLock();
+  }
+}
+
+// ============================================================================
+// KI-frei (Stufe 3, 2026-10-26): Telegram-Fragen – Warteschlange für den Mac
+//   Bot → ckTg_enqueue_ · Mac holt mode=telegramJobs · antwortet POST kind=telegramAnswer
+// ============================================================================
+const CK_TG_QUEUE_KEY = 'CK_TG_QUEUE';
+const CK_TG_VERLAUF_KEY = 'CK_TG_VERLAUF';
+
+function ckTg_read_(key) {
+  try { return JSON.parse(PropertiesService.getScriptProperties().getProperty(key) || '[]'); } catch (e) { return []; }
+}
+
+function ckTg_send_(chatId, text) {
+  // ohne Markdown, damit Sonderzeichen in Kiras Antwort nichts kaputt machen
+  const cfg = getTelegramConfig_();
+  if (!cfg.token) { logToSheet('ERROR', '[Telegram] TELEGRAM_BOT_TOKEN fehlt in ScriptProperties'); return; }
+  UrlFetchApp.fetch('https://api.telegram.org/bot' + cfg.token + '/sendMessage', {
+    method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+    payload: JSON.stringify({ chat_id: chatId, text: String(text).slice(0, 4000) })
+  });
+}
+
+function ckTg_enqueue_(chatId, text, user) {
+  const cfg = getTelegramConfig_();
+  if (cfg.chatId && String(chatId) !== String(cfg.chatId)) return; // nur Marcs Chat
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const q = ckTg_read_(CK_TG_QUEUE_KEY);
+    q.push({ id: 'tg-' + Date.now(), chatId: String(chatId), frage: String(text).slice(0, 2000), user: String(user || ''), ts: ckDash_now_() });
+    PropertiesService.getScriptProperties().setProperty(CK_TG_QUEUE_KEY, JSON.stringify(q.slice(-10)));
+  } finally {
+    lock.releaseLock();
+  }
+  ckTg_send_(chatId, 'Kira denkt nach – die Antwort kommt vom Mac (lokal), meist in 1–2 Minuten.');
+}
+
+function ckTg_jobs_() {
+  return ckDash_json_({
+    ok: true, timestamp: ckDash_now_(),
+    jobs: ckTg_read_(CK_TG_QUEUE_KEY).map(function (j) { return { id: j.id, frage: j.frage, ts: j.ts }; }),
+    verlauf: ckTg_read_(CK_TG_VERLAUF_KEY)
+  });
+}
+
+function ckTg_answer_(e) {
+  try {
+    const b = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    const id = String(b.id || '');
+    const text = String(b.text || '').trim();
+    if (!id || !text) return ckDash_json_({ ok: false, error: 'id oder text fehlt.' });
+    const lock = LockService.getScriptLock();
+    lock.waitLock(10000);
+    let job = null;
+    try {
+      const q = ckTg_read_(CK_TG_QUEUE_KEY);
+      job = q.filter(function (j) { return j.id === id; })[0] || null;
+      if (!job) return ckDash_json_({ ok: false, error: 'Frage nicht (mehr) in der Warteschlange.' });
+      PropertiesService.getScriptProperties().setProperty(CK_TG_QUEUE_KEY, JSON.stringify(q.filter(function (j) { return j.id !== id; })));
+      const v = ckTg_read_(CK_TG_VERLAUF_KEY);
+      v.push({ frage: job.frage.slice(0, 500), antwort: text.slice(0, 1500) });
+      PropertiesService.getScriptProperties().setProperty(CK_TG_VERLAUF_KEY, JSON.stringify(v.slice(-3)));
+    } finally {
+      lock.releaseLock();
+    }
+    ckTg_send_(job.chatId, text);
+    const m = String(b.model || 'coach-kira').replace(/[^\w:.\-]/g, '').slice(0, 40);
+    const eng = String(b.engine || 'local') === 'cloud' ? 'Cloud' : 'lokal';
+    logChatMessage('Marc (Telegram)', job.frage);
+    logChatMessage('Kira (' + eng + ', ' + m + ', Telegram)', text);
+    return ckDash_json_({ ok: true, timestamp: ckDash_now_(), id: id });
+  } catch (err) {
+    return ckDash_json_({ ok: false, error: String(err && err.message ? err.message : err) });
+  }
+}
+
