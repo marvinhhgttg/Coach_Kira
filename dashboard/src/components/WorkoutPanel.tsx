@@ -4,6 +4,9 @@ import { fetchPhysBaseline, hrZones, saveExtra, type PhysBaseline } from '../lib
 import { localChat, parseJsonLoose } from '../lib/localLLM';
 import { downloadFit, type FitIntensity, type FitSport, type FitWorkout } from '../lib/fit';
 import { fmtDateShort } from '../lib/format';
+import { fetchGarminTage } from '../lib/garmin';
+import { lerneModelle, type Modell } from '../lib/essRechner';
+import { anZielAnpassen, dauerHinweis, profilFuer, workoutWerte } from '../lib/workoutEss';
 
 type Zone = 'Z1' | 'Z2' | 'Z3' | 'Z4' | 'Z5' | 'offen';
 interface KiStep { name: string; minuten: number; art: string; zone: Zone; hinweis?: string }
@@ -138,7 +141,10 @@ export function WorkoutPanel({ day, onClose }: { day: PlanDay; onClose: () => vo
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const [modell, setModell] = useState<Modell | null>(null);
+  const [anpassung, setAnpassung] = useState<{ vorherMin: number; vorherEss: number } | null>(null);
   const sport = detectSport(day);
+  const zielEss = Math.round(Number(day.recommended_load_ess ?? 0));
   const zones = useMemo(() => (phys ? hrZones(phys.lthr, sport === 'cycling' ? 'bike' : 'run') : []), [phys, sport]);
   const zoneHr = (z: Zone) => zones.find((x) => x.zone === z) || null;
 
@@ -149,6 +155,18 @@ export function WorkoutPanel({ day, onClose }: { day: PlanDay; onClose: () => vo
     try {
       const p = phys || (await fetchPhysBaseline());
       if (!phys) setPhys(p);
+      const zonesNow = hrZones(p.lthr, sport === 'cycling' ? 'bike' : 'run');
+      // persönliches ESS-Modell (Garmin-Einheiten) für das Verhältnis Last ↔ Dauer
+      let m = modell;
+      if (!m) {
+        const pid = profilFuer(sport, `${day.training_1 || ''}`);
+        if (pid) {
+          const tage = await fetchGarminTage();
+          m = lerneModelle(tage).find((x) => x.id === pid && x.n >= 8) || null;
+          setModell(m);
+        }
+      }
+      const dh = m && zielEss > 0 ? dauerHinweis(m, zielEss, zonesNow, String(day.recommended_zone || 'Z2')) : null;
       const user = [
         `Datum: ${day.date} (${day.day || ''})`,
         `Training: ${day.training_1 || '-'}${day.training_2 ? ` (Alternative: ${day.training_2})` : ''}`,
@@ -159,7 +177,9 @@ export function WorkoutPanel({ day, onClose }: { day: PlanDay; onClose: () => vo
         `Laktatschwelle ${p.lthr} bpm, Max-HF ${p.maxHr} bpm, FTP ${p.ftp} W.`,
         '',
         'Baue ein strukturiertes Workout:',
-        '- Dauer passend zur Last: grob 1 ESS ≈ 0,4–0,6 min bei Z2, intensiver = kürzer.',
+        dh
+          ? `- GESAMTDAUER inkl. Aufwärmen, Pausen und Ausrollen: etwa ${dh.min} min (±5). Das ergibt bei Ø HF um ${dh.hf} bpm deine Ziel-Last von ${zielEss} ESS – gemessen an deinen eigenen Garmin-Einheiten. Mehr Intensität = kürzer, nicht länger.`
+          : '- Dauer passend zur Last: grob 1 ESS ≈ 0,4 min bei Z2, intensiver = kürzer.',
         '- Immer Aufwärmen (warmup) und Ausrollen (cooldown).',
         '- Intervalle als eigener Block mit wiederholungen > 1 (Belastung + Erholung).',
         '- Schrittnamen max. 15 Zeichen, hinweis max. 30 Zeichen, Deutsch.',
@@ -181,13 +201,21 @@ export function WorkoutPanel({ day, onClose }: { day: PlanDay; onClose: () => vo
         console.warn('Workout-Antwort nicht lesbar:', text);
         throw new Error('Kira hat kein gültiges Workout geliefert. Bitte „Neu“ versuchen.');
       }
-      setKi(j);
+      // deterministisch an die Ziel-Last anpassen (Kira hält Dauerangaben nicht immer ein)
+      if (m && zielEss > 0) {
+        const r = anZielAnpassen(j, zonesNow, m, zielEss);
+        setAnpassung(r.angepasst ? { vorherMin: Math.round(r.vorher.min), vorherEss: Math.round(r.vorher.ess) } : null);
+        setKi(r.workout);
+      } else {
+        setAnpassung(null);
+        setKi(j);
+      }
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
     }
-  }, [day, phys]);
+  }, [day, phys, modell, sport, zielEss]);
 
   useEffect(() => {
     generate();
@@ -218,10 +246,11 @@ export function WorkoutPanel({ day, onClose }: { day: PlanDay; onClose: () => vo
   }, [ki, zones, sport, day.date]);
 
   const total = ki ? ki.bloecke.reduce((s, b) => s + blockMinutes(b), 0) : 0;
+  const essSchaetzung = ki && modell && zones.length ? workoutWerte(ki, zones, modell) : null;
 
   const asText = () => {
     if (!ki) return '';
-    const lines = [`${ki.name} · ${fmtDateShort(day.date)} · ${SPORT_LABEL[sport]} · ${Math.round(total)} min`];
+    const lines = [`${ki.name} · ${fmtDateShort(day.date)} · ${SPORT_LABEL[sport]} · ${Math.round(total)} min${essSchaetzung ? ` · ≈ ${Math.round(essSchaetzung.ess)} ESS (Ziel ${zielEss})` : ''}`];
     if (ki.beschreibung) lines.push(ki.beschreibung);
     ki.bloecke.forEach((b) => {
       const pre = b.wiederholungen > 1 ? `${b.wiederholungen} × ` : '';
@@ -258,7 +287,15 @@ export function WorkoutPanel({ day, onClose }: { day: PlanDay; onClose: () => vo
         <>
           <div className="mt-2 text-sm text-ink">{ki.name}</div>
           {ki.beschreibung && <p className="text-xs text-ink-muted">{ki.beschreibung}</p>}
-          <div className="mt-1 text-2xs text-ink-dim tnum">Gesamtdauer {Math.round(total)} min</div>
+          <div className="mt-1 text-2xs text-ink-dim tnum" data-testid="workout-ess">
+            Gesamtdauer {Math.round(total)} min
+            {essSchaetzung && <> · geschätzte Last ≈ {Math.round(essSchaetzung.ess)} ESS bei Ø HF {Math.round(essSchaetzung.hf)} (Ziel {zielEss} ESS)</>}
+          </div>
+          {anpassung && (
+            <div className="text-2xs text-ink-dim tnum">
+              An deine Ziel-Last angepasst: Kiras Vorschlag hatte {anpassung.vorherMin} min ≈ {anpassung.vorherEss} ESS. Grundlage: dein ESS-Modell aus {modell?.n} eigenen Garmin-Einheiten.
+            </div>
+          )}
           <div className="mt-2 flex flex-col gap-2">
             {ki.bloecke.map((b, bi) => (
               <div key={bi} className="rounded border border-border p-2">
