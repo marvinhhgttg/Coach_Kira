@@ -6,6 +6,7 @@ import { downloadFit, type FitIntensity, type FitSport, type FitWorkout } from '
 import { fmtDateShort } from '../lib/format';
 import { fetchGarminTage } from '../lib/garmin';
 import { lerneModelle, type Modell } from '../lib/essRechner';
+import { workoutSenden, workoutAuftragStatus } from '../lib/garminWorkout';
 import { anZielAnpassen, dauerHinweis, profilFuer, workoutWerte } from '../lib/workoutEss';
 
 type Zone = 'Z1' | 'Z2' | 'Z3' | 'Z4' | 'Z5' | 'offen';
@@ -245,6 +246,32 @@ export function WorkoutPanel({ day, onClose }: { day: PlanDay; onClose: () => vo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ki, zones, sport, day.date]);
 
+  const [sendung, setSendung] = useState<{ phase: 'senden' | 'wartet' | 'abgeholt' | 'ok' | 'fehler'; text: string } | null>(null);
+  const anGarmin = useCallback(async () => {
+    if (!fit || !ki) return;
+    setSendung({ phase: 'senden', text: 'Sende Auftrag …' });
+    try {
+      const a = await workoutSenden(day.date, { ...fit, name: ki.name || fit.name, beschreibung: ki.beschreibung || '' });
+      setSendung({ phase: 'wartet', text: 'Auftrag liegt bereit – der Mac holt ihn innerhalb von etwa einer Minute ab.' });
+      const t0 = Date.now();
+      while (Date.now() - t0 < 4 * 60 * 1000) {
+        await new Promise((r) => setTimeout(r, 5000));
+        let st;
+        try { st = await workoutAuftragStatus(a.id); } catch { continue; }
+        if (st.doneAt) {
+          setSendung(st.ok
+            ? { phase: 'ok', text: `In Garmin Connect am ${fmtDateShort(day.date)} eingeplant – die Uhr holt es beim nächsten Sync. ${st.result || ''}`.trim() }
+            : { phase: 'fehler', text: `Garmin hat abgelehnt: ${st.result || 'unbekannter Fehler'}` });
+          return;
+        }
+        if (st.pickedAt) setSendung({ phase: 'abgeholt', text: 'Mac lädt das Workout zu Garmin hoch …' });
+      }
+      setSendung({ phase: 'fehler', text: 'Keine Rückmeldung vom Mac nach 4 Minuten. Ist der Mac wach und der Garmin-Login eingerichtet?' });
+    } catch (e) {
+      setSendung({ phase: 'fehler', text: String((e as Error).message || e) });
+    }
+  }, [fit, ki, day.date]);
+
   const total = ki ? ki.bloecke.reduce((s, b) => s + blockMinutes(b), 0) : 0;
   const essSchaetzung = ki && modell && zones.length ? workoutWerte(ki, zones, modell) : null;
 
@@ -315,14 +342,18 @@ export function WorkoutPanel({ day, onClose }: { day: PlanDay; onClose: () => vo
             ))}
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
-            <button className="btn btn-primary text-xs px-2 py-1" onClick={() => fit && downloadFit(fit, `kira-${day.date}`)}>FIT herunterladen</button>
+            <button className="btn btn-primary text-xs px-2 py-1" data-testid="workout-an-garmin" disabled={sendung?.phase === 'senden' || sendung?.phase === 'wartet' || sendung?.phase === 'abgeholt'} onClick={anGarmin}>An Garmin senden</button>
+            <button className="btn btn-ghost text-xs px-2 py-1" onClick={() => fit && downloadFit(fit, `kira-${day.date}`)}>FIT herunterladen</button>
             <button className="btn btn-ghost text-xs px-2 py-1" onClick={() => navigator.clipboard.writeText(asText()).then(() => setInfo('Kopiert.'))}>Als Text kopieren</button>
             <button className="btn btn-ghost text-xs px-2 py-1" onClick={onSave}>Speichern</button>
             <button className="btn btn-ghost text-xs px-2 py-1" onClick={generate}>Neu</button>
             {info && <span className="text-2xs text-ink-dim self-center">{info}</span>}
           </div>
+          {sendung && (
+            <p className={`mt-2 text-2xs ${sendung.phase === 'ok' ? 'text-emerald-400' : sendung.phase === 'fehler' ? 'text-amber-400' : 'text-ink-muted'}`} data-testid="workout-sendung">{sendung.text}</p>
+          )}
           <p className="mt-2 text-2xs text-ink-dim">
-            Garmin Connect nimmt Workout-FIT-Dateien nicht über „Daten importieren“ an (nur Aktivitäten). Stattdessen die Datei per USB auf die Uhr kopieren: Ordner GARMIN › NewFiles (am Mac mit OpenMTP), Uhr trennen – das Workout erscheint unter Training › Workouts. Herzfrequenzbereiche aus deiner Laktatschwelle ({phys?.lthr} bpm).
+            „An Garmin senden“: Der Mac legt das Workout mit deinem Garmin-Login in den Garmin-Kalender dieses Tages (inoffizieller Weg, kann bei Garmin-Änderungen ausfallen). Ohne Mac: Garmin Connect nimmt Workout-FIT-Dateien nicht über „Daten importieren“ an (nur Aktivitäten). Stattdessen die Datei per USB auf die Uhr kopieren: Ordner GARMIN › NewFiles (am Mac mit OpenMTP), Uhr trennen – das Workout erscheint unter Training › Workouts. Herzfrequenzbereiche aus deiner Laktatschwelle ({phys?.lthr} bpm).
           </p>
         </>
       )}

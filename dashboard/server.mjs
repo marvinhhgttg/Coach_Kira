@@ -290,6 +290,56 @@ app.post('/api/garmin/anfrage/status', (req, res) => {
   res.json({ ok: true });
 });
 
+// Workout an Garmin senden: Cockpit legt das fertige Workout als Auftrag ab, der Mac (60-s-Takt) lädt es
+// mit dem eigenen Garmin-Login hoch und legt es in den Garmin-Kalender. Der Server hält nur die Warteschlange.
+function garminWorkouts() {
+  try { const x = JSON.parse(getSetting('garmin_workouts') || '[]'); return Array.isArray(x) ? x : []; } catch { return []; }
+}
+function garminWorkoutsSpeichern(xs) {
+  setSetting('garmin_workouts', JSON.stringify(xs.slice(-15)));
+}
+app.get('/api/garmin/workout', (req, res) => {
+  const xs = garminWorkouts();
+  const id = String(req.query.id || '');
+  if (id) {
+    const x = xs.find((q) => q.id === id);
+    return x ? res.json({ ok: true, auftrag: x }) : res.status(404).json({ ok: false, error: 'Auftrag unbekannt (Server neu gestartet?)' });
+  }
+  // Mac: offene Aufträge (ohne Abholung oder hängengeblieben > 10 min)
+  const t = now();
+  res.json({ ok: true, offen: xs.filter((q) => !q.doneAt && (!q.pickedAt || t - q.pickedAt > 600000)) });
+});
+app.post('/api/garmin/workout', (req, res) => {
+  if (!llmOriginOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
+  const b = req.body || {};
+  const w = b.workout;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(b.datum || ''))) return res.status(400).json({ ok: false, error: 'Datum fehlt.' });
+  if (!w || !Array.isArray(w.blocks) || !w.blocks.length) return res.status(400).json({ ok: false, error: 'Workout fehlt.' });
+  const roh = JSON.stringify(w);
+  if (roh.length > 20000) return res.status(400).json({ ok: false, error: 'Workout zu groß.' });
+  const xs = garminWorkouts().filter((q) => !(q.datum === b.datum && !q.doneAt)); // älteren offenen Auftrag für den Tag ersetzen
+  const a = { id: crypto.randomUUID(), datum: String(b.datum), workout: w, requestedAt: now(), pickedAt: null, doneAt: null, ok: null, result: '' };
+  xs.push(a);
+  garminWorkoutsSpeichern(xs);
+  res.json({ ok: true, auftrag: { ...a, workout: undefined } });
+});
+app.post('/api/garmin/workout/status', (req, res) => {
+  if (!llmOriginOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
+  const b = req.body || {};
+  const xs = garminWorkouts();
+  const a = xs.find((q) => q.id === String(b.id || ''));
+  if (!a) return res.status(404).json({ ok: false, error: 'Auftrag unbekannt.' });
+  if (b.phase === 'abgeholt') a.pickedAt = now();
+  if (b.phase === 'fertig') {
+    a.doneAt = now();
+    a.ok = !!b.ok;
+    a.result = String(b.result || '').slice(0, 300);
+    if (b.workoutId) a.workoutId = String(b.workoutId);
+  }
+  garminWorkoutsSpeichern(xs);
+  res.json({ ok: true });
+});
+
 app.post('/api/action/:name', requireAuth, async (req, res) => {
   const params = actionToAppsScriptParams(req.params.name, req.body || {});
   if (!params) return res.status(404).json({ ok: false, error: 'unknown_action' });

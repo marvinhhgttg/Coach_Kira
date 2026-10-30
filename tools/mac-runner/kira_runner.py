@@ -754,6 +754,58 @@ def garmin_anfrage_pruefen() -> None:
     log(f"Garmin: Abruf auf Anfrage {'OK' if ok else 'FEHLER ' + msg}")
 
 
+COCKPIT_WORKOUT = "https://coachkira.pplx.app/port/5000/api/garmin/workout"
+GARMIN_VENV_PY = BASE / ".venv-garmin" / "bin" / "python"
+
+
+def garmin_workouts_pruefen() -> None:
+    """Knopf „An Garmin senden“ im Cockpit: Workout-Auftrag abholen, per kira_garmin_workout.py hochladen
+    und im Garmin-Kalender einplanen, Ergebnis zurückmelden. Läuft in eigenem Prozess (eigene venv)."""
+    try:
+        j = http_get_json(COCKPIT_WORKOUT, timeout=15)
+    except Exception:
+        return
+    for a in (j.get("offen") or [])[:3]:
+        aid = a.get("id")
+        if not aid:
+            continue
+        try:
+            _cockpit_post(COCKPIT_WORKOUT + "/status", {"id": aid, "phase": "abgeholt"})
+        except Exception:
+            pass
+        log(f"Garmin-Workout: Auftrag {a.get('datum')} aus dem Cockpit")
+        ok, msg, wid = False, "", None
+        tmp = BASE / f"garmin_workout_{aid}.json"
+        try:
+            tmp.write_text(json.dumps(a, ensure_ascii=False))
+            py = str(GARMIN_VENV_PY) if GARMIN_VENV_PY.exists() else "/opt/homebrew/bin/python3"
+            r = subprocess.run([py, str(BASE / "kira_garmin_workout.py"), "job", str(tmp)], capture_output=True, timeout=180)
+            out = r.stdout.decode("utf-8", "replace").strip().splitlines()
+            try:
+                res = json.loads(out[-1]) if out else {}
+            except Exception:
+                res = {}
+            ok = bool(res.get("ok")) and r.returncode == 0
+            wid = res.get("workoutId")
+            msg = res.get("result") or r.stderr.decode("utf-8", "replace")[-200:] or f"Exit {r.returncode}"
+            if "ModuleNotFoundError" in msg or "No module named" in msg:
+                msg = "garminconnect fehlt auf dem Mac – install-garmin-workout.sh ausführen."
+            elif not ok and any(k in msg.lower() for k in ("token", "login", "auth", "401")):
+                msg = "Garmin-Login fehlt oder abgelaufen – im Terminal: kira_garmin_workout.py login. " + msg[:120]
+        except Exception as e:
+            msg = str(e)[:200]
+        finally:
+            try:
+                tmp.unlink()
+            except Exception:
+                pass
+        try:
+            _cockpit_post(COCKPIT_WORKOUT + "/status", {"id": aid, "phase": "fertig", "ok": ok, "result": msg, "workoutId": wid})
+        except Exception as e:
+            log(f"Garmin-Workout: Rückmeldung fehlgeschlagen: {e}")
+        log(f"Garmin-Workout: {'OK ' + str(wid) if ok else 'FEHLER ' + msg}")
+
+
 def cmd_supervisor() -> None:
     """Supervisor-Aufträge abholen; wurde ein Auftrag während der Rechnung ersetzt,
     sofort den neueren rechnen (max. 3 Runden)."""
@@ -762,6 +814,10 @@ def cmd_supervisor() -> None:
         garmin_anfrage_pruefen()  # vor der Sperre: auch während einer langen Supervisor-Rechnung
     except Exception as e:
         log(f"Garmin-Anfrage: FEHLER {e}")
+    try:
+        garmin_workouts_pruefen()
+    except Exception as e:
+        log(f"Garmin-Workout: FEHLER {e}")
     lock = open(Path.home() / "coach-kira-runner" / "supervisor.lock", "w")
     try:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
