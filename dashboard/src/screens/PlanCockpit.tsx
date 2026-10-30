@@ -42,6 +42,7 @@ import { ErholungspreisTile } from '../components/ErholungspreisTile';
 import { GrauzoneTile } from '../components/GrauzoneTile';
 import { WhatIfTile } from '../components/WhatIfTile';
 import { GoalPlannerTile } from '../components/GoalPlannerTile';
+import { ZeitfensterTile } from '../components/ZeitfensterTile';
 import { SeasonTile } from '../components/SeasonTile';
 import { LoadFactorTile } from '../components/LoadFactorTile';
 import { ReadinessStrip } from '../components/ReadinessStrip';
@@ -1410,6 +1411,9 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
                     <TourformTile />
                     <EsHebelTile />
                   </StoryGrid>
+                </StorySection>
+                <StorySection id="z-fenster" titel="Deine Zeitfenster" unter="Dienstreisen, Urlaub, Pausen – wann eine Entlastung passt">
+                  <ZeitfensterTile />
                 </StorySection>
                 <StorySection id="z-saison" titel="Die Saison" unter="Saisonrahmen und Wochen, die bei dir am besten funktioniert haben">
                   <StoryGrid>

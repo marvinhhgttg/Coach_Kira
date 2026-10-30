@@ -1530,7 +1530,15 @@ def cmd_autopilot(force: bool = False) -> None:
             w = next((x for x in sa["data"].get("wochen", []) if x.get("start") == woche[0]), None)
             if w:
                 ziel_ess = w.get("ziel_ess")
-                saison_txt = f"Saisonrahmen: Phase {w.get('phase')}, Ziel-Wochenlast ca. {ziel_ess} ESS, Fokus {w.get('fokus') or w.get('sportmix') or '-'}"
+                saison_txt = (f"Saisonrahmen: Phase {w.get('phase')}, Ziel-Wochenlast ca. {ziel_ess} ESS, Fokus {w.get('fokus') or w.get('sportmix') or '-'}"
+                              + (f", Zeitfenster: {w.get('fenster')}" if w.get("fenster") else ""))
+                if w.get("phase") == "Pause":
+                    saison_txt += " – Marc hat in dieser Woche kaum Zeit (Zeitfenster „kein Training möglich“): nur kurze lockere Einheiten an freien Tagen, keine harten Reize."
+                elif w.get("phase") == "Aktivurlaub":
+                    saison_txt += " – Aktivurlaub: lange Tage (Bergtouren, Ski) sind gewollt, dazwischen lockere Tage; Monotonie- und ACWR-Regeln gelten weiter."
+                elif w.get("phase") == "Entlastung" and w.get("fenster"):
+                    saison_txt += " – Entlastungswoche passend zum Zeitfenster: locker, Schlaf und Erholung im Blick."
+
         ziele_txt = [f"{x['datum']}: {x['text'][:160]}" for x in items if x["typ"] == "ziel" and x["datum"] >= woche[0]][:3]
     except Exception as e:
         log(f"autopilot: Saison/Ziele nicht lesbar ({e})")
@@ -1544,7 +1552,7 @@ def cmd_autopilot(force: bool = False) -> None:
         return f"{p['datum']} {p['tag']} | Plan: {p['last']} ESS {p['sport']} {p['zone']}{' FEST' if p['fest'] else ''} | Kalender: {kt} | Wetter: {wt}"
 
     regeln = ("Regeln: FEST-Tage nie ändern. "
-              + (f"Wochenlast höchstens 10 % über {ziel_ess} ESS, gern bis 15 % darunter. " if ziel_ess else "Wochenlast etwa beibehalten (15 % weniger ist in Ordnung, höchstens 10 % mehr). ")
+              + (f"Wochenlast höchstens 10 % über {ziel_ess} ESS, gern bis 15 % darunter. " if ziel_ess is not None else "Wochenlast etwa beibehalten (15 % weniger ist in Ordnung, höchstens 10 % mehr). ")
               + rhythmus
               + f"Kein Tag über {spitze} ESS und kein Tag mehr als 40 % über seinem bisherigen Plan. Gestrichene Last nicht auf einen Tag packen: auf zwei bis drei Tage verteilen oder die Wochenlast senken. "
               + "Monotonie-Regel: als Entlastung zählt ein lockerer oder freier Tag (<= 40 ESS bzw. 60 % der üblichen Tageslast); 5 Tage ohne Entlastung sind nur ein Hinweis; nach 2 Tagen Monotonie über 2,0 und 4 fordernden Tagen ein sehr lockerer oder freier Tag; harte Tage klar hart, lockere wirklich locker. "
@@ -1988,7 +1996,7 @@ def vorausblick_rechnen() -> dict:
     # Entlastungswoche in den Tagen 22–28? Dann bis zum Ende der Folgewoche (Wirkung der Entlastung sichtbar machen)
     for k in range(22, 29):
         wk = _saison_woche((datum0 + datetime.timedelta(days=k)).isoformat())
-        if wk and "entlast" in str(wk.get("phase", "")).lower():
+        if wk and any(x in str(wk.get("phase", "")).lower() for x in ("entlast", "pause")):
             ende = datetime.date.fromisoformat(wk["start"]) + datetime.timedelta(days=13)
             horizont = max(horizont, min(42, (ende - datum0).days))
             break
@@ -2002,7 +2010,8 @@ def vorausblick_rechnen() -> dict:
             s = w.get("start", "")
             if s and s <= d < (datetime.date.fromisoformat(s) + datetime.timedelta(days=7)).isoformat():
                 wl = float(w.get("ziel_ess") or 0) / 7
-        ext_loads.append(wl if wl else fallback)
+        # Pause-Wochen (Zeitfenster „kein Training möglich“) dürfen 0 sein – nur fehlende Wochen fallen auf den Ø zurück
+        ext_loads.append(wl if wl is not None else fallback)
     atl, ctl = float(base.get("atl") or 0), float(base.get("ctl") or 0)
     serie = hist_loads[:]
     tage = []

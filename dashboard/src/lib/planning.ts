@@ -17,7 +17,9 @@ export interface Ziel {
 export interface Saisonwoche {
   start: string; // Montag
   kw: number;
-  phase: 'Aufbau' | 'Entlastung' | 'Tapering' | 'Ziel' | 'Erholung';
+  phase: 'Aufbau' | 'Entlastung' | 'Tapering' | 'Ziel' | 'Erholung' | 'Pause' | 'Aktivurlaub';
+  /** Zeitfenster, das diese Woche bestimmt (Dienstreise, Urlaub …) */
+  fenster?: string;
   ziel_ess: number;
   sportmix: string;
   fokus?: string;
@@ -53,7 +55,30 @@ export function sportmixFuerMonat(m: number): string {
  * Saisonrahmen: 3:1-Rhythmus, Steigerung pro Aufbauwoche, Tapering vor A-/B-Zielen, Erholung danach.
  * startWeekly = aktuelle Wochenlast (Ø der letzten 4 Wochen).
  */
-export function buildSeason(opts: { startWeekly: number; wochen: number; rampePct: number; ziele: Ziel[]; maxWeekly?: number; heute?: Date }): Saisonwoche[] {
+/** Zeitfenster: wann eine Entlastung passt, kein Training möglich ist oder ein Aktivurlaub ansteht. */
+export type FensterArt = 'entlastung' | 'pause' | 'aktiv';
+export interface Zeitfenster { id: string; von: string; bis: string; art: FensterArt; titel: string; quelle?: 'cockpit' | 'kalender' }
+export const FENSTER_LABEL: Record<FensterArt, string> = { entlastung: 'Entlastung passt', pause: 'Kein Training möglich', aktiv: 'Aktivurlaub' };
+
+/** Tage der Woche (Mo–So ab `start`), die ein Zeitfenster abdeckt; maßgeblich ist das Fenster mit den meisten Tagen. */
+export function fensterDerWoche(start: string, fenster: Zeitfenster[] | undefined): { f: Zeitfenster; tage: number } | null {
+  if (!fenster?.length) return null;
+  const s = new Date(start + 'T12:00:00');
+  const e = new Date(s); e.setDate(e.getDate() + 6);
+  const ws = iso(s), we = iso(e);
+  let best: { f: Zeitfenster; tage: number } | null = null;
+  for (const f of fenster) {
+    const a = f.von > ws ? f.von : ws, b = f.bis < we ? f.bis : we;
+    if (a > b) continue;
+    const tage = Math.round((new Date(b + 'T12:00:00').getTime() - new Date(a + 'T12:00:00').getTime()) / 86400000) + 1;
+    // Rangfolge bei Gleichstand: Pause vor Aktivurlaub vor Entlastung
+    const rang = (x: Zeitfenster) => (x.art === 'pause' ? 3 : x.art === 'aktiv' ? 2 : 1);
+    if (!best || tage > best.tage || (tage === best.tage && rang(f) > rang(best.f))) best = { f, tage };
+  }
+  return best && best.tage >= 3 ? best : null; // ab 3 Tagen bestimmt das Fenster die Woche
+}
+
+export function buildSeason(opts: { startWeekly: number; wochen: number; rampePct: number; ziele: Ziel[]; maxWeekly?: number; heute?: Date; fenster?: Zeitfenster[] }): Saisonwoche[] {
   const heute = opts.heute || new Date();
   const mon0 = mondayOf(heute);
   if (heute.getDay() !== 1) mon0.setDate(mon0.getDate() + 7); // ab nächstem Montag
@@ -78,10 +103,27 @@ export function buildSeason(opts: { startWeekly: number; wochen: number; rampePc
     });
     let phase: Saisonwoche['phase'];
     let ess: number;
+    const fw = fensterDerWoche(s, opts.fenster);
+    const naechste = new Date(start); naechste.setDate(naechste.getDate() + 7);
+    const fwN = fensterDerWoche(iso(naechste), opts.fenster);
+    const fwUeber = new Date(start); fwUeber.setDate(fwUeber.getDate() + 14);
+    const fwU = fensterDerWoche(iso(fwUeber), opts.fenster);
+    const entlastungBald = (fwN && fwN.f.art !== 'aktiv') || (fwU && fwU.f.art !== 'aktiv');
+    let fensterTitel: string | undefined;
     if (zielHier) { phase = 'Ziel'; ess = level * (zielHier.prioritaet === 'A' ? 0.7 : 0.85); }
     else if (zielNaechste) { phase = 'Tapering'; ess = level * 0.75; }
     else if (zielVorher) { phase = 'Erholung'; ess = level * 0.65; buildCount = 0; }
-    else if (buildCount === 3) { phase = 'Entlastung'; ess = level * 0.65; buildCount = 0; }
+    else if (fw && fw.f.art === 'pause') {
+      // kein Training möglich: nur die freien Tage locker (65 %), Pause zählt als Entlastung
+      phase = 'Pause'; ess = level * 0.65 * Math.max(0, 7 - fw.tage) / 7; buildCount = 0; fensterTitel = fw.f.titel;
+    } else if (fw && fw.f.art === 'entlastung') { phase = 'Entlastung'; ess = level * 0.65; buildCount = 0; fensterTitel = fw.f.titel; }
+    else if (fw && fw.f.art === 'aktiv') {
+      // Aktivurlaub = Belastungswoche (mehr Zeit für lange Tage), Stufe steigt nicht weiter
+      phase = 'Aktivurlaub'; ess = Math.min(max * 1.1, level * 1.2); buildCount++; fensterTitel = fw.f.titel;
+    }
+    else if (fwN && fwN.f.art === 'aktiv' && buildCount >= 2) { phase = 'Entlastung'; ess = level * 0.65; buildCount = 0; fensterTitel = `vor ${fwN.f.titel}`; }
+    // fester 3:1-Takt – außer eine passende Entlastung (Zeitfenster) kommt in den nächsten 2 Wochen; spätestens nach 4 Aufbauwochen (5, wenn die Entlastung direkt danach kommt)
+    else if ((buildCount === 3 && !entlastungBald) || (buildCount >= 4 && !(fwN && fwN.f.art !== 'aktiv')) || buildCount >= 5) { phase = 'Entlastung'; ess = level * 0.65; buildCount = 0; }
     else { level = Math.min(max, w === 0 ? level : level * (1 + opts.rampePct / 100)); phase = 'Aufbau'; ess = level; buildCount++; }
     out.push({
       start: s,
@@ -90,6 +132,7 @@ export function buildSeason(opts: { startWeekly: number; wochen: number; rampePc
       ziel_ess: Math.round(ess / 10) * 10,
       sportmix: sportmixFuerMonat(start.getMonth() + 1),
       ziel: zielHier ? `${zielHier.name} (${zielHier.prioritaet})` : undefined,
+      ...(fensterTitel ? { fenster: fensterTitel } : {}),
     });
   }
   return out;

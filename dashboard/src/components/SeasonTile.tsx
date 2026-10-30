@@ -3,7 +3,8 @@ import { fetchChartData } from '../lib/api';
 import { fetchExtras, saveExtra, type ExtraItem } from '../lib/extras';
 import { localChat, parseJsonLoose } from '../lib/localLLM';
 import { fmtDateShort, fmtNum } from '../lib/format';
-import { buildSeason, mondayOf, type Saisonwoche, type Ziel } from '../lib/planning';
+import { buildSeason, mondayOf, type Saisonwoche, type Ziel, type Zeitfenster } from '../lib/planning';
+import { ladeFenster } from '../lib/zeitfenster';
 
 interface SaisonDaten { wochen: Saisonwoche[]; parameter: { wochen: number; rampePct: number; startWeekly: number; maxWeekly: number } }
 const heute = () => new Date().toLocaleDateString('sv-SE');
@@ -13,6 +14,8 @@ const PHASE_CLS: Record<string, string> = {
   Tapering: 'text-yellow-300',
   Ziel: 'text-orange-300 font-semibold',
   Erholung: 'text-green-300',
+  Pause: 'text-ink-muted',
+  Aktivurlaub: 'text-orange-300',
 };
 
 export function SeasonTile() {
@@ -26,8 +29,19 @@ export function SeasonTile() {
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [vorschau, setVorschau] = useState<Saisonwoche[] | null>(null);
+  const [fenster, setFenster] = useState<Zeitfenster[]>([]);
 
   useEffect(() => {
+    const neu = () => {
+      fetchExtras<SaisonDaten>(['saison'], 1).then((xs) => setItem(xs[0] || null)).catch(() => {});
+      ladeFenster().then(setFenster).catch(() => setFenster([]));
+    };
+    window.addEventListener('ck-saison-neu', neu);
+    return () => window.removeEventListener('ck-saison-neu', neu);
+  }, []);
+
+  useEffect(() => {
+    ladeFenster().then(setFenster).catch(() => setFenster([]));
     fetchExtras<SaisonDaten>(['saison'], 1)
       .then((xs) => setItem(xs[0] || null))
       .catch((e) => setErr(/JSON|Typ|Failed to fetch|Load failed/.test(String(e)) ? 'Patch „Zukunftsplanung“ noch nicht aktiv.' : String(e)));
@@ -43,7 +57,7 @@ export function SeasonTile() {
       .finally(() => setSwLoading(false));
   }, []);
 
-  const params = () => ({ startWeekly: startWeekly || 800, wochen, rampePct: rampe, maxWeekly: maxW ? Number(maxW) : Math.round((startWeekly || 800) * 1.6), ziele });
+  const params = () => ({ startWeekly: startWeekly || 800, wochen, rampePct: rampe, maxWeekly: maxW ? Number(maxW) : Math.round((startWeekly || 800) * 1.6), ziele, fenster });
 
   async function erstellen() {
     setErr(null);
@@ -52,7 +66,7 @@ export function SeasonTile() {
     setVorschau(ws);
     setBusy('Kira formuliert den Fokus…');
     try {
-      const tab = ws.map((w) => `${w.start} KW${w.kw} ${w.phase} ${w.ziel_ess} ESS | ${w.sportmix}${w.ziel ? ` | ZIEL: ${w.ziel}` : ''}`).join('\n');
+      const tab = ws.map((w) => `${w.start} KW${w.kw} ${w.phase} ${w.ziel_ess} ESS | ${w.sportmix}${w.ziel ? ` | ZIEL: ${w.ziel}` : ''}${w.fenster ? ` | ZEITFENSTER: ${w.fenster}` : ''}`).join('\n');
       const zt = ziele.map((z) => `${z.datum} ${z.name} (${z.prioritaet}, ${z.hm} Hm, ${z.dauer_h} h)`).join('; ') || 'keine';
       const t = await localChat(
         [
@@ -91,7 +105,7 @@ export function SeasonTile() {
         <div>
           <div className="label">Coach Kira · Saisonrahmen</div>
           <p className="text-2xs text-ink-dim mt-1">
-            12–24 Wochen im Voraus: Aufbau im 3:1-Rhythmus, Tapering vor A-Zielen, Erholung danach, Sportmix nach Jahreszeit. Der KI-Report und der Wochen-Autopilot richten sich danach.
+            12–24 Wochen im Voraus: Aufbau im 3:1-Rhythmus (Entlastung bevorzugt in deinen Zeitfenstern, spätestens nach 4 Aufbauwochen), Tapering vor A-Zielen, Erholung danach, Sportmix nach Jahreszeit. Der KI-Report und der Wochen-Autopilot richten sich danach.
           </p>
         </div>
       </div>
@@ -128,7 +142,7 @@ export function SeasonTile() {
                 <tr key={w.start} className={`border-b border-border/60 ${w.start === thisMon ? 'bg-accent/10' : ''}`}>
                   <td className="py-1 pr-3 tnum">{w.kw}</td>
                   <td className="py-1 pr-3 tnum whitespace-nowrap">{fmtDateShort(w.start)}</td>
-                  <td className={`py-1 pr-3 whitespace-nowrap ${PHASE_CLS[w.phase] || ''}`}>{w.phase}{w.ziel ? ` · ${w.ziel}` : ''}</td>
+                  <td className={`py-1 pr-3 whitespace-nowrap ${PHASE_CLS[w.phase] || ''}`}>{w.phase}{w.ziel ? ` · ${w.ziel}` : ''}{w.fenster ? <span className="text-ink-dim"> · {w.fenster}</span> : null}</td>
                   <td className="py-1 pr-3 tnum text-right">{w.ziel_ess}</td>
                   <td className="py-1 pr-3 text-ink">{w.fokus || '–'}</td>
                   <td className="py-1 text-ink-dim">{w.sportmix}</td>

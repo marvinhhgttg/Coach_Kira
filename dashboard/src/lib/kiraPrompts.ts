@@ -94,7 +94,7 @@ function planungsBlock(p: { heute: string; ziele: { datum: string; text: string 
   if (wochen.length) {
     const w = wochen.filter((x: any) => x.start <= heute).pop() || wochen[0];
     const n = wochen[wochen.indexOf(w) + 1];
-    if (w) out += '**SAISONRAHMEN diese Woche (ab ' + w.start + '):** Phase ' + w.phase + ', Ziel-Wochenlast ca. ' + w.ziel_ess + ' ESS, Fokus: ' + (w.fokus || '-') + (n ? ' · nächste Woche: ' + n.phase + ', ca. ' + n.ziel_ess + ' ESS' : '') + '\n';
+    if (w) out += '**SAISONRAHMEN diese Woche (ab ' + w.start + '):** Phase ' + w.phase + (w.fenster ? ' (Zeitfenster: ' + w.fenster + ')' : '') + ', Ziel-Wochenlast ca. ' + w.ziel_ess + ' ESS, Fokus: ' + (w.fokus || '-') + (n ? ' · nächste Woche: ' + n.phase + (n.fenster ? ' (Zeitfenster: ' + n.fenster + ')' : '') + ', ca. ' + n.ziel_ess + ' ESS' : '') + '\n';
   }
   return out ? '\n---\n' + out + 'Richte Plan und Empfehlung an Zielen und Saisonrahmen aus, ohne die Monotonie- und ACWR-Regeln zu verletzen.\n---\n' : '';
 }
