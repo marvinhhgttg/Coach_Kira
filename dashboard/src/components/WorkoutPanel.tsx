@@ -322,7 +322,7 @@ export function WorkoutPanel({ day, onClose }: { day: PlanDay; onClose: () => vo
             {info && <span className="text-2xs text-ink-dim self-center">{info}</span>}
           </div>
           <p className="mt-2 text-2xs text-ink-dim">
-            FIT-Datei in Garmin Connect unter Training › Workouts › Importieren hochladen und dann an die Uhr senden. Herzfrequenzbereiche aus deiner Laktatschwelle ({phys?.lthr} bpm).
+            Garmin Connect nimmt Workout-FIT-Dateien nicht über „Daten importieren“ an (nur Aktivitäten). Stattdessen die Datei per USB auf die Uhr kopieren: Ordner GARMIN › NewFiles (am Mac mit OpenMTP), Uhr trennen – das Workout erscheint unter Training › Workouts. Herzfrequenzbereiche aus deiner Laktatschwelle ({phys?.lthr} bpm).
           </p>
         </>
       )}
