@@ -5,6 +5,7 @@ import { IntensitaetTile } from '../components/IntensitaetTile';
 import { DataQualityTile } from '../components/DataQualityTile';
 import { GarminVerlaufTile } from '../components/GarminVerlaufTile';
 import { GarminSportProfilTile } from '../components/GarminSportProfilTile';
+import { EffizienzTile } from '../components/EffizienzTile';
 import { TrainingControl } from './TrainingControl';
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import {
@@ -635,13 +636,14 @@ export function ChartDeck() {
       </div>
       </StorySection>
 
-      <StorySection id="training" titel="Wie trainierst du?" unter="Intensität, Wochenrhythmus, Sportarten und Garmin-Verläufe">
+      <StorySection id="training" titel="Wie trainierst du?" unter="Intensität, Wochenrhythmus, Sportarten, Effizienz und Garmin-Verläufe">
         <div className="space-y-4">
           <StoryGrid>
             <IntensitaetTile />
             <WochenrhythmusTile />
           </StoryGrid>
           <GarminSportProfilTile />
+          <EffizienzTile />
           <GarminVerlaufTile />
         </div>
       </StorySection>
