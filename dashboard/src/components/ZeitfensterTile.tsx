@@ -17,6 +17,8 @@ const ART_HINT: Record<FensterArt, string> = {
   aktiv: 'Bergurlaub, Skiwoche – Belastungswoche, die Woche davor wird zur Entlastung',
 };
 const ART_CLS: Record<FensterArt, string> = { entlastung: 'text-green-600 dark:text-green-300', pause: 'text-ink-muted', aktiv: 'text-orange-600 dark:text-orange-300' };
+/** Nur „Ferien“ (Schulferien-Kalender) ohne Urlaub/Reise → kein Vorschlag, Marc ist dann nicht automatisch frei. */
+const nurFerien = (v: KalVorschlag) => v.stichworte.length > 0 && v.stichworte.every((s) => s === 'ferien');
 const vorschlagArt = (v: KalVorschlag): FensterArt => (v.typ === 'reise' ? 'entlastung' : 'aktiv');
 const vorschlagTitel = (v: KalVorschlag) => {
   const s = v.stichworte[0] || (v.typ === 'reise' ? 'reise' : 'urlaub');
@@ -101,7 +103,7 @@ export function ZeitfensterTile() {
 
   const kommend = (fenster || []).filter((f) => f.bis >= heute());
   const vorbei = (fenster || []).filter((f) => f.bis < heute());
-  const offen = (kal || []).filter((v) => !vorschlagErfasst(v, fenster || []));
+  const offen = (kal || []).filter((v) => !nurFerien(v) && !vorschlagErfasst(v, fenster || []));
   const rb = useMemo(() => {
     if (!ist?.length) return [] as (FensterRueckblick & { ausKalender: boolean })[];
     const alle: (Zeitfenster & { ausKalender: boolean })[] = [

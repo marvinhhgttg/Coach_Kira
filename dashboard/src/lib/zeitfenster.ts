@@ -49,11 +49,24 @@ export function vorschlagErfasst(v: { von: string; bis: string }, fenster: Zeitf
   return fenster.some((f) => f.von <= v.bis && f.bis >= v.von);
 }
 
+/** Fester Fokus-Text passend zur Phase (ohne KI) – verwendet, sobald sich Phase oder Zeitfenster einer Woche ändern. */
+export function fokusFuerPhase(w: Pick<Saisonwoche, 'phase' | 'fenster' | 'ziel'>): string {
+  switch (w.phase) {
+    case 'Pause': return `${w.fenster || 'Zeitfenster'}: nur kurze lockere Einheiten, wenn möglich`;
+    case 'Aktivurlaub': return `${w.fenster || 'Aktivurlaub'}: lange Tage, dazwischen lockere Tage`;
+    case 'Entlastung': return w.fenster ? `${w.fenster}: locker, Schlaf und Erholung im Blick` : 'Entlastung: Umfang runter, locker, Erholung auffüllen';
+    case 'Tapering': return 'Tapering: Umfang runter, kurze Reize, frisch zum Ziel';
+    case 'Ziel': return `${w.ziel || 'Zielwoche'}: frisch ankommen, sonst nur locker`;
+    case 'Erholung': return 'Erholung nach dem Ziel: locker, Schlaf und Mobility';
+    default: return 'Aufbau: Z2-Grundlage, ein Qualitätsreiz, Umfang leicht steigern';
+  }
+}
+
 interface SaisonDaten { wochen: Saisonwoche[]; parameter: { wochen: number; rampePct: number; startWeekly: number; maxWeekly: number }; fenster_stand?: string }
 
 /**
  * Saisonrahmen an die aktuellen Zeitfenster anpassen (ohne KI): gleiche Parameter, neu gelegte Phasen.
- * Fokus-Text bleibt, wenn die Phase der Woche gleich bleibt; sonst kurzer fester Fokus.
+ * Fokus-Text bleibt nur, wenn Phase und Zeitfenster der Woche gleich bleiben; sonst fester Fokus zur neuen Phase.
  */
 export async function saisonAnpassen(fenster: Zeitfenster[]): Promise<{ geaendert: number; wochen: number } | null> {
   const [sx, zx] = await Promise.all([fetchExtras<SaisonDaten>(['saison'], 1), fetchExtras<{ ziel: Ziel }>(['ziel'], 60)]);
@@ -68,12 +81,8 @@ export async function saisonAnpassen(fenster: Zeitfenster[]): Promise<{ geaender
     const a = altMap.get(w.start);
     if (a && a.phase === w.phase && (a.fenster || '') === (w.fenster || '')) return { ...w, fokus: a.fokus || '' };
     geaendert++;
-    const fokus =
-      w.phase === 'Pause' ? `${w.fenster || 'Zeitfenster'}: nur kurze lockere Einheiten, wenn möglich`
-      : w.phase === 'Aktivurlaub' ? `${w.fenster || 'Aktivurlaub'}: lange Tage, dazwischen lockere Tage`
-      : w.phase === 'Entlastung' && w.fenster ? `${w.fenster}: locker, Schlaf und Erholung im Blick`
-      : a?.fokus || '';
-    return { ...w, fokus };
+    // Phase oder Zeitfenster geändert → alter Fokus passt nicht mehr; fester Text zur neuen Phase
+    return { ...w, fokus: fokusFuerPhase(w) };
   });
   const txt = `Saisonrahmen ${ws.length} Wochen ab ${ws[0].start}: ${ws.filter((w) => w.phase === 'Aufbau').length} Aufbau-, ${ws.filter((w) => w.phase === 'Entlastung').length} Entlastungswochen, ${ws.filter((w) => w.fenster).length} Wochen nach Zeitfenstern gelegt, Wochenlast ${ws[0].ziel_ess} → ${Math.max(...ws.map((w) => w.ziel_ess))} ESS.`;
   await saveExtra('saison', heute(), txt, { wochen: ws, parameter: p, fenster_stand: new Date().toISOString() }, 'cockpit');
@@ -131,6 +140,7 @@ export function rueckblick(f: Zeitfenster, ist: IstZeile[]): FensterRueckblick |
     const d = readyDanach - readyVorher;
     teile.push(d >= 5 ? `danach erholt (Bereitschaft ${d > 0 ? '+' : ''}${Math.round(d)})` : d <= -5 ? `danach schlechter erholt (Bereitschaft ${Math.round(d)})` : 'Bereitschaft danach etwa gleich');
   } else if (nach7.length === 0) teile.push('Woche danach noch offen');
+  if (anteil == null && readyVorher == null) teile.push('keine Vergleichsdaten vor dem Zeitfenster');
   if (schlafIm != null && schlafVorher != null && schlafIm < schlafVorher - 5) teile.push(`Schlaf im Fenster schlechter (${Math.round(schlafIm)} statt ${Math.round(schlafVorher)})`);
   const r = (x: number | null) => (x == null ? null : Math.round(x * 10) / 10);
   return {
