@@ -6,6 +6,7 @@ import { DataQualityTile } from '../components/DataQualityTile';
 import { GarminVerlaufTile } from '../components/GarminVerlaufTile';
 import { GarminSportProfilTile } from '../components/GarminSportProfilTile';
 import { EffizienzTile } from '../components/EffizienzTile';
+import { RekordeTile } from '../components/RekordeTile';
 import { TrainingControl } from './TrainingControl';
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import {
@@ -646,6 +647,10 @@ export function ChartDeck() {
           <EffizienzTile />
           <GarminVerlaufTile />
         </div>
+      </StorySection>
+
+      <StorySection id="rekorde" titel="Deine Rekorde" unter="Tempo, Leistung, Distanz, Höhenmeter, Wochen, Serien und Körperwerte">
+        <RekordeTile />
       </StorySection>
 
       <StorySection id="erholung" titel="Wie erholst du dich?" unter="Erholungsverlauf und Zusammenhänge zwischen Last, Schlaf und Bereitschaft">
