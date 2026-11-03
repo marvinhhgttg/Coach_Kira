@@ -8,6 +8,7 @@ import { GarminSportProfilTile } from '../components/GarminSportProfilTile';
 import { EffizienzTile } from '../components/EffizienzTile';
 import { RekordeTile } from '../components/RekordeTile';
 import { EntkopplungTile, HausrundenTile, LaufoekonomieTile, LeistungskurveTile, TageszeitTile, TemperaturTile, TrainingswirkungTile } from '../components/AnalysenTraining';
+import { AlltagErholungTile, EntFaktorenTile, EntSaisonTile, FormSpitzenTile, HitzeRegelTile, WindRadTile } from '../components/AnalysenPlus';
 import { EiweissTile, EnergiebilanzTile, ErholungsFaktorenTile, FruehwarnungAtemTile, SchlafrhythmusTile, StressBilanzTile } from '../components/AnalysenErholung';
 import { TrainingControl } from './TrainingControl';
 import { useEffect, useMemo, useState, useCallback } from 'react';
@@ -667,6 +668,17 @@ export function ChartDeck() {
             <TrainingswirkungTile />
           </StoryGrid>
         </div>
+      </StorySection>
+
+      <StorySection id="einfluesse" titel="Was wirkt auf deine Leistung?" unter="Hitze, Wind, Entkopplung über die Saison und ihre Einflüsse, Alltag und Erholung, Form bei Spitzenleistungen">
+        <StoryGrid spalten={2}>
+          <HitzeRegelTile />
+          <WindRadTile />
+          <EntSaisonTile />
+          <EntFaktorenTile />
+          <AlltagErholungTile />
+          <FormSpitzenTile />
+        </StoryGrid>
       </StorySection>
 
       <StorySection id="erholung" titel="Wie erholst du dich?" unter="Erholungsverlauf und Zusammenhänge zwischen Last, Schlaf und Bereitschaft">

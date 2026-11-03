@@ -7,18 +7,18 @@ import { fetchChartData } from './api';
 import type { GarminTage } from './garmin';
 import { cohenD, eintraege, hart, median, minuten, mittel, plusTage, quantil, schlaegeProKm, sd, startMin, tageSeit, wochentag, wochenStart, zuNachtMin, WT } from './stat';
 
-export interface TlZeile { date: string; kcal_in: number | null; carb: number | null; protein: number | null; fett: number | null; defizit: number | null; ready: number | null; last: number | null }
+export interface TlZeile { date: string; kcal_in: number | null; carb: number | null; protein: number | null; fett: number | null; defizit: number | null; ready: number | null; last: number | null; atl: number | null; ctl: number | null }
 const z = (x: unknown) => { const n = Number(x); return x === '' || x == null || !Number.isFinite(n) ? null : n; };
 let tlCache: Promise<Map<string, TlZeile>> | null = null;
 export function fetchTimeline(): Promise<Map<string, TlZeile>> {
   if (!tlCache) {
-    tlCache = fetchChartData('9999d', ['kcal_in', 'carb_g', 'protein_g', 'fat_g', 'deficit', 'Garmin_Training_Readiness', 'load_fb_day'])
+    tlCache = fetchChartData('9999d', ['kcal_in', 'carb_g', 'protein_g', 'fat_g', 'deficit', 'Garmin_Training_Readiness', 'load_fb_day', 'fbATL_obs', 'fbCTL_obs'])
       .then((r: any) => {
         const m = new Map<string, TlZeile>();
         for (const x of (r && r.data) || []) {
           const d = String(x.date || '').slice(0, 10);
           if (!d) continue;
-          m.set(d, { date: d, kcal_in: z(x.kcal_in), carb: z(x.carb_g), protein: z(x.protein_g), fett: z(x.fat_g), defizit: z(x.deficit), ready: z(x.Garmin_Training_Readiness), last: z(x.load_fb_day) });
+          m.set(d, { date: d, kcal_in: z(x.kcal_in), carb: z(x.carb_g), protein: z(x.protein_g), fett: z(x.fat_g), defizit: z(x.deficit), ready: z(x.Garmin_Training_Readiness), last: z(x.load_fb_day), atl: z(x.fbATL_obs), ctl: z(x.fbCTL_obs) });
         }
         return m;
       })
