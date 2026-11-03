@@ -886,6 +886,8 @@ def _braucht_runden(a: dict) -> bool:
         return True
     if e.get("v", 1) < 2:  # alte Einträge (offizielle API, 404) neu versuchen
         return True
+    if e.get("v", 1) < 3 and tkey in ENT_TYPEN and (a.get("duration") or 0) >= 3600 and not e.get("ent"):
+        return True  # lange Einheit ohne Runden: jetzt mit Sekundenverlauf versuchen
     return not e.get("ok") and e.get("bis", "") <= datetime.date.today().isoformat()
 
 

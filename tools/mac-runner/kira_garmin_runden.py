@@ -63,6 +63,48 @@ def entkopplung_aus_runden(laps: list, rad: bool) -> dict | None:
             "hf1": round(hr1), "hf2": round(hr2), "x1": round(x1, 1), "x2": round(x2, 1), "runden": len(rest)}
 
 
+def entkopplung_aus_verlauf(det: dict, rad: bool) -> dict | None:
+    """Wie entkopplung_aus_runden, aber aus dem Sekundenverlauf (für Einheiten ohne Auto-Runden).
+    Stillstand (< 1 m/s bzw. 0 W) zählt nicht, die ersten 10 Minuten auch nicht."""
+    desc = {d.get("key"): d.get("metricsIndex") for d in (det or {}).get("metricDescriptors") or []}
+    rows = [r.get("metrics") or [] for r in (det or {}).get("activityDetailMetrics") or []]
+    iT, iH, iV, iW = desc.get("sumDuration"), desc.get("directHeartRate"), desc.get("directSpeed"), desc.get("directPower")
+    if iT is None or iH is None or iV is None or len(rows) < 100:
+        return None
+    pts = []
+    for m in rows:
+        try:
+            t, h, v = m[iT], m[iH], m[iV]
+        except IndexError:
+            continue
+        if t is None or not h or v is None or v < 1.0:
+            continue
+        w = m[iW] if iW is not None and iW < len(m) else None
+        pts.append((float(t), float(h), float(v), float(w) if w is not None else None))
+    pts = [p for p in pts if p[0] >= 600]
+    if len(pts) < 60:
+        return None
+    mit_watt = rad and sum(1 for p in pts if p[3]) >= 0.8 * len(pts)
+    if mit_watt:
+        pts = [p for p in pts if p[3] is not None]
+    mitte = pts[len(pts) // 2][0]
+    h1 = [p for p in pts if p[0] < mitte]
+    h2 = [p for p in pts if p[0] >= mitte]
+
+    def eff(h):
+        hr = sum(p[1] for p in h) / len(h)
+        x = (sum(p[3] for p in h) / len(h)) if mit_watt else (sum(p[2] for p in h) / len(h) * 3.6)
+        return hr, x
+
+    hr1, x1 = eff(h1)
+    hr2, x2 = eff(h2)
+    if hr1 <= 0 or hr2 <= 0 or x1 <= 0:
+        return None
+    e1, e2 = x1 / hr1, x2 / hr2
+    return {"pct": round((e1 - e2) / e1 * 100, 1), "basis": "watt" if mit_watt else "tempo",
+            "hf1": round(hr1), "hf2": round(hr2), "x1": round(x1, 1), "x2": round(x2, 1), "runden": 0, "quelle": "verlauf"}
+
+
 def wetter_aus(w: dict | None) -> dict | None:
     """Garmin-Aktivitätswetter (Fahrenheit, mph) → °C, %, km/h."""
     if not w or w.get("temp") is None:
@@ -95,11 +137,13 @@ def main() -> None:
     ent_n = wet_n = fehl = 0
     for i, a in enumerate(auftrag):
         aid, typ = int(a["id"]), a.get("typ") or ""
-        e = {"v": 2, "ok": True}
+        e = {"v": 3, "ok": True}
         try:
             if typ in ENT_TYPEN and (a.get("dauer_s") or 0) >= 3600:
                 sp = g.get_activity_splits(aid) or {}
                 ent = entkopplung_aus_runden(sp.get("lapDTOs") or [], typ != "running")
+                if not ent:  # keine/zu wenige Runden → Sekundenverlauf
+                    ent = entkopplung_aus_verlauf(g.get_activity_details(aid, maxchart=4000, maxpoly=0), typ != "running")
                 if ent:
                     e["ent"] = ent
                     ent_n += 1
@@ -112,10 +156,10 @@ def main() -> None:
                 except Exception:
                     pass
             if "ent" not in e and "wetter" not in e:
-                e = {"v": 2, "ok": False, "bis": (heute + datetime.timedelta(days=60)).isoformat(), "grund": "keine Runden/kein Wetter"}
+                e = {"v": 3, "ok": False, "bis": (heute + datetime.timedelta(days=60)).isoformat(), "grund": "keine Runden/kein Wetter"}
         except Exception as ex:
             fehl += 1
-            e = {"v": 2, "ok": False, "bis": (heute + datetime.timedelta(days=3)).isoformat(), "grund": f"{type(ex).__name__}: {str(ex)[:120]}"}
+            e = {"v": 3, "ok": False, "bis": (heute + datetime.timedelta(days=3)).isoformat(), "grund": f"{type(ex).__name__}: {str(ex)[:120]}"}
             if "429" in str(ex) or "Too Many" in str(ex):
                 cache[str(aid)] = e
                 break
