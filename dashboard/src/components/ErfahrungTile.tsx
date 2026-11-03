@@ -35,6 +35,7 @@ export function ErfahrungTile() {
               <input type="checkbox" checked={an} onChange={(x) => setAn(x.target.checked)} />
               Erfahrung ins heutige Votum einrechnen
             </label>
+            <span className="text-ink-dim">(standardmäßig aus: Tage, an denen du härter trainiert hast, sind nicht zufällig gewählt – „verträglich“ ist eine Beobachtung, keine Freigabe)</span>
             <label className="flex items-center gap-1 cursor-pointer">
               <input type="checkbox" checked={alle} onChange={(x) => setAlle(x.target.checked)} />
               auch kleine Gruppen zeigen (ab 3)

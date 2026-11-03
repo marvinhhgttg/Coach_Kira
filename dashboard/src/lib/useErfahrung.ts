@@ -6,7 +6,7 @@ import { RECOVERY_FETCH_METRICS } from '../screens/RecoveryPanel';
 import { erfahrungAusRohdaten, type Erfahrung } from './votumErfahrung';
 
 let cache: Promise<Erfahrung | null> | null = null;
-const LS_AN = 'ck_votum_erfahrung';
+const LS_AN = 'ck_votum_erfahrung_v2'; // v2: standardmäßig AUS (nur anzeigen)
 const EVT = 'ck-erfahrung-schalter';
 
 export function ladeErfahrung(neu = false): Promise<Erfahrung | null> {
@@ -34,9 +34,9 @@ export function useErfahrung(): Erfahrung | null {
 
 export function erfahrungAn(): boolean {
   try {
-    return localStorage.getItem(LS_AN) !== 'aus';
+    return localStorage.getItem(LS_AN) === 'an';
   } catch {
-    return true;
+    return false;
   }
 }
 

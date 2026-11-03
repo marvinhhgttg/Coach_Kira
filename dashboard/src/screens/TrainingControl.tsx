@@ -263,7 +263,7 @@ function MonotonyCard({ days, plan }: { days: Day[]; plan: PlanDay[] | null | 'l
             ) : lever.best && lever.best.mx < lever.peak - 0.05 ? (
               <span>
                 Spitze laut Plan <b className={tone(lever.peak)}>{f1(lever.peak)}</b>
-                {lever.peakDate ? ` (${wdOf(lever.peakDate)} ${fmtDateShort(lever.peakDate).slice(0, 6)})` : ''}. Wirksamster Eingriff:{' '}
+                {lever.peakDate ? ` (${wdOf(lever.peakDate)} ${fmtDateShort(lever.peakDate).slice(0, 6)})` : ''}. Stärkste Senkung der modellierten Monotonie:{' '}
                 <b>
                   {lever.best.mode === 'rest' ? 'Ruhetag' : `Halbieren auf ${Math.round(lever.best.load / 2)} ESS`} am {wdOf(lever.best.date)}{' '}
                   {fmtDateShort(lever.best.date).slice(0, 6)}
@@ -338,7 +338,7 @@ function IntensityCard({ days }: { days: Day[] }) {
           ? highP < 5
             ? `Polarisiert locker (${lowP} % Z1–Z2), aber kaum hohe Intensität (${highP} %). Bei guter Erholung 1 Qualitätsreiz/Woche möglich.`
             : `Gute 80/20-Verteilung (${lowP} % locker, ${highP} % hart).`
-          : `Lockerer Anteil ${lowP} % – unter dem 80-%-Ziel.`;
+          : `Lockerer Lastanteil ${lowP} % – unter der 80-%-Orientierung (bezogen auf Last, nicht Zeit; Garmin-Zonen sind nicht gleich physiologischen Schwellen, pyramidal ist nicht schlechter).`;
   return (
     <Card title="Intensitätsverteilung" hint="Anteil an der LAST (nicht Zeit) je Kalenderwoche nach Zone · Linie = Lastanteil Z1–Z2 (Ziel ≥ 80 %) · Zeitanteile siehe Kachel unten">
       {(h) => (
@@ -384,8 +384,8 @@ function phaseOf(formPct: number | null): { label: string; color: string; tone: 
   if (formPct == null) return { label: '—', color: C.unk, tone: '' };
   if (formPct > 5) return { label: 'frisch', color: '#38bdf8', tone: 'text-accent' };
   if (formPct >= -10) return { label: 'neutral', color: '#94a3b8', tone: 'text-ink' };
-  if (formPct >= -30) return { label: 'produktiv', color: '#22c55e', tone: 'text-green-300' };
-  return { label: 'Überlastung', color: '#ef4444', tone: 'text-red-300' };
+  if (formPct >= -30) return { label: 'belastet (Modell)', color: '#22c55e', tone: 'text-green-300' };
+  return { label: 'stark belastet (Modell)', color: '#ef4444', tone: 'text-red-300' };
 }
 
 function FitnessCard({ days }: { days: Day[] }) {
@@ -412,7 +412,7 @@ function FitnessCard({ days }: { days: Day[] }) {
   }, [days]);
   const rampTone = (r: number | null) => (r == null ? '' : r > 8 ? 'text-orange-300' : r > 5 ? 'text-yellow-300' : r < -5 ? 'text-accent' : 'text-green-300');
   return (
-    <Card title="Fitness · Ermüdung · Form" hint="CTL (Fitness) · ATL (Ermüdung) · Form = (CTL − ATL) / CTL · Bänder = Phasen">
+    <Card title="Modellierte Belastungsbalance" hint="Modellwerte aus der Trainingslast (Sheet-ESS-Skala), keine gemessenen Körperzustände · CTL = langfristige Last · ATL = kurzfristige Last · Balance = (CTL − ATL) / CTL · ob du wirklich frisch bist, zeigen Befinden, HRV und Leistung">
       {(h) => (
         <>
           <div className="px-2 grid grid-cols-2 sm:grid-cols-4 gap-3 mb-2">
@@ -463,7 +463,7 @@ function FitnessCard({ days }: { days: Day[] }) {
               </ResponsiveContainer>
             </div>
           </div>
-          <p className="px-2 mt-1 text-2xs text-ink-dim">Form-Phasen: &gt; +5 % frisch · −10…+5 % neutral · −30…−10 % produktiv · &lt; −30 % Überlastung.</p>
+          <p className="px-2 mt-1 text-2xs text-ink-dim">Form-Phasen: &gt; +5 % frisch · −10…+5 % neutral · −30…−10 % belastet · &lt; −30 % stark belastet. Feste Bänder des Modells, keine individuell geprüften Grenzen.</p>
         </>
       )}
     </Card>

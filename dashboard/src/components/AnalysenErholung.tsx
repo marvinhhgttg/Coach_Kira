@@ -38,7 +38,7 @@ export function ErholungsFaktorenTile() {
               ))}
             </tbody>
           </table>
-          <KiraFazit title="Erholungsfaktoren" facts={facts} />
+          <KiraFazit title="Erholungsfaktoren" facts={facts} regeln={['Zusammenhänge sind beobachtet, nicht verursacht. Ernährungsfaktoren: nur erfasste Tage.']} />
         </>
       )}
     </Panel>
@@ -200,7 +200,7 @@ export function EnergiebilanzTile() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <KiraFazit title="Energiebilanz" facts={facts} />
+          <KiraFazit title="Energiebilanz" facts={facts} regeln={['Nur erfasste Ernährungstage; ähnliche Trainingslast und Essenszeit sind nicht kontrolliert. Keine Aussage „weniger essen hilft“.']} />
         </>
       )}
     </Panel>
@@ -242,7 +242,7 @@ export function EiweissTile() {
               </div>
             ))}
           </div>
-          <KiraFazit title="Eiweiß und Erholung" facts={facts} />
+          <KiraFazit title="Eiweiß und Erholung" facts={facts} regeln={['Nur erfasste Ernährungstage; Makronährstoffe ändern sich gemeinsam. Keine feste Ernährungsregel ableiten.']} />
         </>
       )}
     </Panel>

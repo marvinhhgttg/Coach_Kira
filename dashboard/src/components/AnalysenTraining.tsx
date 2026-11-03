@@ -243,7 +243,7 @@ export function TrainingswirkungTile() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <KiraFazit title="Trainingswirkung" facts={facts} />
+          <KiraFazit title="Trainingswirkung" facts={facts} regeln={['Es geht um Garmin Training Effect und Qualitätseinheiten – nicht um Effizienz. Training Effect ist eine Garmin-Schätzung.']} />
         </>
       )}
     </Panel>
@@ -257,7 +257,7 @@ export function LaufoekonomieTile() {
   const facts = [
     `${r.n} flache Läufe. Kadenz steigt um ${de(r.kadenzProTempo == null ? null : -r.kadenzProTempo, 1)} Schritte/min je 1 min/km schneller.`,
     `Kadenz bei gleichem Tempo: Trend ${vz(r.kadenzTrend90, 1)} Schritte/min je 90 Tage. Schrittlänge: ${vz(r.schrittTrend90 == null ? null : r.schrittTrend90 * 100, 1)} cm je 90 Tage.`,
-    `Läufe mit höherer Kadenz als fürs Tempo üblich: Median ${de(r.effHoch)} Schläge/km (${r.nHoch}), mit niedrigerer: ${de(r.effTief)} Schläge/km (${r.nTief}). Weniger Schläge/km = effizienter, also war hier ${r.effHoch == null || r.effTief == null ? 'kein Vergleich möglich' : Math.abs(r.effHoch - r.effTief) / r.effTief < 0.01 ? 'kein klarer Unterschied' : r.effHoch < r.effTief ? 'die HÖHERE Kadenz effizienter' : 'die NIEDRIGERE Kadenz effizienter'}.`,
+    `Läufe mit höherer Kadenz als fürs Tempo üblich: Median ${de(r.effHoch)} Schläge/km (${r.nHoch}), mit niedrigerer: ${de(r.effTief)} Schläge/km (${r.nTief}). Weniger Schläge/km = weniger Pulsaufwand (Gruppenvergleich nicht tempobereinigt, keine Ursache). Hier war ${r.effHoch == null || r.effTief == null ? 'kein Vergleich möglich' : Math.abs(r.effHoch - r.effTief) / r.effTief < 0.01 ? 'kein klarer Unterschied' : r.effHoch < r.effTief ? 'die HÖHERE Kadenz mit weniger Schlägen/km verbunden' : 'die NIEDRIGERE Kadenz mit weniger Schlägen/km verbunden'}.`,
   ];
   return (
     <Panel title="Laufökonomie">
@@ -283,7 +283,7 @@ export function LaufoekonomieTile() {
               </LineChart>
             </ResponsiveContainer>
           </div>
-          <KiraFazit title="Laufökonomie" facts={facts} regeln={['Eine höhere Kadenz nur empfehlen, wenn die Fakten sagen, dass die höhere Kadenz effizienter war.']} />
+          <KiraFazit title="Laufökonomie" facts={facts} regeln={['Keine Empfehlung, die Kadenz zu ändern – der Gruppenvergleich ist eine Beobachtung, nicht tempobereinigt.']} />
         </>
       )}
     </Panel>

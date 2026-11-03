@@ -29,7 +29,7 @@ export function HitzeRegelTile() {
   const facts = [
     `${sport === 'lauf' ? 'Laufen' : 'Rad'} flach, ${r.n} Einheiten mit Garmin-Wetter (davon ${r.nWarm} ab 20 °C). Modell: Ø HF = Intensität (${xEinheit}) + Wärme über 15 °C + Kälte unter 15 °C + Formtrend, R² ${de(r.r2, 2)}.`,
     `Je °C über 15 °C: ${vz(r.warm, 1)} Schläge; je °C unter 15 °C: ${vz(r.kalt == null ? null : -r.kalt, 1)} Schläge je °C kälter.`,
-    ...r.regel.map((g) => `${g.temp} °C: ${vz(g.mehrSchlaege, 0)} Schläge gegenüber 15 °C – für gleiche HF ${de(g.wenigerX, 1)} ${xEinheit} weniger.`),
+    ...r.regel.map((g) => `${g.temp} °C: ${vz(g.mehrSchlaege, 0)} Schläge gegenüber 15 °C – für gleiche HF ${de(g.wenigerX, 1)} ${xEinheit} weniger. Einheiten um ${g.temp} °C (±2,5): ${g.n}${g.n < 5 ? ' – Extrapolation aus kühleren Einheiten, nicht beobachtet' : ''}.`),
     r.schwuele != null ? `Schwüle (ab 20 °C): je +20 % Luftfeuchte ${vz(r.schwuele, 1)} Schläge.` : 'Für Schwüle zu wenige warme Einheiten.',
   ];
   return (
@@ -56,7 +56,7 @@ export function HitzeRegelTile() {
             </ResponsiveContainer>
           </div>
           <p className="text-2xs text-ink-muted mt-1">Punkte: Ø HF je Einheit gegen Lufttemperatur (ohne Herausrechnen). Je °C über 15 °C {vz(r.warm, 1)} Schläge, unter 15 °C {vz(r.kalt == null ? null : -r.kalt, 1)} je °C kälter.</p>
-          <KiraFazit title={`Hitze-Faustregel ${sport}`} facts={facts} evidenz={r.nWarm < 8 ? 'schwach' : 'mittel'} regeln={[`Dieser Bericht betrifft nur ${sport === 'lauf' ? 'Laufen (Intensität in km/h)' : 'Rad (Intensität in Watt)'}; nenne nur die Werte für diese Sportart.`]} />
+          <KiraFazit title={`Hitze-Faustregel ${sport}`} facts={facts} evidenzText={evidenz(r.nWarm * 4) + ` – ${r.nWarm} Einheiten ab 20 °C, Werte für 25/30 °C sind Extrapolation`} evidenz={r.nWarm < 8 ? 'schwach' : 'mittel'} regeln={[`Dieser Bericht betrifft nur ${sport === 'lauf' ? 'Laufen (Intensität in km/h)' : 'Rad (Intensität in Watt)'}; nenne nur die Werte für diese Sportart.`]} />
         </>
       )}
     </Panel>
@@ -69,7 +69,7 @@ export function WindRadTile() {
   const r = useMemo(() => windRad(tage), [tage]);
   const facts = [
     `Rad draußen flach, ${r.n} Einheiten mit Normalized Power und Garmin-Wind (Wetterstation, ohne Windrichtung). Wert = Watt je km/h relativ zum Formstand ± 30 Tage.`,
-    `Je +1 km/h Wind: ${vz(r.proWind, 2)} % Watt je km/h. Windstärken: ${r.bins.filter((b) => b.n).map((b) => `${b.lab} ${b.n}× ${vz(b.relPct, 1)} %`).join(', ')}.`,
+    `Je +1 km/h Wind (Stationswert, ohne Richtung): ${vz(r.proWind, 2)} % Watt je km/h. Windstärken: ${r.bins.filter((b) => b.n).map((b) => `${b.lab} ${b.n}× ${vz(b.relPct, 1)} %`).join(', ')}.`,
     `Trend Watt je km/h je 90 Tage: roh ${vz(r.trendRohJe90, 1)} %, windbereinigt ${vz(r.trendKorrJe90, 1)} %. Positiv = mehr Watt für dasselbe Tempo = MEHR Aufwand (keine Effizienzsteigerung); kann auch an mehr Gravel/Untergrund liegen. Streuung um den Trend: roh ${de(r.streuRoh, 1)} %, bereinigt ${de(r.streuKorr, 1)} %.`,
   ];
   const daten = r.punkte.map((p) => ({ ts: new Date(p.datum + 'T12:00:00').getTime(), roh: p.y, korr: p.yk, wind: p.wind }));
@@ -98,9 +98,9 @@ export function WindRadTile() {
             </ResponsiveContainer>
           </div>
           <p className="text-2xs text-ink-muted mt-1">
-            {klein ? 'Ergebnis: Wind verändert deine Rad-Effizienz kaum messbar – der Rad-Effizienztrend ist also nicht vom Wind verzerrt.' : 'Wind wirkt messbar – nutze den bereinigten Trend.'} Die meisten Einheiten lagen unter 10 km/h Wind.
+            {klein ? 'Ergebnis: Die verfügbare Windstärke (ohne Richtung) verändert den Trend kaum. Dass Wind den realen Verlauf verzerrt, lässt sich damit nicht ausschließen.' : 'Die Windstärke wirkt im Modell messbar – nutze den bereinigten Trend.'} Die meisten Einheiten lagen unter 10 km/h Wind.
           </p>
-          <KiraFazit title="Wind Rad" facts={facts} evidenz="schwach" regeln={['Kernaussage: ob Wind die Werte messbar verändert. Ein steigender Trend Watt je km/h bedeutet mehr Aufwand, nicht mehr Effizienz.']} />
+          <KiraFazit title="Wind Rad" facts={facts} evidenz="schwach" evidenzText={`Tendenz – ${r.n} Einheiten, meist wenig Wind, keine Windrichtung; „kaum messbar“ heißt nicht „kein Einfluss“`} regeln={['Kernaussage: ob Wind die Werte messbar verändert. Ein steigender Trend Watt je km/h bedeutet mehr Aufwand, nicht mehr Effizienz.']} />
         </>
       )}
     </Panel>
@@ -147,7 +147,7 @@ export function EntSaisonTile() {
               ))}</tbody>
             </table>
           </div>
-          <KiraFazit title={`Entkopplung Saison ${sport}`} facts={facts} evidenz={r.n < 30 ? 'schwach' : 'mittel'} regeln={['Quartale mit weniger als 5 Einheiten nicht einzeln deuten.']} />
+          <KiraFazit title={`Entkopplung Saison ${sport}`} facts={facts} evidenz={r.n < 30 ? 'schwach' : 'mittel'} evidenzText={`${evidenz(r.n)} – ${r.n} Einheiten`} regeln={['Quartale mit weniger als 5 Einheiten nicht einzeln deuten.']} />
         </>
       )}
     </Panel>
@@ -182,7 +182,7 @@ export function EntFaktorenTile() {
               );
             })}
           </div>
-          <KiraFazit title="Einflüsse Entkopplung" facts={facts} evidenz="schwach" regeln={['Alle Unterschiede liegen unter 1 Prozentpunkt – nur als Beobachtung nennen.', 'Für jeden Faktor die Angabe „Weniger Entkopplung (besser) bei“ übernehmen, nicht umdeuten.']} />
+          <KiraFazit title="Einflüsse Entkopplung" facts={facts} evidenz="schwach" evidenzText={`${evidenz(Math.round(r.n / 2))} – ${r.n} Einheiten, je Gruppe etwa die Hälfte; alle Unterschiede unter 1 Prozentpunkt`} regeln={['Alle Unterschiede liegen unter 1 Prozentpunkt – nur als Beobachtung nennen.', 'Für jeden Faktor die Angabe „Weniger Entkopplung (besser) bei“ übernehmen, nicht umdeuten.']} />
         </>
       )}
     </Panel>
@@ -203,7 +203,7 @@ export function AlltagErholungTile() {
   const r = useMemo(() => alltagErholung(tage, kal), [tage, kal]);
   const facts = r ? [
     `${r.n} Tage (Kalender: ${ALLTAG_KALENDER.join(', ')}, ohne ganztägige Termine), davon ${r.mitTerminen} mit Terminen. Belegte Stunden (6–22 Uhr) gegen HRV, Schlafscore und Body Battery der folgenden Nacht.`,
-    ...r.bins.map((b) => `${b.lab}: ${b.n} Tage, HRV ${vz(b.hrv, 1)} % zur Basis, Schlafscore ${de(b.schlaf)}, Body Battery ${de(b.bb)}, Tagesstress ${de(b.stress)}.`),
+    ...r.bins.map((b) => `${b.lab}: ${b.n} Tage${b.n < 20 ? ' (wenige)' : ''}, HRV ${vz(b.hrv, 1)} % zur Basis, Schlafscore ${de(b.schlaf)}, Body Battery ${de(b.bb)}, Tagesstress ${de(b.stress)}.`),
     `Bei gleicher Trainingslast und Wochentag: je Termin-Stunde HRV ${vz(r.hrv?.proStunde, 2)} %, Schlafscore ${vz(r.schlaf?.proStunde, 2)}, Body Battery ${vz(r.bb?.proStunde, 2)}.`,
     `Termine bis in den Abend (${r.nachAbend.n1} Tage): HRV ${vz(r.nachAbend.hrv1, 1)} %, Schlafscore ${de(r.nachAbend.schlaf1)}; andere Termintage (${r.nachAbend.n2}): HRV ${vz(r.nachAbend.hrv2, 1)} %, Schlafscore ${de(r.nachAbend.schlaf2)}.`,
   ] : [];
@@ -235,7 +235,7 @@ export function AlltagErholungTile() {
             </ResponsiveContainer>
           </div>
           <div className="flex items-center gap-2 mt-1"><Ev n={r.mitTerminen} /><span className="text-2xs text-ink-dim">Belegte Stunden des Tages → Nacht danach.</span></div>
-          <KiraFazit title="Alltag und Erholung" facts={facts} regeln={['Arbeitstermine sind in diesen Kalendern vermutlich nicht enthalten – es geht um private/familiäre Belegung.', 'Effekte unter 1 % HRV je Stunde sind klein.']} />
+          <KiraFazit title="Alltag und Erholung" facts={facts} evidenzText={`${evidenz(r.mitTerminen)} für die Gesamtaussage (${r.mitTerminen} Tage mit Terminen); einzelne Gruppen siehe Anzahl je Zeile; Effekte klein`} regeln={['Arbeitstermine sind in diesen Kalendern vermutlich nicht enthalten – es geht um private/familiäre Belegung.', 'Effekte unter 1 % HRV je Stunde sind klein.']} />
         </>
       )}
     </Panel>
@@ -276,7 +276,7 @@ export function FormSpitzenTile() {
               </div>
             ))}
           </div>
-          <KiraFazit title={`Form Spitzen ${sport}`} facts={facts} evidenz={p.n < 10 ? 'schwach' : 'mittel'} />
+          <KiraFazit title={`Form Spitzen ${sport}`} facts={facts} evidenz={p.n < 10 ? 'schwach' : 'mittel'} evidenzText={`${evidenz(p.n)} – ${p.n} Spitzen von ${r!.n} Einheiten (Vergleichsgruppe ${b.n})`} />
         </>
       )}
     </Panel>

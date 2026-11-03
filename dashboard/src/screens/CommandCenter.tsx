@@ -529,7 +529,7 @@ export function CommandCenter({
                     {typeof acwr === 'number' ? acwr.toFixed(2).replace('.', ',') : String(acwr || '—')}
                   </div>
                   <span className="chip border border-ampel-gruen/40 bg-ampel-gruen/10 text-green-300">
-                    Sweet Spot 0,8–1,3
+                    Orientierung 0,8–1,3
                   </span>
                 </div>
               </div>

@@ -1182,6 +1182,8 @@ def cmd_treffer_woche(force: bool = False) -> None:
         "mittel_abweichung_pct": avg_abw,
         "schlechteste_3": schlechteste,
         "beste_3": beste,
+        "von": werte[0][0],
+        "bis": werte[-1][0],
     }
 
     # LLM-Analyse
@@ -1198,7 +1200,10 @@ def cmd_treffer_woche(force: bool = False) -> None:
         f"Ø Abweichung={avg_abw}%.\n\nTabelle:\n{tabelzeile}\n"
         f"Schlechteste 3: {', '.join(d for d, _ in schlechteste)}\n"
         f"Beste 3: {', '.join(d for d, _ in beste)}\n\n"
-        f"Aufgabe: Wochenbilanz in 3 bis 5 Stichpunkten (max. 120 Wörter)."
+        f"Zeitraum: letzte 28 Tage ({werte[0][0]} bis {werte[-1][0]}), nicht nur diese Woche.\n"
+        f"Aufgabe: Bilanz dieses Zeitraums in 3 bis 5 Stichpunkten (max. 120 Wörter). Nenne den Zeitraum. "
+        f"Kein statistischer Test wurde gerechnet: Verwende nie das Wort „signifikant“, keine Ursachen-Sprache; "
+        f"bei unter 10 Fällen je Gruppe ausdrücklich als Tendenz kennzeichnen."
     )
 
     msgs = [
@@ -1213,6 +1218,7 @@ def cmd_treffer_woche(force: bool = False) -> None:
         text_out, _ = ollama_chat(MODEL, msgs, num_ctx=8192, timeout=600)
         # sane-Prüfung
         text_out = text_out.strip()
+        text_out = re.sub(r"(?i)\bstatistisch signifikant\b|\bsignifikant\b", "erkennbar", text_out)
         if not text_out or len(text_out) < 80:
             log(f"treffer_woche: LLM-Antwort zu kurz ({len(text_out)} Zeichen) – abgebrochen")
             return

@@ -63,9 +63,9 @@ export function detectAnomalies(days: RecoveryDay[]): { date: string | null; ite
 
   // Feste Schwellen (Belastung Stand Vortag, wie im Tagesentscheid)
   if (d.acwr != null && d.acwr > 1.3)
-    out.push({ key: 'acwr', label: 'ACWR', value: f(d.acwr, 2), baseline: 'Zielbereich 0,8–1,3', z: null, level: d.acwr > 1.5 ? 'bad' : 'warn', hint: 'Akute Belastung deutlich über der chronischen – Verletzungs- und Überlastungsrisiko steigt.' });
+    out.push({ key: 'acwr', label: 'ACWR', value: f(d.acwr, 2), baseline: 'Orientierung 0,8–1,3 (kein Sicherheitskorridor)', z: null, level: d.acwr > 1.5 ? 'bad' : 'warn', hint: 'Akute Belastung deutlich über der chronischen – Verletzungs- und Überlastungsrisiko steigt.' });
   if (d.acwr != null && d.acwr < 0.8)
-    out.push({ key: 'acwrLow', label: 'ACWR', value: f(d.acwr, 2), baseline: 'Zielbereich 0,8–1,3', z: null, level: 'warn', hint: 'Belastung unter dem Erhaltungsbereich – Form kann abbauen.' });
+    out.push({ key: 'acwrLow', label: 'ACWR', value: f(d.acwr, 2), baseline: 'Orientierung 0,8–1,3 (kein Sicherheitskorridor)', z: null, level: 'warn', hint: 'Belastung unter dem Erhaltungsbereich – Form kann abbauen.' });
   // Monotonie nur als Verlaufssignal melden (Einzelwert allein ist meist unkritisch)
   const ma = d.monoAssess;
   if (d.monotony != null && ma && ma.cap)

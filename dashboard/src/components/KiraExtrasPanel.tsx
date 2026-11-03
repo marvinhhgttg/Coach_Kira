@@ -220,7 +220,7 @@ export function KiraExtrasPanel() {
           {/* Weekly summary */}
           {neuesteWoche && (
             <div className="mt-3 rounded border border-border p-2">
-              <div className="text-xs font-semibold text-ink mb-1">Wochenbilanz · {fmtDateShort(neuesteWoche.datum)}</div>
+              <div className="text-xs font-semibold text-ink mb-1">Bilanz der letzten 28 Tage · Stand {fmtDateShort(neuesteWoche.datum)}</div>
               <pre className="whitespace-pre-line text-xs text-ink">{neuesteWoche.text}</pre>
               <div className="text-2xs text-ink-dim mt-1">Quelle: {neuesteWoche.quelle}</div>
             </div>
