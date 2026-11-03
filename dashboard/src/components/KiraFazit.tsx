@@ -102,6 +102,8 @@ export function KiraFazit({ title, facts, data, onText, evidenz = 'mittel', rege
         { numCtx: 8192, onToken: setLive, temperature: 0.2 },
       );
       const warn = fremdeZahlen(out, quelle);
+      // harte Deutungsfehler, die der Modelltest gezeigt hat
+      if (/Lauf(ö|oe)konomie[^.]{0,60}(schlechter|verschlechter|gesunken|abgenommen)|(schlechter|verschlechter)[^.]{0,40}Lauf(ö|oe)konomie/i.test(out)) warn.push('„Laufökonomie schlechter“ ist wegen des Garmin-Messbruchs nicht belegt');
       const e: Eintrag = { text: out, ts: new Date().toISOString(), warn: warn.length ? warn : undefined };
       setEintrag(e);
       setLive(null);
@@ -136,7 +138,7 @@ export function KiraFazit({ title, facts, data, onText, evidenz = 'mittel', rege
             </p>
           )}
           {!busy && eintrag?.warn && (
-            <p className="mt-1 text-2xs text-amber-400">Prüfung: Kira nennt Zahlen, die nicht in den Daten stehen ({eintrag.warn.join(', ')}). Dieses Fazit bitte nicht als Handlungsanweisung nutzen.</p>
+            <p className="mt-1 text-2xs text-amber-400">Prüfung: {eintrag.warn.map((w) => (/^[-+−]?\d/.test(w) ? `Zahl ${w} steht nicht in den Daten` : w)).join(' · ')}. Dieses Fazit bitte nicht als Handlungsanweisung nutzen.</p>
           )}
         </>
       ) : (

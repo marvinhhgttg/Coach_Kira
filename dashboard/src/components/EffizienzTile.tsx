@@ -111,6 +111,8 @@ function Diagramm({ ps, k, sport }: { ps: EffPunkt[]; k: Kennzahl; sport: Sporta
   );
 }
 
+const MESSBRUCH_LAUFWATT = '2026-08-01';
+
 export function EffizienzTile() {
   const { tage } = useGarminTage();
   const [sport, setSport] = useState<Sportart>('lauf');
@@ -128,6 +130,11 @@ export function EffizienzTile() {
     for (const g of ['flach', 'berg'] as Gelaende[]) {
       for (const k of ['hf', 'leistung'] as Kennzahl[]) {
         const t = trend(gelaende[g], k), m = KENNZAHL[sport][k];
+        // Laufwatt: Garmin-Messbruch Aug 2026 – Trend über den Bruch hinweg nicht an das Modell geben
+        if (sport === 'lauf' && k === 'leistung' && gelaende[g].some((p) => p.datum < MESSBRUCH_LAUFWATT) && gelaende[g].some((p) => p.datum >= MESSBRUCH_LAUFWATT)) {
+          f.push(`${g === 'flach' ? 'Flach' : 'Viele Höhenmeter'} – ${m.titel}: nicht auswertbar, weil Garmin seit August 2026 bei gleichem Tempo mehr Laufwatt anzeigt (Messbruch). Daraus keine Aussage zur Laufökonomie.`);
+          continue;
+        }
         f.push(`${g === 'flach' ? 'Flach' : 'Viele Höhenmeter'} – ${m.titel} (${m.einheit}): ${t.n} Einheiten, Trendlinie ${de(t.linieStart, m.d)} → ${de(t.linieEnde, m.d)} (${t.prozent == null ? 'kein Trend berechenbar' : `${t.prozent > 0 ? '+' : ''}${de(t.prozent, 1)} %`}); erste 90 Tage Median ${de(t.frueh.wert, m.d)} bei ${de(t.frueh.hmProKm, 1)} hm/km, HF ${de(t.frueh.hf)} und ${sport === 'lauf' ? tempoTxt(t.frueh.tempo) + ' min/km' : de(t.frueh.v, 1) + ' km/h'}; letzte 90 Tage Median ${de(t.spaet.wert, m.d)} bei ${de(t.spaet.hmProKm, 1)} hm/km, HF ${de(t.spaet.hf)} und ${sport === 'lauf' ? tempoTxt(t.spaet.tempo) + ' min/km' : de(t.spaet.v, 1) + ' km/h'}.`);
       }
     }
