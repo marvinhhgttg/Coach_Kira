@@ -126,7 +126,8 @@ export function TageszeitTile() {
   const facts = [
     ...r.effizienz.filter((z) => z.n).map((z) => `${z.lab}: ${z.n} Einheiten${z.n < 5 ? ' (zu wenige für eine Aussage)' : ''}, Puls je km ${vz(z.relPct, 1)} % zum eigenen Formstand`),
     'Unterschiede unter 1 % beim Puls je km sind Rauschen.',
-    ...r.schlaf.map((s) => `Schlaf ${s.lab}: ${s.n} Nächte, Score ${de(s.score)}, HRV ${de(s.hrv)} ms, Tiefschlaf ${de(s.tief)} min`),
+    'Achtung: Die Schlafwerte unten sind eine ANDERE Stichprobe (alle Einheiten mit Startzeit, auch Rad/Kraft) als die Effizienzwerte oben (nur flache Einheiten dieser Sportart). Anzahl immer mit der zugehörigen Zeile nennen.',
+    ...r.schlaf.map((s) => `Schlaf ${s.lab}: ${s.n} Nächte${s.n < 10 ? ' (wenige)' : ''}, Score ${de(s.score)}, HRV ${de(s.hrv)} ms, Tiefschlaf ${de(s.tief)} min`),
   ];
   return (
     <Panel title="Tageszeit" right={<SportSchalter sport={sport} setSport={setSport} />}>
@@ -166,7 +167,7 @@ export function LeistungskurveTile() {
   const { tage } = useGarminTage();
   const r = useMemo(() => leistungskurve(tage), [tage]);
   const facts = [
-    `Rad (draußen und Rolle): beste 20 Minuten aller Zeiten ${r.best ? `${r.best.w} W am ${kurz(r.best.datum)}` : '–'}. FTP-Schätzung (95 % der besten 20 min der letzten 90 Tage) aktuell ${de(r.ftpJetzt)} W, zu Beginn ${de(r.ftpStart)} W.`,
+    `Rad (draußen und Rolle): beste 20 Minuten aller Zeiten ${r.best ? `${r.best.w} W am ${kurz(r.best.datum)}` : '–'}. FTP-Schätzung (95 % der besten 20 min der letzten 90 Tage) aktuell ${de(r.ftpJetzt)} W, zu Beginn ${de(r.ftpStart)} W. Einschränkung: Das ist eine Schätzung, kein FTP-Test; der Startwert stammt aus den ersten 90 Tagen, in denen nicht unbedingt maximale 20 min gefahren wurden, und Rolle und Powermeter draußen können verschieden messen. Die Richtung ist plausibel, die Größenordnung nicht gesichert.`,
     ...r.reihe.slice(-6).map((m) => `${monatName(m.monat)}: beste 20 min ${de(m.best20)} W, NP-Median ${de(m.npMedian)} W, TSS ${m.tss}, IF-Median ${de(m.ifMedian, 2)}`),
   ];
   return (
@@ -297,7 +298,10 @@ export function HausrundenTile() {
   const r = runden.find((x) => x.id === sel) || runden[0];
   const istLauf = r?.sport === 'Laufen' || r?.sport === 'Wandern';
   const vTxt = (v: number) => (istLauf ? `${tempoTxt(60 / v)} /km` : `${de(v, 1)} km/h`);
-  const facts = runden.slice(0, 8).map((x) => `${x.sport} ${x.ort} ${de(x.km, 1)} km/${de(x.hm)} hm, ${x.n}×: Tempo-Trend ${vz(x.tempoTrendPct, 1)} %, Puls je km ${vz(x.effTrendPct, 1)} % (negativ = effizienter)`);
+  const facts = [
+    'Trends = robuste Gerade über den ganzen Zeitraum der jeweiligen Strecke (erste bis letzte Wiederholung). Ab etwa 3 % Änderung und mindestens 6 Wiederholungen ist ein Trend aussagekräftig; Wetter, Rad und Tagesform sind nicht herausgerechnet.',
+    ...runden.slice(0, 8).map((x) => `${x.sport} ${x.ort} ${de(x.km, 1)} km/${de(x.hm)} hm, ${x.n}× von ${kurz(x.laeufe[0]?.datum || '')} bis ${kurz(x.laeufe[x.laeufe.length - 1]?.datum || '')}${x.n < 6 ? ' (wenige Wiederholungen)' : ''}: Tempo-Trend ${vz(x.tempoTrendPct, 1)} % (positiv = schneller), Puls je km ${vz(x.effTrendPct, 1)} % (negativ = effizienter)`),
+  ];
   return (
     <Panel title="Hausrunden">
       <Hinweis>Strecken, die du immer wieder fährst oder läufst – gleicher Ort, ±6 % Distanz, ähnliche Höhenmeter. Hier ist der Vergleich am fairsten, weil Strecke und Gelände gleich bleiben.</Hinweis>
@@ -337,7 +341,7 @@ export function HausrundenTile() {
               </ResponsiveContainer>
             </div>
           )}
-          <KiraFazit title="Hausrunden" facts={facts} />
+          <KiraFazit title="Hausrunden" facts={facts} regeln={['Schneller UND weniger Puls je km = klares Fortschrittssignal; das gilt auch bei Rad-Strecken mit über 10 % Tempo-Plus. Strecken mit gemischtem Bild als gemischt benennen.']} />
         </>
       )}
     </Panel>

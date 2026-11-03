@@ -95,7 +95,7 @@ export function FruehwarnungAtemTile() {
   const heute = r.tage[r.tage.length - 1];
   const facts = [
     `Signale je Morgen gegen die eigene 28-Tage-Basis: Atmung nachts ≥ +1/min, SpO2 ≤ −2 %, Ruhepuls ≥ +4, HRV ≤ −15 %. 2 Signale = gelb, 3+ = rot (rot nur, wenn der Nachbartag auch auffällig ist).`,
-    heute ? `Heute (${kurz(heute.d)}): ${heute.stufe}${heute.signale.length ? ' – ' + heute.signale.join(', ') : ''}.` : '',
+    heute ? `Heute (${kurz(heute.d)}): ${heute.stufe === 'gruen' && heute.signale.length === 1 ? 'grün, aber mit einem Einzelsignal' : heute.stufe}${heute.signale.length ? ' – ' + heute.signale.join(', ') : ''}. Ein einzelnes Signal ist laut Regel noch keine Warnung, soll aber genannt und beobachtet werden (SpO2 der Uhr schwankt nachts, z. B. durch Liegeposition).` : '',
     `Letzte Auffälligkeiten: ${r.episoden.slice(0, 5).map((e) => `${kurz(e.von)}${e.bis !== e.von ? '–' + kurz(e.bis) : ''} ${e.stufe} (${e.signale.join(', ')})`).join('; ') || 'keine'}.`,
   ].filter(Boolean);
   return (
@@ -104,8 +104,8 @@ export function FruehwarnungAtemTile() {
       {tage === null ? <Laedt /> : !heute ? <p className="text-2xs text-ink-dim">Zu wenige Nächte.</p> : (
         <>
           <div className="flex items-center gap-3 mb-2">
-            <span className={`inline-block w-3 h-3 rounded-full ${FARBE[heute.stufe]}`} />
-            <span className="text-sm text-ink">Heute {heute.stufe === 'gruen' ? 'unauffällig' : heute.stufe === 'gelb' ? 'zwei Signale' : 'mehrere Signale'}</span>
+            <span className={`inline-block w-3 h-3 rounded-full ${heute.stufe === 'gruen' && heute.signale.length === 1 ? 'bg-emerald-500/70 ring-2 ring-amber-400' : FARBE[heute.stufe]}`} />
+            <span className="text-sm text-ink">Heute {heute.stufe === 'gruen' ? (heute.signale.length === 1 ? 'ein Einzelsignal – allein noch keine Warnung (gelb ab zwei Signalen)' : 'unauffällig') : heute.stufe === 'gelb' ? 'zwei Signale' : 'mehrere Signale'}</span>
             <span className="text-2xs text-ink-muted tnum">Atmung {de(heute.atem)} · SpO2 {de(heute.spo2)} % · Ruhepuls {de(heute.rhr)} · HRV {de(heute.hrv)}</span>
           </div>
           {heute.signale.length > 0 && <p className="text-2xs text-amber-400 mb-2">{heute.signale.join(' · ')}</p>}

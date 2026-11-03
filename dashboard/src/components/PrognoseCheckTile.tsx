@@ -74,6 +74,9 @@ export function PrognoseCheckTile() {
         Zwei Blickwinkel: Gespeicherte Prognosen (so, wie der Mac sie jeden Tag erstellt hat, mit dem damaligen Plan) gegen das, was wirklich kam – und das reine Modell, rückgerechnet mit deinen echten Lasten über die ganze Historie.
         Der Unterschied zeigt, wie viel Fehler vom Modell und wie viel von Planänderungen kommt. Vergleich jeweils mit „bleibt wie heute“. Fest berechnet, ohne KI.
       </p>
+      <p className="text-2xs text-ink-dim mt-1">
+        Einordnung: „Modell mit Ist-Last“ prüft nur, ob das Belastungsmodell die Kurve nachrechnen kann – nicht deine tatsächliche Fitness. „Nur halbe Änderung“ testet, ob die Bereitschaftsprognose besser wird, wenn sie vom heutigen Wert aus nur die Hälfte der vorhergesagten Veränderung annimmt. Unter etwa 20 Fällen sind die Fehler noch unsicher.
+      </p>
       {c === undefined && <div className="text-2xs text-ink-dim mt-2">lädt …</div>}
       {c === null && <div className="text-2xs text-ink-dim mt-2">Daten nicht erreichbar.</div>}
       {c && (
@@ -100,6 +103,7 @@ export function PrognoseCheckTile() {
               {c.echt.es && H.map((h) => <Zeile key={'ee' + h} was="Endurance Score · gespeichert" h={`${h} Tage`} f={c.echt.es![h]} />)}
               {H.map((h) => <Zeile key={'em' + h} was="Endurance Score · Modell mit Ist-Last" h={`${h} Tage`} f={c.modell.es[h]} />)}
               {(['1', '2', '3'] as const).map((h) => <Zeile key={'b' + h} was="Bereitschaft · gespeichert" h={`${h} Tag${h === '1' ? '' : 'e'}`} f={c.echt.bereitschaft[h]} />)}
+              {c.echt.bereitschaftHalb && (['1', '2', '3'] as const).map((h) => <Zeile key={'bh' + h} was="Bereitschaft · nur halbe Änderung (Test)" h={`${h} Tag${h === '1' ? '' : 'e'}`} f={c.echt.bereitschaftHalb[h]} />)}
             </tbody>
           </table>
           <div className="mt-3 text-2xs" data-testid="prognose-check-qualitaet">

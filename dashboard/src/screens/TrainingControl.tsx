@@ -340,13 +340,13 @@ function IntensityCard({ days }: { days: Day[] }) {
             : `Gute 80/20-Verteilung (${lowP} % locker, ${highP} % hart).`
           : `Lockerer Anteil ${lowP} % – unter dem 80-%-Ziel.`;
   return (
-    <Card title="Intensitätsverteilung" hint="Last je Kalenderwoche nach Zone · Linie = Anteil Z1–Z2 (Ziel ≥ 80 %)">
+    <Card title="Intensitätsverteilung" hint="Anteil an der LAST (nicht Zeit) je Kalenderwoche nach Zone · Linie = Lastanteil Z1–Z2 (Ziel ≥ 80 %) · Zeitanteile siehe Kachel unten">
       {(h) => (
         <>
           <div className="px-2 grid grid-cols-2 sm:grid-cols-4 gap-3 mb-2">
-            <Stat label="Z1–Z2 · 4 Wo." value={`${lowP} %`} tone={lowP >= 80 ? 'text-green-300' : 'text-yellow-300'} />
-            <Stat label="Z3 · 4 Wo." value={`${midP} %`} tone={midP >= 20 ? 'text-orange-300' : ''} />
-            <Stat label="Z4–Z5 · 4 Wo." value={`${highP} %`} />
+            <Stat label="Last Z1–Z2 · 4 Wo." value={`${lowP} %`} tone={lowP >= 80 ? 'text-green-300' : 'text-yellow-300'} />
+            <Stat label="Last Z3 · 4 Wo." value={`${midP} %`} tone={midP >= 20 ? 'text-orange-300' : ''} />
+            <Stat label="Last Z4–Z5 · 4 Wo." value={`${highP} %`} />
             <Stat label="TE anaerob : aerob" value={ae4 > 0 ? `1 : ${fmtNum(ae4 / Math.max(an4, 0.01), 0)}` : '—'} sub={`Σ ${fmtNum(an4, 1)} / ${fmtNum(ae4, 1)}`} />
           </div>
           <div style={{ height: h }}>

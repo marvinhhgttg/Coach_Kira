@@ -16,6 +16,8 @@ export interface CheckErgebnis {
     fitness: Record<H3, Fehler & { lastPlan: number; lastIst: number }>;
     es: Record<H3, Fehler>;
     bereitschaft: Record<'1' | '2' | '3', Fehler>;
+    /** Test: nur die halbe vorhergesagte Änderung gegenüber heute */
+    bereitschaftHalb: Record<'1' | '2' | '3', Fehler>;
     qualitaetstag: { n: number; eingetroffen: number; faelle: { datum: string; fuer: string; prog: number | null; ist: number | null; ok: boolean }[] };
   };
   modell: { fitness: Record<H3, Fehler>; es: Record<H3, Fehler> };
@@ -80,6 +82,7 @@ export function prognoseCheck(items: PrognoseItem[], ist0: IstTag[], heute: stri
   const lastI = Object.fromEntries(H.map((h) => [h, [] as number[]])) as Record<H3, number[]>;
   const es = Object.fromEntries(H.map((h) => [h, new Samm()])) as Record<H3, Samm>;
   const ber = { '1': new Samm(), '2': new Samm(), '3': new Samm() };
+  const berH = { '1': new Samm(), '2': new Samm(), '3': new Samm() };
   const qf: CheckErgebnis['echt']['qualitaetstag']['faelle'] = [];
   const its = [...items].filter((x) => x?.data?.vorausblick && /^\d{4}-\d{2}-\d{2}$/.test(x.datum)).sort((a, b) => a.datum.localeCompare(b.datum));
 
@@ -110,7 +113,10 @@ export function prognoseCheck(items: PrognoseItem[], ist0: IstTag[], heute: stri
       const k = String(tageZwischen(it.datum, String(t?.datum || '')));
       const pb = zahl(t?.bereitschaft);
       const ir = byDate.get(String(t?.datum))?.ready;
-      if ((k === '1' || k === '2' || k === '3') && pb != null && ir != null) ber[k].add(pb, ir, naivR);
+      if ((k === '1' || k === '2' || k === '3') && pb != null && ir != null) {
+        ber[k].add(pb, ir, naivR);
+        if (naivR != null) berH[k].add(naivR + 0.5 * (pb - naivR), ir, naivR);
+      }
     }
     const q = v.qualitaetstag;
     if (q && q.datum) {
@@ -133,6 +139,7 @@ export function prognoseCheck(items: PrognoseItem[], ist0: IstTag[], heute: stri
       fitness: Object.fromEntries(H.map((h) => [h, { ...fit[h].get(), lastPlan: mean(lastP[h]), lastIst: mean(lastI[h]) }])) as any,
       es: Object.fromEntries(H.map((h) => [h, es[h].get()])) as any,
       bereitschaft: { '1': ber['1'].get(), '2': ber['2'].get(), '3': ber['3'].get() },
+      bereitschaftHalb: { '1': berH['1'].get(), '2': berH['2'].get(), '3': berH['3'].get() },
       qualitaetstag: { n: qs.length, eingetroffen: qs.filter((x) => x.ok).length, faelle: qs },
     },
     modell: {

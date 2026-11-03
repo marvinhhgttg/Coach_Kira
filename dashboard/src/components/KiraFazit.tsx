@@ -13,7 +13,7 @@ export { fremdeZahlen };
  *  - Nachprüfung: Zahlen im Fazit, die nicht in den Fakten stehen, werden markiert.
  */
 const KEY = 'ck_kira_fazit_v2';
-const PROMPT_VERSION = 'p2';
+const PROMPT_VERSION = 'p3';
 type Eintrag = { text: string; ts: string; warn?: string[] };
 function readCache(): Record<string, Eintrag> {
   try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { return {}; }
@@ -82,12 +82,14 @@ export function KiraFazit({ title, facts, data, onText, evidenz = 'mittel', rege
               'Regeln (verbindlich):',
               '1. Nutze nur Zahlen, die wörtlich in den Fakten stehen. Rechne nichts Neues aus, runde nicht um.',
               '2. Die Richtung jeder Kennzahl steht unten fest. Deute sie NIE anders herum. Vertausche keine Gruppen: Nenne immer, welche Gruppe welchen Wert hat.',
-              '3. Effekte „kaum“/„leicht“, Unterschiede unter 1 Prozentpunkt oder Gruppen mit weniger als 5 Einheiten sind Rauschen: als „kein klarer Unterschied“ benennen, keine Empfehlung daraus.',
+              '3. Unterscheide streng: (a) ZU WENIGE DATEN (Gruppe unter 5 Einheiten, „wenige“, „Tendenz“) = unsicher, ein Effekt ist weder belegt noch ausgeschlossen – nie „Rauschen“ oder „kein Effekt“ nennen. (b) GENUG DATEN, aber Effekt „kaum“/„leicht“ bzw. unter 1 Prozentpunkt = „kein klarer Unterschied“. (c) Messbruch = nicht auswertbar.',
+              '3b. Nenne zu jeder Zahl die zugehörige Anzahl (n) aus derselben Zeile. Vermische keine Stichproben (z. B. Schlafnächte und Einheiten).',
+              '3c. Bei Zonenanteilen immer sagen, ob es um Anteil an der Last oder an der Zeit geht.',
               '4. Keine Empfehlung zu mehr Intensität, Kadenzänderung oder festen Regeln, wenn die Fakten sie nicht klar stützen.',
               '5. Zusammenhang ist keine Ursache – formuliere vorsichtig („geht einher mit“).',
               evidenz === 'schwach'
                 ? '6. Die Datenlage dieses Berichts ist dünn: Gib KEINE Trainingsempfehlung. Schließe mit „Empfehlung: noch keine – zu wenige Daten.“'
-                : '6. Schließe mit genau einer Zeile „Empfehlung: …“ – nur wenn ein Befund klar und belastbar ist, sonst „Empfehlung: keine – die Unterschiede sind zu klein.“',
+                : '6. Schließe mit genau einer Zeile „Empfehlung: …“ – nur wenn ein Befund klar und belastbar ist. Sonst „Empfehlung: keine – weil …“ mit dem konkreten Grund (zu wenige Daten / Unterschied unter der Rauschgrenze / Messbruch / gemischtes Bild). Große Änderungen (über 5 %) nie als „zu klein“ abtun.',
               '',
               'Richtung der Kennzahlen:',
               ...RICHTUNG.map((r) => '- ' + r),
