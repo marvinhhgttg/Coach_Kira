@@ -333,11 +333,11 @@ function IntensityCard({ days }: { days: Day[] }) {
     tot4 === 0
       ? 'Keine Zonendaten.'
       : midP >= 20
-        ? `Viel „mittleres Grau“: ${midP} % in Z3. Für 80/20 Z3-Anteil zugunsten Z2 bzw. gezielter Z4-Reize senken.`
+        ? `${midP} % der Last in Garmin-Z3 (Beschreibung, keine Diagnose). Ob das zu viel ist, hängt von deinen tatsächlichen Schwellen und deinem Ziel ab; pyramidal ist nicht schlechter als polarisiert.`
         : lowP >= 80
           ? highP < 5
-            ? `Polarisiert locker (${lowP} % Z1–Z2), aber kaum hohe Intensität (${highP} %). Bei guter Erholung 1 Qualitätsreiz/Woche möglich.`
-            : `Gute 80/20-Verteilung (${lowP} % locker, ${highP} % hart).`
+            ? `${lowP} % der Last in Z1–Z2, ${highP} % in Z4–Z5 (Beschreibung).`
+            : `${lowP} % der Last locker, ${highP} % hart – entspricht der 80/20-Orientierung.`
           : `Lockerer Lastanteil ${lowP} % – unter der 80-%-Orientierung (bezogen auf Last, nicht Zeit; Garmin-Zonen sind nicht gleich physiologischen Schwellen, pyramidal ist nicht schlechter).`;
   return (
     <Card title="Intensitätsverteilung" hint="Anteil an der LAST (nicht Zeit) je Kalenderwoche nach Zone · Linie = Lastanteil Z1–Z2 (Ziel ≥ 80 %) · Zeitanteile siehe Kachel unten">
