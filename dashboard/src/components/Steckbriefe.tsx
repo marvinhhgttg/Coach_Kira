@@ -4,7 +4,8 @@ import { KiraFazit, fazitAusCache } from './KiraFazit';
 import { Hinweis, Kz, Laedt } from './AnalysenTraining';
 import { useGarminTage, type GarminAkt, type GarminTage } from '../lib/garmin';
 import { fetchChartData } from '../lib/api';
-import { rekorde } from '../lib/rekorde';
+import { rekorde, GRUPPEN } from '../lib/rekorde';
+const GLAB: Record<string, string> = Object.fromEntries(GRUPPEN.map((g) => [g.id, g.label]));
 import { effPunkte, nachGelaende, trend, GRENZEN_STANDARD } from '../lib/effizienz';
 import { BERG, LAUF, RAD, RAD_ALLE, de, dauerTxt, eintraege, kurz, median, mittel, monatName, plusTage, vz, type E } from '../lib/stat';
 
@@ -116,7 +117,7 @@ ${fazit ? `<h2>Kiras Fazit</h2><div class="faz">${esc(fazit)}</div>` : ''}
 <h2>Nach Sportart</h2><table><tr><th>Sport</th><th>Einheiten</th><th>km</th><th>hm</th><th>Zeit</th></tr>${s.gr.map((g) => `<tr><td>${esc(g.lab)}</td><td>${g.n}</td><td>${de(g.km)}</td><td>${de(g.hm)}</td><td>${dauerTxt(g.s)}</td></tr>`).join('')}</table>
 <h2>Trainingszeit je Monat (Stunden)</h2>${svgBalken(s.monate.map((m) => ({ lab: monatName(m.monat), v: Math.round(m.s / 360) / 10 })), 'h')}
 ${s.ctl ? `<h2>Fitnessverlauf (CTL)</h2>${svgLinie(s.ctl.reihe.filter((_, i) => i % 3 === 0).map((x) => ({ lab: kurz(x.d).slice(3), v: x.v })), 'CTL')}` : ''}
-<h2>Rekorde</h2><table><tr><th>Bereich</th><th>Rekord</th><th>Wert</th><th>Datum</th><th>Einheit</th></tr>${s.rek.filter((r) => r.gruppe !== 'koerper').map((r) => `<tr><td>${esc(r.gruppe)}</td><td>${esc(r.titel)}</td><td>${esc(r.text)}${r.neu ? ' <span class="neu">neu</span>' : ''}</td><td>${r.bis ? kurz(r.datum) + '–' + kurz(r.bis) : kurz(r.datum)}</td><td>${esc(r.detail || '')}</td></tr>`).join('')}</table>
+<h2>Rekorde</h2><table><tr><th>Bereich</th><th>Rekord</th><th>Wert</th><th>Datum</th><th>Einheit</th></tr>${s.rek.filter((r) => r.gruppe !== 'koerper').map((r) => `<tr><td>${esc(GLAB[r.gruppe] || r.gruppe)}</td><td>${esc(r.titel)}</td><td>${esc(r.text)}${r.neu ? ' <span class="neu">neu</span>' : ''}</td><td>${r.bis ? kurz(r.datum) + '–' + kurz(r.bis) : kurz(r.datum)}</td><td>${esc(r.detail || '')}</td></tr>`).join('')}</table>
 <h2>Größte Touren nach Höhenmetern</h2><table><tr><th>Datum</th><th>Tour</th><th>km</th><th>hm</th><th>Dauer</th></tr>${s.groesste.map((e) => `<tr><td>${kurz(e.datum)}</td><td>${esc(e.a.name || '')}</td><td>${de(e.a.km, 1)}</td><td>${de(e.a.hm)}</td><td>${dauerTxt(e.a.dauer_s)}</td></tr>`).join('')}</table>`;
     drucken(titel, html);
   }
