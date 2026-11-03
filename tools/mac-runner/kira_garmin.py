@@ -312,7 +312,14 @@ def send_day_metrics(rows: list, modus: str, probe: bool) -> list:
             "modus": modus,
             "probe": probe,
         }
-        resp = http_post_json(SCRIPT_URL, payload)
+        resp = {}
+        for versuch in range(3):
+            try:
+                resp = http_post_json(SCRIPT_URL, payload, timeout=60)
+                break
+            except Exception as e:
+                resp = {"ok": False, "error": f"{type(e).__name__}: {e}"}
+                time.sleep(5 * (versuch + 1))
         if not resp.get("ok"):
             err = resp.get("error", "unbekannt")
             log(f"[garmin] saveDayMetrics Fehler: {err}")
@@ -1245,7 +1252,14 @@ def send_tage(tage: dict, nur_geaendert=True, state=None):
             "data": data,
             "quelle": "garmin-api",
         }
-        resp = http_post_json(SCRIPT_URL, payload)
+        resp = {}
+        for versuch in range(3):
+            try:
+                resp = http_post_json(SCRIPT_URL, payload, timeout=60)
+                break
+            except Exception as e:
+                resp = {"ok": False, "error": f"{type(e).__name__}: {e}"}
+                time.sleep(5 * (versuch + 1))
         if not resp.get("ok"):
             err = resp.get("error", "unbekannt")
             log(f"[garmin] send_tage({datum}): {err}")
@@ -1625,7 +1639,7 @@ def cmd_ablauf(bis):
     log(f"[garmin] Schlüssel läuft am {bis} ab")
 
 
-def cmd_details(von=None, bis=None, probe=False):
+def cmd_details(von=None, bis=None, probe=False, nur_ent=False):
     """Tag-Details für einen Zeitraum abrufen und optional senden."""
     today = datetime.datetime.now(TZ).date().isoformat()
     start_date = START_TIMELINE  # Vorlage für --von
@@ -1658,7 +1672,12 @@ def cmd_details(von=None, bis=None, probe=False):
             t = text_fuer(data)
             print(f"  {d}: {t}")
     else:
-        send_tage(tage, nur_geaendert=False)
+        if nur_ent:
+            tage = {d: v for d, v in tage.items()
+                    if any(isinstance(a, dict) and a.get("ent") is not None for a in (v.get("akt") or []))}
+            print(f"Sende {len(tage)} Tage mit Entkopplung ans Sheet …", flush=True)
+        g, f = send_tage(tage, nur_geaendert=False, state=_laden_state())
+        print(f"Tage gesendet: {g}, Fehler: {f}", flush=True)
 
 
 def main():
@@ -1717,7 +1736,7 @@ def main():
             cmd_ablauf(bis=args.bis)
         elif args.command == "entkopplung":
             _ent_budget["n"] = 400
-            cmd_details(von=args.von, bis=args.bis, probe=False)
+            cmd_details(von=args.von, bis=args.bis, probe=False, nur_ent=True)
             c = _ent_cache_laden()
             ok = sum(1 for v in c.values() if v.get("ok"))
             ent = sum(1 for v in c.values() if v.get("ok") and v.get("ent"))
