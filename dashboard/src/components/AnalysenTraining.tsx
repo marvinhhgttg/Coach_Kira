@@ -45,7 +45,7 @@ export function EntkopplungTile() {
       {tage === null ? <Laedt /> : !r.punkte.length ? (
         <p className="text-2xs text-amber-400">
           Noch keine Rundendaten: {r.kandidaten} passende lange Einheiten gefunden. Der Mac lädt die Runden nach, sobald das Mac-Update eingespielt ist
-          (Terminal: <code>zsh /tmp/ck-analysen/install-analysen.sh</code>).
+          (Terminal: <code>zsh /tmp/ck-analysen/install-analysen.sh</code>). Die Runden kommen über deinen Garmin-Login von „An Garmin senden“.
         </p>
       ) : (
         <>
@@ -86,13 +86,13 @@ export function TemperaturTile() {
   }, [tage]);
   const r = useMemo(() => temperatur(tage, sport, wetter), [tage, sport, wetter]);
   const facts = [
-    `${sport === 'lauf' ? 'Laufen' : 'Rad'} flach im Raum Pfaffenhofen/Ulm, Lufttemperatur aus Open-Meteo zur Mitte der Einheit. Werte = Herzschläge je km relativ zum eigenen Formstand (± 30 Tage), negativ = effizienter.`,
+    `${sport === 'lauf' ? 'Laufen' : 'Rad'} flach, Lufttemperatur aus Garmin-Wetter bzw. Open-Meteo. Werte = Herzschläge je km relativ zum eigenen Formstand (± 30 Tage), negativ = effizienter.`,
     ...r.bins.filter((b) => b.n).map((b) => `${b.lab}: ${b.n} Einheiten, ${vz(b.relPct, 1)} % (Median ${de(b.schlaege)} Schläge/km, HF ${de(b.hf)})`),
     `Steigung: ${vz(r.proGrad == null ? null : r.proGrad * 10, 1)} % je +10 °C.`,
   ];
   return (
     <Panel title="Hitze und Kälte" right={<SportSchalter sport={sport} setSport={setSport} />}>
-      <Hinweis>Wie viel Puls kostet dich dein Tempo bei Kälte und Hitze? Lufttemperatur von Open-Meteo (nur Einheiten im Raum Pfaffenhofen/Ulm – die Uhr misst durch die Körperwärme zu hoch). Formstand ist herausgerechnet.</Hinweis>
+      <Hinweis>Wie viel Puls kostet dich dein Tempo bei Kälte und Hitze? Lufttemperatur aus dem Garmin-Wetter der Einheit, sonst Open-Meteo für den Raum Pfaffenhofen/Ulm (die Uhr selbst misst durch die Körperwärme zu hoch). Formstand ist herausgerechnet.</Hinweis>
       {fehler && <p className="text-2xs text-amber-400">Wetterdaten nicht ladbar: {fehler}</p>}
       {tage === null || (!wetter && !fehler) ? <Laedt /> : r.n < 5 ? <p className="text-2xs text-ink-dim">Zu wenige Einheiten mit Temperatur ({r.n}).</p> : (
         <>

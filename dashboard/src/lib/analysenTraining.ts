@@ -55,6 +55,7 @@ export async function fetchWetterStunden(von: string, bis: string): Promise<Map<
   return m;
 }
 const tempFuer = (e: E, wetter: Map<string, number> | null) => {
+  if (e.a.wetter_c != null) return { t: e.a.wetter_c, quelle: 'garmin' as const };
   const sm = startMin(e.a);
   if (wetter && sm != null && HEIM_ORTE.test(e.a.ort || '')) {
     const h = Math.min(23, Math.floor((sm + minuten(e.a) / 2) / 60)); // Mitte der Einheit

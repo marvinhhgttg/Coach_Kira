@@ -13,6 +13,7 @@ import hashlib
 import json
 import os
 import sys
+import subprocess
 import time
 from pathlib import Path
 from urllib.parse import urlencode
@@ -857,13 +858,16 @@ def _activities_block(von: str, bis: str) -> list:
 
 ENT_CACHE = BASE / "entkopplung_cache.json"
 ENT_TYPEN = {"running", "road_biking", "cycling", "gravel_cycling", "mountain_biking", "indoor_cycling", "virtual_ride"}
+WETTER_TYPEN = {"running", "trail_running", "road_biking", "cycling", "gravel_cycling", "mountain_biking", "hiking", "mountaineering",
+                "walking", "backcountry_skiing", "skate_skiing_ws", "cross_country_skiing_ws"}
+GARMIN_VENV_PY = BASE / ".venv-garmin" / "bin" / "python"
 _ent_cache: dict | None = None
-_ent_budget = {"n": 25}  # neue Runden-Abrufe je Lauf (Backfill: cmd_entkopplung setzt höher)
+_ent_budget = {"n": 25}  # neue Abrufe je Lauf (Backfill: Befehl „entkopplung“ setzt höher)
 
 
-def _ent_cache_laden() -> dict:
+def _ent_cache_laden(neu: bool = False) -> dict:
     global _ent_cache
-    if _ent_cache is None:
+    if _ent_cache is None or neu:
         try:
             _ent_cache = json.loads(ENT_CACHE.read_text())
         except Exception:
@@ -871,78 +875,47 @@ def _ent_cache_laden() -> dict:
     return _ent_cache
 
 
-def entkopplung_aus_runden(laps: list, rad: bool) -> dict | None:
-    """Aerobe Entkopplung aus Garmin-Runden: Effizienz (Tempo bzw. Leistung je Herzschlag) 1. vs. 2. Hälfte.
-    Erste 10 Minuten (Einrollen/Einlaufen) zählen nicht. Positiv = Puls driftet nach oben."""
-    rs = []
-    for l in laps or []:
-        d = float(l.get("movingDuration") or l.get("duration") or 0)
-        hr = l.get("averageHR")
-        if d < 30 or not hr:
-            continue
-        rs.append({"d": d, "hr": float(hr), "km": float(l.get("distance") or 0) / 1000.0, "w": l.get("averagePower")})
-    if len(rs) < 4:
-        return None
-    t, rest = 0.0, []
-    for r in rs:
-        if t + r["d"] / 2 >= 600:
-            rest.append(r)
-        t += r["d"]
-    if len(rest) < 4:
-        return None
-    gesamt = sum(r["d"] for r in rest)
-    h1, h2, t = [], [], 0.0
-    for r in rest:
-        (h1 if t + r["d"] / 2 < gesamt / 2 else h2).append(r)
-        t += r["d"]
-    if len(h1) < 2 or len(h2) < 2:
-        return None
-    mit_watt = rad and all(r["w"] for r in rest)
-
-    def eff(h):
-        dd = sum(r["d"] for r in h)
-        hr = sum(r["hr"] * r["d"] for r in h) / dd
-        x = (sum(float(r["w"]) * r["d"] for r in h) / dd) if mit_watt else (sum(r["km"] for r in h) / (dd / 3600.0))
-        return hr, x
-
-    hr1, x1 = eff(h1)
-    hr2, x2 = eff(h2)
-    if hr1 <= 0 or hr2 <= 0 or x1 <= 0:
-        return None
-    e1, e2 = x1 / hr1, x2 / hr2
-    return {"pct": round((e1 - e2) / e1 * 100, 1), "basis": "watt" if mit_watt else "tempo",
-            "hf1": round(hr1), "hf2": round(hr2), "x1": round(x1, 1), "x2": round(x2, 1), "runden": len(rest)}
+def _braucht_runden(a: dict) -> bool:
+    """Runden (Entkopplung) für lange Rad-/Laufeinheiten, Wetter für alle Einheiten draußen."""
+    aid = a.get("activityId")
+    tkey = ((a.get("activityType") or {}).get("typeKey") or "") if isinstance(a.get("activityType"), dict) else ""
+    if not aid or not (tkey in WETTER_TYPEN or (tkey in ENT_TYPEN and (a.get("duration") or 0) >= 3600)):
+        return False
+    e = _ent_cache_laden().get(str(aid))
+    if e is None:
+        return True
+    if e.get("v", 1) < 2:  # alte Einträge (offizielle API, 404) neu versuchen
+        return True
+    return not e.get("ok") and e.get("bis", "") <= datetime.date.today().isoformat()
 
 
-def _entkopplung(aid, typ: str, dauer_s) -> dict | None:
-    if not aid or typ not in ENT_TYPEN or (dauer_s or 0) < 3600:
-        return None
-    c = _ent_cache_laden()
-    k = str(aid)
-    e = c.get(k)
-    heute = datetime.date.today().isoformat()
-    if e is not None:
-        if e.get("ok"):
-            return e.get("ent")
-        if e.get("bis", "") > heute:  # Fehler/keine Runden: erst später neu versuchen
-            return None
-    if _ent_budget["n"] <= 0:
-        return None
-    _ent_budget["n"] -= 1
+def _runden_nachladen(acts: list) -> None:
+    """Fehlende Runden/Wetter über den Garmin-Login (kira_garmin_runden.py in der eigenen venv) holen."""
+    offen = [a for a in acts if _braucht_runden(a)]
+    if not offen or not GARMIN_VENV_PY.exists() or not (BASE / "kira_garmin_runden.py").exists():
+        return
+    offen = offen[: _ent_budget["n"]]
+    auftraege = [{"id": int(a["activityId"]), "typ": ((a.get("activityType") or {}).get("typeKey") or ""), "dauer_s": int(a.get("duration") or 0)} for a in offen]
+    tmp = BASE / "runden_auftrag.json"
+    tmp.write_text(json.dumps(auftraege))
     try:
-        j = api_get(f"/activity-service/activity/{int(aid)}/splits")
-        laps = (j or {}).get("lapDTOs") or []
-        ent = entkopplung_aus_runden(laps, typ not in ("running",))
-        c[k] = {"ok": True, "ent": ent} if ent else {"ok": False, "bis": (datetime.date.today() + datetime.timedelta(days=30)).isoformat(), "grund": f"{len(laps)} Runden"}
+        r = subprocess.run([str(GARMIN_VENV_PY), str(BASE / "kira_garmin_runden.py"), str(tmp), str(ENT_CACHE)],
+                           capture_output=True, timeout=60 + 6 * len(auftraege))
+        msg = (r.stdout.decode("utf-8", "replace").strip().splitlines() or [""])[-1]
+        log(f"[garmin] Runden/Wetter: {msg or r.stderr.decode('utf-8', 'replace')[-200:]}")
     except Exception as ex:
-        c[k] = {"ok": False, "bis": (datetime.date.today() + datetime.timedelta(days=7)).isoformat(), "grund": str(ex)[:120]}
-        log(f"[garmin] Runden {aid}: {str(ex)[:120]}")
-    try:
-        _atomar_schreiben(ENT_CACHE, c)
-    except Exception:
-        pass
-    time.sleep(0.4)
-    return c[k].get("ent") if c[k].get("ok") else None
+        log(f"[garmin] Runden/Wetter: FEHLER {ex}")
+    finally:
+        try:
+            tmp.unlink()
+        except Exception:
+            pass
+    _ent_cache_laden(neu=True)
+
+
+def _runden_info(aid) -> dict:
+    e = _ent_cache_laden().get(str(aid)) if aid else None
+    return e if e and e.get("ok") else {}
 
 
 def _activity_day(acts: list, datum: str) -> dict | None:
@@ -1063,8 +1036,12 @@ def _activity_day(acts: list, datum: str) -> dict | None:
         is_pr = a.get("isPR")
         if is_pr is True: item["pr"] = True
 
-        ent = _entkopplung(aid, tkey, dur)
-        if ent: item["ent"] = ent
+        ri = _runden_info(aid)
+        if ri.get("ent"): item["ent"] = ri["ent"]
+        w = ri.get("wetter") or {}
+        if w.get("temp_c") is not None: item["wetter_c"] = w["temp_c"]
+        if w.get("feuchte") is not None: item["feuchte"] = w["feuchte"]
+        if w.get("wind_kmh") is not None: item["wind_kmh"] = w["wind_kmh"]
 
         aus.append(item)
     return aus
@@ -1077,6 +1054,10 @@ def tag_details(von: str, bis: str, extras_heute=False) -> dict:
     dailies = _dailysummaries(von, bis)
     sleeps = _sleep(von, bis)
     acts = _activities_block(von, bis)
+    try:
+        _runden_nachladen(acts)
+    except Exception as ex:
+        log(f"[garmin] Runden/Wetter übersprungen: {ex}")
 
     hrvs = {}
     try:
@@ -1737,7 +1718,9 @@ def main():
             cmd_details(von=args.von, bis=args.bis, probe=False)
             c = _ent_cache_laden()
             ok = sum(1 for v in c.values() if v.get("ok"))
-            print(f"Entkopplung: {ok} Einheiten mit Rundendaten, {len(c) - ok} ohne (Cache {ENT_CACHE})")
+            ent = sum(1 for v in c.values() if v.get("ok") and v.get("ent"))
+            wet = sum(1 for v in c.values() if v.get("ok") and v.get("wetter"))
+            print(f"Fertig: {ent} lange Einheiten mit Entkopplung, {wet} Einheiten mit Garmin-Wetter, {len(c) - ok} ohne Daten.")
         elif args.command == "details":
             cmd_details(von=args.von, bis=args.bis, probe=bool(args.probe))
     except Exception as e:

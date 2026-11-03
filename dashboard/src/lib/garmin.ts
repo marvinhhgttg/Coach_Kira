@@ -13,6 +13,9 @@ export interface GarminAkt {
   temp_min?: number; temp_max?: number; v_kmh?: number; watt?: number; watt_np?: number; watt_20?: number;
   kadenz?: number; vo2max?: number; tss?: number; if?: number; ort?: string; schritte?: number;
   int_mod?: number; int_vig?: number; atem?: number; stress_diff?: number; runden?: number; hoehe_max?: number; pr?: boolean;
+  /** vom Mac über den Garmin-Login: Garmin-Wetter und aerobe Entkopplung */
+  wetter_c?: number; feuchte?: number; wind_kmh?: number;
+  ent?: { pct: number; basis: 'tempo' | 'watt'; hf1: number; hf2: number; x1: number; x2: number; runden: number } | null;
 }
 export interface GarminSumme {
   n?: number; km?: number; hm?: number; dauer_s?: number; bewegt_s?: number; last?: number; kcal?: number; bb?: number; zonen_s?: number[];
