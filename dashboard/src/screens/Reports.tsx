@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { GarminBerichtTile } from '../components/GarminBerichtTile';
 import { ZeitraumVergleichTile } from '../components/ZeitraumVergleichTile';
 import { JahresrueckblickTile } from '../components/JahresrueckblickTile';
+import { SaisonSteckbriefTile, TourenSteckbriefTile } from '../components/Steckbriefe';
 import { istPlatzhalter } from '../lib/dataQuality';
 import {
   Bar,
@@ -1036,6 +1037,12 @@ export function Reports() {
     <div>
       <StorySection id="umfang" titel="Was hast du geschafft?" unter="Umfang, Sportarten und Bestwerte laut Garmin – mit Vergleich zur Vorperiode">
         <GarminBerichtTile />
+      </StorySection>
+      <StorySection id="steckbriefe" titel="Steckbriefe" unter="Saison und Touren auf einer Seite – mit Kiras Fazit als PDF">
+        <div className="grid gap-4 lg:grid-cols-2">
+          <SaisonSteckbriefTile />
+          <TourenSteckbriefTile />
+        </div>
       </StorySection>
       <StorySection id="rueckblick" titel="Rückblick" unter="Woche, Monat und Jahr im Detail, Zeiträume vergleichen, Kira Wrapped"
         rechts={<Chips items={RUECK} value={subR} onChange={setSub} fmt={lbl} />}>

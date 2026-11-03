@@ -7,6 +7,8 @@ import { GarminVerlaufTile } from '../components/GarminVerlaufTile';
 import { GarminSportProfilTile } from '../components/GarminSportProfilTile';
 import { EffizienzTile } from '../components/EffizienzTile';
 import { RekordeTile } from '../components/RekordeTile';
+import { EntkopplungTile, HausrundenTile, LaufoekonomieTile, LeistungskurveTile, TageszeitTile, TemperaturTile, TrainingswirkungTile } from '../components/AnalysenTraining';
+import { EiweissTile, EnergiebilanzTile, ErholungsFaktorenTile, FruehwarnungAtemTile, SchlafrhythmusTile, StressBilanzTile } from '../components/AnalysenErholung';
 import { TrainingControl } from './TrainingControl';
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import {
@@ -653,8 +655,38 @@ export function ChartDeck() {
         <RekordeTile />
       </StorySection>
 
+      <StorySection id="leistung" titel="Leistung im Detail" unter="Entkopplung, Temperatur, Tageszeit, Rad-Leistung, Trainingswirkung, Laufökonomie und Hausrunden">
+        <div className="space-y-4">
+          <HausrundenTile />
+          <StoryGrid spalten={2}>
+            <EntkopplungTile />
+            <TemperaturTile />
+            <TageszeitTile />
+            <LaufoekonomieTile />
+            <LeistungskurveTile />
+            <TrainingswirkungTile />
+          </StoryGrid>
+        </div>
+      </StorySection>
+
       <StorySection id="erholung" titel="Wie erholst du dich?" unter="Erholungsverlauf und Zusammenhänge zwischen Last, Schlaf und Bereitschaft">
         <RecoveryPanel mode="history" />
+      </StorySection>
+
+      <StorySection id="erholung-detail" titel="Erholung im Detail" unter="Was dich erholt, Schlafrhythmus, Atem- und SpO2-Frühwarnung, Stress">
+        <StoryGrid spalten={2}>
+          <ErholungsFaktorenTile />
+          <FruehwarnungAtemTile />
+          <SchlafrhythmusTile />
+          <StressBilanzTile />
+        </StoryGrid>
+      </StorySection>
+
+      <StorySection id="ernaehrung" titel="Ernährung" unter="Energiebilanz, Kohlenhydrate vor harten Einheiten, Eiweiß und Erholung">
+        <StoryGrid spalten={2}>
+          <EnergiebilanzTile />
+          <EiweissTile />
+        </StoryGrid>
       </StorySection>
 
       <StorySection id="gelernt" titel="Was Kira gelernt hat" unter="Workouts, Treffer der Empfehlungen, Modelltest und Kalenderabgleich">

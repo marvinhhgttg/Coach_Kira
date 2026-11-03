@@ -26,7 +26,13 @@ function hash(s: string) {
   return String(h);
 }
 
-export function KiraFazit({ title, facts, data }: { title: string; facts: string[]; data?: unknown }) {
+/** Zuletzt erstelltes Fazit zu genau diesen Fakten (für Druck-Berichte). */
+export function fazitAusCache(title: string, facts: string[], data?: unknown): string | null {
+  const payload = JSON.stringify({ title, facts, data: data ?? null });
+  return readCache()[title + ':' + hash(payload)]?.text ?? null;
+}
+
+export function KiraFazit({ title, facts, data, onText }: { title: string; facts: string[]; data?: unknown; onText?: (t: string) => void }) {
   const [engine] = useEngine();
   const payload = JSON.stringify({ title, facts, data: data ?? null });
   const id = title + ':' + hash(payload);
@@ -54,6 +60,7 @@ export function KiraFazit({ title, facts, data }: { title: string; facts: string
         { numCtx: 8192, onToken: setText },
       );
       setText(out);
+      onText?.(out);
       const c = readCache();
       c[id] = { text: out, ts: new Date().toISOString() };
       writeCache(c);
