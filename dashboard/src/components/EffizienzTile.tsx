@@ -191,7 +191,7 @@ export function EffizienzTile() {
             </div>
           ))
         )}
-        {alle.length > 0 && <KiraFazit title={`Effizienz ${sport === 'lauf' ? 'Laufen' : 'Rad'} flach und bergig`} facts={facts} />}
+        {alle.length > 0 && <KiraFazit title={`Effizienz ${sport === 'lauf' ? 'Laufen' : 'Rad'} flach und bergig`} facts={facts} regeln={['Aus Laufleistung (Watt je km/h) keine Verschlechterung der Laufökonomie ableiten: Garmin-Messbruch seit August 2026. Maßgeblich ist der Pulswert.', 'Ändert sich die HF-Kennzahl um weniger als 2 %, ist sie stabil.']} />}
       </div>
     </Panel>
   );

@@ -492,7 +492,7 @@ def cmd_plausi() -> None:
 
 
 def cmd_selbsttest(force: bool = False) -> None:
-    """Selbsttest des lokalen Ollama-Modells mit 6 Tests."""
+    """Selbsttest des lokalen Ollama-Modells: 6 Technik-Tests + 4 Deutungstests."""
     st = load_x()
 
     # Nur einmal pro Tag (außer force)
@@ -793,8 +793,61 @@ def cmd_selbsttest(force: bool = False) -> None:
             return {"id": "T6", "name": "Schema", "ok": False,
                     "detail": str(e), "sekunden": 0, "tps": None}
 
+    # T7–T10: Deutung (Richtung, Vorzeichen, Rauschen, Messbruch/unvollständige Woche)
+    DEUT_SYS = (
+        "Du bist Coach Kira. Antworte nur mit JSON. Verbindliche Richtungen: "
+        "Puls je km / Schläge je km: NIEDRIGER = effizienter. Watt je km/h (Rad): NIEDRIGER = effizienter, ein Anstieg ist keine Effizienzsteigerung. "
+        "Entkopplung: NIEDRIGER = besser. Unterschiede unter 1 Prozentpunkt oder Gruppen unter 5 Einheiten = Rauschen, keine Empfehlung. "
+        "Garmin-Laufwatt seit August 2026 mit Messbruch: daraus keine Schlüsse zur Laufökonomie. Eine laufende, unvollständige Woche ist nicht als Ruhewoche einzuordnen."
+    )
+
+    def _deut(tid: str, name: str, frage: str, pruef) -> dict:
+        messages = [{"role": "system", "content": DEUT_SYS}, {"role": "user", "content": frage}]
+        try:
+            t0 = datetime.datetime.now(tz_local).timestamp()
+            text_out, tps = ollama_chat(MODEL, messages, num_ctx=8192, timeout=300)
+            sekunden = datetime.datetime.now(tz_local).timestamp() - t0
+            data = parse_loose(text_out) or {}
+            ok, detail = pruef(data)
+            return {"id": tid, "name": name, "ok": ok, "detail": detail, "sekunden": round(sekunden, 1), "tps": tps}
+        except Exception as e:
+            return {"id": tid, "name": name, "ok": False, "detail": str(e), "sekunden": 0, "tps": None}
+
+    def _bool(v):
+        if isinstance(v, bool):
+            return v
+        return str(v).strip().lower() in ("true", "ja", "yes", "1")
+
+    def test_7() -> dict:
+        return _deut("T7", "Richtung",
+            "Läufe mit höherer Kadenz: 837 Schläge/km (12 Läufe). Läufe mit niedrigerer Kadenz: 791 Schläge/km (14 Läufe). "
+            'Welche Gruppe war effizienter? JSON: {"effizienter": "hoehere_kadenz"|"niedrigere_kadenz"}',
+            lambda d: (d.get("effizienter") == "niedrigere_kadenz", f"Antwort: {d.get('effizienter')} (richtig: niedrigere_kadenz)"))
+
+    def test_8() -> dict:
+        return _deut("T8", "Vorzeichen",
+            "Rad: Trend Watt je km/h +5,1 % je 90 Tage. Ist das eine Effizienzsteigerung? "
+            'JSON: {"effizienzsteigerung": true|false}',
+            lambda d: (_bool(d.get("effizienzsteigerung")) is False, f"Antwort: {d.get('effizienzsteigerung')} (richtig: false)"))
+
+    def test_9() -> dict:
+        return _deut("T9", "Rauschen",
+            "Puls je km zum Formstand: Abendläufe -0,6 % (3 Läufe), Vormittagsläufe +0,1 % (20 Läufe). "
+            'Darf daraus eine Empfehlung „Abendläufe bevorzugen“ abgeleitet werden? JSON: {"empfehlung_erlaubt": true|false}',
+            lambda d: (_bool(d.get("empfehlung_erlaubt")) is False, f"Antwort: {d.get('empfehlung_erlaubt')} (richtig: false)"))
+
+    def test_10() -> dict:
+        def pr(d):
+            a = _bool(d.get("laufoekonomie_schlechter")) is False
+            b = str(d.get("ruhewoche", "")).strip().lower() in ("false", "nein", "unklar", "no")  or d.get("ruhewoche") is False
+            return (a and b, f"laufoekonomie_schlechter={d.get('laufoekonomie_schlechter')} (richtig: false), ruhewoche={d.get('ruhewoche')} (richtig: false/unklar)")
+        return _deut("T10", "Messbruch/Woche",
+            "1) Laufen flach: Laufwatt je km/h seit Januar +12,6 %, HF-Trend bei gleichem Tempo +0,1 %. "
+            "2) Heute ist Dienstag; die laufende Woche hat bisher 30 % der üblichen Wochenlast. "
+            'JSON: {"laufoekonomie_schlechter": true|false, "ruhewoche": true|false|"unklar"}', pr)
+
     # Alle Tests ausführen
-    test_funktionen = [test_1, test_2, test_3, test_4, test_5, test_6]
+    test_funktionen = [test_1, test_2, test_3, test_4, test_5, test_6, test_7, test_8, test_9, test_10]
     tps_werte: list[float | None] = []
 
     for tf in test_funktionen:
@@ -808,7 +861,7 @@ def cmd_selbsttest(force: bool = False) -> None:
     avg_tps: float = sum(tps_werte) / len(tps_werte) if tps_werte else 0
 
     # Text zusammenbauen
-    lines_out = [f"{bestanden}/6 Tests bestanden ({MODEL}, Ø {avg_tps:.0f} tok/s, {gesamt_ssekunden:.0f} s)."]
+    lines_out = [f"{bestanden}/{len(ergebnisse)} Tests bestanden ({MODEL}, Ø {avg_tps:.0f} tok/s, {gesamt_ssekunden:.0f} s)."]
     for e in ergebnisse:
         if not e["ok"]:
             lines_out.append(f"- {e['name']}: {e['detail']}")
@@ -830,8 +883,8 @@ def cmd_selbsttest(force: bool = False) -> None:
     save_x(st)
 
     # Notify bei unvollständig
-    if bestanden < 6:
-        notify("Coach Kira", f"Selbsttest lokales Modell: {bestanden}/6")
+    if bestanden < len(ergebnisse):
+        notify("Coach Kira", f"Selbsttest lokales Modell: {bestanden}/{len(ergebnisse)}")
 
     log(f"selbsttest: {text}")
 

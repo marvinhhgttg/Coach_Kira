@@ -111,7 +111,7 @@ export function TemperaturTile() {
             {r.n} Einheiten · je +10 °C {vz(r.proGrad == null ? null : r.proGrad * 10, 1)} % Puls je km
             {r.optimum ? ` · am effizientesten bei ${r.optimum.lab}` : ''}. Balken unter null = weniger Puls für dasselbe Tempo.
           </p>
-          <KiraFazit title={`Temperatur ${sport}`} facts={facts} />
+          <KiraFazit title={`Temperatur ${sport}`} facts={facts} evidenz={r.n < 20 ? 'schwach' : 'mittel'} regeln={[`Dieser Bericht betrifft nur ${sport === 'lauf' ? 'Laufen' : 'Rad'}.`]} />
         </>
       )}
     </Panel>
@@ -124,7 +124,8 @@ export function TageszeitTile() {
   const [sport, setSport] = useState<Sport>('lauf');
   const r = useMemo(() => tageszeit(tage, sport), [tage, sport]);
   const facts = [
-    ...r.effizienz.filter((z) => z.n).map((z) => `${z.lab}: ${z.n} Einheiten, Puls je km ${vz(z.relPct, 1)} % zum eigenen Formstand`),
+    ...r.effizienz.filter((z) => z.n).map((z) => `${z.lab}: ${z.n} Einheiten${z.n < 5 ? ' (zu wenige für eine Aussage)' : ''}, Puls je km ${vz(z.relPct, 1)} % zum eigenen Formstand`),
+    'Unterschiede unter 1 % beim Puls je km sind Rauschen.',
     ...r.schlaf.map((s) => `Schlaf ${s.lab}: ${s.n} Nächte, Score ${de(s.score)}, HRV ${de(s.hrv)} ms, Tiefschlaf ${de(s.tief)} min`),
   ];
   return (
@@ -155,7 +156,7 @@ export function TageszeitTile() {
           </table>
         </div>
       )}
-      {tage && <KiraFazit title={`Tageszeit ${sport}`} facts={facts} />}
+      {tage && <KiraFazit title={`Tageszeit ${sport}`} facts={facts} evidenz={r.effizienz.filter((z) => z.n >= 5).length < 2 || Math.max(...r.effizienz.filter((z) => z.n >= 5).map((z) => Math.abs(z.relPct ?? 0))) < 1 ? 'schwach' : 'mittel'} regeln={['Keine pauschale Regel zu Abendtraining ableiten, wenn eine Gruppe weniger als 5 Einheiten hat.']} />}
     </Panel>
   );
 }
@@ -255,7 +256,7 @@ export function LaufoekonomieTile() {
   const facts = [
     `${r.n} flache Läufe. Kadenz steigt um ${de(r.kadenzProTempo == null ? null : -r.kadenzProTempo, 1)} Schritte/min je 1 min/km schneller.`,
     `Kadenz bei gleichem Tempo: Trend ${vz(r.kadenzTrend90, 1)} Schritte/min je 90 Tage. Schrittlänge: ${vz(r.schrittTrend90 == null ? null : r.schrittTrend90 * 100, 1)} cm je 90 Tage.`,
-    `Läufe mit höherer Kadenz als fürs Tempo üblich: Median ${de(r.effHoch)} Schläge/km (${r.nHoch}), mit niedrigerer: ${de(r.effTief)} Schläge/km (${r.nTief}).`,
+    `Läufe mit höherer Kadenz als fürs Tempo üblich: Median ${de(r.effHoch)} Schläge/km (${r.nHoch}), mit niedrigerer: ${de(r.effTief)} Schläge/km (${r.nTief}). Weniger Schläge/km = effizienter, also war hier ${r.effHoch == null || r.effTief == null ? 'kein Vergleich möglich' : Math.abs(r.effHoch - r.effTief) / r.effTief < 0.01 ? 'kein klarer Unterschied' : r.effHoch < r.effTief ? 'die HÖHERE Kadenz effizienter' : 'die NIEDRIGERE Kadenz effizienter'}.`,
   ];
   return (
     <Panel title="Laufökonomie">
@@ -281,7 +282,7 @@ export function LaufoekonomieTile() {
               </LineChart>
             </ResponsiveContainer>
           </div>
-          <KiraFazit title="Laufökonomie" facts={facts} />
+          <KiraFazit title="Laufökonomie" facts={facts} regeln={['Eine höhere Kadenz nur empfehlen, wenn die Fakten sagen, dass die höhere Kadenz effizienter war.']} />
         </>
       )}
     </Panel>

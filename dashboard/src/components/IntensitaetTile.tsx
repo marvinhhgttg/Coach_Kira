@@ -17,8 +17,9 @@ function zeitAnteile(g: GarminTage | null, wocheMontag: string) {
   if (sum <= 0) return null;
   return { locker: (z[0] + z[1]) / sum, grau: z[2] / sum, hart: (z[3] + z[4]) / sum, std: sum / 3600 };
 }
-function typAus(locker: number, grau: number, hart: number, ruhe: boolean): string {
+function typAus(locker: number, grau: number, hart: number, ruhe: boolean, laeuft = false): string {
   void locker;
+  if (laeuft) return 'läuft noch';
   if (ruhe) return 'Ruhewoche';
   if (hart >= 0.1 && grau < 0.15) return 'polarisiert';
   if (grau >= 0.25) return 'schwellenlastig';
@@ -41,6 +42,7 @@ function typChipInfo(typ: string): { text: string; cls: string } {
     case 'schwellenlastig': return { text: typ, cls: 'bg-yellow-400/20 text-yellow-700' };
     case 'Grundlage': return { text: typ, cls: 'text-ink-muted' };
     case 'Ruhewoche': return { text: typ, cls: 'text-ink-dim' };
+    case 'läuft noch': return { text: 'läuft noch', cls: 'text-ink-dim' };
     default: return { text: typ, cls: 'text-ink-muted' };
   }
 }
@@ -83,7 +85,7 @@ export function IntensitaetTile() {
     if (!nachZeit) return { ...w, std: null as number | null };
     const z = zeitAnteile(garmin, w.woche);
     if (!z) return { ...w, locker: 0, grau: 0, hart: 0, std: null as number | null };
-    return { ...w, locker: z.locker, grau: z.grau, hart: z.hart, std: z.std, typ: typAus(z.locker, z.grau, z.hart, w.typ === 'Ruhewoche') as typeof w.typ };
+    return { ...w, locker: z.locker, grau: z.grau, hart: z.hart, std: z.std, typ: typAus(z.locker, z.grau, z.hart, w.typ === 'Ruhewoche', w.typ === 'läuft noch') as typeof w.typ };
   });
 
   // Fazit: Typen zählen

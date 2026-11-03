@@ -369,7 +369,7 @@ export function esZiel(
 
 // ─── intensitaetProWoche ─────────────────────────────────────────────────────
 
-export type WochenTyp = 'polarisiert' | 'pyramidal' | 'schwellenlastig' | 'Grundlage' | 'Ruhewoche';
+export type WochenTyp = 'polarisiert' | 'pyramidal' | 'schwellenlastig' | 'Grundlage' | 'Ruhewoche' | 'läuft noch';
 
 function parseDateParts(d: string): { y: number; m: number; day: number } {
   const p = d.split('-');
@@ -403,7 +403,8 @@ export function intensitaetProWoche(
   const ergebnis: Array<{ woche: string; last: number; locker: number; grau: number; hart: number; typ: WochenTyp }> = [];
 
   const summe = (tage: P3Tag[]) => tage.reduce((a, x) => a + (x.load && x.load > 0 ? x.load : 0), 0);
-  const wochenLast = sortedWeeks.map((wk) => summe(weekMap.get(wk)!)).sort((a, b) => a - b);
+  const laufend = mondayOfWeek(new Date().toLocaleDateString('sv-SE'));
+  const wochenLast = sortedWeeks.filter((wk) => wk !== laufend).map((wk) => summe(weekMap.get(wk)!)).sort((a, b) => a - b);
   const median = wochenLast.length ? wochenLast[Math.floor(wochenLast.length / 2)] : 0;
   for (const wk of sortedWeeks) {
     const tageWoche = weekMap.get(wk)!;
@@ -421,7 +422,10 @@ export function intensitaetProWoche(
     const grauPct = zonenL > 0 ? grauL / zonenL : 0;
     const hartPct = zonenL > 0 ? hartL / zonenL : 0;
     let typ: WochenTyp;
-    if (totalLoad < 0.6 * median) typ = 'Ruhewoche';
+    // laufende Woche erst ab Sonntag einordnen (sonst wirkt jede Woche am Dienstag wie eine Ruhewoche)
+    const heute = new Date().toLocaleDateString('sv-SE');
+    if (wk === mondayOfWeek(heute) && new Date(heute + 'T12:00:00').getDay() !== 0) typ = 'läuft noch';
+    else if (totalLoad < 0.6 * median) typ = 'Ruhewoche';
     else if (hartPct >= 0.1 && grauPct < 0.15) typ = 'polarisiert';
     else if (grauPct >= 0.25) typ = 'schwellenlastig';
     else if (grauPct >= 0.1 && grauPct > hartPct) typ = 'pyramidal';

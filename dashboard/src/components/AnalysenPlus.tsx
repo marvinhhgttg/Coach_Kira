@@ -56,7 +56,7 @@ export function HitzeRegelTile() {
             </ResponsiveContainer>
           </div>
           <p className="text-2xs text-ink-muted mt-1">Punkte: Ø HF je Einheit gegen Lufttemperatur (ohne Herausrechnen). Je °C über 15 °C {vz(r.warm, 1)} Schläge, unter 15 °C {vz(r.kalt == null ? null : -r.kalt, 1)} je °C kälter.</p>
-          <KiraFazit title={`Hitze-Faustregel ${sport}`} facts={facts} />
+          <KiraFazit title={`Hitze-Faustregel ${sport}`} facts={facts} evidenz={r.nWarm < 8 ? 'schwach' : 'mittel'} regeln={[`Dieser Bericht betrifft nur ${sport === 'lauf' ? 'Laufen (Intensität in km/h)' : 'Rad (Intensität in Watt)'}; nenne nur die Werte für diese Sportart.`]} />
         </>
       )}
     </Panel>
@@ -70,7 +70,7 @@ export function WindRadTile() {
   const facts = [
     `Rad draußen flach, ${r.n} Einheiten mit Normalized Power und Garmin-Wind (Wetterstation, ohne Windrichtung). Wert = Watt je km/h relativ zum Formstand ± 30 Tage.`,
     `Je +1 km/h Wind: ${vz(r.proWind, 2)} % Watt je km/h. Windstärken: ${r.bins.filter((b) => b.n).map((b) => `${b.lab} ${b.n}× ${vz(b.relPct, 1)} %`).join(', ')}.`,
-    `Effizienztrend je 90 Tage: roh ${vz(r.trendRohJe90, 1)} %, windbereinigt ${vz(r.trendKorrJe90, 1)} % (positiv = mehr Watt für dasselbe Tempo). Streuung um den Trend: roh ${de(r.streuRoh, 1)} %, bereinigt ${de(r.streuKorr, 1)} %.`,
+    `Trend Watt je km/h je 90 Tage: roh ${vz(r.trendRohJe90, 1)} %, windbereinigt ${vz(r.trendKorrJe90, 1)} %. Positiv = mehr Watt für dasselbe Tempo = MEHR Aufwand (keine Effizienzsteigerung); kann auch an mehr Gravel/Untergrund liegen. Streuung um den Trend: roh ${de(r.streuRoh, 1)} %, bereinigt ${de(r.streuKorr, 1)} %.`,
   ];
   const daten = r.punkte.map((p) => ({ ts: new Date(p.datum + 'T12:00:00').getTime(), roh: p.y, korr: p.yk, wind: p.wind }));
   const klein = Math.abs(r.proWind ?? 0) < 0.3;
@@ -100,7 +100,7 @@ export function WindRadTile() {
           <p className="text-2xs text-ink-muted mt-1">
             {klein ? 'Ergebnis: Wind verändert deine Rad-Effizienz kaum messbar – der Rad-Effizienztrend ist also nicht vom Wind verzerrt.' : 'Wind wirkt messbar – nutze den bereinigten Trend.'} Die meisten Einheiten lagen unter 10 km/h Wind.
           </p>
-          <KiraFazit title="Wind Rad" facts={facts} />
+          <KiraFazit title="Wind Rad" facts={facts} evidenz="schwach" regeln={['Kernaussage: ob Wind die Werte messbar verändert. Ein steigender Trend Watt je km/h bedeutet mehr Aufwand, nicht mehr Effizienz.']} />
         </>
       )}
     </Panel>
@@ -147,7 +147,7 @@ export function EntSaisonTile() {
               ))}</tbody>
             </table>
           </div>
-          <KiraFazit title={`Entkopplung Saison ${sport}`} facts={facts} />
+          <KiraFazit title={`Entkopplung Saison ${sport}`} facts={facts} evidenz={r.n < 30 ? 'schwach' : 'mittel'} regeln={['Quartale mit weniger als 5 Einheiten nicht einzeln deuten.']} />
         </>
       )}
     </Panel>
@@ -162,7 +162,7 @@ export function EntFaktorenTile() {
   const fmtS = (f: { schwelle: number; einheit: string; id: string }) => (f.id === 'start' ? '14 Uhr' : `${de(f.schwelle, f.einheit === 'h' ? 1 : 0)}${f.einheit ? ' ' + f.einheit : ''}`);
   const facts = [
     `${r.n} lange flache Einheiten (Laufen und Rad). Entkopplung um Dauer und Sportart bereinigt; jeder Faktor am Median (Temperatur 18 °C, Startzeit 14 Uhr) geteilt. Positiv = stärker entkoppelt. Zusammenhang, keine Ursache.`,
-    ...r.faktoren.map((f) => `${f.lab} (Grenze ${fmtS(f)}): ${f.niedrig} ${vz(f.m1, 1)} Pkt (${f.n1}×), ${f.hoch} ${vz(f.m2, 1)} Pkt (${f.n2}×), Effekt ${staerke(f.d)}.`),
+    ...r.faktoren.map((f) => `${f.lab} (Grenze ${fmtS(f)}): ${f.niedrig} ${vz(f.m1, 1)} Pkt (${f.n1}×), ${f.hoch} ${vz(f.m2, 1)} Pkt (${f.n2}×), Effekt ${staerke(f.d)}. ${Math.abs((f.m1 ?? 0) - (f.m2 ?? 0)) < 0.3 ? 'Kein Unterschied.' : `Weniger Entkopplung (besser) bei: ${(f.m1 ?? 0) < (f.m2 ?? 0) ? f.niedrig : f.hoch}.`}`),
   ];
   return (
     <Panel title="Was die Entkopplung beeinflusst">
@@ -182,7 +182,7 @@ export function EntFaktorenTile() {
               );
             })}
           </div>
-          <KiraFazit title="Einflüsse Entkopplung" facts={facts} />
+          <KiraFazit title="Einflüsse Entkopplung" facts={facts} evidenz="schwach" regeln={['Alle Unterschiede liegen unter 1 Prozentpunkt – nur als Beobachtung nennen.', 'Für jeden Faktor die Angabe „Weniger Entkopplung (besser) bei“ übernehmen, nicht umdeuten.']} />
         </>
       )}
     </Panel>
@@ -235,7 +235,7 @@ export function AlltagErholungTile() {
             </ResponsiveContainer>
           </div>
           <div className="flex items-center gap-2 mt-1"><Ev n={r.mitTerminen} /><span className="text-2xs text-ink-dim">Belegte Stunden des Tages → Nacht danach.</span></div>
-          <KiraFazit title="Alltag und Erholung" facts={facts} />
+          <KiraFazit title="Alltag und Erholung" facts={facts} regeln={['Arbeitstermine sind in diesen Kalendern vermutlich nicht enthalten – es geht um private/familiäre Belegung.', 'Effekte unter 1 % HRV je Stunde sind klein.']} />
         </>
       )}
     </Panel>
@@ -276,7 +276,7 @@ export function FormSpitzenTile() {
               </div>
             ))}
           </div>
-          <KiraFazit title={`Form Spitzen ${sport}`} facts={facts} />
+          <KiraFazit title={`Form Spitzen ${sport}`} facts={facts} evidenz={p.n < 10 ? 'schwach' : 'mittel'} />
         </>
       )}
     </Panel>

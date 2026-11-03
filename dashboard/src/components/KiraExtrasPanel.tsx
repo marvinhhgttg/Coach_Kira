@@ -170,6 +170,7 @@ export function KiraExtrasPanel() {
     return selbsttestEintraege.slice(0, 14).map((e) => ({
       datum: e.datum,
       okCount: e.tests.filter((t) => t.ok).length,
+      gesamt: e.tests.length || 6,
     }));
   }, [selbsttestEintraege]);
 
@@ -331,7 +332,7 @@ export function KiraExtrasPanel() {
                 <div className="flex flex-wrap gap-2 text-2xs">
                   {testVerlauf.map((v, i) => (
                     <span key={i} className="text-ink-dim">
-                      {fmtDateShort(v.datum)}: <span className="tnum">{v.okCount}/6</span>
+                      {fmtDateShort(v.datum)}: <span className="tnum">{v.okCount}/{v.gesamt}</span>
                     </span>
                   ))}
                 </div>
