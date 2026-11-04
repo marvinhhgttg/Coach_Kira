@@ -190,7 +190,22 @@ export async function sendChat(messages: ChatMsg[], context: ChatContext, source
 // ---------------------------------------------------------------------------
 // Lokal: Ollama auf dem Mac (nur erreichbar, wenn das Cockpit auf diesem Mac läuft)
 // ---------------------------------------------------------------------------
-export const OLLAMA_URL = 'http://localhost:11434';
+/**
+ * Ollama auf dem Mac. Safari blockiert http://localhost von https-Seiten (Mixed Content) –
+ * dafür gibt es eine https-Weiterleitung auf Port 11435 (Caddy, siehe docs/safari-lokale-ki.md).
+ * Gefunden wird automatisch die erste erreichbare Adresse; Safari probiert https zuerst.
+ */
+const OLLAMA_HTTP = 'http://localhost:11434';
+const OLLAMA_HTTPS = 'https://localhost:11435';
+const IST_SAFARI = typeof navigator !== 'undefined' && /Safari\//.test(navigator.userAgent) && !/Chrome|Chromium|CriOS|Edg|Comet/i.test(navigator.userAgent);
+const KANDIDATEN = IST_SAFARI ? [OLLAMA_HTTPS, OLLAMA_HTTP] : [OLLAMA_HTTP, OLLAMA_HTTPS];
+let ollamaBasis: string = KANDIDATEN[0];
+/** Aktuell genutzte Ollama-Adresse (nach erfolgreicher Prüfung). */
+export function ollamaUrl(): string {
+  return ollamaBasis;
+}
+/** @deprecated – ollamaUrl() verwenden */
+export const OLLAMA_URL = OLLAMA_HTTP;
 export const LOCAL_MODEL = 'coach-kira';
 
 export const KIRA_SYSTEM = [
@@ -205,26 +220,32 @@ export const KIRA_SYSTEM = [
 
 /** Prüft, ob Ollama erreichbar ist und das Modell coach-kira existiert. */
 export async function pingLocal(): Promise<{ ok: boolean; hasModel: boolean; models: string[]; error?: string }> {
-  try {
-    const ctl = new AbortController();
-    // großzügig, damit eine Browser-Freigabe (lokales Netzwerk) beantwortet werden kann
-    const t = setTimeout(() => ctl.abort(), 15000);
-    const res = await fetch(`${OLLAMA_URL}/api/tags`, { signal: ctl.signal, cache: 'no-store' });
-    clearTimeout(t);
-    const j = await res.json();
-    const models: string[] = (j.models || []).map((m: any) => String(m.name || m.model || ''));
-    return { ok: true, hasModel: models.some((m) => m === LOCAL_MODEL || m.startsWith(LOCAL_MODEL + ':')), models };
-  } catch (e) {
-    const name = e instanceof Error ? e.name : '';
-    const msg = e instanceof Error ? e.message : String(e);
-    const error =
-      name === 'AbortError'
-        ? 'keine Antwort in 15 s – vermutlich wartet der Browser auf die Freigabe „Lokales Netzwerk“'
-        : /Failed to fetch|NetworkError|Load failed/i.test(msg)
-          ? 'vom Browser blockiert (Freigabe „Lokales Netzwerk“ oder CORS/OLLAMA_ORIGINS)'
-          : msg;
-    return { ok: false, hasModel: false, models: [], error };
+  let letzterFehler = '';
+  for (const basis of KANDIDATEN) {
+    try {
+      const ctl = new AbortController();
+      // großzügig, damit eine Browser-Freigabe (lokales Netzwerk) beantwortet werden kann
+      const t = setTimeout(() => ctl.abort(), basis === KANDIDATEN[0] ? 15000 : 8000);
+      const res = await fetch(`${basis}/api/tags`, { signal: ctl.signal, cache: 'no-store' });
+      clearTimeout(t);
+      const j = await res.json();
+      const models: string[] = (j.models || []).map((m: any) => String(m.name || m.model || ''));
+      ollamaBasis = basis;
+      return { ok: true, hasModel: models.some((m) => m === LOCAL_MODEL || m.startsWith(LOCAL_MODEL + ':')), models };
+    } catch (e) {
+      const name = e instanceof Error ? e.name : '';
+      const msg = e instanceof Error ? e.message : String(e);
+      letzterFehler =
+        name === 'AbortError'
+          ? 'keine Antwort – vermutlich wartet der Browser auf die Freigabe „Lokales Netzwerk“'
+          : /Failed to fetch|NetworkError|Load failed/i.test(msg)
+            ? IST_SAFARI
+              ? 'Safari erreicht den Mac nicht – sichere Verbindung (https://localhost:11435) einrichten'
+              : 'vom Browser blockiert (Freigabe „Lokales Netzwerk“ oder Ollama-Freigabe für diese Seite)'
+            : msg;
+    }
   }
+  return { ok: false, hasModel: false, models: [], error: letzterFehler };
 }
 
 /** Lokale Antwort mit Streaming. onToken erhält den bisher gesammelten Text. */
@@ -235,7 +256,7 @@ export async function sendChatLocal(
   model = LOCAL_MODEL,
 ): Promise<{ answer: string; model: string; tokPerS: number | null }> {
   const sys = KIRA_SYSTEM + '\n\nCOCKPIT-DATEN:\n' + JSON.stringify(context);
-  const res = await fetch(`${OLLAMA_URL}/api/chat`, {
+  const res = await fetch(`${ollamaUrl()}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

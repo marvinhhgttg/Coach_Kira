@@ -5,7 +5,7 @@
 import { ladeErfahrung } from './useErfahrung';
 import { erfahrungText } from './votumErfahrung';
 import { BASE_URL } from './api';
-import { LOCAL_MODEL, OLLAMA_URL, pingLocal } from './chatContext';
+import { LOCAL_MODEL, ollamaUrl, pingLocal } from './chatContext';
 import { getEngine } from './engine';
 import { cloudChat } from './cloudLLM';
 import { briefingMessages, type KiMsg } from './kiraPrompts';
@@ -82,7 +82,7 @@ export async function runLocalBriefing(type: BriefingType, onProgress?: (text: s
     return savedC as { ok: true; analysis?: string; briefing?: string; recommendations?: any[]; timestamp?: string };
   }
 
-  const res = await fetch(`${OLLAMA_URL}/api/chat`, {
+  const res = await fetch(`${ollamaUrl()}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

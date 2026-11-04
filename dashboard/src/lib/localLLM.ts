@@ -4,7 +4,7 @@
  *   Cloud → Perplexity über den Cockpit-Server (/api/llm)
  * Kein automatischer Wechsel zwischen beiden.
  */
-import { LOCAL_MODEL, OLLAMA_URL, pingLocal } from './chatContext';
+import { LOCAL_MODEL, ollamaUrl, pingLocal } from './chatContext';
 import { getEngine } from './engine';
 import { cloudChat } from './cloudLLM';
 
@@ -32,7 +32,7 @@ export async function localChat(messages: LlmMsg[], opts: KiOpts = {}): Promise<
 /** Immer lokal (coach-kira). */
 export async function ollamaChat(messages: LlmMsg[], opts: KiOpts = {}): Promise<string> {
   await ensureLocal();
-  const res = await fetch(`${OLLAMA_URL}/api/chat`, {
+  const res = await fetch(`${ollamaUrl()}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
