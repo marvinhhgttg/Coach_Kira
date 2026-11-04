@@ -88,7 +88,7 @@ export function AlltagCheckTile({
     const c = c0.status === 'fulfilled' ? ({ status: 'fulfilled', value: c0.value.days } as const) : c0;
     if (c0.status === 'fulfilled') {
       const k = c0.value;
-      if (!k.filterAktiv) n.push('Kalenderfilter noch nicht aktiv (Apps-Script-Patch „Alltag-Kalender“) – es zählen noch alle Kalender, ganztägige Termine sind herausgerechnet.');
+      if (!k.filterAktiv) n.push('Kalenderauswahl nicht verfügbar – es zählen alle Kalender, ganztägige Termine sind herausgerechnet.');
       else {
         const fehlt = ALLTAG_KALENDER.filter((x) => !(k.kalender || []).some((y) => y.trim().toLowerCase() === x.toLowerCase()));
         if (fehlt.length) n.push(`Kalender nicht gefunden: ${fehlt.join(', ')} (Name in Google Kalender prüfen).`);

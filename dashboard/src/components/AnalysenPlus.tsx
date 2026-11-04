@@ -211,7 +211,7 @@ export function AlltagErholungTile() {
     <Panel title="Alltag und Erholung">
       <Hinweis>Kosten dich volle Kalendertage Erholung? Belegte Stunden aus deinen drei Kalendern (Marc, Marc (geteilt), Natalia & Marc; ganztägige Termine zählen nicht) gegen HRV und Schlaf der Nacht danach. Trainingslast und Wochenende sind herausgerechnet.</Hinweis>
       {fehler ? (
-        <p className="text-2xs text-amber-400">{fehler}. Den Patch findest du im Repo unter docs/patches/Apps-Script-Patch-Kalender-Historie.md.</p>
+        <p className="text-2xs text-amber-400">{fehler}.</p>
       ) : !r ? <Laedt /> : r.n < 20 ? <p className="text-2xs text-ink-dim">Zu wenige Tage ({r.n}).</p> : (
         <>
           <div className="grid grid-cols-3 gap-2 mb-2">

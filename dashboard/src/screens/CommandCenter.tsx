@@ -282,7 +282,7 @@ function RadarChart({ title, labels, items }: { title: string; labels: string[];
 
 function StatusRadarSection({ items }: { items: StatusItemLike[] }) {
   return (
-    <Panel title="AI_REPORT_STATUS · Radar">
+    <Panel title="Status-Radar">
       <div className="grid gap-4 xl:grid-cols-3">
         <RadarChart title="Gesamtzustand" labels={RADAR_MAP.overall} items={items} />
         <RadarChart title="Recovery" labels={RADAR_MAP.recovery} items={items} />
@@ -588,8 +588,8 @@ export function CommandCenter({
               <BriefingMarkdown text={consolidated} />
             ) : (
               <p className="mt-3 text-sm text-ink-muted">
-                Synthetisiert AI_REPORT_STATUS, Plan Cockpit, Plan-Briefing, Historie und die Perspektiven
-                deiner Garmin-Analyse-Skills zu einer konsolidierten Coach-Kira-Lagebeurteilung.
+                Fasst den Statusbericht, das Plan Cockpit, das Plan-Briefing, die Historie und die Perspektiven
+                deiner Garmin-Analysen zu einer gemeinsamen Lagebeurteilung zusammen.
               </p>
             )}
           </div>
@@ -618,8 +618,7 @@ export function CommandCenter({
               <AiAnalysisText text={analysis} />
             ) : (
               <p className="mt-3 text-sm text-ink-muted">
-                Lokal mit coach-kira auf deinem Mac oder in der Cloud über Perplexity – gespeichert wird in
-                <span className="tnum text-ink"> AI_STATUS_ANALYSIS</span>.
+                Lokal auf deinem Mac oder in der Cloud – das Ergebnis wird im Sheet gespeichert.
               </p>
             )}
           </div>

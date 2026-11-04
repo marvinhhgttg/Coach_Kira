@@ -205,10 +205,10 @@ export async function fetchKalenderHistorie(von: string, bis: string, kalender: 
   const q = new URLSearchParams({ mode: 'calendarHistorie', von, bis, kal: kalender.join('|'), ganztag: '0', cb: String(Date.now()) });
   let txt = '';
   try { txt = await (await fetch(`${BASE_URL}?${q.toString()}`, { redirect: 'follow', cache: 'no-store' })).text(); }
-  catch { throw new Error('Apps-Script-Patch „Kalender-Historie“ fehlt noch'); } // unbekannter Modus → Google-Fehlerseite ohne CORS
+  catch { throw new Error('Die Kalender-Historie ist gerade nicht verfügbar'); } // unbekannter Modus → Google-Fehlerseite ohne CORS
   let j: any;
-  try { j = JSON.parse(txt); } catch { throw new Error('Apps-Script-Patch „Kalender-Historie“ fehlt noch'); }
-  if (!j?.ok || !Array.isArray(j.days)) throw new Error(j?.error && /mode|unbekannt|unknown/i.test(j.error) ? 'Apps-Script-Patch „Kalender-Historie“ fehlt noch' : (j?.error || 'Kalender nicht lesbar'));
+  try { j = JSON.parse(txt); } catch { throw new Error('Die Kalender-Historie ist gerade nicht verfügbar'); }
+  if (!j?.ok || !Array.isArray(j.days)) throw new Error(j?.error && /mode|unbekannt|unknown/i.test(j.error) ? 'Die Kalender-Historie ist gerade nicht verfügbar' : (j?.error || 'Kalender nicht lesbar'));
   try { localStorage.setItem(KEY, JSON.stringify({ at: Date.now(), von, bis, days: j.days })); } catch { /* ignore */ }
   return j.days;
 }

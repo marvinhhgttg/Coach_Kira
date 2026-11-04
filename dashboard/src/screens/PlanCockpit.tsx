@@ -962,7 +962,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
       START: 'Startet…',
       INIT: 'Sammelt Daten…',
       AI_WAIT_LOCAL: 'Wartet auf Mac (coach-kira)',
-      AI_CALL: 'Fragt GPT-4o…',
+      AI_CALL: 'Kira arbeitet…',
       AI_OK: 'Antwort da',
       WRITE: 'Speichert…',
     };

@@ -224,7 +224,7 @@ export function KiraChat() {
   }
 
   function handleClear() {
-    if (!window.confirm('Chat-Verlauf im Browser löschen? Der Eintrag in AI_CHAT_LOG bleibt.')) return;
+    if (!window.confirm('Chat-Verlauf im Browser löschen? Das Protokoll im Sheet bleibt erhalten.')) return;
     setMsgs([]);
     setUsed(null);
     setLimit(null);
@@ -357,8 +357,8 @@ export function KiraChat() {
           </div>
           <div className="text-2xs text-ink-dim">
             {engine === 'local'
-              ? 'Kira (lokal) läuft auf deinem Mac – keine Cloud. Verlauf: dieser Browser + AI_CHAT_LOG.'
-              : 'Kira (Cloud) läuft über den Cockpit-Server mit Perplexity. Sie berät nur – Plan und Sheet ändert sie nicht. Verlauf: dieser Browser + AI_CHAT_LOG.'}
+              ? 'Kira (lokal) läuft auf deinem Mac – keine Cloud. Verlauf: dieser Browser und das Chat-Protokoll im Sheet.'
+              : 'Kira (Cloud) läuft über den Cockpit-Server. Sie berät nur – Plan und Sheet ändert sie nicht. Verlauf: dieser Browser und das Chat-Protokoll im Sheet.'}
           </div>
         </div>
       )}
