@@ -145,7 +145,7 @@ export function SupervisorPlanTile({
       {hasDays && (
         <p className="mt-3 text-2xs text-ink-dim">
           „ESS übernehmen“ setzt Last und Zone der freien Tage in die Simulation;
-          gesperrte Tage bleiben. Gespeichert wird erst mit „In timeline
+          gesperrte Tage bleiben. Gespeichert wird erst mit „In Timeline
           speichern“.
         </p>
       )}

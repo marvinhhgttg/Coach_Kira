@@ -41,7 +41,7 @@ export function GoalPlannerTile() {
       setErr(null);
       if (!sel) setSel(xs.find((x) => x.datum >= heute())?.datum || null);
     } catch (e) {
-      setErr(/JSON|Typ|Failed to fetch|Load failed/.test(String(e)) ? 'Patch „Zukunftsplanung“ noch nicht aktiv.' : String(e instanceof Error ? e.message : e));
+      setErr(/JSON|Typ|Failed to fetch|Load failed/.test(String(e)) ? 'Planungsdaten sind gerade nicht verfügbar.' : String(e instanceof Error ? e.message : e));
     }
   }
   useEffect(() => {

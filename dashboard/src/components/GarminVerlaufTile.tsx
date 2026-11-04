@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
+import { ZeitraumWahl } from './ZeitraumWahl';
 import { Bar, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Panel } from './UI';
 import { fmtDateShort, fmtNum } from '../lib/format';
 import { useGarminTage, type GarminTag } from '../lib/garmin';
-import { WINDOWS, winLabel, type WinKey } from '../lib/windows';
+import { WINDOWS, winLabel, type WinKey, winVonBis } from '../lib/windows';
 
 type Serie = { key: string; label: string; farbe: string; art: 'linie' | 'balken' | 'flaeche'; stapel?: string; achse?: 'rechts' };
 type Ansicht = {
@@ -113,8 +114,8 @@ export function GarminVerlaufTile() {
   const rows = useMemo(() => {
     if (!tage) return [];
     const daten = [...tage.keys()].sort();
-    const bis = new Date().toLocaleDateString('sv-SE');
-    const von = win === 0 ? '0000' : new Date(Date.now() - win * 86400000).toLocaleDateString('sv-SE');
+    const { von, bis: bisW } = winVonBis(win);
+    const bis = bisW > new Date().toLocaleDateString('sv-SE') ? new Date().toLocaleDateString('sv-SE') : bisW;
     const sel = daten.filter((d) => d >= von && d <= bis);
     if (!ansicht.woche) return sel.map((d) => ({ date: d, ...ansicht.wert(tage.get(d)!) }));
     const wochen = new Map<string, Record<string, number>>();
@@ -138,13 +139,7 @@ export function GarminVerlaufTile() {
     <Panel
       title="Garmin-Verläufe"
       right={
-        <div className="inline-flex flex-wrap bg-bg rounded border border-border p-0.5">
-          {WINDOWS.map((w) => (
-            <button key={w} onClick={() => setWin(w)} className={`px-1.5 sm:px-2 py-1 text-xs rounded tnum ${win === w ? 'bg-bg-subtle text-ink' : 'text-ink-muted hover:text-ink'}`}>
-              {winLabel(w)}
-            </button>
-          ))}
-        </div>
+        <ZeitraumWahl value={win} onChange={setWin} />
       }
     >
       <div className="flex flex-wrap gap-1 mb-2" data-testid="garmin-verlauf-ansichten">

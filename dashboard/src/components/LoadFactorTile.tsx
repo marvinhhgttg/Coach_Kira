@@ -18,7 +18,7 @@ export function LoadFactorTile({
         <div>
           <div className="label">Coach Kira · Lastfaktoren</div>
           <p className="text-2xs text-ink-dim mt-1">
-            Vergleich geplante vs. tatsächliche Last je Sport und Zone (Plan-Schnappschuss am Morgen gegen Garmin-Ist). Nur Vorschläge – KK_LOAD_FACTORS änderst du selbst.
+            Vergleich geplante vs. tatsächliche Last je Sport und Zone (Plan-Schnappschuss am Morgen gegen Garmin-Ist). Nur Vorschläge – die Lastfaktoren im Sheet änderst du selbst.
           </p>
         </div>
         <button

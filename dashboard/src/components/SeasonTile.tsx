@@ -44,7 +44,7 @@ export function SeasonTile() {
     ladeFenster().then(setFenster).catch(() => setFenster([]));
     fetchExtras<SaisonDaten>(['saison'], 1)
       .then((xs) => setItem(xs[0] || null))
-      .catch((e) => setErr(/JSON|Typ|Failed to fetch|Load failed/.test(String(e)) ? 'Patch „Zukunftsplanung“ noch nicht aktiv.' : String(e)));
+      .catch((e) => setErr(/JSON|Typ|Failed to fetch|Load failed/.test(String(e)) ? 'Planungsdaten sind gerade nicht verfügbar.' : String(e)));
     fetchExtras<{ ziel: Ziel }>(['ziel'], 60)
       .then((xs) => setZiele(xs.map((x) => x.data?.ziel).filter((z): z is Ziel => !!z && z.datum >= heute())))
       .catch(() => setZiele([]));

@@ -88,7 +88,7 @@ export function NutritionTile() {
         if (!cancelled) setItems(data);
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        if (msg.includes('JSON')) setErr('Patch „KI-Extras" noch nicht aktiv');
+        if (msg.includes('JSON')) setErr('Daten sind gerade nicht verfügbar');
         else if (!cancelled) setErr('Ernährung konnte nicht geladen werden');
       }
     }

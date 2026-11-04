@@ -170,7 +170,7 @@ export function WhatIfTile({
           <p className="text-sm text-ink whitespace-pre-line">{res.antwort}</p>
           <div className="flex gap-2">
             <button className="btn btn-ghost text-xs px-2 py-1" onClick={() => onApply(res.loads, res.sports, res.zones)}>In Slider übernehmen</button>
-            <span className="text-2xs text-ink-dim self-center">Gespeichert wird erst mit „In timeline speichern“.</span>
+            <span className="text-2xs text-ink-dim self-center">Gespeichert wird erst mit „In Timeline speichern“.</span>
           </div>
         </div>
       )}

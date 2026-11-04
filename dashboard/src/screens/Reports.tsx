@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { ZeitraumWahl } from '../components/ZeitraumWahl';
 import { GarminBerichtTile } from '../components/GarminBerichtTile';
 import { ZeitraumVergleichTile } from '../components/ZeitraumVergleichTile';
 import { JahresrueckblickTile } from '../components/JahresrueckblickTile';
@@ -1049,7 +1050,7 @@ export function Reports() {
         {inhalt(subR, false)}
       </StorySection>
       <StorySection id="gesund" titel="Erholung, Schlaf und Ernährung" unter="Wie du nach harten Tagen zurückkommst, wie du schläfst und isst, und wo Daten fehlen"
-        rechts={<div className="flex flex-wrap items-center gap-2"><Chips items={GESUND} value={subG} onChange={setSub2} fmt={lbl} /><Chips items={WINDOWS} value={win} onChange={setWin} fmt={winLabel} /></div>}>
+        rechts={<div className="flex flex-wrap items-center gap-2"><Chips items={GESUND} value={subG} onChange={setSub2} fmt={lbl} /><ZeitraumWahl value={win} onChange={setWin} /></div>}>
         {inhalt(subG, true)}
       </StorySection>
     </div>

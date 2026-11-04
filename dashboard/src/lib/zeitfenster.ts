@@ -36,11 +36,11 @@ export async function kalenderVorschlaege(von = heute(), tage = 200): Promise<Ka
   const b = new Date(von + 'T12:00:00');
   b.setDate(b.getDate() + tage);
   const res = await fetch(`${BASE_URL}?mode=calendarFenster&von=${von}&bis=${b.toLocaleDateString('sv-SE')}&cb=${Date.now()}`, { redirect: 'follow' }).catch(() => {
-    throw new Error('Kalender-Vorschläge noch nicht verfügbar – Apps-Script-Patch „Zeitfenster“ fehlt.');
+    throw new Error('Kalender-Vorschläge sind gerade nicht verfügbar.');
   });
   let j: any = null;
-  try { j = JSON.parse(await res.text()); } catch { throw new Error('Apps-Script-Patch „Zeitfenster“ fehlt (Kalender-Abruf)'); }
-  if (!j || !j.ok) throw new Error(/mode|unbekannt|unknown/i.test(String(j?.error)) ? 'Apps-Script-Patch „Zeitfenster“ fehlt (Kalender-Abruf)' : (j && j.error) || 'Kalender nicht lesbar');
+  try { j = JSON.parse(await res.text()); } catch { throw new Error('Kalender-Vorschläge sind gerade nicht verfügbar.'); }
+  if (!j || !j.ok) throw new Error(/mode|unbekannt|unknown/i.test(String(j?.error)) ? 'Kalender-Vorschläge sind gerade nicht verfügbar.' : (j && j.error) || 'Kalender nicht lesbar');
   return (j.fenster || []) as KalVorschlag[];
 }
 

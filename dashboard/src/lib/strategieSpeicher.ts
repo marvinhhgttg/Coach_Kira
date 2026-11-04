@@ -68,7 +68,7 @@ async function hochladen() {
     setStatus('gespeichert', d.stand);
   } catch (e) {
     const msg = String((e as Error)?.message || e);
-    if (/typ|type|unbekannt|unknown|erlaubt/i.test(msg)) setStatus('nur_browser', 'Apps-Script-Patch „Strategie speichern“ fehlt');
+    if (/typ|type|unbekannt|unknown|erlaubt/i.test(msg)) setStatus('nur_browser', 'Speichern im Sheet gerade nicht möglich');
     else setStatus('fehler', msg);
   }
 }

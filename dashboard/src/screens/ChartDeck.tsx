@@ -1,4 +1,5 @@
 import { RecoveryPanel } from './RecoveryPanel';
+import { ZeitraumWahl } from '../components/ZeitraumWahl';
 import { FormelEditorTile } from '../components/FormelEditorTile';
 import { WochenrhythmusTile } from '../components/WochenrhythmusTile';
 import { IntensitaetTile } from '../components/IntensitaetTile';
@@ -32,16 +33,7 @@ import {
   RECOVERY_METRICS,
   type ChartDataResponse,
 } from '../lib/api';
-import {
-  WINDOWS,
-  ALL_RANGE,
-  winLabel,
-  winTitle,
-  sliceWin,
-  rangeFor,
-  rangeDays,
-  type WinKey,
-} from '../lib/windows';
+import { WINDOWS, ALL_RANGE, winLabel, winTitle, sliceWin, rangeFor, rangeDays, type WinKey, isCustom } from '../lib/windows';
 import { fmtDateShort, fmtTime } from '../lib/format';
 import { ErrorBox, Panel, Skeleton, StorySection, StoryGrid } from '../components/UI';
 import { KiraExtrasPanel } from '../components/KiraExtrasPanel';
@@ -398,11 +390,11 @@ export function ChartDeck() {
   }, [load_, rawOpen]);
 
   const loadRows = useMemo(
-    () => (load ? normaliseData(load.data, LOAD_METRICS) : []),
+    () => (load ? sliceWin(normaliseData(load.data, LOAD_METRICS), isCustom(win) ? win : 0) : []),
     [load]
   );
   const recoveryRowsBase = useMemo(
-    () => (recovery ? normaliseData(recovery.data, RECOVERY_METRICS) : []),
+    () => (recovery ? sliceWin(normaliseData(recovery.data, RECOVERY_METRICS), isCustom(win) ? win : 0) : []),
     [recovery]
   );
   const recoveryRows = useMemo(
@@ -538,22 +530,7 @@ export function ChartDeck() {
               {rawOpen ? '▴ Einklappen' : '▾ Ausklappen'}
             </button>
             {rawOpen && <>
-            <div className="inline-flex flex-wrap bg-bg rounded border border-border p-0.5" role="tablist">
-              {WINDOWS.map((w) => (
-                <button
-                  key={w}
-                  onClick={() => setWin(w)}
-                  className={`px-1.5 sm:px-2.5 py-1 text-xs rounded tnum ${
-                    win === w
-                      ? 'bg-bg-subtle text-ink'
-                      : 'text-ink-muted hover:text-ink'
-                  }`}
-                  data-testid={`range-${w}`}
-                >
-                  {winLabel(w)}
-                </button>
-              ))}
-            </div>
+            <ZeitraumWahl value={win} onChange={setWin} testIdPrefix="range" />
             <button onClick={load_} className="btn btn-ghost text-xs px-2 py-1" disabled={busy}>
               {busy ? 'Lade…' : 'Aktualisieren'}
             </button>

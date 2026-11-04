@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { ZeitraumWahl } from '../components/ZeitraumWahl';
 import { ApiError, fetchChartData } from '../lib/api';
 import { fetchActivityReviews, type ActivityReview } from '../lib/activityReviews';
 import { SourceBadge } from '../components/EngineSwitch';
@@ -70,6 +71,50 @@ type Act = {
   next: RecoveryDay | null;
   base: { r: number | null; h: number | null; p: number | null };
 };
+
+type Rest = { d: RecoveryDay; krank: boolean; next: RecoveryDay | null; base: { r: number | null; h: number | null; p: number | null } };
+
+function RestRow({ r, open, onToggle }: { r: Rest; open: boolean; onToggle: () => void }) {
+  const n = r.next;
+  const dr = n?.readiness != null && r.base.r != null ? n.readiness - r.base.r : null;
+  const dh = n?.hrv != null && r.base.h != null ? n.hrv - r.base.h : null;
+  const dp = n?.rhr != null && r.base.p != null ? n.rhr - r.base.p : null;
+  const label = r.krank ? 'Krank' : 'Off';
+  return (
+    <Fragment>
+      <tr id={`log-${r.d.date}`} className={`border-t border-border cursor-pointer text-ink-muted hover:bg-bg-subtle/60 ${open ? 'bg-bg-subtle/60' : ''}`} onClick={onToggle} data-testid="log-ruhetag">
+        <td className="px-2 py-1.5 tnum whitespace-nowrap">{WD[wdIdx(r.d.date)]} {fmtDateShort(r.d.date)}</td>
+        <td className="px-2 py-1.5">
+          <span className="inline-block w-2 h-2 rounded-full mr-1.5 align-middle border border-ink-dim" />
+          {label}
+        </td>
+        <td className="px-2 py-1.5">—</td>
+        <td className="px-2 py-1.5 tnum">0</td>
+        <td className="px-2 py-1.5" colSpan={7}><span className="text-2xs text-ink-dim">{r.krank ? 'Krankheitstag' : 'Ruhetag'}</span></td>
+        <td className="px-2 py-1.5 whitespace-nowrap"><VoteChip v={r.d.vote} /></td>
+        <td className={`px-2 py-1.5 tnum ${tone(dr, true, 2)}`}>{n ? `Ready ${sgn(dr)}` : '—'}</td>
+        <td className="px-2 py-1.5 text-ink-dim">{open ? '▴' : '▾'}</td>
+      </tr>
+      {open && (
+        <tr className="bg-bg-subtle/40">
+          <td colSpan={14} className="px-3 py-3">
+            <div className="grid gap-x-6 gap-y-1 sm:grid-cols-2 md:grid-cols-4 text-xs">
+              <div className="label md:col-span-4 mb-1">Folgemorgen nach dem {r.krank ? 'Krankheitstag' : 'Ruhetag'} · ggü. deinem Schnitt der 28 Tage davor</div>
+              {n ? (
+                <>
+                  <Row k="Readiness" v={<span className={tone(dr, true, 2)}>{fmtNum(n.readiness)} ({sgn(dr)})</span>} />
+                  <Row k="HRV" v={<span className={tone(dh, true, 1)}>{fmtNum(n.hrv)} ms ({sgn(dh, 1)})</span>} />
+                  <Row k="RHR" v={<span className={tone(dp, false, 1)}>{fmtNum(n.rhr)} bpm ({sgn(dp, 1)})</span>} />
+                  <Row k="Votum am Tag" v={r.d.vote ? VOTE_LABEL[r.d.vote] : '—'} />
+                </>
+              ) : <span className="text-ink-dim">Folgemorgen noch nicht verfügbar</span>}
+            </div>
+          </td>
+        </tr>
+      )}
+    </Fragment>
+  );
+}
 
 function buildActs(all: RecoveryDay[]): Act[] {
   const today = localIsoDate();
@@ -296,7 +341,7 @@ function Calendar({ days, acts, onPick, picked }: { days: RecoveryDay[]; acts: M
                     style={col ? { background: `${col}${Math.round(alpha * 255).toString(16).padStart(2, '0')}` } : undefined}
                   >
                     <span className="absolute top-0.5 left-1 text-ink-dim">{Number(iso.slice(8))}</span>
-                    <span className="absolute bottom-0.5 right-1 font-semibold text-ink">{a ? fmtNum(a.ess) : sick ? 'K' : ''}</span>
+                    <span className={`absolute bottom-0.5 right-1 font-semibold ${a ? 'text-ink' : 'text-ink-dim'}`}>{a ? fmtNum(a.ess) : sick ? 'K' : d && iso < localIsoDate() ? 'Off' : ''}</span>
                     {a && a.fits === false && <span className="absolute top-0.5 right-1 w-1.5 h-1.5 rounded-full bg-ampel-orange" />}
                   </button>
                 );
@@ -359,7 +404,25 @@ export function TacticalLog() {
   const allActs = useMemo(() => buildActs(all), [all]);
   const days = sliceWin(all, win);
   const from = days[0]?.date ?? '';
-  const acts = allActs.filter((a) => a.d.date >= from);
+  const to = days[days.length - 1]?.date ?? '';
+  const acts = allActs.filter((a) => a.d.date >= from && a.d.date <= to);
+  // Ruhetage (Off) und Krankheitstage: vergangene Tage ohne Training
+  const rests = useMemo<Rest[]>(() => {
+    const today = localIsoDate();
+    const out: Rest[] = [];
+    all.forEach((d, i) => {
+      if (d.date >= today || d.date < from || d.date > to) return;
+      if ((d.essDay ?? 0) > 0) return;
+      const prior = all.slice(Math.max(0, i - 28), i);
+      out.push({
+        d,
+        krank: isSick(d),
+        next: all[i + 1] && all[i + 1].date <= today ? all[i + 1] : null,
+        base: { r: avg(prior.map((x) => x.readiness)), h: avg(prior.map((x) => x.hrv)), p: avg(prior.map((x) => x.rhr)) },
+      });
+    });
+    return out;
+  }, [all, from, to]);
   const actMap = useMemo(() => new Map(acts.map((a) => [a.d.date, a])), [acts]);
 
   // 4) Serien & Abstände (über alle Daten, Stand heute)
@@ -394,7 +457,9 @@ export function TacticalLog() {
     return { cur, hardRun, sinceRest: diff(lastRest?.date), sinceQ: diff(lastQ?.d.date), lastQ, best, bestEnd, bestHard };
   }, [all, allActs, days]);
 
-  const sports = ['Alle', ...Object.keys(SPORT_COLORS).filter((s) => acts.some((a) => a.sport === s))];
+  const sports = ['Alle', ...Object.keys(SPORT_COLORS).filter((s) => acts.some((a) => a.sport === s)), ...(rests.length ? ['Ruhetag'] : [])];
+  const restsSichtbar = (fSport === 'Alle' || fSport === 'Ruhetag') && fZone === 'Alle' && fLoad === 'Alle' && !onlyMiss && sort === 'date';
+  const restMap = new Map(rests.map((r) => [r.d.date, r]));
   const filtered = acts
     .filter((a) => fSport === 'Alle' || a.sport === fSport)
     .filter((a) => fZone === 'Alle' || a.zoneG === fZone)
@@ -443,7 +508,7 @@ export function TacticalLog() {
       <StorySection id="bilanz" titel="Deine Bilanz" unter={`Umfang und Rhythmus · ${winTitle(win)}`}
         rechts={
           <div className="flex flex-wrap items-center gap-2">
-            <Chips items={WINDOWS} value={win} onChange={setWin} fmt={winLabel} />
+            <ZeitraumWahl value={win} onChange={setWin} />
             <button className="btn btn-ghost text-xs px-2 py-1" onClick={load} disabled={!raw && !err}>
               {!raw && !err ? 'Lade…' : 'Aktualisieren'}
             </button>
@@ -451,12 +516,13 @@ export function TacticalLog() {
         }>
         {raw && !err ? (
           <div className="space-y-3">
-            <div className="grid gap-3 grid-cols-2 md:grid-cols-5">
+            <div className="grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
               <Kpi label="Aktivitäten" value={totals.n} sub={winTitle(win)} />
               <Kpi label="Gesamtlast" value={`${fmtNum(totals.sum)} ESS`} sub={`Ø ${fmtNum(totals.n ? totals.sum / totals.n : null)} / Einheit`} />
               <Kpi label="Distanz" value={gTot.n ? `${fmtNum(gTot.km)} km` : '—'} sub="laut Garmin" />
               <Kpi label="Höhenmeter" value={gTot.n ? `${fmtNum(gTot.hm)} hm` : '—'} sub="laut Garmin" />
               <Kpi label="Bewegungszeit" value={gTot.n ? `${fmtNum(gTot.sek / 3600)} h` : '—'} sub="laut Garmin" />
+              <Kpi label="Ruhetage (Off)" value={rests.filter((r) => !r.krank).length} sub={rests.some((r) => r.krank) ? `+ ${rests.filter((r) => r.krank).length} krank` : winTitle(win)} />
             </div>
             <div className="grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
               <Kpi label="Trainingstage am Stück" value={streaks.cur} tone={streaks.cur >= 6 ? 'text-orange-300' : ''} sub="aktuell" />
@@ -471,7 +537,7 @@ export function TacticalLog() {
           <Skeleton className="h-40" />
         )}
       </StorySection>
-      <StorySection id="aktivitaeten" titel="Alle Aktivitäten" unter="Filtern, sortieren und jede Einheit mit Garmin-Details aufklappen"
+      <StorySection id="aktivitaeten" titel="Alle Aktivitäten und Ruhetage" unter="Filtern, sortieren und jede Einheit mit Garmin-Details aufklappen"
         rechts={<Chips items={['Tabelle', 'Kalender'] as const as any} value={view as any} onChange={(v: any) => setView(v)} />}>
       <Panel title="Aktivitäten">
         {err ? (
@@ -500,7 +566,7 @@ export function TacticalLog() {
                     <div className="flex justify-between items-baseline mb-2">
                       <span className="text-sm font-semibold tnum">
                         {WD[wdIdx(pickedDay.date)]} {fmtDateShort(pickedDay.date)} ·{' '}
-                        {pickedAct ? `${fmtNum(pickedAct.ess)} ESS ${pickedDay.actual.sport} ${pickedDay.actual.zone} · TE ${fmtNum(pickedAct.teAe, 1)}/${fmtNum(pickedAct.teAn, 1)}` : isSick(pickedDay) ? 'krank' : 'Ruhetag'}
+                        {pickedAct ? `${fmtNum(pickedAct.ess)} ESS ${pickedDay.actual.sport} ${pickedDay.actual.zone} · TE ${fmtNum(pickedAct.teAe, 1)}/${fmtNum(pickedAct.teAn, 1)}` : isSick(pickedDay) ? 'krank' : 'Ruhetag (Off)'}
                       </span>
                       <button className="btn btn-ghost text-2xs px-2 py-0.5" onClick={() => setPicked(null)}>× schließen</button>
                     </div>
@@ -534,7 +600,12 @@ export function TacticalLog() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filtered.map((a) => {
+                      {(restsSichtbar
+                        ? [...filtered.map((a) => ({ k: a.d.date, a })), ...rests.map((r) => ({ k: r.d.date, r }))].sort((x, y) => y.k.localeCompare(x.k))
+                        : filtered.map((a) => ({ k: a.d.date, a }))
+                      ).map((z: { k: string; a?: Act; r?: Rest }) => {
+                        if (z.r) return <RestRow key={'r' + z.k} r={z.r} open={open === z.k} onToggle={() => setOpen(open === z.k ? null : z.k)} />;
+                        const a = z.a!;
                         const isOpen = open === a.d.date;
                         const dr = a.next?.readiness != null && a.base.r != null ? a.next.readiness - a.base.r : null;
                         const gs = garmin?.get(a.d.date)?.summe;
@@ -577,10 +648,10 @@ export function TacticalLog() {
                       })}
                     </tbody>
                   </table>
-                  {!filtered.length && <p className="text-sm text-ink-muted py-3">Keine Einheiten für diese Filter.</p>}
+                  {!filtered.length && !(restsSichtbar && rests.length) && <p className="text-sm text-ink-muted py-3">Keine Einträge für diese Filter.</p>}
                 </div>
                 <p className="text-2xs text-ink-dim">
-                  Ertrag = (TE aerob + TE anaerob) je 100 ESS. km, hm, Dauer laut Garmin (Bewegungszeit); Last/h = Kira-Last je Stunde Bewegung. Folgemorgen = Readiness am nächsten Morgen ggü. deinem Schnitt der 28 Tage davor. Klick auf eine Zeile = Nachbetrachtung.
+                  Ertrag = (TE aerob + TE anaerob) je 100 ESS. km, hm, Dauer laut Garmin (Bewegungszeit); Last/h = Kira-Last je Stunde Bewegung. Folgemorgen = Readiness am nächsten Morgen ggü. deinem Schnitt der 28 Tage davor. Ruhetage (Off) erscheinen bei Sortierung nach Datum ohne weitere Filter; Klick auf eine Zeile = Nachbetrachtung.
                 </p>
               </>
             )}

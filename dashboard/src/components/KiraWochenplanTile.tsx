@@ -2,7 +2,7 @@
  * Coach Kira · Wochenplan – direkt von der KI (lokal coach-kira oder Cloud), ohne KI-Report im Sheet.
  * Kira plant 14 Tage, die Cockpit-Simulation prüft ACWR, Monotonie, Ruhetage und Fitness,
  * Verstöße gehen bis zu 3 Runden zurück an Kira. Ergebnis landet nur in der Simulation
- * (und wird im Browser gemerkt); gespeichert wird erst mit „In timeline speichern“.
+ * (und wird im Browser gemerkt); gespeichert wird erst mit „In Timeline speichern“.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useEngine } from '../lib/engine';
@@ -316,7 +316,7 @@ export function KiraWochenplanTile({
           {openDay && <WorkoutPanel key={openDay.date} day={openDay} onClose={() => setOpenDate(null)} />}
           <p className="mt-3 text-2xs text-ink-dim">
             „In Simulation übernehmen“ setzt Last, Zone und Sport der freien Tage; heute und gesperrte Tage bleiben. Der Plan liegt nur im Browser, gespeichert wird
-            erst mit „In timeline speichern“. Cloud nutzt pro Runde eine Chat-Anfrage.
+            erst mit „In Timeline speichern“. Cloud nutzt pro Runde eine Chat-Anfrage.
           </p>
         </>
       )}

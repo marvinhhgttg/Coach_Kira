@@ -180,9 +180,9 @@ export async function sendChat(messages: ChatMsg[], context: ChatContext, source
   try {
     json = JSON.parse(text);
   } catch {
-    throw new Error('Antwort des Apps Script ist kein JSON (Chat-Patch eingespielt?)');
+    throw new Error('Die Datenquelle antwortet gerade nicht wie erwartet. Bitte später erneut versuchen.');
   }
-  if (json && json.status && json.ok === undefined) throw new Error('Der Chat-Patch ist im Apps Script noch nicht aktiv (doPost kennt mode=chat nicht).');
+  if (json && json.status && json.ok === undefined) throw new Error('Der Chat ist gerade nicht verfügbar.');
   if (!json.ok) throw new Error(json.error || 'Chat-Fehler');
   return json as { ok: true; answer: string; citations: string[]; used: number; limit: number; model: string };
 }

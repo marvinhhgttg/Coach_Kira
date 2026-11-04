@@ -278,10 +278,11 @@ export function KiraChat() {
             {msgs.filter((m) => !(m.pending && m.content === '')).map((m, i) => (
               <div key={i} className={m.role === 'user' ? 'ml-auto max-w-[85%]' : 'mr-auto max-w-[92%]'}>
                 {m.role === 'assistant' && (
-                  <div className="text-2xs text-ink-dim mb-1">
+                  <div className="text-2xs text-ink-dim mb-1 inline-flex items-center gap-1.5">
+                    <span className={`inline-block w-1.5 h-1.5 rounded-full ${m.engine === 'local' ? 'bg-green-400' : 'bg-blue-500'}`} aria-hidden />
                     {m.engine === 'local'
                       ? `Kira · lokal (${m.model || LOCAL_MODEL})${m.tokPerS != null ? ` · ${m.tokPerS} Tok/s` : ''}`
-                      : 'Kira · Perplexity'}
+                      : 'Kira · Cloud'}
                   </div>
                 )}
                 <div

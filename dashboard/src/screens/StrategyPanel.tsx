@@ -646,7 +646,7 @@ export function StrategyPanel({
         {/* 3) Szenarien */}
         <Box
           title="3 · Szenarien vergleichen"
-          hint={`Aktuellen Planstand als A, B oder C merken (${speicherOrt(strat.status)}). In die Timeline kommt erst, was du über „In timeline speichern“ sicherst.`}
+          hint={`Aktuellen Planstand als A, B oder C merken (${speicherOrt(strat.status)}). In die Timeline kommt erst, was du über „In Timeline speichern“ sicherst.`}
           right={
             <div className="flex gap-1">
               {(['A', 'B', 'C'] as const).map((n) => (

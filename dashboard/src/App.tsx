@@ -105,7 +105,7 @@ export function App() {
             <Logo size={22} />
             <div className="leading-tight">
               <div className="text-sm font-semibold tracking-tight">Coach Kira</div>
-              <div className="text-2xs text-ink-dim tnum">Cockpit · MVP</div>
+              <div className="text-2xs text-ink-dim tnum">Trainingscockpit</div>
             </div>
           </div>
 
@@ -212,10 +212,8 @@ export function App() {
 
       <footer className="border-t border-border mt-6">
         <div className="max-w-[1400px] mx-auto px-5 py-3 flex flex-wrap items-center justify-between gap-2 text-2xs text-ink-dim tnum">
-          <span>Coach Kira pptx.app · MVP-Prototyp · Live-Daten via Apps-Script-Endpunkte</span>
-          <span>
-            Aktionen ohne Token (Schutz deaktiviert)
-          </span>
+          <span>© {new Date().getFullYear()} Coach Kira · Trainingssteuerung</span>
+          <span>Daten: Garmin Connect · Google Sheets</span>
         </div>
       </footer>
 

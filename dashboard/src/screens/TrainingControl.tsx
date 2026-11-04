@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { ZeitraumWahl } from '../components/ZeitraumWahl';
 import {
   Bar,
   CartesianGrid,
@@ -532,18 +533,7 @@ export function TrainingControl() {
     <Panel
       title="Trainingssteuerung"
       right={
-        <div className="inline-flex bg-bg rounded border border-border p-0.5 flex-wrap">
-          {WINDOWS.map((w) => (
-            <button
-              key={w}
-              onClick={() => setWin(w)}
-              className={`px-2 py-1 text-xs rounded tnum ${win === w ? 'bg-bg-subtle text-ink' : 'text-ink-muted hover:text-ink'}`}
-              data-testid={`tc-win-${w}`}
-            >
-              {winLabel(w)}
-            </button>
-          ))}
-        </div>
+        <ZeitraumWahl value={win} onChange={setWin} testIdPrefix="tc-win" />
       }
     >
       {err ? (

@@ -48,7 +48,7 @@ export function ZeitfensterTile() {
       setErr(null);
     } catch (e) {
       setFenster([]);
-      setErr(/Typ|JSON|zeitfenster/i.test(String(e)) ? 'Apps-Script-Patch „Zeitfenster“ fehlt – Zeitfenster lassen sich erst danach speichern.' : String(e));
+      setErr(/Typ|JSON|zeitfenster/i.test(String(e)) ? 'Zeitfenster sind gerade nicht verfügbar.' : String(e));
     }
   };
   useEffect(() => {
@@ -84,7 +84,7 @@ export function ZeitfensterTile() {
       setVon(''); setBis(''); setTitel('');
     } catch (e) {
       const t = String(e instanceof Error ? e.message : e);
-      setMsg(/Unbekannter Typ/.test(t) ? 'Speichern nicht möglich: Apps-Script-Patch „Zeitfenster“ fehlt noch.' : t);
+      setMsg(/Unbekannter Typ/.test(t) ? 'Speichern gerade nicht möglich. Bitte später erneut versuchen.' : t);
     } finally {
       setBusy(false);
     }

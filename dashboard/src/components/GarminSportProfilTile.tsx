@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
+import { ZeitraumWahl } from './ZeitraumWahl';
 import { Panel } from './UI';
 import { fmtNum } from '../lib/format';
 import { useGarminTage, fmtDauer, type GarminTage } from '../lib/garmin';
-import { WINDOWS, winLabel, type WinKey } from '../lib/windows';
+import { WINDOWS, winLabel, type WinKey, winVonBis } from '../lib/windows';
 
 export type SportProfil = {
   sport: string; n: number; sek: number; km: number; hm: number; last: number; lastSek: number;
@@ -10,12 +11,12 @@ export type SportProfil = {
 };
 
 /** Kennzahlen je Sport aus den Garmin-Aktivitäten (Fenster in Tagen, 0 = alle). */
-export function sportProfile(tage: GarminTage | null, win: number): SportProfil[] {
+export function sportProfile(tage: GarminTage | null, win: WinKey): SportProfil[] {
   if (!tage) return [];
-  const von = win === 0 ? '0000' : new Date(Date.now() - win * 86400000).toLocaleDateString('sv-SE');
+  const { von, bis } = winVonBis(win);
   const m = new Map<string, SportProfil>();
   for (const [d, g] of tage) {
-    if (d < von) continue;
+    if (d < von || d > bis) continue;
     for (const a of g.akt || []) {
       const sport = a.sport || 'Sonstige';
       const p = m.get(sport) || { sport, n: 0, sek: 0, km: 0, hm: 0, last: 0, lastSek: 0, bb: 0, bbSek: 0, hf: 0, hfN: 0, te: 0, teN: 0 };
@@ -43,11 +44,7 @@ export function GarminSportProfilTile() {
     <Panel
       title="Sportprofil · Garmin"
       right={
-        <div className="inline-flex flex-wrap bg-bg rounded border border-border p-0.5">
-          {WINDOWS.map((w) => (
-            <button key={w} onClick={() => setWin(w)} className={`px-1.5 sm:px-2 py-1 text-xs rounded tnum ${win === w ? 'bg-bg-subtle text-ink' : 'text-ink-muted hover:text-ink'}`}>{winLabel(w)}</button>
-          ))}
-        </div>
+        <ZeitraumWahl value={win} onChange={setWin} />
       }
     >
       <p className="text-2xs text-ink-muted mb-2">

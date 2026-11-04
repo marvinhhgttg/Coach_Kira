@@ -24,7 +24,7 @@ async function postScript(mode: string, body: unknown) {
   try {
     return JSON.parse(t);
   } catch {
-    throw new Error('Apps Script antwortet nicht mit JSON (Briefing-Patch eingespielt?)');
+    throw new Error('Die Datenquelle antwortet gerade nicht wie erwartet.');
   }
 }
 
@@ -69,7 +69,7 @@ export async function runLocalBriefing(type: BriefingType, onProgress?: (text: s
     try {
       prompt = JSON.parse(pr);
     } catch {
-      throw new Error('Apps Script liefert weder briefingData noch briefingPrompt (Patch eingespielt und neue Version bereitgestellt?)');
+      throw new Error('Für das Briefing liegen gerade keine Daten vor.');
     }
   }
   if (!prompt.ok) throw new Error(prompt.error || (dj && dj.error) || 'Briefing-Daten konnten nicht geladen werden.');

@@ -18,7 +18,7 @@ async function getJson(url: string): Promise<any> {
   try {
     return JSON.parse(t);
   } catch {
-    throw new Error('Apps Script antwortet nicht mit JSON (Patch „KI-Extras“ eingespielt?)');
+    throw new Error('Die Datenquelle antwortet gerade nicht wie erwartet.');
   }
 }
 
@@ -41,7 +41,7 @@ export async function saveExtra(typ: ExtraTyp, datum: string, text: string, data
   try {
     j = JSON.parse(t);
   } catch {
-    throw new Error('Speichern fehlgeschlagen (Patch „KI-Extras“ eingespielt?)');
+    throw new Error('Speichern fehlgeschlagen. Bitte später erneut versuchen.');
   }
   if (!j.ok) throw new Error(j.error || 'Speichern fehlgeschlagen');
 }

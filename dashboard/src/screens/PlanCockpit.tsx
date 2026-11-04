@@ -794,7 +794,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
         ? await proxySavePlanSimulation(payload)
         : await savePlanSimulation(token.trim(), payload);
       if (res.ok) {
-        toast('ok', res.message || 'Plan in timeline gespeichert.');
+        toast('ok', res.message || 'Plan in der Timeline gespeichert.');
         setBaseline(JSON.stringify([loads, sports, zones]));
       }
       else toast('err', res.error || res.raw || 'Speichern fehlgeschlagen.');
@@ -901,7 +901,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
         { vorschlaege: v },
       ).catch(() => undefined);
     } catch (e) {
-      setLfErr(/JSON|Lastfaktoren|Failed to fetch|Load failed/.test(String(e)) ? 'Patch „Zukunftsplanung“ noch nicht aktiv.' : String(e instanceof Error ? e.message : e));
+      setLfErr(/JSON|Lastfaktoren|Failed to fetch|Load failed/.test(String(e)) ? 'Planungsdaten sind gerade nicht verfügbar.' : String(e instanceof Error ? e.message : e));
     } finally {
       setLfBusy(false);
     }
@@ -1021,9 +1021,9 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
               onClick={saveToTimeline}
               disabled={saving}
               className="btn btn-primary text-xs px-2 py-1"
-              title="Token-geschützt: schreibt analog PlanApp in timeline"
+              title="Schreibt den Plan in die Timeline"
             >
-              {saving ? 'Speichern…' : 'In timeline speichern'}
+              {saving ? 'Speichern…' : 'In Timeline speichern'}
             </button>
             <button onClick={reset} className="btn btn-ghost text-xs px-2 py-1">
               Reset
@@ -1174,7 +1174,7 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
                 <div>
                   <div className="label">Parameter</div>
                   <p className="text-xs text-ink-muted mt-1">
-                    Lokale Simulation: ATL/CTL nach aktueller Last rekursiv aus KK_TIMELINE-Schätzung · KEI=((CTL−CTL vor 7 Tagen)×10)/(ACWR×(1+Monotonie))×0,1
+                    Lokale Simulation: ATL/CTL nach aktueller Last rekursiv aus der Timeline-Schätzung · KEI=((CTL−CTL vor 7 Tagen)×10)/(ACWR×(1+Monotonie))×0,1
                   </p>
                 </div>
                 <label className="flex items-center gap-2 text-xs text-ink-muted">

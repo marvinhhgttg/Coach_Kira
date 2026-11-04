@@ -151,7 +151,7 @@ export function AutopilotTile({ planDates, onApply }: { planDates: string[]; onA
           <button className="mt-3 btn btn-primary text-xs px-2 py-1" onClick={() => onApply(tage)}>
             In Slider übernehmen
           </button>
-          <p className="mt-1 text-2xs text-ink-dim">Gespeichert wird erst mit „In timeline speichern“.</p>
+          <p className="mt-1 text-2xs text-ink-dim">Gespeichert wird erst mit „In Timeline speichern“.</p>
         </>
       )}
 

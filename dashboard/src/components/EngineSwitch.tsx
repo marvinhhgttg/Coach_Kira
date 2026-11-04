@@ -15,7 +15,7 @@ export function EngineSwitch({ compact = false }: { compact?: boolean }) {
         <button type="button" className={btn(engine === 'local')} onClick={() => setEngine('local')} aria-pressed={engine === 'local'}>
           Lokal (Mac)
         </button>
-        <button type="button" className={btn(engine === 'pplx')} onClick={() => setEngine('pplx')} aria-pressed={engine === 'pplx'}>
+        <button type="button" className={`${btn(engine === 'pplx')} ${engine === 'pplx' ? 'engine-cloud-on' : ''}`} onClick={() => setEngine('pplx')} aria-pressed={engine === 'pplx'}>
           Cloud
         </button>
       </div>
@@ -33,8 +33,26 @@ export function EngineSwitch({ compact = false }: { compact?: boolean }) {
           )}
         </span>
       )}
-      {engine === 'pplx' && <span className="text-2xs text-ink-dim">Perplexity über den Cockpit-Server</span>}
+      {engine === 'pplx' && <CloudStatusText compact={compact} />}
     </div>
+  );
+}
+
+function CloudStatusText({ compact }: { compact: boolean }) {
+  const [cloud, setCloud] = useState<{ ok: boolean; configured: boolean; used: number; limit: number } | null>(null);
+  useEffect(() => {
+    let off = false;
+    cloudStatus().then((c) => !off && setCloud(c));
+    return () => {
+      off = true;
+    };
+  }, []);
+  const ok = !!cloud?.ok && cloud.configured && cloud.used < cloud.limit;
+  return (
+    <span className="inline-flex items-center gap-1.5 text-2xs text-ink-dim" data-testid="engine-cloud-status">
+      <span className={`inline-block w-2 h-2 rounded-full ${cloud == null ? 'bg-ink-dim' : ok ? 'bg-blue-500' : 'bg-orange-400'}`} aria-hidden />
+      {cloud == null ? 'Cloud wird geprüft …' : ok ? (compact ? 'Cloud bereit' : 'Cloud bereit · Perplexity') : cloud.configured ? 'Cloud-Kontingent für heute aufgebraucht' : 'Cloud nicht eingerichtet'}
+    </span>
   );
 }
 
@@ -42,7 +60,7 @@ export function SourceBadge({ source }: { source: { engine: 'local' | 'cloud'; m
   if (!source) return null;
   const local = source.engine === 'local';
   return (
-    <span className={`chip border text-2xs ${local ? 'border-green-400/40 text-green-300' : 'border-border-strong text-ink-muted'}`}>
+    <span className={`chip border text-2xs ${local ? 'border-green-400/40 text-green-300' : 'border-blue-400/40 text-blue-300'}`}>
       {local ? `lokal · ${source.model || 'coach-kira'}` : `Cloud · ${source.model || 'Perplexity'}`}
     </span>
   );
@@ -70,7 +88,7 @@ export function HeaderEngineSwitch() {
   const cloudOk = !!cloud?.ok && cloud.configured && cloud.used < cloud.limit;
   const dot =
     engine !== 'local'
-      ? cloud == null ? 'bg-ink-dim' : cloudOk ? 'bg-green-400' : 'bg-orange-400'
+      ? cloud == null ? 'bg-ink-dim' : cloudOk ? 'bg-blue-500' : 'bg-orange-400'
       : st.tone === 'ok' ? 'bg-green-400' : st.tone === 'warn' ? 'bg-orange-400' : 'bg-ink-dim';
   const title =
     engine === 'local'
@@ -96,7 +114,7 @@ export function HeaderEngineSwitch() {
       <button type="button" className={btn(engine === 'local')} onClick={() => setEngine('local')} aria-pressed={engine === 'local'}>
         Lokal
       </button>
-      <button type="button" className={btn(engine === 'pplx')} onClick={() => setEngine('pplx')} aria-pressed={engine === 'pplx'}>
+      <button type="button" className={`${btn(engine === 'pplx')} ${engine === 'pplx' ? 'engine-cloud-on' : ''}`} onClick={() => setEngine('pplx')} aria-pressed={engine === 'pplx'}>
         Cloud
       </button>
     </div>

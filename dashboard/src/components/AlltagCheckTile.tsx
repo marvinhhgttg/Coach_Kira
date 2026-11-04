@@ -97,7 +97,7 @@ export function AlltagCheckTile({
     const calMap: Record<string, CalendarDay> = {};
     const wetMap: Record<string, WeatherDay> = {};
     if (c.status === 'fulfilled') c.value.forEach((x) => (calMap[x.date] = x));
-    else n.push(/JSON/.test(String(c.reason)) ? 'Kalender nicht verfügbar (Patch „KI-Extras“ noch nicht aktiv)' : 'Kalender nicht verfügbar');
+    else n.push(/JSON/.test(String(c.reason)) ? 'Kalender nicht verfügbar' : 'Kalender nicht verfügbar');
     if (w.status === 'fulfilled') w.value.forEach((x) => (wetMap[x.date] = x));
     else n.push('Wetter nicht verfügbar');
     setCal(c.status === 'fulfilled' ? calMap : null);
@@ -263,7 +263,7 @@ export function AlltagCheckTile({
             <button className="btn btn-ghost text-xs px-2 py-1" onClick={onSave}>Speichern</button>
             {info && <span className="text-2xs text-ink-dim self-center">{info}</span>}
           </div>
-          <p className="text-2xs text-ink-dim">Übernommene Tausche landen in den Slidern; gespeichert wird erst mit „In timeline speichern“.</p>
+          <p className="text-2xs text-ink-dim">Übernommene Tausche landen in den Slidern; gespeichert wird erst mit „In Timeline speichern“.</p>
         </div>
       )}
     </div>

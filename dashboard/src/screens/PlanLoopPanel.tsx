@@ -262,7 +262,7 @@ export function PlanLoopPanel({
               In Slider übernehmen
             </button>
             <p className="text-2xs text-ink-dim">
-              Übernimmt nur in die Simulation; gespeichert wird erst mit „In timeline
+              Übernimmt nur in die Simulation; gespeichert wird erst mit „In Timeline
               speichern“.
             </p>
           </div>

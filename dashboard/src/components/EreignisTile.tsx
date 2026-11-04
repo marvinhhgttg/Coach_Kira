@@ -43,7 +43,7 @@ export function EreignisTile() {
       .catch(e => {
         const msg = e.message || '';
         if (/Typ|JSON|Failed to fetch|Load failed/i.test(msg)) {
-          setError('Patch „Ereignis-Marker" noch nicht aktiv.');
+          setError('Ereignisse sind gerade nicht verfügbar.');
         } else {
           setError(msg);
         }
@@ -69,7 +69,7 @@ export function EreignisTile() {
       .catch(e => {
         const msg = e.message || '';
         if (/Typ|JSON|Failed to fetch|Load failed/i.test(msg)) {
-          setError('Patch „Ereignis-Marker" noch nicht aktiv.');
+          setError('Ereignisse sind gerade nicht verfügbar.');
         } else {
           setError(msg);
         }

@@ -30,6 +30,18 @@ function parseTrefferTag(item: ExtraItem): TrefferTag {
   };
 }
 
+/** Anzeigename der Herkunft eines Eintrags. */
+function quelleText(q: string | undefined | null): string {
+  const t = String(q || '').toLowerCase();
+  if (!t) return '–';
+  if (t === 'plan-briefing') return 'nachgetragen';
+  if (t.startsWith('supervisor')) return 'KI-Report';
+  if (t.startsWith('mac') || t.includes('lokal') || t.includes('local')) return 'Mac (lokal)';
+  if (t.startsWith('cockpit')) return 'Cockpit';
+  if (t.includes('cloud')) return 'Cloud';
+  return String(q);
+}
+
 // --- Section B: Selbsttest types ---
 interface SelbsttestEintrag {
   datum: string;
@@ -94,7 +106,7 @@ export function KiraExtrasPanel() {
         if (!cancelled) setTrefferTagItems(items);
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        if (msg.includes('JSON')) setErrTag('Patch „KI-Extras" noch nicht aktiv');
+        if (msg.includes('JSON')) setErrTag('Daten sind gerade nicht verfügbar');
         else if (!cancelled) setErrTag('Treffer-Tage konnten nicht geladen werden');
       }
 
@@ -104,7 +116,7 @@ export function KiraExtrasPanel() {
         if (!cancelled) setTrefferWocheItems(items);
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        if (msg.includes('JSON')) setErrWoche('Patch „KI-Extras" noch nicht aktiv');
+        if (msg.includes('JSON')) setErrWoche('Daten sind gerade nicht verfügbar');
         else if (!cancelled) setErrWoche('Wochenbilanz konnte nicht geladen werden');
       }
 
@@ -114,7 +126,7 @@ export function KiraExtrasPanel() {
         if (!cancelled) setSelbsttestItems(items);
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        if (msg.includes('JSON')) setErrTest('Patch „KI-Extras" noch nicht aktiv');
+        if (msg.includes('JSON')) setErrTest('Daten sind gerade nicht verfügbar');
         else if (!cancelled) setErrTest('Selbsttest konnte nicht geladen werden');
       }
     }
@@ -222,7 +234,7 @@ export function KiraExtrasPanel() {
             <div className="mt-3 rounded border border-border p-2">
               <div className="text-xs font-semibold text-ink mb-1">Bilanz der letzten 28 Tage · Stand {fmtDateShort(neuesteWoche.datum)}</div>
               <pre className="whitespace-pre-line text-xs text-ink">{neuesteWoche.text}</pre>
-              <div className="text-2xs text-ink-dim mt-1">Quelle: {neuesteWoche.quelle}</div>
+              <div className="text-2xs text-ink-dim mt-1">Quelle: {quelleText(neuesteWoche.quelle)}</div>
             </div>
           )}
 
@@ -270,7 +282,7 @@ export function KiraExtrasPanel() {
                           </span>
                         ) : '—'}
                       </td>
-                      <td className="pt-1 text-ink-dim">{t.quelle === 'plan-briefing' ? 'nachgetragen' : t.quelle}</td>
+                      <td className="pt-1 text-ink-dim">{quelleText(t.quelle)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -341,7 +353,7 @@ export function KiraExtrasPanel() {
             )}
 
             <div className="mt-2 text-2xs text-ink-dim">
-              Erstellt {neuesterTest.gespeichert} · {neuesterTest.quelle}
+              Erstellt {neuesterTest.gespeichert} · {quelleText(neuesterTest.quelle)}
             </div>
           </div>
         )}

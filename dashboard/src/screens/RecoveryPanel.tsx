@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { ZeitraumWahl } from '../components/ZeitraumWahl';
 import { BefindenHinweis } from '../components/BefindenHinweis';
 import {
   Area,
@@ -33,7 +34,7 @@ const RHR_BASELINE_DAYS = 28;
 const RHR_BASELINE_MIN_VALUES = 7;
 
 type Span = WinKey;
-const SPANS: Span[] = WINDOWS;
+const SPANS = WINDOWS;
 /** Datenfenster je Ansicht: +28 Tage Vorlauf für RHR-Baseline, mindestens 90 Tage (Wochenbalken). */
 function rangeForSpan(n: Span): Range {
   return rangeFor(n, 28, 90);
@@ -1519,21 +1520,17 @@ export function RecoveryPanel({
       title={isToday ? 'Heute · Tagesentscheid' : 'Erholungsverlauf & Korrelationen'}
       right={
         <div className="flex flex-wrap items-center gap-2">
-          {!isToday && <div className="inline-flex bg-bg rounded border border-border p-0.5 flex-wrap">
-            {SPANS.map((n) => (
-              <button
-                key={n}
-                onClick={() => {
-                  setSpan(n);
-                  const need = rangeForSpan(n);
-                  if (rangeDays(need) > rangeDays(loadedRange || '90d') || (!loadedRange && need !== '90d')) load(need, false);
-                }}
-                className={`px-1.5 sm:px-2.5 py-1 text-xs rounded tnum whitespace-nowrap ${span === n ? 'bg-bg-subtle text-ink' : 'text-ink-muted hover:text-ink'}`}
-              >
-                {winLabel(n)}
-              </button>
-            ))}
-          </div>}
+          {!isToday && (
+            <ZeitraumWahl
+              value={span}
+              presets={SPANS}
+              onChange={(n) => {
+                setSpan(n);
+                const need = rangeForSpan(n);
+                if (rangeDays(need) > rangeDays(loadedRange || '90d') || (!loadedRange && need !== '90d')) load(need, false);
+              }}
+            />
+          )}
           <button onClick={() => load(rangeForSpan(span), isToday)} className="btn btn-ghost text-xs px-2 py-1" disabled={busy}>
             {busy ? 'Lade…' : 'Aktualisieren'}
           </button>

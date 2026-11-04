@@ -693,8 +693,7 @@ export function CommandCenter({
               <div className="label mb-2">Agent-Auftrag</div>
               <code className="block tnum text-accent text-base">{activeRoutine.skill}</code>
               <p className="text-2xs text-ink-muted mt-2 leading-relaxed">
-                Diese Routine wird über den Computer-Agent gestartet — der Prototyp führt
-                keine Browser-Automation aus. Starte den Skill in deiner Computer-Sitzung.
+                Starte diese Routine in deiner Perplexity-Computer-Sitzung mit dem oben genannten Auftrag.
               </p>
             </div>
             <div className="text-2xs text-ink-dim leading-relaxed">
