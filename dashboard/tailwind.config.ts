@@ -35,7 +35,7 @@ export default {
           orange: '#f97316',
           rot: '#ef4444',
           grau: '#6b7280',
-          blau: '#3b82f6',
+          blau: '#1976d2', // Garmin-Blau (Quality)
           lila: '#a855f7',
         },
       },

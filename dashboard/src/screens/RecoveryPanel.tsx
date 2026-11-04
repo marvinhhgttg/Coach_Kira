@@ -67,7 +67,7 @@ export const RECOVERY_FETCH_METRICS = [
 const ACWR_WARN = 1.3;
 const ACWR_HIGH = 1.5;
 
-export type Level = 'gruen' | 'gelb' | 'orange' | 'rot' | 'grau' | 'leer';
+export type Level = 'blau' | 'gruen' | 'gelb' | 'orange' | 'rot' | 'grau' | 'leer';
 export type Vote = 'QUALITY' | 'TRAIN' | 'EASY' | 'REST';
 
 export const VOTE_ORDER: Vote[] = ['REST', 'EASY', 'TRAIN', 'QUALITY'];
@@ -78,7 +78,7 @@ export const VOTE_LABEL: Record<Vote, string> = {
   REST: 'Rest',
 };
 export const VOTE_LEVEL: Record<Vote, Level> = {
-  QUALITY: 'gruen',
+  QUALITY: 'blau', // Garmin-Spektrum: Blau über Grün
   TRAIN: 'gruen',
   EASY: 'gelb',
   REST: 'rot',
@@ -90,13 +90,14 @@ const VOTE_ADVICE: Record<Vote, string> = {
   REST: 'Ruhetag oder max. 30–45 min sehr locker / Mobility.',
 };
 const VOTE_STATUS_TEXT: Record<Vote, string> = {
-  QUALITY: 'GRÜN — Qualität möglich',
+  QUALITY: 'BLAU — Qualität möglich',
   TRAIN: 'GRÜN — normal trainieren',
   EASY: 'GELB — locker trainieren',
   REST: 'ROT — Erholung priorisieren',
 };
 
 const LEVEL_DOT: Record<Level, string> = {
+  blau: 'bg-ampel-blau',
   gruen: 'bg-ampel-gruen',
   gelb: 'bg-ampel-gelb',
   orange: 'bg-ampel-orange',
@@ -105,6 +106,7 @@ const LEVEL_DOT: Record<Level, string> = {
   leer: 'bg-transparent border border-border-strong',
 };
 export const LEVEL_CELL: Record<Level, string> = {
+  blau: 'bg-ampel-blau/10',
   gruen: 'bg-ampel-gruen/10',
   gelb: 'bg-ampel-gelb/10',
   orange: 'bg-ampel-orange/10',
@@ -113,6 +115,7 @@ export const LEVEL_CELL: Record<Level, string> = {
   leer: '',
 };
 export const LEVEL_TEXT: Record<Level, string> = {
+  blau: 'text-blue-300',
   gruen: 'text-green-300',
   gelb: 'text-yellow-300',
   orange: 'text-orange-300',
@@ -857,7 +860,7 @@ function VoteChip({ vote, large = false }: { vote: Vote | null; large?: boolean 
   if (!vote) return <span className="text-ink-dim">—</span>;
   const lvl = VOTE_LEVEL[vote];
   const border =
-    lvl === 'gruen' ? 'border-ampel-gruen/40' : lvl === 'gelb' ? 'border-ampel-gelb/40' : 'border-ampel-rot/40';
+    lvl === 'blau' ? 'border-ampel-blau/40' : lvl === 'gruen' ? 'border-ampel-gruen/40' : lvl === 'gelb' ? 'border-ampel-gelb/40' : 'border-ampel-rot/40';
   return (
     <span
       className={`chip border ${border} ${LEVEL_CELL[lvl]} ${LEVEL_TEXT[lvl]} font-semibold ${large ? 'text-sm px-3 py-1' : ''}`}
@@ -1031,7 +1034,7 @@ function TodayCard({
   ];
 
   return (
-    <div className={`panel-raised p-3 sm:p-4 h-full min-w-0 border ${lvl === 'rot' ? 'border-ampel-rot/40' : lvl === 'gelb' ? 'border-ampel-gelb/40' : 'border-ampel-gruen/40'}`}>
+    <div className={`panel-raised p-3 sm:p-4 h-full min-w-0 border ${lvl === 'rot' ? 'border-ampel-rot/40' : lvl === 'gelb' ? 'border-ampel-gelb/40' : lvl === 'blau' ? 'border-ampel-blau/50' : 'border-ampel-gruen/40'}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="label">Heute · Recovery Brief</div>
@@ -1294,7 +1297,7 @@ type ToastFn = (kind: 'ok' | 'err' | 'info', text: string) => void;
 // ---------------------------------------------------------------------------
 // Wichtigste Daten (Garmin-Connect-Stil)
 // ---------------------------------------------------------------------------
-const AMPEL_HEX: Record<Level, string> = { gruen: '#22a15a', gelb: '#e0a800', orange: '#ef7d00', rot: '#d64545', grau: '#9aa5b1', leer: '#9aa5b1' };
+const AMPEL_HEX: Record<Level, string> = { blau: '#1976d2', gruen: '#22a15a', gelb: '#e0a800', orange: '#ef7d00', rot: '#d64545', grau: '#9aa5b1', leer: '#9aa5b1' };
 function Punkt({ farbe, haken = false }: { farbe: string; haken?: boolean }) {
   return (
     <span className="inline-flex items-center justify-center rounded-full" style={{ width: 44, height: 44, background: haken ? farbe : `${farbe}22` }}>
