@@ -246,6 +246,31 @@ function Detail({ a, review, g }: { a: Act; review?: ActivityReview | null; g?: 
     </div>
   );
 }
+const GARMIN_AKT = (id: number) => `https://connect.garmin.com/modern/activity/${id}`;
+/** Link(s) zur Garmin-Connect-Aktivität; bei mehreren Aktivitäten am Tag nummeriert. */
+function GarminLinks({ akt }: { akt: GarminTag['akt'] | undefined }) {
+  const xs = (akt || []).filter((x) => x.id != null);
+  if (!xs.length) return null;
+  return (
+    <span className="ml-1.5 inline-flex gap-1 align-middle">
+      {xs.map((x, i) => (
+        <a
+          key={x.id}
+          href={GARMIN_AKT(x.id!)}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="text-2xs text-accent hover:underline whitespace-nowrap"
+          title={`${x.name || x.typ || 'Aktivität'} in Garmin Connect öffnen`}
+          data-testid="garmin-link"
+        >
+          Garmin{xs.length > 1 ? ` ${i + 1}` : ''} ↗
+        </a>
+      ))}
+    </span>
+  );
+}
+
 function GarminAktKarte({ x, zoneEingetragen }: { x: NonNullable<GarminTag['akt']>[number]; zoneEingetragen: string }) {
   const zLabel = x.te_label ? TE_LABEL_ZONE[x.te_label] : undefined;
   const zEin = zoneAusText(zoneEingetragen);
@@ -259,6 +284,11 @@ function GarminAktKarte({ x, zoneEingetragen }: { x: NonNullable<GarminTag['akt'
         {x.start && <span className="tnum text-ink-dim">{x.start}</span>}
         <span className="font-semibold truncate">{x.name || x.typ || 'Aktivität'}</span>
         {x.pr && <span className="chip text-2xs border border-border text-green-300">PR</span>}
+        {x.id != null && (
+          <a href={GARMIN_AKT(x.id)} target="_blank" rel="noopener noreferrer" className="ml-auto shrink-0 text-2xs text-accent hover:underline" data-testid="garmin-link-karte">
+            In Garmin Connect öffnen ↗
+          </a>
+        )}
       </div>
       <div className="tnum">{teile([x.km != null && `${fmtNum(x.km, 1)} km`, x.hm != null && `${fmtNum(x.hm)} hm${x.hm_ab != null ? ` (${fmtNum(x.hm_ab)} ab)` : ''}`, hk != null && `${fmtNum(hk, 1)} hm/km`, `${fmtDauer(x.bewegt_s || x.dauer_s)}`, x.v_kmh != null && `Ø ${fmtNum(x.v_kmh, 1)} km/h`])}</div>
       {(x.hf_avg != null || x.zonen_s) && (
@@ -619,6 +649,7 @@ export function TacticalLog() {
                               <td className="px-2 py-1.5">
                                 <span className="inline-block w-2 h-2 rounded-full mr-1.5 align-middle" style={{ background: SPORT_COLORS[a.sport] }} />
                                 {a.d.actual.sport}
+                                <GarminLinks akt={garmin?.get(a.d.date)?.akt} />
                               </td>
                               <td className="px-2 py-1.5">{a.d.actual.zone || '—'}</td>
                               <td className={`px-2 py-1.5 tnum font-semibold ${a.ess >= 220 ? 'text-orange-300' : 'text-accent'}`}>{fmtNum(a.ess)}</td>
