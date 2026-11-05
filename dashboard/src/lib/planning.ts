@@ -6,7 +6,7 @@
 export interface Ziel {
   datum: string; // YYYY-MM-DD
   name: string;
-  art: 'bergtour' | 'bike_hike' | 'rad' | 'lauf' | 'skitour' | 'sonstiges';
+  art: 'bergtour' | 'marsch' | 'bike_hike' | 'rad' | 'lauf' | 'skitour' | 'sonstiges';
   hm: number;
   dauer_h: number;
   distanz_km: number;
@@ -139,7 +139,15 @@ export function buildSeason(opts: { startWeekly: number; wochen: number; rampePc
 }
 
 /** Last einer Tour grob schätzen: Dauer × Faktor Z2 + Höhenmeter × Höhenfaktor */
+/** „Sonstiges“ mit Marsch/Wanderung im Namen oder in der Notiz wird wie ein Marsch behandelt. */
+export function zielArt(z: Ziel): Ziel['art'] {
+  if (z.art === 'sonstiges' && /marsch|wander|walk|hike|trekking|pilger/i.test(`${z.name} ${z.notiz || ''}`)) return 'marsch';
+  return z.art;
+}
+
 export function tourLast(z: Ziel, faktoren?: { load: any[]; elev: any[] }) {
+  // Marsch/Wanderung: Garmin vergibt beim Gehen wenig Last (bei dir 1–14 ESS/h je nach Herzfrequenz) – Faustregel 7 ESS/h + Höhenmeter
+  if (zielArt(z) === 'marsch') return Math.round(7 * z.dauer_h + (z.hm / 100) * 3);
   const typ = z.art === 'rad' ? 'Bike' : z.art === 'lauf' ? 'Run' : z.art === 'skitour' ? 'Skitour' : 'Other';
   const f = (faktoren?.load || []).find((x) => String(x.ActivityType) === typ && /Z2|Default/.test(String(x.Zone)));
   const perH = Number(f?.Factor) || (typ === 'Bike' ? 85 : typ === 'Run' ? 120 : 50);
@@ -177,7 +185,9 @@ export function zielBereitschaft(
   faktoren?: { load: any[]; elev: any[] },
   pers?: TourLastPersoenlich | null,
   maxDauerH?: number | null, // längster Tag (Summe Aktivitätszeit) der letzten 8 Wochen laut Garmin
+  maxGehKm?: number | null, // längste Strecke zu Fuß (Wandern/Gehen) an einem Tag, letzte 8 Wochen
 ): Bereitschaft {
+  const marsch = zielArt(z) === 'marsch';
   const faust = tourLast(z, faktoren);
   const tl = pers && pers.ess > 0 ? pers.ess : faust;
   const last8 = hist.slice(-56);
@@ -194,8 +204,16 @@ export function zielBereitschaft(
   const punkte: string[] = [];
   let rot = 0, gelb = 0;
   const chk = (ok: boolean, nah: boolean, txt: string) => { punkte.push(txt); if (!ok) (nah ? gelb++ : rot++); };
+  if (marsch) {
+    // Marsch: Garmin-Last ist kein Engpass – maßgeblich sind Strecke und Zeit auf den Beinen
+    if (z.distanz_km > 0 && maxGehKm != null) {
+      const kz = Math.round(z.distanz_km * 0.6);
+      chk(maxGehKm >= kz, maxGehKm >= kz * 0.75, `Längste Strecke zu Fuß in den letzten 8 Wochen ${Math.round(maxGehKm)} km – vor dem Marsch mind. einmal ca. ${kz} km am Stück`);
+    }
+  } else {
   if (ctl != null) chk(ctl >= ctlZiel, ctl >= ctlZiel * 0.8, `Ø Wochenlast (4 Wochen) ${ctl} ESS – Ziel ca. ${ctlZiel} (2 × Tourlast)`);
   chk(maxTag >= langeTageZiel, maxTag >= langeTageZiel * 0.75, `Längster Tag der letzten 8 Wochen ${maxTag} ESS – vor der Tour mind. einmal ca. ${langeTageZiel} ESS`);
+  }
   const hmTage = last8.filter((r) => (r.elev ?? 0) > 0).length;
   if (z.hm > 0 && hmTage === 0)
     punkte.push(`Höhenmeter: in den letzten 8 Wochen nicht erfasst (Spalte elev_m_day leer) – vor der Tour mind. einmal ca. ${hmZiel} Hm am Stück einplanen`);

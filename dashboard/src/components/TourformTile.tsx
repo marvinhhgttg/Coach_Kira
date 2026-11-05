@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ladeP4, tourform as berechneTourform, type P4Tag } from '../lib/paket4';
 import { fetchExtras } from '../lib/extras';
-import type { Ziel } from '../lib/planning';
+import { zielArt, type Ziel } from '../lib/planning';
 import { useGarminTage } from '../lib/garmin';
 import { lerneModelle } from '../lib/essRechner';
 import { eigeneBergtouren, eigeneSkitouren, tourLastPersoenlich } from '../lib/tourEss';
@@ -112,6 +112,18 @@ function TourformBody({ p4 }: { p4: P4Tag[] }) {
   }, []);
   const { tage: garmin } = useGarminTage();
   const modelle = useMemo(() => (garmin ? lerneModelle(garmin) : []), [garmin]);
+  // Für Märsche: längste Strecke zu Fuß und längste Zeit unterwegs an einem Tag (letzte 8 Wochen, Garmin)
+  const fuss = useMemo(() => {
+    if (!garmin || !garmin.size) return null;
+    const ab = new Date(Date.now() - 56 * 86400000).toLocaleDateString('sv-SE');
+    let km = 0, h = 0;
+    for (const [d, t] of garmin) {
+      if (d < ab) continue;
+      km = Math.max(km, (t.akt || []).filter((x) => /hiking|walking|mountaineering/i.test(String(x.typ || ''))).reduce((a, x) => a + (x.km || 0), 0));
+      h = Math.max(h, (t.summe?.dauer_s ?? (t.akt || []).reduce((a, x) => a + (x.dauer_s || 0), 0)) / 3600);
+    }
+    return { km, h };
+  }, [garmin]);
 
   if (ziele.length === 0) {
     return (
@@ -141,7 +153,23 @@ function TourformBody({ p4 }: { p4: P4Tag[] }) {
       <div className="mt-3 space-y-2">
         {ziele.map((z, i) => {
           const pers = modelle.length ? tourLastPersoenlich(z, modelle, eigeneSkitouren(garmin), eigeneBergtouren(garmin)) : null;
-          const wf = berechneTourform(p4, z, pers?.ess);
+          const wf0 = berechneTourform(p4, z, pers?.ess);
+          // Marsch: Strecke und Zeit am Stück statt lange Lasttage und Höhenmeter
+          const marsch = zielArt(z) === 'marsch' && fuss;
+          const strecke = marsch && z.distanz_km > 0 ? Math.min(1, fuss!.km / (z.distanz_km * 0.6)) : null;
+          const zeit = marsch && z.dauer_h > 0 ? Math.min(1, fuss!.h / (z.dauer_h * 0.7)) : null;
+          const wf = marsch
+            ? {
+                ...wf0,
+                lange: strecke ?? wf0.lange,
+                hoehe: zeit,
+                prozent: Math.round(100 * (0.2 * wf0.volumen + 0.45 * (strecke ?? wf0.lange) + 0.35 * (zeit ?? 1))),
+                hinweise: [
+                  `Strecke: zuletzt höchstens ${Math.round(fuss!.km)} km zu Fuß an einem Tag – Ziel vor dem Marsch etwa ${Math.round(z.distanz_km * 0.6)} km.`,
+                  `Zeit: zuletzt höchstens ${(Math.round(fuss!.h * 10) / 10).toLocaleString('de-DE')} h unterwegs – Ziel etwa ${(Math.round(z.dauer_h * 0.7 * 10) / 10).toLocaleString('de-DE')} h am Stück.`,
+                ],
+              }
+            : wf0;
           const wo = wochenBisZiel(z);
 
           // Prozent-Farbe: >= 80 grün, >= 60 gelb, sonst orange
@@ -174,7 +202,7 @@ function TourformBody({ p4 }: { p4: P4Tag[] }) {
                 </div>
                 {/* Lange Tage */}
                 <div className="flex items-center gap-2">
-                  <span className="text-2xs w-16 text-right shrink-0">Lange</span>
+                  <span className="text-2xs w-16 text-right shrink-0">{marsch ? 'Strecke' : 'Lange'}</span>
                   <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden">
                     <div className={`h-full ${barColor(wf.lange)} rounded-full`} style={{ width: `${Math.round(wf.lange * 100)}%` }} />
                   </div>
@@ -182,7 +210,7 @@ function TourformBody({ p4 }: { p4: P4Tag[] }) {
                 </div>
                 {/* Höhenmeter */}
                 <div className="flex items-center gap-2">
-                  <span className="text-2xs w-16 text-right shrink-0">Höhe</span>
+                  <span className="text-2xs w-16 text-right shrink-0">{marsch ? 'Zeit' : 'Höhe'}</span>
                   <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden">
                     {wf.hoehe == null ? (
                       <div className="h-full bg-orange-300 rounded-full" style={{ width: '0%' }} />
@@ -198,8 +226,8 @@ function TourformBody({ p4 }: { p4: P4Tag[] }) {
 
               {/* Zahlen darunter */}
               <p className="mt-2 text-2xs text-ink-muted">
-                Wochenlast {fmtNum(Math.round(wf.wochenLastIst))} von {fmtNum(Math.round(wf.wochenLastZiel))} ESS ·
-                lange Tage {wf.langeTage}/{wf.langeZiel} ·
+                Wochenlast {fmtNum(Math.round(wf.wochenLastIst))} von {fmtNum(Math.round(wf.wochenLastZiel))} ESS ·{' '}
+                {marsch ? '' : `lange Tage ${wf.langeTage}/${wf.langeZiel} · `}
                 Tourlast ≈ {fmtNum(wf.tourLast)} ESS{pers ? ' (ESS-Rechner)' : ' (Faustregel)'}
               </p>
 

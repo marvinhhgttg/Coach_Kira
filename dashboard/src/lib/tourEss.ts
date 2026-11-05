@@ -2,7 +2,7 @@
  * Tourlast über den persönlichen ESS-Rechner (gelernte Modelle aus Garmin-Tagesdetails)
  * statt Faustregel. Fehlt ein passendes Modell (< 8 Einheiten), bleibt die Faustregel.
  */
-import type { Ziel } from './planning';
+import { zielArt, type Ziel } from './planning';
 import { vorwaerts, type Modell, type ProfilId } from './essRechner';
 import type { GarminTage } from './garmin';
 import SKI_API from '../data/skitouren_garmin.json';
@@ -61,18 +61,30 @@ export function tourLastPersoenlich(z: Ziel, modelle: Modell[], skitouren: Skito
   const hm = Math.max(0, z.hm || 0);
   const min = z.dauer_h * 60;
   let plan: { m: Modell; min: number; km?: number; hm: number }[] = [];
-  if (z.art === 'lauf') {
+  const art = zielArt(z);
+  if (art === 'marsch') {
+    const m = finde(modelle, 'hike');
+    if (!m) return null;
+    const e = vorwaerts(m, { min, km, hm });
+    if (!e) return null;
+    hinweise.push(
+      'Marsch über dein Wandermodell geschätzt. Garmin vergibt beim Gehen wenig Last und fast nur über die Herzfrequenz: bei dir 1–2 ESS/h bei ruhigem Gehen (Ø HF unter 90), etwa 13 ESS/h bei zügigen 5+ km/h. ' +
+        'Für einen Marsch zählen deshalb Dauer und Strecke am Stück mehr als die Last.',
+    );
+    return { ess: Math.round(e.ess), lo: Math.round(e.lo), hi: Math.round(e.hi), teile: [{ profil: 'hike', min: Math.round(min), km, hm: Math.round(hm), ess: Math.round(e.ess), lo: Math.round(e.lo), hi: Math.round(e.hi), n: m.n }], hinweise };
+  }
+  if (art === 'lauf') {
     const m = finde(modelle, 'run');
     if (!m) return null;
     plan = [{ m, min, km, hm }];
-  } else if (z.art === 'rad') {
+  } else if (art === 'rad') {
     const m = finde(modelle, 'bike_road', 'bike_gravel');
     if (!m) return null;
     plan = [{ m, min, km, hm }];
-  } else if (z.art === 'bergtour' || z.art === 'skitour') {
+  } else if (art === 'bergtour' || art === 'skitour') {
     const m = finde(modelle, 'hike');
     if (!m) return null;
-    if (z.art === 'skitour') {
+    if (art === 'skitour') {
       const alleSki = skitouren;
       skitouren = skitouren.filter((t) => t.vergleichbar);
       const ausgeschl = alleSki.length - skitouren.length;
@@ -119,7 +131,7 @@ export function tourLastPersoenlich(z: Ziel, modelle: Modell[], skitouren: Skito
       const f = (v: number) => Math.round(v * k);
       return { ess: f(e.ess), lo: f(e.lo), hi: f(e.hi), teile: [{ profil: 'hike', min: Math.round(min), km, hm: Math.round(hm), ess: f(e.ess), lo: f(e.lo), hi: f(e.hi), n: m.n }], hinweise: [...hinweise, ...e.hinweise.filter((h) => !hinweise.includes(h))] };
     }
-  } else if (z.art === 'bike_hike') {
+  } else if (art === 'bike_hike') {
     const rad = finde(modelle, 'bike_gravel', 'bike_road');
     const geh = finde(modelle, 'hike');
     if (!rad || !geh) return null;

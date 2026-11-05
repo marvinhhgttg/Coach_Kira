@@ -13,6 +13,7 @@ interface ZielDaten { ziel: Ziel; plan?: { bloecke: Block[]; hinweise: string[];
 
 const ARTEN: { v: Ziel['art']; l: string }[] = [
   { v: 'bergtour', l: 'Bergtour' },
+  { v: 'marsch', l: 'Marsch/Wanderung' },
   { v: 'bike_hike', l: 'Bike & Hike' },
   { v: 'rad', l: 'Rad/Gravel' },
   { v: 'lauf', l: 'Lauf' },
@@ -69,8 +70,19 @@ export function GoalPlannerTile() {
     }
     return Math.round((mx / 3600) * 10) / 10;
   }, [garmin]);
+  const maxGehKm = useMemo(() => {
+    if (!garmin || !garmin.size) return null;
+    const ab = new Date(Date.now() - 56 * 86400000).toLocaleDateString('sv-SE');
+    let mx = 0;
+    for (const [d, t] of garmin) {
+      if (d < ab) continue;
+      const km = (t.akt || []).filter((x) => /hiking|walking|mountaineering/i.test(String(x.typ || ''))).reduce((a, x) => a + (x.km || 0), 0);
+      if (km > mx) mx = km;
+    }
+    return mx;
+  }, [garmin]);
   const pers = useMemo(() => (cur?.data?.ziel && modelle.length ? tourLastPersoenlich(cur.data.ziel, modelle, eigeneSkitouren(garmin), eigeneBergtouren(garmin)) : null), [cur, modelle, garmin]);
-  const bereit = useMemo(() => (cur?.data?.ziel && hist.length ? zielBereitschaft(cur.data.ziel, hist, fakt, pers, maxDauerH) : null), [cur, hist, fakt, pers, maxDauerH]);
+  const bereit = useMemo(() => (cur?.data?.ziel && hist.length ? zielBereitschaft(cur.data.ziel, hist, fakt, pers, maxDauerH, maxGehKm) : null), [cur, hist, fakt, pers, maxDauerH, maxGehKm]);
 
   async function onSave() {
     if (!form || !form.name.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(form.datum)) {
