@@ -146,8 +146,8 @@ export function zielArt(z: Ziel): Ziel['art'] {
 }
 
 export function tourLast(z: Ziel, faktoren?: { load: any[]; elev: any[] }) {
-  // Marsch/Wanderung: Garmin vergibt beim Gehen wenig Last (bei dir 1–14 ESS/h je nach Herzfrequenz) – Faustregel 7 ESS/h + Höhenmeter
-  if (zielArt(z) === 'marsch') return Math.round(7 * z.dauer_h + (z.hm / 100) * 3);
+  // Marsch/Wanderung: Garmin vergibt bei langem Gehen kaum Last (bei dir seit 2024 ca. 1–1,5 ESS/h) – Faustregel 2 ESS/h + Höhenmeter
+  if (zielArt(z) === 'marsch') return Math.round(2 * z.dauer_h + (z.hm / 100) * 1);
   const typ = z.art === 'rad' ? 'Bike' : z.art === 'lauf' ? 'Run' : z.art === 'skitour' ? 'Skitour' : 'Other';
   const f = (faktoren?.load || []).find((x) => String(x.ActivityType) === typ && /Z2|Default/.test(String(x.Zone)));
   const perH = Number(f?.Factor) || (typ === 'Bike' ? 85 : typ === 'Run' ? 120 : 50);

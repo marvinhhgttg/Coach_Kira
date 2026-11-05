@@ -4,7 +4,7 @@ import { fetchExtras } from '../lib/extras';
 import { zielArt, type Ziel } from '../lib/planning';
 import { useGarminTage } from '../lib/garmin';
 import { lerneModelle } from '../lib/essRechner';
-import { eigeneBergtouren, eigeneSkitouren, tourLastPersoenlich } from '../lib/tourEss';
+import { eigeneBergtouren, eigeneSkitouren, setzeGarminTage, tourLastPersoenlich } from '../lib/tourEss';
 
 // ── Hilfsfunktionen ────────────────────────────────────────────────
 function fmtDateShort(iso: string): string {
@@ -111,6 +111,7 @@ function TourformBody({ p4 }: { p4: P4Tag[] }) {
     return () => { cancelled = true; };
   }, []);
   const { tage: garmin } = useGarminTage();
+  setzeGarminTage(garmin);
   const modelle = useMemo(() => (garmin ? lerneModelle(garmin) : []), [garmin]);
   // Für Märsche: längste Strecke zu Fuß und längste Zeit unterwegs an einem Tag (letzte 8 Wochen, Garmin)
   const fuss = useMemo(() => {

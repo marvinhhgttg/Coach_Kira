@@ -6,7 +6,7 @@ import { fmtDateShort } from '../lib/format';
 import { zielBereitschaft, type Ziel } from '../lib/planning';
 import { useGarminTage } from '../lib/garmin';
 import { lerneModelle } from '../lib/essRechner';
-import { eigeneBergtouren, eigeneSkitouren, tourLastPersoenlich } from '../lib/tourEss';
+import { eigeneBergtouren, eigeneSkitouren, setzeGarminTage, tourLastPersoenlich } from '../lib/tourEss';
 
 interface Block { titel: string; von: string; bis: string; wochen_ess: number; schluesseleinheiten: string[] }
 interface ZielDaten { ziel: Ziel; plan?: { bloecke: Block[]; hinweise: string[]; tapering?: string; erstellt?: string } }
@@ -58,6 +58,7 @@ export function GoalPlannerTile() {
   const vergangen = items.filter((x) => x.datum < heute());
   const cur = items.find((x) => x.datum === sel) || null;
   const { tage: garmin } = useGarminTage();
+  setzeGarminTage(garmin);
   const modelle = useMemo(() => (garmin ? lerneModelle(garmin) : []), [garmin]);
   const maxDauerH = useMemo(() => {
     if (!garmin || !garmin.size) return null;

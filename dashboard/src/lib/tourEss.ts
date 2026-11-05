@@ -6,6 +6,7 @@ import { zielArt, type Ziel } from './planning';
 import { vorwaerts, type Modell, type ProfilId } from './essRechner';
 import type { GarminTage } from './garmin';
 import SKI_API from '../data/skitouren_garmin.json';
+import MARSCH_API from '../data/lange_maersche_garmin.json';
 
 export interface TourTeil { profil: ProfilId; min: number; km?: number; hm: number; ess: number; lo: number; hi: number; n: number }
 export interface TourEss { ess: number; lo: number; hi: number; teile: TourTeil[]; hinweise: string[] }
@@ -40,6 +41,21 @@ export function eigeneBergtouren(tage: GarminTage | null | undefined): Bergtour[
         out.push({ datum, name: a.name, min: a.dauer_s! / 60, km: a.km, hm: a.hm!, hf: a.hf_avg, ess: a.last! });
   return out.sort((a, b) => a.datum.localeCompare(b.datum));
 }
+/** Lange Märsche: Garmin-API-Historie + neue aus den Tagesdetails (≥ 4 h, höchstens 40 Hm/km, Gehen/Wandern). */
+export interface Marsch { datum: string; min: number; km?: number; hm: number; hf?: number; ess: number; name?: string }
+let tageCache: GarminTage | null = null;
+/** Garmin-Tagesdetails für neue Märsche bereitstellen (vom Aufrufer, einmal je Laden). */
+export function setzeGarminTage(t: GarminTage | null) { tageCache = t; }
+export function eigeneMaersche(tage: GarminTage | null | undefined): Marsch[] {
+  const m = new Map<string, Marsch>();
+  for (const t of (MARSCH_API as any).touren as Marsch[]) m.set(t.datum, t);
+  if (tage)
+    for (const [datum, t] of tage)
+      for (const a of t.akt || [])
+        if (/^(hiking|walking|speed_walking|mountaineering)$/i.test(String(a.typ || '')) && (a.dauer_s || 0) >= 14400 && a.km && (a.hm || 0) / a.km <= 40 && a.last != null && !m.has(datum))
+          m.set(datum, { datum, name: a.name, min: a.dauer_s! / 60, km: a.km, hm: a.hm || 0, hf: a.hf_avg, ess: a.last });
+  return [...m.values()].sort((a, b) => a.datum.localeCompare(b.datum));
+}
 const median = (x: number[]) => {
   const s = [...x].sort((a, b) => a - b);
   return s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2;
@@ -63,14 +79,25 @@ export function tourLastPersoenlich(z: Ziel, modelle: Modell[], skitouren: Skito
   let plan: { m: Modell; min: number; km?: number; hm: number }[] = [];
   const art = zielArt(z);
   if (art === 'marsch') {
+    // Garmin-Last beim langen Gehen: aus deinen eigenen langen Märschen (≥ 4 h, flach) ab 2024 – ESS je Stunde × Dauer
+    const ms = eigeneMaersche(tageCache).filter((t) => t.datum >= '2024-01-01');
+    if (ms.length >= 3) {
+      const ph = ms.map((t) => t.ess / (t.min / 60)).sort((a, b) => a - b);
+      const med = median(ph);
+      const ess = Math.round(med * z.dauer_h), lo = Math.round(ph[0] * z.dauer_h), hi = Math.round(ph[ph.length - 1] * z.dauer_h);
+      const lang = ms.reduce((a, t) => (t.min > a.min ? t : a), ms[0]);
+      hinweise.push(
+        `Marsch aus ${ms.length} eigenen langen Touren seit 2024 (≥ 4 h, flach): Garmin vergab ${ph[0].toLocaleString('de-DE', { maximumFractionDigits: 1 })}–${ph[ph.length - 1].toLocaleString('de-DE', { maximumFractionDigits: 1 })} ESS je Stunde – ` +
+          `z. B. ${de(lang.datum)}: ${(Math.round(lang.min / 6) / 10).toLocaleString('de-DE')} h, ${Math.round(lang.km || 0)} km, ${lang.hm} Hm → ${lang.ess} ESS. ` +
+          'Garmin misst die Last über die Intensität, nicht über die Dauer – für einen Marsch zählen deshalb Strecke und Zeit am Stück.',
+      );
+      return { ess, lo, hi, teile: [{ profil: 'hike', min: Math.round(min), km, hm: Math.round(hm), ess, lo, hi, n: ms.length }], hinweise };
+    }
     const m = finde(modelle, 'hike');
     if (!m) return null;
     const e = vorwaerts(m, { min, km, hm });
     if (!e) return null;
-    hinweise.push(
-      'Marsch über dein Wandermodell geschätzt. Garmin vergibt beim Gehen wenig Last und fast nur über die Herzfrequenz: bei dir 1–2 ESS/h bei ruhigem Gehen (Ø HF unter 90), etwa 13 ESS/h bei zügigen 5+ km/h. ' +
-        'Für einen Marsch zählen deshalb Dauer und Strecke am Stück mehr als die Last.',
-    );
+    hinweise.push('Marsch über dein Wandermodell geschätzt – noch zu wenige eigene lange Märsche für einen direkten Abgleich.');
     return { ess: Math.round(e.ess), lo: Math.round(e.lo), hi: Math.round(e.hi), teile: [{ profil: 'hike', min: Math.round(min), km, hm: Math.round(hm), ess: Math.round(e.ess), lo: Math.round(e.lo), hi: Math.round(e.hi), n: m.n }], hinweise };
   }
   if (art === 'lauf') {
