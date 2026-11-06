@@ -1,0 +1,446 @@
+{
+ "quelle": "Garmin Connect API (activitylist-service), abgerufen 29.10.2026",
+ "hinweis": "12/2022–12/2023: Garmin-Last etwa doppelt so hoch wie davor und mit der aktuellen Uhr – nicht vergleichbar",
+ "touren": [
+  {
+   "datum": "2020-12-29",
+   "name": "Blaichach Ski-/Snowboardtour",
+   "min": 228.4,
+   "km": 13.8,
+   "hm": 773,
+   "hf": 132,
+   "ess": 113,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2020-12-31",
+   "name": "Nesselwang Ski-/Snowboardtour",
+   "min": 211.2,
+   "km": 10.5,
+   "hm": 888,
+   "hf": 127,
+   "ess": 114,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2021-01-09",
+   "name": "Mittelberg Ski-/Snowboardtour",
+   "min": 219.7,
+   "km": 14.5,
+   "hm": 1393,
+   "hf": 120,
+   "ess": 70,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2021-01-20",
+   "name": "Immenstadt i. Allgäu Ski-/Snowboardtour",
+   "min": 132.9,
+   "km": 9.9,
+   "hm": 723,
+   "hf": 134,
+   "ess": 103,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2021-01-24",
+   "name": "Immenstadt i. Allgäu Ski-/Snowboardtour",
+   "min": 95.5,
+   "km": 8.1,
+   "hm": 718,
+   "hf": 139,
+   "ess": 103,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2021-01-26",
+   "name": "Blaichach Ski-/Snowboardtour",
+   "min": 178.5,
+   "km": 11.3,
+   "hm": 825,
+   "hf": 139,
+   "ess": 163,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2021-03-17",
+   "name": "Immenstadt i. Allgäu Ski-/Snowboardtour",
+   "min": 193.9,
+   "km": 12.2,
+   "hm": 1042,
+   "hf": 140,
+   "ess": 152,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2021-03-20",
+   "name": "Hochgrat Skitour",
+   "min": 140.2,
+   "km": 10.0,
+   "hm": 984,
+   "hf": 140,
+   "ess": 127,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2021-03-26",
+   "name": "Eineguntkopf Skitour",
+   "min": 171.5,
+   "km": 9.6,
+   "hm": 764,
+   "hf": 131,
+   "ess": 111,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2021-11-29",
+   "name": "Skitour Ofterschwanger Horn",
+   "min": 139.8,
+   "km": 7.8,
+   "hm": 531,
+   "hf": 144,
+   "ess": 209,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2021-11-30",
+   "name": "Skitour Ofterschwanger Horn",
+   "min": 90.7,
+   "km": 4.9,
+   "hm": 518,
+   "hf": 145,
+   "ess": 148,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2021-12-03",
+   "name": "Skitour Rangiswanger Horn von Sigiswang ",
+   "min": 131.1,
+   "km": 6.7,
+   "hm": 724,
+   "hf": 140,
+   "ess": 137,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2021-12-12",
+   "name": "Skitour Immenstadt - Mittag - Bärenköpfle - Dürrehorn und zurück",
+   "min": 174.5,
+   "km": 10.8,
+   "hm": 1035,
+   "hf": 143,
+   "ess": 189,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2021-12-15",
+   "name": "Skitour nach Hause ",
+   "min": 164.0,
+   "km": 11.9,
+   "hm": 772,
+   "hf": 139,
+   "ess": 166,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2021-12-27",
+   "name": "Skitour Fellhorn und Kanzelwand",
+   "min": 195.4,
+   "km": 14.1,
+   "hm": 1315,
+   "hf": 151,
+   "ess": 276,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2022-01-06",
+   "name": "Skitour Riedberger Horn und Bolgental",
+   "min": 120.3,
+   "km": 7.1,
+   "hm": 633,
+   "hf": 137,
+   "ess": 113,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2022-01-12",
+   "name": "Skitour Kanzelwand und Fellhorn",
+   "min": 217.7,
+   "km": 14.5,
+   "hm": 1349,
+   "hf": 136,
+   "ess": 137,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2022-01-13",
+   "name": "Skitour Gschwender Horn",
+   "min": 96.4,
+   "km": 5.9,
+   "hm": 618,
+   "hf": 137,
+   "ess": 97,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2022-01-14",
+   "name": "Skitour Wannenkopf",
+   "min": 152.1,
+   "km": 9.5,
+   "hm": 814,
+   "hf": 133,
+   "ess": 100,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2022-01-18",
+   "name": "Skitour Güntlespitze",
+   "min": 217.3,
+   "km": 9.8,
+   "hm": 939,
+   "hf": 135,
+   "ess": 147,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2022-01-22",
+   "name": "Skitour nach Hause",
+   "min": 153.3,
+   "km": 11.8,
+   "hm": 769,
+   "hf": 130,
+   "ess": 101,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2022-01-25",
+   "name": "Skitour nach Hause ",
+   "min": 145.0,
+   "km": 11.2,
+   "hm": 760,
+   "hf": 125,
+   "ess": 69,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2022-01-29",
+   "name": "Blitzskitour auf den Mittag",
+   "min": 86.3,
+   "km": 6.2,
+   "hm": 658,
+   "hf": 146,
+   "ess": 159,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2022-02-04",
+   "name": "Skitour nach Hause ",
+   "min": 133.6,
+   "km": 8.4,
+   "hm": 719,
+   "hf": 139,
+   "ess": 124,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2022-02-09",
+   "name": "Skitour Feuerstätterkopf",
+   "min": 125.9,
+   "km": 9.4,
+   "hm": 657,
+   "hf": 129,
+   "ess": 82,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2022-02-12",
+   "name": "Skitour Steinmannl und Hählekopf",
+   "min": 232.3,
+   "km": 16.5,
+   "hm": 1145,
+   "hf": 140,
+   "ess": 215,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2022-02-19",
+   "name": "Skitour Ochsenkopf und Rangiswanger Horn",
+   "min": 166.1,
+   "km": 10.5,
+   "hm": 880,
+   "hf": 132,
+   "ess": 107,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2022-02-23",
+   "name": "Skitour Mittag - Bärenköpfle - Dürrehorn - Bärenköpfle - Mittag",
+   "min": 155.8,
+   "km": 11.5,
+   "hm": 1066,
+   "hf": 147,
+   "ess": 210,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2022-02-24",
+   "name": "Skitour Riedberger Horn ",
+   "min": 55.9,
+   "km": 4.1,
+   "hm": 329,
+   "hf": 132,
+   "ess": 59,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2022-02-26",
+   "name": "Skitour Seekopf",
+   "min": 256.9,
+   "km": 15.2,
+   "hm": 1509,
+   "hf": 136,
+   "ess": 186,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2022-03-04",
+   "name": "Skitour Hochgrat",
+   "min": 106.1,
+   "km": 7.4,
+   "hm": 842,
+   "hf": 145,
+   "ess": 188,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2022-03-05",
+   "name": "Skitour Ponten",
+   "min": 140.0,
+   "km": 8.6,
+   "hm": 831,
+   "hf": 137,
+   "ess": 117,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2022-03-09",
+   "name": "Skitour Grünhorn",
+   "min": 177.8,
+   "km": 10.8,
+   "hm": 970,
+   "hf": 134,
+   "ess": 166,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2022-03-20",
+   "name": "Skitour Schochen",
+   "min": 229.6,
+   "km": 13.4,
+   "hm": 1162,
+   "hf": 128,
+   "ess": 116,
+   "vergleichbar": true
+  },
+  {
+   "datum": "2022-12-17",
+   "name": "Riedberger Horn ",
+   "min": 70.7,
+   "km": 3.8,
+   "hm": 337,
+   "hf": 156,
+   "ess": 271,
+   "vergleichbar": false
+  },
+  {
+   "datum": "2022-12-18",
+   "name": "Ochsenkopf und Rangiswanger Horn ",
+   "min": 217.8,
+   "km": 10.7,
+   "hm": 926,
+   "hf": 143,
+   "ess": 288,
+   "vergleichbar": false
+  },
+  {
+   "datum": "2023-01-28",
+   "name": "Rangiswanger Horn ",
+   "min": 112.3,
+   "km": 6.2,
+   "hm": 734,
+   "hf": 153,
+   "ess": 331,
+   "vergleichbar": false
+  },
+  {
+   "datum": "2023-02-10",
+   "name": "Riedberger Horn - 3 Aufstiege",
+   "min": 160.6,
+   "km": 8.5,
+   "hm": 826,
+   "hf": 154,
+   "ess": 489,
+   "vergleichbar": false
+  },
+  {
+   "datum": "2023-02-26",
+   "name": "Oberstaufen Skitour",
+   "min": 152.1,
+   "km": 9.0,
+   "hm": 941,
+   "hf": 148,
+   "ess": 365,
+   "vergleichbar": false
+  },
+  {
+   "datum": "2023-04-21",
+   "name": "Austoben im Skigebiet Fellhorn - Kanzelwand",
+   "min": 219.3,
+   "km": 15.3,
+   "hm": 1496,
+   "hf": 142,
+   "ess": 272,
+   "vergleichbar": false
+  },
+  {
+   "datum": "2023-04-26",
+   "name": "Hahnenköpfle",
+   "min": 158.4,
+   "km": 9.2,
+   "hm": 1041,
+   "hf": 148,
+   "ess": 330,
+   "vergleichbar": false
+  },
+  {
+   "datum": "2023-11-29",
+   "name": "Ofterschwang Skitouren",
+   "min": 169.5,
+   "km": 10.5,
+   "hm": 954,
+   "hf": 143,
+   "ess": 333,
+   "vergleichbar": false
+  },
+  {
+   "datum": "2023-12-30",
+   "name": "Pistenskitour Muttelkopf",
+   "min": 134.5,
+   "km": 8.3,
+   "hm": 751,
+   "hf": 134,
+   "ess": 164,
+   "vergleichbar": false
+  },
+  {
+   "datum": "2025-11-29",
+   "name": "Skitour - Ochsenkopf und Weiherkopf",
+   "min": 211.4,
+   "km": 13.7,
+   "hm": 1171,
+   "hf": 136,
+   "ess": 170,
+   "vergleichbar": true
+  }
+ ]
+}
