@@ -624,6 +624,11 @@ def cmd_activity() -> None:
         if st.get("act_fail", {}).get(key, 0) >= 3:
             continue  # dreimal gescheitert – nicht weiter versuchen
         soll = st.get("plan_snapshot", {}).get(date)
+        if not texte_claim(f"aktivitaet:{date}"):
+            log(f"Aktivität {date}: Cloud-Ersatz hat übernommen – übersprungen")
+            st["reviewed"] = (st.get("reviewed", []) + [key])[-60:]
+            save_state(st)
+            continue
         try:
             model, sec = review_activity(row, soll)
             log(f"Aktivität {date}: kommentiert mit {model} in {sec:.0f} s")
@@ -636,6 +641,8 @@ def cmd_activity() -> None:
             fails[key] = fails.get(key, 0) + 1
             st["act_fail"] = fails
             save_state(st)
+        finally:
+            texte_mac(arbeit=None)
 
 
 # ---------------------------------------------------------------------------
@@ -722,6 +729,33 @@ def _cockpit_post(url: str, obj: dict, timeout: int = 20) -> dict:
     )
     with urlopen(req, timeout=timeout) as resp:
         return json.loads(resp.read().decode("utf-8"))
+
+
+COCKPIT_TEXTE = "https://coachkira.pplx.app/port/5000/api/texte"
+_KEIN = object()
+
+
+def texte_mac(ollama: bool | None = None, arbeit=_KEIN) -> None:
+    """Herzschlag an den Texte-Wächter im Cockpit (Mac erreichbar, Ollama bereit, woran gerade gerechnet wird)."""
+    body: dict = {}
+    if ollama is not None:
+        body["ollama"] = ollama
+    if arbeit is not _KEIN:
+        body["arbeit"] = arbeit
+    try:
+        _cockpit_post(COCKPIT_TEXTE + "/mac", body, timeout=10)
+    except Exception as e:
+        log(f"texte: Herzschlag nicht gesendet ({e})")
+
+
+def texte_claim(key: str) -> bool:
+    """Vor dem lokalen Rechnen fragen, ob die Cloud den Text schon übernommen hat. Server nicht erreichbar → lokal rechnen."""
+    try:
+        j = _cockpit_post(COCKPIT_TEXTE + "/claim", {"key": key}, timeout=10)
+        return bool(j.get("erlaubt", True))
+    except Exception as e:
+        log(f"texte: Abstimmung nicht möglich ({e}) – rechne lokal")
+        return True
 
 
 def garmin_anfrage_pruefen() -> None:
@@ -1000,6 +1034,14 @@ def cmd_befinden_check() -> None:
 
 
 def cmd_tick() -> None:
+    texte_mac(ollama=ollama_ready(), arbeit=None)
+    try:
+        _cmd_tick()
+    finally:
+        texte_mac(arbeit=None)
+
+
+def _cmd_tick() -> None:
     schlaf_luecke_merken()
     try:
         cmd_befinden_check()
@@ -1383,6 +1425,9 @@ def cmd_morning(force: bool = False) -> None:
         if not force and done_today(src, t, today):
             log(f"{t}: heute schon vorhanden – übersprungen")
             continue
+        if not texte_claim(f"morgen:{today}:{t}"):
+            log(f"{t}: Cloud-Ersatz hat übernommen – übersprungen")
+            continue
         try:
             sec = run_briefing(t)
             log(f"{t}: lokal erzeugt in {sec:.0f} s")
@@ -1390,6 +1435,8 @@ def cmd_morning(force: bool = False) -> None:
         except Exception as e:
             log(f"{t}: FEHLER {e}")
             fehler.append(t)
+        finally:
+            texte_mac(arbeit=None)
     if not fehler:
         st["morning_done"] = today
         save_state(st)

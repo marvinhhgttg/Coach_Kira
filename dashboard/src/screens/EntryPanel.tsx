@@ -5,6 +5,7 @@ import { ApiError, fetchChartData, submitCockpitEntry, type EntryType, type Subm
 import { proxySubmitEntry } from '../lib/proxy';
 import { fmtDateShort } from '../lib/format';
 import { Panel, StorySection } from '../components/UI';
+import { TexteStatusTile, texteNachAbsenden } from '../components/TexteStatusTile';
 import { garminAnfordern, garminAnfrageStatus } from '../lib/garminAnfrage';
 import { fetchExtras } from '../lib/extras';
 
@@ -374,6 +375,7 @@ export function EntryPanel({
       setResult(res);
       if (!res.ok) throw new ApiError(res.error || 'Senden fehlgeschlagen');
       toast('ok', `${type} für ${fmtDateShort(date)} übertragen (Zeile ${res.row}).`);
+      texteNachAbsenden();
       setValues((s) => ({ ...s, [type]: {} }));
       setFilled((prev) => ({ ...prev, [type]: [] }));
       setBefunde([]);
@@ -580,6 +582,7 @@ export function EntryPanel({
         )}
       </div>
     </Panel>
+    <div className="mt-4"><TexteStatusTile /></div>
     </StorySection>
     <StorySection id="ereignisse" titel="Besondere Tage" unter="Krankheit, Reise, Höhe, Hitze, Stress – damit Kira solche Tage richtig einordnet">
       <EreignisTile />

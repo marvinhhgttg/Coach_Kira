@@ -1258,6 +1258,16 @@ def cmd_ernaehrung(force: bool = False) -> None:
 
     morgen = (datetime.datetime.now(tz_local) + datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 
+    # Abstimmung mit dem Texte-Wächter: hat die Cloud den Plan schon übernommen?
+    try:
+        import kira_runner
+        if not kira_runner.texte_claim(f"ernaehrung:{morgen}"):
+            log("ernaehrung: Cloud-Ersatz hat übernommen – übersprungen")
+            st["ern_done"] = heute
+            save_x(st)
+            return
+    except Exception:
+        pass
     # Plan morgen laden
     plan = http_get_json(SCRIPT_URL + "?mode=planJsonV2").get("plan") or []
     plan_morgen = None
@@ -1314,7 +1324,8 @@ def cmd_ernaehrung(force: bool = False) -> None:
         a = grundumsatz * 1.15
         b = 4.5
 
-    kcal_ziel = round(a + b * last, -1) if last else 0
+    # Ruhetag (Last 0): Bedarf = eigener Grundumsatz aus der Regression, nicht 0
+    kcal_ziel = round(a + b * (last or 0), -1)
 
     # Makroziele
     kg = gewicht
@@ -1331,7 +1342,7 @@ def cmd_ernaehrung(force: bool = False) -> None:
     protein_g = round(kg * protein_kg)
     carbs_g = round(kg * carb_kg)
 
-    fett_g: float | None
+    fett_g: float | None = None
     if kcal_ziel > 0 and protein_g + carbs_g > 0:
         fett_g = round((kcal_ziel - 4 * protein_g - 4 * carbs_g) / 9)
     fett_g = max(round(0.8 * kg), fett_g if fett_g is not None else 0)

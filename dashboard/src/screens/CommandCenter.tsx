@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { TexteStatusTile } from '../components/TexteStatusTile';
 import { GarminNachtTile } from '../components/GarminNachtTile';
 import { GarminGesternTile } from '../components/GarminGesternTile';
 import { SchlafkontoTile } from '../components/SchlafkontoTile';
@@ -507,6 +508,7 @@ export function CommandCenter({
       </StorySection>
       <StorySection id="kira" titel="Kiras Einordnung" unter="Scores, KI-Analysen und Auffälligkeiten">
       <div className="space-y-4">
+      <TexteStatusTile compact />
       <section className="panel overflow-hidden">
         <div>
           <div className="p-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

@@ -4,6 +4,7 @@ import Database from 'better-sqlite3';
 import crypto from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { setupTexte } from './server/texte.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 5000);
@@ -211,6 +212,30 @@ app.get('/api/llm/status', (req, res) => {
   res.json({ ok: true, configured: !!(PPLX_URL && PPLX_KEY), used: llmUsed(), limit: LLM_DAILY_LIMIT, models: [...LLM_MODELS] });
 });
 
+/** Cloud-KI für serverseitige Aufgaben (Texte-Wächter) – zählt ins gleiche Tageslimit. */
+async function cloudChatServer(messages, opts = {}) {
+  if (!PPLX_URL || !PPLX_KEY) throw new Error('Cloud-KI ist auf dem Server nicht eingerichtet.');
+  const used = llmUsed();
+  if (used >= LLM_DAILY_LIMIT) throw new Error(`Tageslimit von ${LLM_DAILY_LIMIT} Cloud-Anfragen erreicht.`);
+  setSetting(llmDayKey(), String(used + 1));
+  const msgs = opts.json
+    ? [{ role: 'system', content: 'Antworte ausschließlich mit gültigem JSON – ohne Codeblock, ohne Text davor oder danach.' }, ...messages]
+    : messages;
+  const model = LLM_MODELS.has(opts.model) ? opts.model : 'sonar-pro';
+  const r = await fetch(PPLX_URL.replace(/\/$/, '') + '/chat/completions', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-api-key': PPLX_KEY },
+    body: JSON.stringify({ model, messages: msgs, temperature: 0.3, max_tokens: Math.max(100, Math.min(8000, Number(opts.maxTokens) || 2500)), disable_search: true }),
+  });
+  const text = await r.text();
+  let j;
+  try { j = JSON.parse(text); } catch { throw new Error(`Perplexity HTTP ${r.status}`); }
+  if (!r.ok) throw new Error(j?.error?.message || `Perplexity HTTP ${r.status}`);
+  const answer = String(j?.choices?.[0]?.message?.content || '').trim();
+  if (!answer) throw new Error('Cloud-KI lieferte keinen Text.');
+  return { answer, model };
+}
+
 app.post('/api/llm', async (req, res) => {
   try {
     if (!llmOriginOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
@@ -350,6 +375,8 @@ app.post('/api/action/:name', requireAuth, async (req, res) => {
     res.status(502).json({ ok: false, error: err?.message || String(err) });
   }
 });
+
+setupTexte(app, { getSetting, setSetting, cloudChat: cloudChatServer, originOk: llmOriginOk, scriptUrl: APPS_SCRIPT_URL });
 
 app.use(express.static(path.join(__dirname, 'dist')));
 app.use((req, res) => {
