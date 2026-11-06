@@ -12,20 +12,22 @@ Briefings (`saveBriefing`) und Extras (`saveExtra`) können das schon, dort ist 
 
 ## Änderung 1
 
-Streiche:
+Achtung: Die `model`-Zeile kommt in der Datei zweimal vor. In `ckDash_saveBriefing_` gibt es `engine` schon, dort darf nichts eingefügt werden. Damit die Stelle eindeutig ist, enthält der Block hier auch die Zeile davor.
+
+Streiche (in `ckDash_saveActivityReview_`):
 
 ```js
+    if (!text) throw new Error('Kein Kommentar-Text übermittelt.');
     const model = String(b.model || 'lokal').replace(/[^\w:.\-]/g, '').slice(0, 40);
 ```
 
 Ersetze durch:
 
 ```js
+    if (!text) throw new Error('Kein Kommentar-Text übermittelt.');
     const model = String(b.model || 'lokal').replace(/[^\w:.\-]/g, '').slice(0, 40);
     const engine = String(b.engine || 'local') === 'cloud' ? 'cloud' : 'local';
 ```
-
-(Die Zeile kommt in der Datei mehrfach vor. Gemeint ist nur die in `ckDash_saveActivityReview_`, direkt nach `if (!text) throw new Error('Kein Kommentar-Text übermittelt.');`.)
 
 ## Änderung 2
 
