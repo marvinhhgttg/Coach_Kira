@@ -408,7 +408,7 @@ function gWert(tage: GarminTage | null, date: string, k: 'km' | 'hm' | 'dauer'):
 export function TacticalLog() {
   const [raw, setRaw] = useState<any[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [win, setWin] = useState<WinKey>(60);
+  const [win, setWin] = useState<WinKey>(120);
   const [view, setView] = useState<'Tabelle' | 'Kalender'>('Tabelle');
   const [fSport, setFSport] = useState('Alle');
   const [fZone, setFZone] = useState('Alle');

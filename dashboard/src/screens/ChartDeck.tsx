@@ -352,7 +352,7 @@ function FullscreenChart({
 }
 
 export function ChartDeck() {
-  const [win, setWin] = useState<WinKey>(30);
+  const [win, setWin] = useState<WinKey>(120);
   const range = rangeFor(win);
   const [load, setLoad] = useState<ChartDataResponse | null>(null);
   const [recovery, setRecovery] = useState<ChartDataResponse | null>(null);

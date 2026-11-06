@@ -1356,7 +1356,7 @@ export function RecoveryPanel({
   const [raw, setRaw] = useState<any[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(true);
-  const [span, setSpan] = useState<Span>(14);
+  const [span, setSpan] = useState<Span>(isToday ? 14 : 120);
   const [loadedRange, setLoadedRange] = useState<Range | null>(null);
   const [planToday, setPlanToday] = useState<PlannedSession | null | 'loading'>('loading');
   const [planDays, setPlanDays] = useState<PlanDaySim[] | null | 'loading'>('loading');

@@ -962,7 +962,7 @@ function OutageReport({ days }: { days: D[] }) {
 export function Reports() {
   const [sub, setSub] = useState<Sub>('month');
   const [sub2, setSub2] = useState<Sub>('recovery');
-  const [win, setWin] = useState<WinKey>(360);
+  const [win, setWin] = useState<WinKey>(120);
   const [raw, setRaw] = useState<any[] | null>(null);
   const [extra, setExtra] = useState<any[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
