@@ -508,7 +508,6 @@ export function CommandCenter({
       </StorySection>
       <StorySection id="kira" titel="Kiras Einordnung" unter="Scores, KI-Analysen und Auffälligkeiten">
       <div className="space-y-4">
-      <TexteStatusTile compact />
       <section className="panel overflow-hidden">
         <div>
           <div className="p-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -638,6 +637,10 @@ export function CommandCenter({
       </StorySection>
       <StorySection id="chat" titel="Frag Kira" unter="Trainingschat mit deinen Daten">
         <KiraChat />
+      </StorySection>
+
+      <StorySection id="texte" titel="Kira-Texte" unter="Status nach dem Absenden – lokal, Cloud-Ersatz, fertig">
+        <TexteStatusTile compact />
       </StorySection>
 
       <StorySection id="technik" titel="Technik" unter="Letzter Lauf der Auswertung">
