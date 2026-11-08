@@ -1241,7 +1241,7 @@ def cmd_treffer_woche(force: bool = False) -> None:
 # ---------------------------------------------------------------------------
 
 
-def cmd_ernaehrung(force: bool = False) -> None:
+def cmd_ernaehrung(force: bool = False) -> bool | None:
     """Erstellt Ernährungsplan für morgen."""
     st = load_x()
     heute = today()
@@ -1261,7 +1261,7 @@ def cmd_ernaehrung(force: bool = False) -> None:
     # Abstimmung mit dem Texte-Wächter: hat die Cloud den Plan schon übernommen?
     try:
         import kira_runner
-        if not kira_runner.texte_claim(f"ernaehrung:{morgen}"):
+        if not force and not kira_runner.texte_claim(f"ernaehrung:{morgen}"):
             log("ernaehrung: Cloud-Ersatz hat übernommen – übersprungen")
             st["ern_done"] = heute
             save_x(st)
@@ -1406,9 +1406,9 @@ def cmd_ernaehrung(force: bool = False) -> None:
         text = "\n".join(lines_ern)
     except Exception as e:
         log(f"ernaehrung: LLM-FEHLER – {e}")
-        return
+        return False
 
-    save_extra(
+    gespeichert = save_extra(
         "ernaehrung", morgen, text,
         {
             "ziele": {"kcal": kcal_ziel, "protein": protein_g, "carbs": carbs_g, "fett": fett_g},
@@ -1426,6 +1426,7 @@ def cmd_ernaehrung(force: bool = False) -> None:
     st["ern_done"] = heute
     save_x(st)
     log(f"ernaehrung: Plan für {morgen} gespeichert.")
+    return gespeichert
 
 
 # ---------------------------------------------------------------------------

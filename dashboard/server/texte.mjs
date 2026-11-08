@@ -5,6 +5,7 @@
  * die Cloud-KI den Text erzeugen. Gespeichert wird wie gewohnt im Apps Script, mit Herkunft „cloud“.
  */
 import { spawn } from 'node:child_process';
+import crypto from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -305,7 +306,7 @@ export function setupTexte(app, { getSetting, setSetting, cloudChat, originOk, s
         key: `ernaehrung:${morgen}`,
         gruppe: 'abends',
         art: 'ernaehrung',
-        label: 'Ernährungsplan für morgen',
+        label: `Ernährungsplan für ${morgen.slice(8, 10)}.${morgen.slice(5, 7)}.`,
         datum: morgen,
         fertig: !!x,
         engine: x ? (q.startsWith('cloud') ? 'cloud' : 'local') : null,
@@ -416,6 +417,94 @@ export function setupTexte(app, { getSetting, setSetting, cloudChat, originOk, s
   }, Math.min(60000, TAKT_MS / 4));
   setTimeout(() => takt(false), 5000);
 
+  // ---------- Manuelle Läufe (Knopf im Cockpit) ----------
+  const auftraege = () => lesen('texte_auftraege', []);
+  const auftraegeSpeichern = (xs) => schreiben('texte_auftraege', xs.slice(-30));
+  const LABEL = { status: 'KI-Analyse', plan: 'Plan-Briefing', consolidated: 'Konsolidierte Analyse', aktivitaet: 'Aktivitätskommentar', ernaehrung: 'Ernährungsplan' };
+  function schluessel(art, datum) {
+    if (art === 'aktivitaet') return `aktivitaet:${datum}`;
+    if (art === 'ernaehrung') return `ernaehrung:${datum}`;
+    return `morgen:${datum}:${art}`;
+  }
+  function auftragSetzen(id, patch) {
+    const xs = auftraege();
+    const a = xs.find((x) => x.id === id);
+    if (a) Object.assign(a, patch);
+    auftraegeSpeichern(xs);
+    return a;
+  }
+  /** Zustand des passenden Eintrags nach einem manuellen Lauf nachziehen (fertig mit Herkunft). */
+  function eintragFertig(key, art, datum, engine, model) {
+    const z = zustand();
+    const gruppe = art === 'aktivitaet' ? 'aktivitaet' : art === 'ernaehrung' ? 'abends' : 'morgens';
+    const e = z.items[key] || { key, gruppe, art, label: LABEL[art], datum, erkannt: Date.now(), versuche: 0, cloudVersuche: 0 };
+    Object.assign(e, { phase: 'fertig', engine, model, fertigAt: Date.now(), fehler: null, manuell: true });
+    z.items[key] = e;
+    schreiben('texte_zustand', z);
+  }
+  async function cloudManuell(a) {
+    try {
+      let model;
+      if (a.art === 'aktivitaet') {
+        const rows = (await holen({ mode: 'chartData', range: '14d', metrics: ACT_METRICS })).data || [];
+        const row = rows.find((r) => r.date === a.datum);
+        if (!row || !istAktivitaet(row)) throw new Error(`Keine Aktivität am ${a.datum} gefunden`);
+        model = await cloudAktivitaet(row, lesen('texte_soll', {})[a.datum] || null);
+      } else if (a.art === 'ernaehrung') model = await cloudErnaehrung(a.datum);
+      else model = await cloudBriefing(a.art);
+      auftragSetzen(a.id, { phase: 'fertig', ok: true, model, endAt: Date.now(), result: 'gespeichert' });
+      eintragFertig(a.key, a.art, a.datum, 'cloud', model);
+    } catch (err) {
+      auftragSetzen(a.id, { phase: 'fehler', ok: false, endAt: Date.now(), result: String(err?.message || err).slice(0, 200) });
+    }
+  }
+
+  app.post('/api/texte/starten', (req, res) => {
+    if (!originOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
+    const b = req.body || {};
+    const art = String(b.art || '');
+    if (!LABEL[art]) return res.status(400).json({ ok: false, error: 'Unbekannter Lauf.' });
+    const datum = /^\d{4}-\d{2}-\d{2}$/.test(String(b.datum || '')) ? String(b.datum) : art === 'ernaehrung' ? plusTage(heute(), 1) : heute();
+    const engine = b.engine === 'cloud' ? 'cloud' : 'local';
+    const key = schluessel(art, datum);
+    const xs = auftraege();
+    const laufend = xs.find((x) => x.key === key && ['angefordert', 'abgeholt', 'cloud'].includes(x.phase) && Date.now() - x.at < 2 * 3600 * 1000);
+    if (laufend) return res.status(409).json({ ok: false, error: `${LABEL[art]} läuft bereits (${laufend.engine === 'cloud' ? 'Cloud' : 'lokal'}).` });
+    const a = { id: crypto.randomUUID(), key, art, datum, label: LABEL[art], engine, phase: engine === 'cloud' ? 'cloud' : 'angefordert', at: Date.now() };
+    xs.push(a);
+    auftraegeSpeichern(xs);
+    if (engine === 'cloud') cloudManuell(a);
+    res.json({ ok: true, auftrag: a });
+  });
+  // Mac holt lokale Aufträge ab (jede Minute aus dem Supervisor-Takt)
+  app.get('/api/texte/auftrag', (req, res) => {
+    const xs = auftraege();
+    let geaendert = false;
+    for (const x of xs) {
+      if (x.phase === 'angefordert' && Date.now() - x.at > 2 * 3600 * 1000) {
+        Object.assign(x, { phase: 'fehler', ok: false, endAt: Date.now(), result: 'Mac hat den Auftrag 2 h nicht abgeholt' });
+        geaendert = true;
+      }
+    }
+    if (geaendert) auftraegeSpeichern(xs);
+    const a = xs.find((x) => x.engine === 'local' && x.phase === 'angefordert');
+    res.json({ ok: true, pending: !!a, auftrag: a || null });
+  });
+  app.post('/api/texte/auftrag/status', (req, res) => {
+    if (!originOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
+    const b = req.body || {};
+    const patch = { phase: String(b.phase || '') };
+    if (b.phase === 'fertig' || b.phase === 'fehler') Object.assign(patch, { ok: !!b.ok, endAt: Date.now(), result: String(b.result || '').slice(0, 200), model: b.model || null });
+    const a = auftragSetzen(String(b.id || ''), patch);
+    if (a && b.phase === 'fertig' && b.ok) eintragFertig(a.key, a.art, a.datum, 'local', b.model || null);
+    const m = mac();
+    m.at = Date.now();
+    m.arbeit = b.phase === 'abgeholt' && a ? a.key : null;
+    m.arbeitSeit = m.arbeit ? Date.now() : null;
+    schreiben('texte_mac', m);
+    res.json({ ok: !!a });
+  });
+
   function statusAntwort() {
     const z = zustand();
     const m = mac();
@@ -430,6 +519,7 @@ export function setupTexte(app, { getSetting, setSetting, cloudChat, originOk, s
       einstellung: einstellung(),
       mac: { at: m.at || null, erreichbar: !!(m.at && jetzt - m.at < MAC_FRISCH_MS), ollama: m.ollama ?? null, arbeit: m.arbeit || null, arbeitSeit: m.arbeitSeit || null },
       items,
+      auftraege: auftraege().filter((x) => jetzt - x.at < 24 * 3600 * 1000).slice(-12),
     };
   }
 

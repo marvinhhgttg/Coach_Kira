@@ -758,6 +758,52 @@ def texte_claim(key: str) -> bool:
         return True
 
 
+def texte_auftrag_pruefen() -> None:
+    """Knopf „lokal starten“ im Cockpit (Eingabe → Kira-Texte): Auftrag abholen, lokal rechnen, zurückmelden."""
+    try:
+        j = http_get_json(COCKPIT_TEXTE + "/auftrag", timeout=15)
+    except Exception:
+        return
+    a = j.get("auftrag") if j.get("pending") else None
+    if not a:
+        return
+    aid, art, datum = a.get("id"), a.get("art"), a.get("datum")
+    try:
+        _cockpit_post(COCKPIT_TEXTE + "/auftrag/status", {"id": aid, "phase": "abgeholt"})
+    except Exception:
+        pass
+    log(f"Texte: manueller Lauf {art} {datum} (lokal)")
+    ok, msg, model = False, "", MODEL
+    try:
+        if art in MORNING_TYPES:
+            model = ROUTES.get(art, MODEL)
+            sec = run_briefing(art)
+            msg = f"lokal erzeugt in {sec:.0f} s"
+        elif art == "aktivitaet":
+            rows = fetch_days(14)
+            row = next((r for r in rows if r.get("date") == datum and is_activity(r)), None)
+            if row is None:
+                raise RuntimeError(f"keine Aktivität am {datum} gefunden")
+            soll = load_state().get("plan_snapshot", {}).get(datum)
+            model, sec = review_activity(row, soll)
+            msg = f"kommentiert in {sec:.0f} s"
+        elif art == "ernaehrung":
+            import kira_extras
+            if kira_extras.cmd_ernaehrung(force=True) is False:
+                raise RuntimeError("Ernährungsplan nicht erzeugt – siehe runner.log")
+            msg = "Ernährungsplan gespeichert"
+        else:
+            raise RuntimeError(f"unbekannter Lauf {art}")
+        ok = True
+    except Exception as e:
+        msg = str(e)[:200]
+    try:
+        _cockpit_post(COCKPIT_TEXTE + "/auftrag/status", {"id": aid, "phase": "fertig" if ok else "fehler", "ok": ok, "result": msg, "model": model})
+    except Exception as e:
+        log(f"Texte: Rückmeldung fehlgeschlagen: {e}")
+    log(f"Texte: manueller Lauf {art} {'OK' if ok else 'FEHLER ' + msg}")
+
+
 def garmin_anfrage_pruefen() -> None:
     """Knopf „Garmin jetzt abrufen“ im Cockpit: Auftrag abholen, kira_garmin.py tick --force, zurückmelden."""
     try:
@@ -852,6 +898,10 @@ def cmd_supervisor() -> None:
         garmin_workouts_pruefen()
     except Exception as e:
         log(f"Garmin-Workout: FEHLER {e}")
+    try:
+        texte_auftrag_pruefen()
+    except Exception as e:
+        log(f"Texte-Auftrag: FEHLER {e}")
     lock = open(Path.home() / "coach-kira-runner" / "supervisor.lock", "w")
     try:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
