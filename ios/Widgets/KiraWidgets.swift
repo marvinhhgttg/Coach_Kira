@@ -94,7 +94,7 @@ struct KiraWidgetView: View {
     }
 }
 
-private struct LeerView: View {
+struct LeerView: View {
     let fehler: String?
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -110,7 +110,7 @@ private struct LeerView: View {
     }
 }
 
-private struct Kopf: View {
+struct Kopf: View {
     let d: WidgetDaten
     var body: some View {
         let farbe = KiraStil.farbe(d.votum?.stufe)
@@ -124,7 +124,7 @@ private struct Kopf: View {
     }
 }
 
-private struct Wert: View {
+struct Wert: View {
     let titel: String
     let wert: String
     var farbe: Color = .white
@@ -165,7 +165,7 @@ private func texteZeile(_ t: WidgetDaten.Texte?) -> String {
     return "Kira-Texte: \(t.fertig)/\(t.gesamt) fertig (\(wo))"
 }
 
-private struct KleinView: View {
+struct KleinView: View {
     let d: WidgetDaten
     var body: some View {
         let farbe = KiraStil.farbe(d.votum?.stufe)
@@ -185,7 +185,7 @@ private struct KleinView: View {
     }
 }
 
-private struct MittelView: View {
+struct MittelView: View {
     let d: WidgetDaten
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -205,7 +205,7 @@ private struct MittelView: View {
     }
 }
 
-private struct Balken: View {
+struct Balken: View {
     let woche: [WidgetDaten.Tag]
     var body: some View {
         let werte = woche.map { $0.ist ?? 0 }
@@ -221,7 +221,7 @@ private struct Balken: View {
     }
 }
 
-private struct GrossView: View {
+struct GrossView: View {
     let d: WidgetDaten
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -286,7 +286,7 @@ private struct GrossView: View {
     }
 }
 
-private struct RundView: View {
+struct RundView: View {
     let d: WidgetDaten
     var body: some View {
         let r = d.morgen?.readiness ?? 0
@@ -301,7 +301,7 @@ private struct RundView: View {
     }
 }
 
-private struct RechteckView: View {
+struct RechteckView: View {
     let d: WidgetDaten
     var body: some View {
         VStack(alignment: .leading, spacing: 1) {
@@ -313,15 +313,228 @@ private struct RechteckView: View {
     }
 }
 
-private struct InlineView: View {
+struct InlineView: View {
     let d: WidgetDaten
     var body: some View {
         Text("Kira: \(KiraStil.farbname(d.votum?.stufe)) · \(KiraStil.zahl(d.last?.sollHeute)) ESS")
     }
 }
 
-// MARK: - Widget
+// MARK: - Weitere Ansichten
 
+struct ZielKleinView: View {
+    let d: WidgetDaten
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("ZIELTOUR").font(.caption2.bold()).foregroundStyle(.white.opacity(0.6))
+            if let z = d.ziel {
+                Text(z.name).font(.subheadline.weight(.semibold)).foregroundStyle(.white).lineLimit(2).minimumScaleFactor(0.8)
+                Spacer(minLength: 0)
+                HStack(alignment: .firstTextBaseline, spacing: 3) {
+                    Text("\(z.tage)").font(.title.weight(.heavy).monospacedDigit()).foregroundStyle(KiraStil.blau)
+                    Text(z.tage == 1 ? "Tag" : "Tage").font(.caption).foregroundStyle(.white.opacity(0.7))
+                }
+                if let t = z.tourform {
+                    ProgressView(value: min(max(t, 0), 100), total: 100).tint(tourformFarbe(t))
+                    Text("Tourform \(KiraStil.zahl(t)) %").font(.caption2.monospacedDigit()).foregroundStyle(.white.opacity(0.7))
+                }
+            } else {
+                Text("Keine Zieltour geplant").font(.caption).foregroundStyle(.white.opacity(0.7))
+                Spacer(minLength: 0)
+            }
+        }
+        .widgetURL(URL(string: "coachkira://ziele"))
+    }
+}
+
+private func tourformFarbe(_ t: Double) -> Color {
+    t >= 85 ? KiraStil.gruen : t >= 60 ? KiraStil.gelb : KiraStil.orange
+}
+
+struct ZielRechteckView: View {
+    let d: WidgetDaten
+    var body: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            if let z = d.ziel {
+                Text(z.name).font(.headline).lineLimit(1)
+                Text("in \(z.tage) Tagen").font(.caption)
+                Text("Tourform \(KiraStil.zahl(z.tourform)) %").font(.caption2)
+            } else {
+                Text("Keine Zieltour").font(.headline)
+            }
+        }
+        .widgetURL(URL(string: "coachkira://ziele"))
+    }
+}
+
+struct MacPunkt: View {
+    let t: WidgetDaten.Texte?
+    var body: some View {
+        let ok = t?.mac?.erreichbar == true && t?.mac?.ollama != false
+        HStack(spacing: 4) {
+            Circle().fill(ok ? KiraStil.gruen : KiraStil.orange).frame(width: 7, height: 7)
+            Text(ok ? "Mac bereit" : "Mac nicht erreichbar").font(.caption2).foregroundStyle(.white.opacity(0.6))
+        }
+    }
+}
+
+private func phaseText(_ p: String) -> String {
+    switch p {
+    case "lokal": return "lokal in Arbeit"
+    case "cloud": return "Cloud-Ersatz läuft"
+    default: return "wartet auf Mac"
+    }
+}
+
+struct TexteKleinView: View {
+    let d: WidgetDaten
+    var body: some View {
+        let t = d.texte
+        let offen = t?.offen ?? []
+        VStack(alignment: .leading, spacing: 4) {
+            Text("KIRA-TEXTE").font(.caption2.bold()).foregroundStyle(.white.opacity(0.6))
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Text("\(t?.fertig ?? 0)").font(.title.weight(.heavy).monospacedDigit())
+                    .foregroundStyle(offen.isEmpty ? KiraStil.gruen : KiraStil.orange)
+                Text("/ \(t?.gesamt ?? 0) fertig").font(.caption).foregroundStyle(.white.opacity(0.7))
+            }
+            if let o = offen.first {
+                Text(o.label).font(.caption2.weight(.semibold)).foregroundStyle(.white).lineLimit(1)
+                Text(phaseText(o.phase)).font(.caption2).foregroundStyle(.white.opacity(0.6))
+            } else if (t?.cloud ?? 0) > 0 {
+                Text("davon \(t?.cloud ?? 0) aus der Cloud").font(.caption2).foregroundStyle(KiraStil.blau)
+            } else {
+                Text("alles lokal").font(.caption2).foregroundStyle(KiraStil.gruen)
+            }
+            Spacer(minLength: 0)
+            MacPunkt(t: t)
+        }
+        .widgetURL(URL(string: "coachkira://eingabe"))
+    }
+}
+
+struct TexteMittelView: View {
+    let d: WidgetDaten
+    var body: some View {
+        let t = d.texte
+        let offen = t?.offen ?? []
+        VStack(alignment: .leading, spacing: 5) {
+            HStack {
+                Text("Kira-Texte").font(.headline).foregroundStyle(.white)
+                Text("\(t?.fertig ?? 0)/\(t?.gesamt ?? 0) fertig").font(.subheadline.monospacedDigit())
+                    .foregroundStyle(offen.isEmpty ? KiraStil.gruen : KiraStil.orange)
+                Spacer()
+                MacPunkt(t: t)
+            }
+            if offen.isEmpty {
+                Text((t?.cloud ?? 0) > 0 ? "Alle Texte da, davon \(t?.cloud ?? 0) aus der Cloud." : (t?.gesamt ?? 0) > 0 ? "Alle Texte da, lokal erzeugt." : "Heute noch nichts offen.")
+                    .font(.caption).foregroundStyle(.white.opacity(0.75))
+            } else {
+                ForEach(Array(offen.prefix(3).enumerated()), id: \.offset) { _, o in
+                    HStack {
+                        Text(o.label).font(.caption).foregroundStyle(.white).lineLimit(1)
+                        Spacer()
+                        Text(phaseText(o.phase)).font(.caption2).foregroundStyle(.white.opacity(0.6))
+                    }
+                }
+            }
+            Spacer(minLength: 0)
+            HStack(spacing: 8) {
+                Button(intent: BriefingLokalIntent()) {
+                    Label("Analyse lokal", systemImage: "desktopcomputer").font(.caption2.weight(.semibold))
+                }
+                .tint(KiraStil.gruen)
+                Button(intent: GarminAbrufenIntent()) {
+                    Label("Garmin abrufen", systemImage: "arrow.down.circle").font(.caption2.weight(.semibold))
+                }
+                .tint(KiraStil.blau)
+                Spacer()
+                Text(KiraStil.uhrzeit(d.stand)).font(.caption2).foregroundStyle(.white.opacity(0.45))
+            }
+            .buttonStyle(.bordered)
+        }
+        .widgetURL(URL(string: "coachkira://eingabe"))
+    }
+}
+
+struct BelastungKleinView: View {
+    let d: WidgetDaten
+    var body: some View {
+        let band = d.last?.acwrBand
+        let farbe: Color = band == "hoch" ? KiraStil.rot : band == "erhoeht" ? KiraStil.orange : band == "niedrig" ? KiraStil.gelb : KiraStil.gruen
+        VStack(alignment: .leading, spacing: 3) {
+            Text("BELASTUNG").font(.caption2.bold()).foregroundStyle(.white.opacity(0.6))
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(KiraStil.zahl(d.last?.acwr, stellen: 2)).font(.title2.weight(.heavy).monospacedDigit()).foregroundStyle(farbe)
+                Text("ACWR").font(.caption2).foregroundStyle(.white.opacity(0.6))
+            }
+            Text("Soll \(KiraStil.zahl(d.last?.sollHeute)) · Ist \(KiraStil.zahl(d.last?.istHeute))").font(.caption2.monospacedDigit()).foregroundStyle(.white)
+            Spacer(minLength: 0)
+            Balken(woche: d.last?.woche ?? [])
+        }
+        .widgetURL(URL(string: "coachkira://analyse"))
+    }
+}
+
+/// Gemeinsame Hülle: leere Daten → Hinweis, sonst Inhalt; immer mit Kira-Hintergrund
+struct Huelle<Inhalt: View>: View {
+    let eintrag: KiraEintrag
+    @ViewBuilder let inhalt: (WidgetDaten) -> Inhalt
+    var body: some View {
+        Group {
+            if let d = eintrag.daten { inhalt(d) } else { LeerView(fehler: eintrag.fehler) }
+        }
+        .containerBackground(for: .widget) { KiraStil.hintergrund }
+    }
+}
+
+struct TagesentscheidView: View {
+    @Environment(\.widgetFamily) private var family
+    let e: KiraEintrag
+    var body: some View {
+        Huelle(eintrag: e) { d in
+            switch family {
+            case .accessoryCircular: RundView(d: d)
+            case .accessoryInline: InlineView(d: d)
+            default: KleinView(d: d)
+            }
+        }
+    }
+}
+
+struct MorgenLageView: View {
+    @Environment(\.widgetFamily) private var family
+    let e: KiraEintrag
+    var body: some View {
+        Huelle(eintrag: e) { d in
+            if family == .accessoryRectangular { RechteckView(d: d) } else { MittelView(d: d) }
+        }
+    }
+}
+
+struct ZieltourView: View {
+    @Environment(\.widgetFamily) private var family
+    let e: KiraEintrag
+    var body: some View {
+        Huelle(eintrag: e) { d in
+            if family == .accessoryRectangular { ZielRechteckView(d: d) } else { ZielKleinView(d: d) }
+        }
+    }
+}
+
+struct TexteView: View {
+    @Environment(\.widgetFamily) private var family
+    let e: KiraEintrag
+    var body: some View {
+        Huelle(eintrag: e) { d in
+            if family == .systemMedium { TexteMittelView(d: d) } else { TexteKleinView(d: d) }
+        }
+    }
+}
+
+// MARK: - Widgets
+
+/// Alles in einem (wie bisher): Klein, Mittel, Groß und Sperrbildschirm
 struct KiraWidget: Widget {
     let kind = "KiraWidget"
 
@@ -335,9 +548,73 @@ struct KiraWidget: Widget {
     }
 }
 
+struct TagesentscheidWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "KiraTagesentscheid", provider: KiraProvider()) { e in TagesentscheidView(e: e) }
+            .configurationDisplayName("Tagesentscheid")
+            .description("Votum in Garmin-Farbe, Readiness und Soll für heute.")
+            .supportedFamilies([.systemSmall, .accessoryCircular, .accessoryInline])
+    }
+}
+
+struct MorgenLageWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "KiraMorgenLage", provider: KiraProvider()) { e in MorgenLageView(e: e) }
+            .configurationDisplayName("Morgen-Lage")
+            .description("Readiness, Schlaf, HRV, Ruhepuls und ESS heute.")
+            .supportedFamilies([.systemMedium, .accessoryRectangular])
+    }
+}
+
+struct WocheZielWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "KiraWocheZiel", provider: KiraProvider()) { e in
+            Huelle(eintrag: e) { d in GrossView(d: d) }
+        }
+        .configurationDisplayName("Woche & Ziel")
+        .description("Tagesstand, ACWR, Last der letzten 7 Tage, nächstes Ziel und Knöpfe für den Mac.")
+        .supportedFamilies([.systemLarge])
+    }
+}
+
+struct ZieltourWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "KiraZieltour", provider: KiraProvider()) { e in ZieltourView(e: e) }
+            .configurationDisplayName("Zieltour")
+            .description("Countdown zur nächsten Zieltour mit Tourform.")
+            .supportedFamilies([.systemSmall, .accessoryRectangular])
+    }
+}
+
+struct TexteWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "KiraTexte", provider: KiraProvider()) { e in TexteView(e: e) }
+            .configurationDisplayName("Kira-Texte")
+            .description("Stand der KI-Texte nach dem Absenden, lokal oder Cloud-Ersatz, mit Knopf für die lokale Analyse.")
+            .supportedFamilies([.systemSmall, .systemMedium])
+    }
+}
+
+struct BelastungWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "KiraBelastung", provider: KiraProvider()) { e in
+            Huelle(eintrag: e) { d in BelastungKleinView(d: d) }
+        }
+        .configurationDisplayName("Belastung")
+        .description("ACWR, Soll und Ist heute, Last der letzten 7 Tage.")
+        .supportedFamilies([.systemSmall])
+    }
+}
+
 @main
 struct KiraWidgetBundle: WidgetBundle {
     var body: some Widget {
+        TagesentscheidWidget()
+        MorgenLageWidget()
+        WocheZielWidget()
+        ZieltourWidget()
+        TexteWidget()
+        BelastungWidget()
         KiraWidget()
     }
 }
