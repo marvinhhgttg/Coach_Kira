@@ -23,10 +23,31 @@ const TABS: { id: Tab; label: string; sub: string }[] = [
   { id: 'logs', label: 'Log', sub: 'Aktivitäten' },
 ];
 
+const HASH_TAB: Record<string, Tab> = { heute: 'command', eingabe: 'entry', plan: 'plan', ziele: 'plan', analyse: 'charts', berichte: 'reports', log: 'logs' };
+function tabAusHash(): Tab | null {
+  const h = (window.location.hash || '').replace('#', '').toLowerCase();
+  const t = HASH_TAB[h];
+  if (!t) return null;
+  if (h === 'ziele') {
+    try { localStorage.setItem('ck_plan_tab', 'ziele'); } catch { /* egal */ }
+    window.dispatchEvent(new CustomEvent('ck-plan-tab', { detail: 'ziele' }));
+  }
+  return t;
+}
+
 export function App() {
   // Token in React state ONLY — never persisted.
   const [token, setToken] = useState('');
-  const [tab, setTab] = useState<Tab>('command');
+  const [tab, setTab] = useState<Tab>(() => tabAusHash() || 'command');
+  // Sprungziele aus App und Widgets: #heute, #eingabe, #plan, #ziele, #analyse, #berichte, #log
+  useEffect(() => {
+    const f = () => {
+      const t = tabAusHash();
+      if (t) setTab(t);
+    };
+    window.addEventListener('hashchange', f);
+    return () => window.removeEventListener('hashchange', f);
+  }, []);
   const [toast, setToast] = useState<
     { kind: 'ok' | 'err' | 'info'; text: string } | null
   >(null);

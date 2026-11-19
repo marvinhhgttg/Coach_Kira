@@ -451,6 +451,14 @@ export function PlanCockpit({ token, toast, proxyAuthenticated }: Props) {
       return 'woche';
     }
   });
+  useEffect(() => {
+    const f = (e: Event) => {
+      const t = (e as CustomEvent).detail;
+      if (t === 'woche' || t === 'simulation' || t === 'strategie' || t === 'ziele') setPlanTabState(t);
+    };
+    window.addEventListener('ck-plan-tab', f);
+    return () => window.removeEventListener('ck-plan-tab', f);
+  }, []);
   const setPlanTab = (t: PlanTab) => {
     setPlanTabState(t);
     try { localStorage.setItem('ck_plan_tab', t); } catch { /* egal */ }
