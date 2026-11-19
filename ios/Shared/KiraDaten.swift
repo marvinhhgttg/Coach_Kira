@@ -3,7 +3,11 @@ import SwiftUI
 
 /// Gemeinsam für App und Widgets: Adresse, Speicher (App Group), Datenmodell zu /api/widget, Abruf.
 enum KiraConfig {
-    static let appGroup = "group.de.reichpietsch.coachkira"
+    /// iPhone: group.de.reichpietsch.coachkira · Mac: <Team-ID>.de.reichpietsch.coachkira (aus Info.plist „KiraAppGroup“)
+    static let appGroup: String = {
+        if let g = Bundle.main.object(forInfoDictionaryKey: "KiraAppGroup") as? String, !g.isEmpty, !g.contains("$(") { return g }
+        return "group.de.reichpietsch.coachkira"
+    }()
     static let server = URL(string: "https://coachkira.pplx.app/port/5000")!
     static let cockpit = URL(string: "https://coachkira.pplx.app/")!
 }

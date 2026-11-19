@@ -47,3 +47,28 @@ Mit der kostenlosen Apple-ID läuft die App 7 Tage. Danach öffnet sie sich nich
 - **Rote Fehlermeldungen beim Bau:** Fehlerliste (⌘5) öffnen und einen Screenshot schicken.
 - **Widget zeigt „App ist noch nicht gekoppelt“:** App öffnen → runder Knopf unten rechts → Kopplungscode eingeben.
 - **Widget aktualisiert sich langsam:** iOS teilt Widgets ein Budget zu. Geplant ist morgens alle 15 Minuten und sonst alle 30 Minuten. Sofort frisch werden die Widgets beim Öffnen der App, nach „Absenden“ auf der Eingabe-Seite in der App und über „Widgets jetzt aktualisieren“ in der Kopplung.
+
+## Mac-App mit Widgets
+
+Gleiches Xcode-Projekt, zwei neue Targets: `CoachKiraMac` (App mit Fenster) und `CoachKiraMacWidgets`.
+
+1. Neue Dateien liegen in `~/coach-kira-ios` (Ordner `MacApp/`, geänderte `project.yml`, `Widgets/KiraWidgets.swift`, `Shared/KiraDaten.swift`, `App/CoachKiraApp.swift`).
+2. Xcode schließen, im Terminal neu erzeugen:
+   ```
+   cd ~/coach-kira-ios && xcodegen generate && open CoachKira.xcodeproj
+   ```
+3. Für alle vier Targets unter „Signing & Capabilities“ dein Team wählen (Personal Team).
+4. Oben das Schema `CoachKiraMac` und als Ziel „My Mac“ wählen, dann ▶.
+5. In der App: Toolbar „Koppeln“ (oder ⌘,) → Code aus dem Cockpit (Technik → App-Kopplung) eingeben. Der Mac wird als eigenes Gerät gekoppelt.
+
+Bedienung im Fenster:
+- ⌘1 bis ⌘7 springen zu Heute, Eingabe, Plan, Ziele, Analyse, Berichte, Log.
+- ⌘R lädt neu, ⇧⌘R aktualisiert die Widgets, „Im Browser öffnen“ im Menü „Cockpit“.
+- Das lokale Modell läuft direkt über Caddy (https://localhost:11435), ohne Umweg über das Relay.
+
+Widgets auf dem Mac: Rechtsklick auf den Schreibtisch → „Widgets bearbeiten …“ (oder Mitteilungszentrale → „Widgets bearbeiten“), nach „Coach Kira“ suchen. Auf dem Mac gibt es nur die Größen klein, mittel und groß; die Sperrbildschirm-Varianten sind iPhone-only.
+
+Hinweise:
+- Auch die Mac-App muss mit dem kostenlosen Konto alle 7 Tage neu aus Xcode gestartet werden.
+- Wenn Xcode beim App Group meckert: beim Mac-Target ist die Gruppe `<TeamID>.de.reichpietsch.coachkira` (macOS-Schreibweise) – Xcode legt sie beim Signieren selbst an.
+- Bei Buildfehlern: Fehlerliste (⌘5) als Screenshot schicken.

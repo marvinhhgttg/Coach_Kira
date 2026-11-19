@@ -198,7 +198,9 @@ export async function sendChat(messages: ChatMsg[], context: ChatContext, source
  */
 const OLLAMA_HTTP = 'http://localhost:11434';
 const OLLAMA_HTTPS = 'https://localhost:11435';
-const IST_SAFARI = typeof navigator !== 'undefined' && /Safari\//.test(navigator.userAgent) && !/Chrome|Chromium|CriOS|Edg|Comet/i.test(navigator.userAgent);
+const IST_MAC_APP = typeof window !== 'undefined' && !!(window as any).webkit?.messageHandlers?.kiraMac;
+// Safari und die Mac-App (WebKit) blockieren http://localhost von https-Seiten → https-Weiterleitung zuerst
+const IST_SAFARI = IST_MAC_APP || (typeof navigator !== 'undefined' && /Safari\//.test(navigator.userAgent) && !/Chrome|Chromium|CriOS|Edg|Comet/i.test(navigator.userAgent));
 const KANDIDATEN = IST_SAFARI ? [OLLAMA_HTTPS, OLLAMA_HTTP] : [OLLAMA_HTTP, OLLAMA_HTTPS];
 /** In der iPhone-App (WKWebView mit Kira-Brücke) gibt es kein Ollama auf dem Gerät → gleich über den Mac. */
 const IST_APP = typeof window !== 'undefined' && !!(window as any).webkit?.messageHandlers?.kira;

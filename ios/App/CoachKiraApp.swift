@@ -78,6 +78,8 @@ struct KiraWebView: UIViewRepresentable {
         let rc = UIRefreshControl()
         rc.addTarget(context.coordinator, action: #selector(Coordinator.neuLaden(_:)), for: .valueChanged)
         wv.scrollView.refreshControl = rc
+        wv.uiDelegate = context.coordinator
+        wv.navigationDelegate = context.coordinator
         context.coordinator.webView = wv
         context.coordinator.geladen = url
         wv.load(URLRequest(url: url))
@@ -91,7 +93,7 @@ struct KiraWebView: UIViewRepresentable {
         }
     }
 
-    final class Coordinator: NSObject, WKScriptMessageHandler {
+    final class Coordinator: NSObject, WKScriptMessageHandler, WKUIDelegate, WKNavigationDelegate {
         weak var webView: WKWebView?
         var geladen: URL?
 
@@ -99,6 +101,47 @@ struct KiraWebView: UIViewRepresentable {
             webView?.reload()
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { rc.endRefreshing() }
             WidgetCenter.shared.reloadAllTimelines()
+        }
+
+        // target="_blank" (z. B. Garmin-Connect-Links im Log) → Safari bzw. Garmin-App
+        func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration,
+                     for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+            if let u = navigationAction.request.url { UIApplication.shared.open(u) }
+            return nil
+        }
+
+        // Links auf andere Seiten als das Cockpit → außerhalb der App öffnen
+        func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
+                     decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+            if navigationAction.navigationType == .linkActivated, let u = navigationAction.request.url,
+               let h = u.host, h != KiraConfig.cockpit.host {
+                UIApplication.shared.open(u)
+                decisionHandler(.cancel)
+                return
+            }
+            decisionHandler(.allow)
+        }
+
+        func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String,
+                     initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
+            let a = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+            a.addAction(UIAlertAction(title: "Abbrechen", style: .cancel) { _ in completionHandler(false) })
+            a.addAction(UIAlertAction(title: "OK", style: .default) { _ in completionHandler(true) })
+            Self.oberster()?.present(a, animated: true)
+        }
+
+        func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String,
+                     initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
+            let a = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+            a.addAction(UIAlertAction(title: "OK", style: .default) { _ in completionHandler() })
+            Self.oberster()?.present(a, animated: true)
+        }
+
+        static func oberster() -> UIViewController? {
+            let szene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+            var vc = szene?.windows.first(where: { $0.isKeyWindow })?.rootViewController
+            while let p = vc?.presentedViewController { vc = p }
+            return vc
         }
 
         func userContentController(_ ucc: WKUserContentController, didReceive message: WKScriptMessage) {

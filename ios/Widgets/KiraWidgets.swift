@@ -81,9 +81,11 @@ struct KiraWidgetView: View {
                 case .systemSmall: KleinView(d: d)
                 case .systemMedium: MittelView(d: d)
                 case .systemLarge, .systemExtraLarge: GrossView(d: d)
+                #if os(iOS)
                 case .accessoryCircular: RundView(d: d)
                 case .accessoryRectangular: RechteckView(d: d)
                 case .accessoryInline: InlineView(d: d)
+                #endif
                 @unknown default: KleinView(d: d)
                 }
             } else {
@@ -286,6 +288,7 @@ struct GrossView: View {
     }
 }
 
+#if os(iOS)
 struct RundView: View {
     let d: WidgetDaten
     var body: some View {
@@ -300,6 +303,8 @@ struct RundView: View {
         .widgetURL(URL(string: "coachkira://heute"))
     }
 }
+
+#endif
 
 struct RechteckView: View {
     let d: WidgetDaten
@@ -493,11 +498,15 @@ struct TagesentscheidView: View {
     let e: KiraEintrag
     var body: some View {
         Huelle(eintrag: e) { d in
+            #if os(iOS)
             switch family {
             case .accessoryCircular: RundView(d: d)
             case .accessoryInline: InlineView(d: d)
             default: KleinView(d: d)
             }
+            #else
+            KleinView(d: d)
+            #endif
         }
     }
 }
@@ -507,7 +516,7 @@ struct MorgenLageView: View {
     let e: KiraEintrag
     var body: some View {
         Huelle(eintrag: e) { d in
-            if family == .accessoryRectangular { RechteckView(d: d) } else { MittelView(d: d) }
+            if istRechteck(family) { RechteckView(d: d) } else { MittelView(d: d) }
         }
     }
 }
@@ -517,7 +526,7 @@ struct ZieltourView: View {
     let e: KiraEintrag
     var body: some View {
         Huelle(eintrag: e) { d in
-            if family == .accessoryRectangular { ZielRechteckView(d: d) } else { ZielKleinView(d: d) }
+            if istRechteck(family) { ZielRechteckView(d: d) } else { ZielKleinView(d: d) }
         }
     }
 }
@@ -532,6 +541,29 @@ struct TexteView: View {
     }
 }
 
+/// Widget-Größen je Plattform: Sperrbildschirm-Varianten gibt es nur auf dem iPhone
+enum KiraFamilien {
+    #if os(iOS)
+    static let alle: [WidgetFamily] = [.systemSmall, .systemMedium, .systemLarge, .accessoryCircular, .accessoryRectangular, .accessoryInline]
+    static let tagesentscheid: [WidgetFamily] = [.systemSmall, .accessoryCircular, .accessoryInline]
+    static let morgenLage: [WidgetFamily] = [.systemMedium, .accessoryRectangular]
+    static let zieltour: [WidgetFamily] = [.systemSmall, .accessoryRectangular]
+    #else
+    static let alle: [WidgetFamily] = [.systemSmall, .systemMedium, .systemLarge]
+    static let tagesentscheid: [WidgetFamily] = [.systemSmall]
+    static let morgenLage: [WidgetFamily] = [.systemMedium]
+    static let zieltour: [WidgetFamily] = [.systemSmall]
+    #endif
+}
+
+func istRechteck(_ f: WidgetFamily) -> Bool {
+    #if os(iOS)
+    return f == .accessoryRectangular
+    #else
+    return false
+    #endif
+}
+
 // MARK: - Widgets
 
 /// Alles in einem (wie bisher): Klein, Mittel, Groß und Sperrbildschirm
@@ -544,7 +576,7 @@ struct KiraWidget: Widget {
         }
         .configurationDisplayName("Coach Kira")
         .description("Tagesentscheid, Morgenwerte, Last, Ziel und Kira-Texte.")
-        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryCircular, .accessoryRectangular, .accessoryInline])
+        .supportedFamilies(KiraFamilien.alle)
     }
 }
 
@@ -553,7 +585,7 @@ struct TagesentscheidWidget: Widget {
         StaticConfiguration(kind: "KiraTagesentscheid", provider: KiraProvider()) { e in TagesentscheidView(e: e) }
             .configurationDisplayName("Tagesentscheid")
             .description("Votum in Garmin-Farbe, Readiness und Soll für heute.")
-            .supportedFamilies([.systemSmall, .accessoryCircular, .accessoryInline])
+            .supportedFamilies(KiraFamilien.tagesentscheid)
     }
 }
 
@@ -562,7 +594,7 @@ struct MorgenLageWidget: Widget {
         StaticConfiguration(kind: "KiraMorgenLage", provider: KiraProvider()) { e in MorgenLageView(e: e) }
             .configurationDisplayName("Morgen-Lage")
             .description("Readiness, Schlaf, HRV, Ruhepuls und ESS heute.")
-            .supportedFamilies([.systemMedium, .accessoryRectangular])
+            .supportedFamilies(KiraFamilien.morgenLage)
     }
 }
 
@@ -582,7 +614,7 @@ struct ZieltourWidget: Widget {
         StaticConfiguration(kind: "KiraZieltour", provider: KiraProvider()) { e in ZieltourView(e: e) }
             .configurationDisplayName("Zieltour")
             .description("Countdown zur nächsten Zieltour mit Tourform.")
-            .supportedFamilies([.systemSmall, .accessoryRectangular])
+            .supportedFamilies(KiraFamilien.zieltour)
     }
 }
 

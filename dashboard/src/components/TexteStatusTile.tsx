@@ -48,6 +48,7 @@ async function laden(pfad: string, body?: unknown): Promise<Status> {
 export function texteNachAbsenden() {
   // In der iPhone-App: Widgets nach dem Absenden neu laden lassen
   try { (window as any).webkit?.messageHandlers?.kira?.postMessage('abgesendet'); } catch { /* nur Browser */ }
+  try { (window as any).webkit?.messageHandlers?.kiraMac?.postMessage('abgesendet'); } catch { /* nur Browser */ }
   window.setTimeout(() => {
     laden('/api/texte/pruefen', {}).then(() => window.dispatchEvent(new Event('ck-texte'))).catch(() => {});
   }, 4000);
