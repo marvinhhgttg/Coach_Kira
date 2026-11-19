@@ -9,6 +9,7 @@ import { buildDays, localIsoDate, RECOVERY_FETCH_METRICS, VOTE_LABEL, type Recov
 import { erfahrungAn, ladeErfahrung } from './useErfahrung';
 import { erfahrungText, persoenlichesVotum } from './votumErfahrung';
 import { MONOTONIE_REGEL_TEXT } from './monotony';
+import { SERVER_BASE } from './cloudLLM';
 
 const EXTRA = ['fbATL_obs', 'fbCTL_obs', 'garminEnduranceScore', 'Trainingszustand'] as const;
 const r1 = (v: number | null | undefined, d = 1) => (v == null || !Number.isFinite(v) ? null : Math.round(v * 10 ** d) / 10 ** d);
@@ -199,7 +200,93 @@ const OLLAMA_HTTP = 'http://localhost:11434';
 const OLLAMA_HTTPS = 'https://localhost:11435';
 const IST_SAFARI = typeof navigator !== 'undefined' && /Safari\//.test(navigator.userAgent) && !/Chrome|Chromium|CriOS|Edg|Comet/i.test(navigator.userAgent);
 const KANDIDATEN = IST_SAFARI ? [OLLAMA_HTTPS, OLLAMA_HTTP] : [OLLAMA_HTTP, OLLAMA_HTTPS];
-let ollamaBasis: string = KANDIDATEN[0];
+/** In der iPhone-App (WKWebView mit Kira-Brücke) gibt es kein Ollama auf dem Gerät → gleich über den Mac. */
+const IST_APP = typeof window !== 'undefined' && !!(window as any).webkit?.messageHandlers?.kira;
+/** 'mac' = Weiterleitung über den Cockpit-Server an den Mac (iPhone, iPad, fremde Rechner) */
+export const UEBER_MAC = 'mac';
+let ollamaBasis: string = IST_APP ? UEBER_MAC : KANDIDATEN[0];
+/** true, wenn lokale Anfragen über den Mac weitergeleitet werden */
+export function lokalUeberMac(): boolean {
+  return ollamaBasis === UEBER_MAC;
+}
+
+/** Mac über den Cockpit-Server erreichbar (Lebenszeichen der letzten Minuten, Ollama bereit)? */
+async function macErreichbar(): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const r = await fetch(`${SERVER_BASE}/api/lokal/status?cb=${Date.now()}`, { cache: 'no-store' });
+    const j = await r.json();
+    if (j?.mac?.erreichbar) return { ok: true };
+    return { ok: false, error: 'Mac nicht erreichbar (aus, im Ruhezustand oder ohne Netz)' };
+  } catch {
+    return { ok: false, error: 'Cockpit-Server nicht erreichbar' };
+  }
+}
+
+/**
+ * Gemeinsamer lokaler Aufruf (Ollama /api/chat): direkt mit Streaming oder über den Mac (ohne Streaming,
+ * Antwort kommt am Stück). onToken erhält den bisher gesammelten Text.
+ */
+export async function ollamaAufruf(
+  body: Record<string, unknown>,
+  onToken?: (textSoFar: string) => void,
+  zweck = 'chat',
+): Promise<{ text: string; tokPerS: number | null }> {
+  if (ollamaBasis === UEBER_MAC) {
+    const a = await fetch(`${SERVER_BASE}/api/lokal/auftrag`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ body: { ...body, stream: false }, zweck }),
+    });
+    const aj = await a.json().catch(() => ({ ok: false, error: `HTTP ${a.status}` }));
+    if (!aj.ok) throw new Error(aj.error || 'Weiterleitung an den Mac fehlgeschlagen.');
+    const start = Date.now();
+    for (;;) {
+      await new Promise((r) => setTimeout(r, 2000));
+      const s = await (await fetch(`${SERVER_BASE}/api/lokal/auftrag/${aj.id}?cb=${Date.now()}`, { cache: 'no-store' })).json();
+      if (!s.ok) throw new Error(s.error || 'Anfrage abgelaufen.');
+      if (s.phase === 'fertig') {
+        const text = String(s.text || '');
+        onToken?.(text);
+        return { text, tokPerS: s.tokPerS ?? null };
+      }
+      if (s.phase === 'fehler') throw new Error(s.fehler || 'Fehler auf dem Mac.');
+      if (s.phase === 'wartet') onToken?.('… wird an den Mac übergeben (bis zu 1 min)');
+      else onToken?.('… dein Mac rechnet lokal mit coach-kira');
+      if (Date.now() - start > 25 * 60 * 1000) throw new Error('Der Mac hat nach 25 min nicht geantwortet.');
+    }
+  }
+  const res = await fetch(`${ollamaBasis}/api/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...body, stream: true }),
+  });
+  if (!res.ok || !res.body) throw new Error(`Ollama HTTP ${res.status}`);
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '';
+  let text = '';
+  let tokPerS: number | null = null;
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let nl: number;
+    while ((nl = buf.indexOf('\n')) >= 0) {
+      const line = buf.slice(0, nl).trim();
+      buf = buf.slice(nl + 1);
+      if (!line) continue;
+      const j = JSON.parse(line);
+      if (j.error) throw new Error(j.error);
+      const piece = j.message?.content || '';
+      if (piece) {
+        text += piece;
+        onToken?.(text);
+      }
+      if (j.done && j.eval_count && j.eval_duration) tokPerS = Math.round((j.eval_count / (j.eval_duration / 1e9)) * 10) / 10;
+    }
+  }
+  return { text, tokPerS };
+}
 /** Aktuell genutzte Ollama-Adresse (nach erfolgreicher Prüfung). */
 export function ollamaUrl(): string {
   return ollamaBasis;
@@ -219,8 +306,13 @@ export const KIRA_SYSTEM = [
 ].join('\n');
 
 /** Prüft, ob Ollama erreichbar ist und das Modell coach-kira existiert. */
-export async function pingLocal(): Promise<{ ok: boolean; hasModel: boolean; models: string[]; error?: string }> {
+export async function pingLocal(): Promise<{ ok: boolean; hasModel: boolean; models: string[]; error?: string; ueberMac?: boolean }> {
   let letzterFehler = '';
+  if (IST_APP) {
+    const m = await macErreichbar();
+    ollamaBasis = UEBER_MAC;
+    return { ok: m.ok, hasModel: m.ok, models: m.ok ? [LOCAL_MODEL] : [], error: m.error, ueberMac: true };
+  }
   for (const basis of KANDIDATEN) {
     try {
       const ctl = new AbortController();
@@ -245,7 +337,13 @@ export async function pingLocal(): Promise<{ ok: boolean; hasModel: boolean; mod
             : msg;
     }
   }
-  return { ok: false, hasModel: false, models: [], error: letzterFehler };
+  // Kein Ollama auf diesem Gerät → über den Mac weiterleiten, wenn er sich meldet
+  const m = await macErreichbar();
+  if (m.ok) {
+    ollamaBasis = UEBER_MAC;
+    return { ok: true, hasModel: true, models: [LOCAL_MODEL], ueberMac: true };
+  }
+  return { ok: false, hasModel: false, models: [], error: `${letzterFehler}; ${m.error}` };
 }
 
 /** Lokale Antwort mit Streaming. onToken erhält den bisher gesammelten Text. */
@@ -256,43 +354,19 @@ export async function sendChatLocal(
   model = LOCAL_MODEL,
 ): Promise<{ answer: string; model: string; tokPerS: number | null }> {
   const sys = KIRA_SYSTEM + '\n\nCOCKPIT-DATEN:\n' + JSON.stringify(context);
-  const res = await fetch(`${ollamaUrl()}/api/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+  const r = await ollamaAufruf(
+    {
       model,
-      stream: true,
       think: false,
       keep_alive: '30m',
       options: { temperature: 0.3, num_ctx: 16384 },
       messages: [{ role: 'system', content: sys }, ...messages.slice(-12).map(({ role, content }) => ({ role, content }))],
-    }),
-  });
-  if (!res.ok || !res.body) throw new Error(`Ollama HTTP ${res.status}`);
-  const reader = res.body.getReader();
-  const dec = new TextDecoder();
-  let buf = '';
-  let answer = '';
-  let tokPerS: number | null = null;
-  for (;;) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    buf += dec.decode(value, { stream: true });
-    let nl: number;
-    while ((nl = buf.indexOf('\n')) >= 0) {
-      const line = buf.slice(0, nl).trim();
-      buf = buf.slice(nl + 1);
-      if (!line) continue;
-      const j = JSON.parse(line);
-      if (j.error) throw new Error(j.error);
-      const piece = j.message?.content || '';
-      if (piece) {
-        answer += piece;
-        onToken(answer);
-      }
-      if (j.done && j.eval_count && j.eval_duration) tokPerS = Math.round((j.eval_count / (j.eval_duration / 1e9)) * 10) / 10;
-    }
-  }
+    },
+    onToken,
+    'chat',
+  );
+  const answer = r.text;
+  const tokPerS = r.tokPerS;
   return { answer, model, tokPerS };
 }
 

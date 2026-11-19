@@ -804,6 +804,66 @@ def texte_auftrag_pruefen() -> None:
     log(f"Texte: manueller Lauf {art} {'OK' if ok else 'FEHLER ' + msg}")
 
 
+COCKPIT_LOKAL = "https://coachkira.pplx.app/port/5000/api/lokal"
+
+
+def lokal_relay_pruefen(nachlauf_s: int = 45) -> None:
+    """Lokal-Weiterleitung: Anfragen vom iPhone (App) oder anderen Geräten ohne eigenes Ollama abholen,
+    mit coach-kira lokal rechnen und zurückgeben. Nach einem Auftrag noch nachlauf_s Sekunden im 2-s-Takt
+    weiter nachsehen (Folgefragen im Chat kommen dann ohne Minutenwartezeit)."""
+    ende = None
+    while True:
+        try:
+            j = http_get_json(COCKPIT_LOKAL + "/naechster", timeout=15)
+        except Exception:
+            return
+        if not j.get("pending"):
+            if ende is None or time.time() > ende:
+                return
+            time.sleep(2)
+            continue
+        aid, body = j.get("id"), j.get("body") or {}
+        ok, text, fehler, tok = False, "", "", None
+        try:
+            model = str(body.get("model") or MODEL)
+            if not (model == MODEL or model.startswith(MODEL + ":")):
+                raise RuntimeError("nur coach-kira erlaubt")
+            req_body = {
+                "model": model,
+                "stream": False,
+                "think": False,
+                "keep_alive": "30m",
+                "options": body.get("options") or {},
+                "messages": body.get("messages") or [],
+            }
+            if body.get("format"):
+                req_body["format"] = body["format"]
+            req = Request(
+                OLLAMA + "/api/chat",
+                data=json.dumps(req_body, ensure_ascii=False).encode("utf-8"),
+                headers={"Content-Type": "application/json", "User-Agent": "coach-kira-runner"},
+                method="POST",
+            )
+            start = time.time()
+            with modell_sperre(f"weiterleitung {j.get('zweck', 'chat')}"), urlopen(req, timeout=1200) as resp:
+                r = json.loads(resp.read().decode("utf-8"))
+            text = ((r.get("message") or {}).get("content") or "").strip()
+            if not text:
+                raise RuntimeError("Ollama antwortete ohne Text")
+            if r.get("eval_count") and r.get("eval_duration"):
+                tok = round(r["eval_count"] / (r["eval_duration"] / 1e9), 1)
+            ok = True
+            log(f"Weiterleitung: {j.get('zweck', 'chat')} lokal beantwortet in {time.time() - start:.0f} s")
+        except Exception as e:
+            fehler = str(e)[:300]
+            log(f"Weiterleitung: FEHLER {fehler}")
+        try:
+            _cockpit_post(COCKPIT_LOKAL + "/ergebnis", {"id": aid, "ok": ok, "text": text, "fehler": fehler, "tokPerS": tok})
+        except Exception as e:
+            log(f"Weiterleitung: Rückgabe fehlgeschlagen: {e}")
+        ende = time.time() + nachlauf_s
+
+
 def garmin_anfrage_pruefen() -> None:
     """Knopf „Garmin jetzt abrufen“ im Cockpit: Auftrag abholen, kira_garmin.py tick --force, zurückmelden."""
     try:
@@ -898,6 +958,10 @@ def cmd_supervisor() -> None:
         garmin_workouts_pruefen()
     except Exception as e:
         log(f"Garmin-Workout: FEHLER {e}")
+    try:
+        lokal_relay_pruefen()
+    except Exception as e:
+        log(f"Weiterleitung: FEHLER {e}")
     try:
         texte_auftrag_pruefen()
     except Exception as e:

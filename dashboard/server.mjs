@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { setupTexte } from './server/texte.mjs';
 import { setupWidget } from './server/widget_api.mjs';
+import { setupLokalRelay } from './server/lokal_relay.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 5000);
@@ -379,6 +380,19 @@ app.post('/api/action/:name', requireAuth, async (req, res) => {
 
 const texte = setupTexte(app, { getSetting, setSetting, cloudChat: cloudChatServer, originOk: llmOriginOk, scriptUrl: APPS_SCRIPT_URL });
 setupWidget(app, { getSetting, setSetting, originOk: llmOriginOk, texte });
+setupLokalRelay(app, {
+  originOk: llmOriginOk,
+  macStatus: () => {
+    const m = texte.statusAntwort().mac;
+    return { erreichbar: !!m.erreichbar && m.ollama !== false, zuletzt: m.at, ollama: m.ollama };
+  },
+  macPuls: () => {
+    let m = {};
+    try { m = JSON.parse(getSetting('texte_mac') || '{}'); } catch {}
+    m.at = now();
+    setSetting('texte_mac', JSON.stringify(m));
+  },
+});
 
 app.use(express.static(path.join(__dirname, 'dist')));
 app.use((req, res) => {

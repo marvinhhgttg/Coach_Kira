@@ -5,7 +5,7 @@
 import { ladeErfahrung } from './useErfahrung';
 import { erfahrungText } from './votumErfahrung';
 import { BASE_URL } from './api';
-import { LOCAL_MODEL, ollamaUrl, pingLocal } from './chatContext';
+import { LOCAL_MODEL, ollamaAufruf, pingLocal } from './chatContext';
 import { getEngine } from './engine';
 import { cloudChat } from './cloudLLM';
 import { briefingMessages, type KiMsg } from './kiraPrompts';
@@ -82,42 +82,18 @@ export async function runLocalBriefing(type: BriefingType, onProgress?: (text: s
     return savedC as { ok: true; analysis?: string; briefing?: string; recommendations?: any[]; timestamp?: string };
   }
 
-  const res = await fetch(`${ollamaUrl()}/api/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+  const { text } = await ollamaAufruf(
+    {
       model: LOCAL_MODEL,
-      stream: true,
       think: false,
       keep_alive: '30m',
       ...(prompt.format === 'json' ? { format: 'json' } : {}),
       options: { temperature: 0.3, num_ctx: 32768 },
       messages: prompt.messages,
-    }),
-  });
-  if (!res.ok || !res.body) throw new Error(`Ollama HTTP ${res.status}`);
-  const reader = res.body.getReader();
-  const dec = new TextDecoder();
-  let buf = '';
-  let text = '';
-  for (;;) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    buf += dec.decode(value, { stream: true });
-    let nl: number;
-    while ((nl = buf.indexOf('\n')) >= 0) {
-      const line = buf.slice(0, nl).trim();
-      buf = buf.slice(nl + 1);
-      if (!line) continue;
-      const j = JSON.parse(line);
-      if (j.error) throw new Error(j.error);
-      const piece = j.message?.content || '';
-      if (piece) {
-        text += piece;
-        onProgress?.(text);
-      }
-    }
-  }
+    },
+    onProgress,
+    'briefing',
+  );
   if (!text.trim()) throw new Error('Das lokale Modell hat keinen Text geliefert.');
   const saved = await postScript('saveBriefing', { kind: 'saveBriefing', type, text, model: LOCAL_MODEL, engine: 'local' });
   if (!saved.ok) throw new Error(saved.error || 'Speichern im Apps Script fehlgeschlagen.');

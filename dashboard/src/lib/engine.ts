@@ -45,7 +45,7 @@ export function useEngine(): [Engine, (e: Engine) => void] {
   return [e, setEngine];
 }
 
-export type LocalStatus = { ok: boolean; hasModel: boolean; error?: string } | null;
+export type LocalStatus = { ok: boolean; hasModel: boolean; error?: string; ueberMac?: boolean } | null;
 let statusStore: LocalStatus = null;
 const statusSubs = new Set<(s: LocalStatus) => void>();
 let pending: Promise<LocalStatus> | null = null;
@@ -55,7 +55,7 @@ export async function checkLocal(): Promise<LocalStatus> {
   if (!pending) {
     pending = pingLocal()
       .then((s) => {
-        statusStore = { ok: s.ok, hasModel: s.hasModel, error: s.error };
+        statusStore = { ok: s.ok, hasModel: s.hasModel, error: s.error, ueberMac: s.ueberMac };
         statusSubs.forEach((f) => f(statusStore));
         return statusStore;
       })
@@ -82,6 +82,7 @@ export function useLocalStatus(active: boolean): [LocalStatus, () => void] {
 
 export function localStatusText(s: LocalStatus): { text: string; tone: 'ok' | 'warn' | 'wait' } {
   if (!s) return { text: 'prüfe…', tone: 'wait' };
+  if (s.ok && s.hasModel && s.ueberMac) return { text: 'Lokal über deinen Mac (coach-kira)', tone: 'ok' };
   if (s.ok && s.hasModel) return { text: 'Lokal bereit (coach-kira)', tone: 'ok' };
   if (s.ok) return { text: 'Ollama läuft, aber das Modell coach-kira fehlt', tone: 'warn' };
   return { text: `Lokales Modell nicht erreichbar${s.error ? ' – ' + s.error : ''}`, tone: 'warn' };

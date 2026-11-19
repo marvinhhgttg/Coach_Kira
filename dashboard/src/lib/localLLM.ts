@@ -4,7 +4,7 @@
  *   Cloud → Perplexity über den Cockpit-Server (/api/llm)
  * Kein automatischer Wechsel zwischen beiden.
  */
-import { LOCAL_MODEL, ollamaUrl, pingLocal } from './chatContext';
+import { LOCAL_MODEL, ollamaAufruf, pingLocal } from './chatContext';
 import { getEngine } from './engine';
 import { cloudChat } from './cloudLLM';
 
@@ -32,42 +32,18 @@ export async function localChat(messages: LlmMsg[], opts: KiOpts = {}): Promise<
 /** Immer lokal (coach-kira). */
 export async function ollamaChat(messages: LlmMsg[], opts: KiOpts = {}): Promise<string> {
   await ensureLocal();
-  const res = await fetch(`${ollamaUrl()}/api/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+  const { text } = await ollamaAufruf(
+    {
       model: LOCAL_MODEL,
-      stream: true,
       think: false,
       keep_alive: '30m',
       ...(opts.format ? { format: opts.format } : {}),
       options: { temperature: opts.temperature ?? 0.3, num_ctx: opts.numCtx ?? 16384 },
       messages,
-    }),
-  });
-  if (!res.ok || !res.body) throw new Error(`Ollama HTTP ${res.status}`);
-  const reader = res.body.getReader();
-  const dec = new TextDecoder();
-  let buf = '';
-  let text = '';
-  for (;;) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    buf += dec.decode(value, { stream: true });
-    let nl: number;
-    while ((nl = buf.indexOf('\n')) >= 0) {
-      const line = buf.slice(0, nl).trim();
-      buf = buf.slice(nl + 1);
-      if (!line) continue;
-      const j = JSON.parse(line);
-      if (j.error) throw new Error(j.error);
-      const piece = j.message?.content || '';
-      if (piece) {
-        text += piece;
-        opts.onToken?.(text);
-      }
-    }
-  }
+    },
+    opts.onToken,
+    'funktion',
+  );
   if (!text.trim()) throw new Error('Das lokale Modell hat keinen Text geliefert.');
   return text.trim();
 }
