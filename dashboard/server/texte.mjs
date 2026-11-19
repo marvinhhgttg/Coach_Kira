@@ -459,22 +459,25 @@ export function setupTexte(app, { getSetting, setSetting, cloudChat, originOk, s
     }
   }
 
-  app.post('/api/texte/starten', (req, res) => {
-    if (!originOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
-    const b = req.body || {};
+  function auftragStarten(b) {
     const art = String(b.art || '');
-    if (!LABEL[art]) return res.status(400).json({ ok: false, error: 'Unbekannter Lauf.' });
+    if (!LABEL[art]) return [400, { ok: false, error: 'Unbekannter Lauf.' }];
     const datum = /^\d{4}-\d{2}-\d{2}$/.test(String(b.datum || '')) ? String(b.datum) : art === 'ernaehrung' ? plusTage(heute(), 1) : heute();
     const engine = b.engine === 'cloud' ? 'cloud' : 'local';
     const key = schluessel(art, datum);
     const xs = auftraege();
     const laufend = xs.find((x) => x.key === key && ['angefordert', 'abgeholt', 'cloud'].includes(x.phase) && Date.now() - x.at < 2 * 3600 * 1000);
-    if (laufend) return res.status(409).json({ ok: false, error: `${LABEL[art]} läuft bereits (${laufend.engine === 'cloud' ? 'Cloud' : 'lokal'}).` });
+    if (laufend) return [409, { ok: false, error: `${LABEL[art]} läuft bereits (${laufend.engine === 'cloud' ? 'Cloud' : 'lokal'}).` }];
     const a = { id: crypto.randomUUID(), key, art, datum, label: LABEL[art], engine, phase: engine === 'cloud' ? 'cloud' : 'angefordert', at: Date.now() };
     xs.push(a);
     auftraegeSpeichern(xs);
     if (engine === 'cloud') cloudManuell(a);
-    res.json({ ok: true, auftrag: a });
+    return [200, { ok: true, auftrag: a }];
+  }
+  app.post('/api/texte/starten', (req, res) => {
+    if (!originOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
+    const [code, body] = auftragStarten(req.body || {});
+    res.status(code).json(body);
   });
   // Mac holt lokale Aufträge ab (jede Minute aus dem Supervisor-Takt)
   app.get('/api/texte/auftrag', (req, res) => {
@@ -570,4 +573,5 @@ export function setupTexte(app, { getSetting, setSetting, cloudChat, originOk, s
     schreiben('texte_mac', m);
     res.json({ ok: true, erlaubt: !cloud });
   });
+  return { statusAntwort, auftragStarten };
 }

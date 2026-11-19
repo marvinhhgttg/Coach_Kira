@@ -5,6 +5,7 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { setupTexte } from './server/texte.mjs';
+import { setupWidget } from './server/widget_api.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 5000);
@@ -376,7 +377,8 @@ app.post('/api/action/:name', requireAuth, async (req, res) => {
   }
 });
 
-setupTexte(app, { getSetting, setSetting, cloudChat: cloudChatServer, originOk: llmOriginOk, scriptUrl: APPS_SCRIPT_URL });
+const texte = setupTexte(app, { getSetting, setSetting, cloudChat: cloudChatServer, originOk: llmOriginOk, scriptUrl: APPS_SCRIPT_URL });
+setupWidget(app, { getSetting, setSetting, originOk: llmOriginOk, texte });
 
 app.use(express.static(path.join(__dirname, 'dist')));
 app.use((req, res) => {
