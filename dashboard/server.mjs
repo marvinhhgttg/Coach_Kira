@@ -168,6 +168,12 @@ app.get('/api/auth/status', (req, res) => {
 });
 
 app.post('/api/auth/setup', (req, res) => {
+  // Etappe 3a (20.11.2026): Ersteinrichtung nur noch, wenn ausdrücklich freigeschaltet (CK_SETUP_OFFEN=1),
+  // nie über eine bestehende Einrichtung hinweg und nur aus dem eigenen Cockpit.
+  const schonEingerichtet = !!getSetting('dashboard_token') && !!getSetting('pin_hash');
+  if (schonEingerichtet && !isAuthed(req)) return res.status(403).json({ ok: false, error: 'already_configured' });
+  if (!schonEingerichtet && process.env.CK_SETUP_OFFEN !== '1') return res.status(403).json({ ok: false, error: 'setup_disabled' });
+  if (!browserOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
   const { token, pin } = req.body || {};
   if (!token || String(token).length < 20) return res.status(400).json({ ok: false, error: 'token_too_short' });
   if (!pin || String(pin).length < 6) return res.status(400).json({ ok: false, error: 'pin_too_short' });
@@ -200,7 +206,6 @@ const PPLX_URL = process.env.CUSTOM_CRED_API_PERPLEXITY_AI_URL || '';
 const PPLX_KEY = process.env.CUSTOM_CRED_API_PERPLEXITY_AI_PROXY_AUTH_KEY || '';
 const LLM_DAILY_LIMIT = Number(process.env.CK_LLM_DAILY_LIMIT || 80);
 const LLM_MODELS = new Set(['sonar', 'sonar-pro']);
-const LLM_ORIGINS = ['https://coachkira.pplx.app', 'http://localhost', 'http://127.0.0.1'];
 
 function llmDayKey() {
   const d = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
@@ -209,15 +214,31 @@ function llmDayKey() {
 function llmUsed() {
   return Number(getSetting(llmDayKey()) || 0);
 }
-function llmOriginOk(req) {
-  const o = String(req.headers.origin || req.headers.referer || '');
-  if (!o) return true; // gleiche Herkunft ohne Origin-Header (GET/Navigation)
-  if (LLM_ORIGINS.some((x) => o.startsWith(x))) return true;
+// Etappe 3a (20.11.2026): exakte Herkunft statt Präfix bzw. *.pplx.app-Joker.
+function herkunftErlaubt(o) {
   try {
-    return new URL(o).host.endsWith('.pplx.app');
+    const u = new URL(o);
+    if (u.origin === 'https://coachkira.pplx.app') return true;
+    if (u.protocol === 'http:' && (u.hostname === 'localhost' || u.hostname === '127.0.0.1')) return true;
+    return false;
   } catch {
     return false;
   }
+}
+/** Für Endpunkte, die auch der Mac-Runner ohne Browser aufruft: fremde Browser-Herkunft wird abgewiesen. */
+function llmOriginOk(req) {
+  const o = String(req.headers.origin || req.headers.referer || '');
+  if (!o) return true; // Mac-Runner (kein Browser) – Absicherung mit Geheimnis folgt in Etappe 3b
+  return herkunftErlaubt(o);
+}
+/** Nur für Aufrufe aus dem Cockpit selbst (Browser bzw. App-WebView): Herkunft muss vorhanden und exakt sein. */
+function browserOk(req) {
+  const o = String(req.headers.origin || '');
+  if (o) return herkunftErlaubt(o);
+  const site = String(req.headers['sec-fetch-site'] || '');
+  if (site && site !== 'same-origin') return false;
+  const r = String(req.headers.referer || '');
+  return !!r && herkunftErlaubt(r);
 }
 
 app.get('/api/llm/status', (req, res) => {
@@ -250,7 +271,7 @@ async function cloudChatServer(messages, opts = {}) {
 
 app.post('/api/llm', async (req, res) => {
   try {
-    if (!llmOriginOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
+    if (!browserOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
     if (!PPLX_URL || !PPLX_KEY) return res.status(503).json({ ok: false, error: 'Cloud-KI ist auf dem Server nicht eingerichtet (Perplexity-Schlüssel fehlt).' });
     const b = req.body || {};
     const msgs = Array.isArray(b.messages) ? b.messages : [];
@@ -303,7 +324,7 @@ app.get('/api/garmin/anfrage', (req, res) => {
   res.json({ ok: true, ...a, pending: !!a.requestedAt && !(a.doneAt && a.doneAt >= a.requestedAt), now: now() });
 });
 app.post('/api/garmin/anfrage', (req, res) => {
-  if (!llmOriginOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
+  if (!browserOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
   const a = garminAnfrage();
   const pending = !!a.requestedAt && !(a.doneAt && a.doneAt >= a.requestedAt);
   if (!pending) {
@@ -347,7 +368,7 @@ app.get('/api/garmin/workout', (req, res) => {
   res.json({ ok: true, offen: xs.filter((q) => !q.doneAt && (!q.pickedAt || t - q.pickedAt > 600000)) });
 });
 app.post('/api/garmin/workout', (req, res) => {
-  if (!llmOriginOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
+  if (!browserOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
   const b = req.body || {};
   const w = b.workout;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(b.datum || ''))) return res.status(400).json({ ok: false, error: 'Datum fehlt.' });
@@ -392,7 +413,7 @@ const INSTANZ = process.env.CK_INSTANZ || 'live';
 const texte = setupTexte(app, { getSetting, setSetting, cloudChat: cloudChatServer, originOk: llmOriginOk, scriptUrl: APPS_SCRIPT_URL, passiv: INSTANZ !== 'live' });
 app.get('/api/instanz', (_req, res) => res.json({ instanz: INSTANZ }));
 setupRechenkern(app, { getSetting, setSetting, aktiv: INSTANZ !== 'live' });
-setupWidget(app, { getSetting, setSetting, originOk: llmOriginOk, texte });
+setupWidget(app, { getSetting, setSetting, originOk: browserOk, texte });
 setupLokalRelay(app, {
   originOk: llmOriginOk,
   macStatus: () => {
