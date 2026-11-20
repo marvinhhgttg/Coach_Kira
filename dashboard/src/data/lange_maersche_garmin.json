@@ -1,0 +1,177 @@
+{
+ "quelle": "Garmin Connect API, abgerufen 29.10.2026",
+ "auswahl": "Gehen/Wandern ≥ 4 h, höchstens 40 Hm/km",
+ "touren": [
+  {
+   "datum": "2020-09-27",
+   "name": "Immenstadt i. Allgäu Wandern",
+   "min": 269.2,
+   "km": 21.23,
+   "hm": 482,
+   "hf": 112.0,
+   "ess": 56
+  },
+  {
+   "datum": "2020-11-29",
+   "name": "Füssen Wandern",
+   "min": 305.8,
+   "km": 20.61,
+   "hm": 356,
+   "hf": 89.0,
+   "ess": 20
+  },
+  {
+   "datum": "2021-02-13",
+   "name": "Immenstadt i. Allgäu Wandern",
+   "min": 247.2,
+   "km": 20.01,
+   "hm": 472,
+   "hf": 102.0,
+   "ess": 30
+  },
+  {
+   "datum": "2021-04-04",
+   "name": "Immenstadt i. Allgäu Wandern",
+   "min": 279.1,
+   "km": 22.39,
+   "hm": 663,
+   "hf": 93.0,
+   "ess": 33
+  },
+  {
+   "datum": "2021-06-19",
+   "name": "Scharnitz Wandern",
+   "min": 344.1,
+   "km": 24.38,
+   "hm": 700,
+   "hf": 92.0,
+   "ess": 43
+  },
+  {
+   "datum": "2022-02-27",
+   "name": "Siedelalpe mit Tanja",
+   "min": 247.4,
+   "km": 17.4,
+   "hm": 416,
+   "hf": 96.0,
+   "ess": 19
+  },
+  {
+   "datum": "2022-06-18",
+   "name": "Tag 2 - Þórsmörk - Emstrur",
+   "min": 312.5,
+   "km": 18.59,
+   "hm": 458,
+   "hf": 102.0,
+   "ess": 26
+  },
+  {
+   "datum": "2022-06-19",
+   "name": "Tag 3 - Emstrur - Álftavatn",
+   "min": 326.7,
+   "km": 17.9,
+   "hm": 194,
+   "hf": 98.0,
+   "ess": 24
+  },
+  {
+   "datum": "2022-06-20",
+   "name": "Tag 4 - Álftavatn - Landmannalaugar",
+   "min": 396.2,
+   "km": 22.03,
+   "hm": 661,
+   "hf": 108.0,
+   "ess": 27
+  },
+  {
+   "datum": "2022-06-27",
+   "name": "Reykjavegur ",
+   "min": 401.4,
+   "km": 28.05,
+   "hm": 827,
+   "hf": 88.0,
+   "ess": 10
+  },
+  {
+   "datum": "2022-07-16",
+   "name": "Immenstadt i. Allgäu Wandern",
+   "min": 316.6,
+   "km": 19.08,
+   "hm": 487,
+   "hf": 99.0,
+   "ess": 10
+  },
+  {
+   "datum": "2022-08-15",
+   "name": "Zur Siedelalpe",
+   "min": 257.7,
+   "km": 17.44,
+   "hm": 419,
+   "hf": 88.0,
+   "ess": 5
+  },
+  {
+   "datum": "2022-10-28",
+   "name": "High Peak Wandern",
+   "min": 248.5,
+   "km": 16.11,
+   "hm": 552,
+   "hf": 105.0,
+   "ess": 58
+  },
+  {
+   "datum": "2023-03-28",
+   "name": "Illerschleifen",
+   "min": 243.4,
+   "km": 20.47,
+   "hm": 706,
+   "hf": 98.0,
+   "ess": 16
+  },
+  {
+   "datum": "2023-04-10",
+   "name": "Monte Luppia - Garda",
+   "min": 269.5,
+   "km": 18.0,
+   "hm": 528,
+   "hf": 90.0,
+   "ess": 7
+  },
+  {
+   "datum": "2024-07-20",
+   "name": "Hasenstabweg - Spessart",
+   "min": 912.3,
+   "km": 62.8,
+   "hm": 1661,
+   "hf": 96.0,
+   "ess": 14
+  },
+  {
+   "datum": "2025-09-13",
+   "name": "Obergünzburg Wandern",
+   "min": 243.2,
+   "km": 12.37,
+   "hm": 388,
+   "hf": 80.0,
+   "ess": 3
+  },
+  {
+   "datum": "2025-09-27",
+   "name": "Altmühltal Teil 1",
+   "min": 351.0,
+   "km": 24.45,
+   "hm": 607,
+   "hf": 87.0,
+   "ess": 7
+  },
+  {
+   "datum": "2025-09-28",
+   "name": "Altmühltal Teil 2",
+   "min": 344.2,
+   "km": 25.19,
+   "hm": 552,
+   "hf": 85.0,
+   "ess": 8
+  }
+ ]
+}
