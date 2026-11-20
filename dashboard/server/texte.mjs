@@ -66,7 +66,7 @@ export function setupTexte(app, { getSetting, setSetting, cloudChat, originOk, s
   };
   const schreiben = (k, v) => setSetting(k, JSON.stringify(v));
   const zustand = () => lesen('texte_zustand', { items: {}, letzterTakt: 0, letzterFehler: null });
-  const einstellung = () => ({ cloudErsatz: true, ...lesen('texte_einstellung', {}) });
+  const einstellung = () => ({ cloudErsatz: true, votumQuelle: 'kern', ...lesen('texte_einstellung', {}) });
   const mac = () => lesen('texte_mac', {});
 
   async function holen(params) {
@@ -121,7 +121,7 @@ export function setupTexte(app, { getSetting, setSetting, cloudChat, originOk, s
   async function cloudBriefing(type) {
     const d = await holen({ mode: 'briefingData', type });
     if (!d.ok || !d.daten) throw new Error(d.error || 'Keine Briefing-Daten');
-    const b = await prompts('briefing', { type, daten: d.daten });
+    const b = await prompts('briefing', { type, daten: d.daten, votumQuelle: einstellung().votumQuelle });
     const r = await cloudChat(b.messages, { json: b.format === 'json', model: 'sonar-pro', maxTokens: 4000 });
     await senden('saveBriefing', { kind: 'saveBriefing', type, text: r.answer, model: r.model, engine: 'cloud' });
     return r.model;
@@ -540,7 +540,10 @@ export function setupTexte(app, { getSetting, setSetting, cloudChat, originOk, s
   app.post('/api/texte/einstellung', (req, res) => {
     if (!originOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
     const b = req.body || {};
-    schreiben('texte_einstellung', { ...einstellung(), cloudErsatz: !!b.cloudErsatz });
+    const neu = { ...einstellung() };
+    if (typeof b.cloudErsatz === 'boolean') neu.cloudErsatz = b.cloudErsatz;
+    if (b.votumQuelle === 'kern' || b.votumQuelle === 'ampel') neu.votumQuelle = b.votumQuelle;
+    schreiben('texte_einstellung', neu);
     res.json(statusAntwort());
   });
   // Mac-Herzschlag (alle 5 min aus kira_runner tick) und Arbeitsmeldung je Text

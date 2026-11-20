@@ -22,6 +22,21 @@ export const MONOTONIE_REGEL = [
 ].join('\n');
 
 /** Erfahrung aus Nichtbefolgung (lib/votumErfahrung.ts, fest berechnet). Leer → Prompt unverändert. */
+/** Umschaltung 20.11.2026: maßgebliches Tagesvotum (Kern) für alle KI-Texte. kv fehlt → Prompt unverändert. */
+export function votumBlock(kv?: any): string {
+  if (!kv || typeof kv !== 'object') return '';
+  if (kv.quelle === 'kern' && kv.label) {
+    const g = (kv.gruende || []).filter(Boolean).slice(0, 4).map((x: string) => '  - ' + x).join('\n');
+    return '\n---\n**TAGESVOTUM (MASSGEBLICH, Rechenkern/Cockpit-Regel, ' + kv.datum + '): ' + kv.label + '**\n' +
+      (g ? 'Gründe:\n' + g + '\n' : '') +
+      'Richte Bewertung, Empfehlung, Plan-Status und Ton nach diesem Tagesvotum. Der Gesamtscore/die Supervisor-Ampel ist nur eine Zweitmeinung: ' +
+      'Widerspricht sie dem Tagesvotum, erwähne das höchstens kurz als Hinweis, empfiehl aber nicht danach.\n' +
+      'Nenne im Text einmal kurz die Grundlage, z. B. „Grundlage: Tagesvotum ' + kv.label + '“.\n---\n';
+  }
+  return '\n---\n**TAGESVOTUM:** heute nicht verfügbar (' + (kv.rueckfall || 'unbekannt') + '). Richte dich wie bisher nach Gesamtscore und Supervisor-Ampel ' +
+    'und nenne im Text einmal kurz „Grundlage: Supervisor-Ampel“.\n---\n';
+}
+
 export function erfahrungBlock(text?: string): string {
   const t = String(text || '').trim();
   if (!t) return '';
@@ -570,7 +585,7 @@ ${history}
 ---
 
 BERECHNETER GESAMTSTATUS (HEUTE: ${cleanDate})
-- Gesamtscore: ${gesamtScoreNum} / 100 (${gesamtScoreAmpel})
+- Gesamtscore: ${gesamtScoreNum} / 100 (${gesamtScoreAmpel})${d.kernVotum && d.kernVotum.quelle === 'kern' ? ' – nur Zweitmeinung, maßgeblich ist das TAGESVOTUM unten' : ''}
 - HEUTIGER Original-Load (ESS): ${heutigerSollLoad}
 - HEUTIGER IST-Load (load_fb_day): ${heutigerIstLoad}
 - HEUTIGER Wochentag: ${cleanTag}
@@ -598,6 +613,7 @@ DEINE AUFGABE (MAXIMALER KONTEXT & SPORTWISSENSCHAFTLICHE ANALYSE):
 
 **Berücksichtige bei allen Empfehlungen die 'Allgemeinen Ziele' UND die 'Vergangene 14 Tage (Historie)', um konsistent zu planen.**
 
+${votumBlock(d.kernVotum)}
 1.  **ANALYSIERE ERNÄHRUNG ('bewertung_ernaehrung_7d'):**
     * Bewerte die 7-Tage-Bilanz (Score ${nutritionScore.num_score}, Wert ${nutritionScore.raw_wert} kcal) **in maximal 2 Sätzen**.
     * (REGEL: Der Wert ${nutritionScore.raw_wert} kcal ist ein ${ernaehrungLabel}).
@@ -741,7 +757,7 @@ ANTWORTE AUSSCHLIESSLICH IM FOLGENDEN JSON-FORMAT (ohne Markdown):
 // ---------------------------------------------------------------------------
 export function briefingMessages(type: BriefingTyp, daten: any): { format: 'text' | 'json'; messages: KiMsg[] } {
   const res = briefingRoh(type, daten);
-  if (res.messages.length && res.messages[0].role === 'system') res.messages[0].content = String(res.messages[0].content) + '\n\n' + MONOTONIE_REGEL + erfahrungBlock(daten && daten.erfahrung);
+  if (res.messages.length && res.messages[0].role === 'system') res.messages[0].content = String(res.messages[0].content) + '\n\n' + MONOTONIE_REGEL + erfahrungBlock(daten && daten.erfahrung) + votumBlock(daten && daten.kernVotum);
   return res;
 }
 
@@ -866,13 +882,13 @@ function briefingRoh(type: BriefingTyp, daten: any): { format: 'text' | 'json'; 
 // ---------------------------------------------------------------------------
 // Telegram: freie Frage an Kira (Mac, lokal)
 // ---------------------------------------------------------------------------
-export function telegramMessages(frage: string, ctx: { status?: any; vorausblick?: string; erfahrung?: string; verlauf?: { frage: string; antwort: string }[] }): KiMsg[] {
+export function telegramMessages(frage: string, ctx: { status?: any; vorausblick?: string; erfahrung?: string; kernVotum?: any; verlauf?: { frage: string; antwort: string }[] }): KiMsg[] {
   const sys = [
     'Du bist Coach Kira, Marcs Sportwissenschaftlerin und Trainingscoach – wie eine gute Freundin, direkt und per Du.',
     'Du antwortest auf Telegram: kurz (max. 6 Sätze), konkret, auf Deutsch, ohne Markdown-Tabellen und ohne Emojis.',
     'Nutze die Daten unten. Erfinde keine Werte. Keine medizinischen Diagnosen.',
     MONOTONIE_REGEL,
-  ].join('\n') + erfahrungBlock(ctx.erfahrung);
+  ].join('\n') + erfahrungBlock(ctx.erfahrung) + votumBlock(ctx.kernVotum);
   const daten = [
     ctx.status ? 'STATUS (Cockpit):\n' + JSON.stringify(ctx.status).slice(0, 6000) : '',
     ctx.vorausblick ? 'VORAUSBLICK:\n' + String(ctx.vorausblick).slice(0, 3000) : '',

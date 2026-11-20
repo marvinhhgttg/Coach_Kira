@@ -3120,6 +3120,17 @@ var import_react8 = __toESM(require_react(), 1);
 var import_react = __toESM(require_react(), 1);
 var CACHE_MS = 10 * 60 * 1e3;
 
+// src/kern/formeln.ts
+var ATL_MODEL = { a: -8.819849, b: 0.83645661, c: 1.24059231 };
+var CTL_MODEL = { a: -3.95042, b: 0.97283824, c: 0.2336734, g: 0.7, k: 7.1, win: 28 };
+function atlStep(atl, last) {
+  return ATL_MODEL.a + ATL_MODEL.b * atl + ATL_MODEL.c * last;
+}
+function ctlStep(ctl, last, mittel28) {
+  const m = CTL_MODEL;
+  return m.g * (m.a + m.b * ctl + m.c * last) + (1 - m.g) * m.k * mittel28;
+}
+
 // src/screens/RecoveryPanel.tsx
 var import_react7 = __toESM(require_react(), 1);
 
@@ -3159,6 +3170,10 @@ var import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
 // src/lib/useErfahrung.ts
 var import_react4 = __toESM(require_react(), 1);
 
+// src/lib/cloudLLM.ts
+var SENTINEL = "__PORT_5000__";
+var SERVER_BASE = SENTINEL.startsWith("__PORT") ? "" : "/" + SENTINEL.replace(/^\/+/, "");
+
 // src/lib/format.ts
 function fmtNum(v, digits = 0) {
   if (v === null || v === void 0 || !Number.isFinite(v)) return "\u2014";
@@ -3183,6 +3198,41 @@ var VARS = [
   { key: "essDay", label: "Last", short: "Last", unit: "ESS" }
 ];
 var VAR = Object.fromEntries(VARS.map((v) => [v.key, v]));
+
+// src/kern/soll.ts
+var BAND = { REST: [0, 0.25], EASY: [0.3, 0.8], TRAIN: [0.7, 1.25], QUALITY: [1, 1.7] };
+function lastEmpfehlung(today, yesterday) {
+  const vote = today.vote;
+  const atl0 = yesterday?.atlPost ?? null;
+  const ctl0 = yesterday?.ctlPost ?? null;
+  if (!vote || atl0 == null || ctl0 == null || ctl0 <= 0) return null;
+  const m0 = ctl0 / 7.04;
+  const ctlNach = (L) => ctlStep(ctl0, L, (27 * m0 + L) / 28);
+  const acwrNach = (L) => atlStep(atl0, L) / ctlNach(L);
+  let halte = 0;
+  for (let L = 0; L <= 500; L += 1) if (ctlNach(L) >= ctl0) {
+    halte = L;
+    break;
+  }
+  let acwrGrenze = null;
+  for (let L = 0; L <= 600; L += 1) if (acwrNach(L) > 1.3) {
+    acwrGrenze = L - 1;
+    break;
+  }
+  const r5 = (x) => Math.max(0, Math.round(x / 5) * 5);
+  let [lo, hi] = BAND[vote].map((f) => r5(f * halte));
+  let gedeckelt = false;
+  if (acwrGrenze != null && hi > acwrGrenze) {
+    hi = r5(Math.max(0, acwrGrenze));
+    gedeckelt = true;
+    if (lo > hi) lo = r5(hi * 0.6);
+  }
+  return { min: lo, max: hi, halte: r5(halte), acwrGrenze: acwrGrenze != null ? r5(acwrGrenze) : null, gedeckelt };
+}
+function lageImRahmen(load, e) {
+  if (load == null || !e) return null;
+  return load > e.max ? "dar\xFCber" : load < e.min ? "darunter" : "im Rahmen";
+}
 
 // src/components/GarminSportProfilTile.tsx
 var import_react6 = __toESM(require_react(), 1);
@@ -3272,10 +3322,6 @@ var MONOTONIE_REGEL_TEXT = [
 // src/screens/RecoveryPanel.tsx
 var import_jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
 
-// src/lib/cloudLLM.ts
-var SENTINEL = "__PORT_5000__";
-var SERVER_BASE = SENTINEL.startsWith("__PORT") ? "" : "/" + SENTINEL.replace(/^\/+/, "");
-
 // src/lib/chatContext.ts
 var OLLAMA_HTTP = "http://localhost:11434";
 var OLLAMA_HTTPS = "https://localhost:11435";
@@ -3328,6 +3374,20 @@ var ApiError = class extends Error {
     this.name = "ApiError";
   }
 };
+var TimeoutError = class extends ApiError {
+  constructor(message = "Zeit\xFCberschreitung") {
+    super(message);
+    this.name = "TimeoutError";
+  }
+};
+function withTimeout(ms, factory) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  return factory(controller.signal).catch((err) => {
+    if (controller.signal.aborted) throw new TimeoutError(`Timeout nach ${ms} ms`);
+    throw err;
+  }).finally(() => clearTimeout(timer));
+}
 async function getJson(url, signal) {
   const isRead = /[?&]mode=/.test(url) && !/[?&]action=/.test(url);
   try {
@@ -3367,6 +3427,12 @@ function fetchChartData(range, metrics, signal) {
     buildUrl({ mode: "chartData", range, metrics: metrics.join(",") }),
     signal
   );
+}
+function fetchPlanSimulation(signal) {
+  return getJson(buildUrl({ mode: "planSimulationJson" }), signal);
+}
+function fetchPlanSimulationWithTimeout(ms = 8e3) {
+  return withTimeout(ms, (signal) => fetchPlanSimulation(signal));
 }
 function dedupeByDateKeepLast2(rows) {
   const map = /* @__PURE__ */ new Map();
@@ -3623,6 +3689,22 @@ var [res, st] = await Promise.all([
 ]);
 var days = buildDays(res?.data || []).filter((d) => d.date <= heute2);
 var t = days.find((d) => d.date === heute2) || null;
+var ti = t ? days.indexOf(t) : -1;
+var rahmen = t && ti > 0 ? lastEmpfehlung(t, days[ti - 1]) : null;
+var planSim = null;
+try {
+  const sim = await fetchPlanSimulationWithTimeout(45e3);
+  planSim = sim?.ok ? (sim.days || []).find((x) => String(x.date).slice(0, 10) === heute2) || null : null;
+} catch {
+}
+var planLoad = planSim ? Number(planSim.load) : t?.essDay ?? null;
+var istLoad = t?.activityDone ? t.actual?.load ?? t.load ?? null : null;
+var rueck = days.slice(-31).map((d, i, a) => {
+  if (i === 0 || d.date >= heute2) return null;
+  const e = lastEmpfehlung(d, a[i - 1]);
+  const ist = d.activityDone ? d.actual?.load ?? d.load ?? 0 : 0;
+  return e ? { d: d.date, v: d.vote, min: e.min, max: e.max, ist, lage: lageImRahmen(ist, e) } : null;
+}).filter(Boolean);
 var sum = st?.summary || {};
 var svStand = st?.heartbeat?.timestamp ? iso(new Date(st.heartbeat.timestamp)) : null;
 var svAktuell = svStand === heute2 && st?.heartbeat?.stage === "END_OK";
@@ -3634,6 +3716,14 @@ process.stdout.write(JSON.stringify({
   cockpit: t ? { vote: t.vote, stufe: c, bind: t.bind ?? null, gruende: (t.reasons || []).slice(0, 3), readiness: t.readiness, hrv: t.hrv, acwr: t.acwr } : null,
   supervisor: { ampel: sum.gesamtAmpel ?? null, stufe: s, score: sum.gesamtScore ?? null, recovery: sum.recoveryScore ?? null, training: sum.trainingScore ?? null, planStatus: sum.planStatus ?? null, lauf: st?.heartbeat?.timestamp ?? null, aktuell: svAktuell },
   vergleich: vergleiche(c, s),
+  soll: {
+    rahmen,
+    plan: planLoad != null && Number.isFinite(planLoad) ? { load: planLoad, sport: planSim?.sport || "", zone: planSim?.zone || "", gesperrt: !!planSim?.locked, quelle: planSim ? "planSimulation" : "coachE_ESS_day" } : null,
+    planLage: lageImRahmen(planLoad, rahmen),
+    ist: istLoad,
+    istLage: istLoad != null ? lageImRahmen(istLoad, rahmen) : null
+  },
+  sollRueckblick: { tage: rueck.length, imRahmen: rueck.filter((x) => x.lage === "im Rahmen").length, darueber: rueck.filter((x) => x.lage === "dar\xFCber").length, darunter: rueck.filter((x) => x.lage === "darunter").length, verlauf: rueck },
   cockpitVerlauf: days.slice(-30).map((d) => ({ d: d.date, v: d.vote, b: d.bind ?? null }))
 }));
 /*! Bundled license information:

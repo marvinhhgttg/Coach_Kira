@@ -3121,6 +3121,14 @@ var MONOTONIE_REGEL = [
   "Steuerung: Ein hoher Wert an einem Tag ist praktisch bedeutungslos. Liegt die 7-Tage-Monotonie an 2 Tagen in Folge \xFCber etwa 2,0 und sind schon 4\u20135 fordernde Tage gesammelt \u2192 n\xE4chster Tag sehr locker oder frei. Als Entlastung z\xE4hlt ein lockerer oder freier Tag (h\xF6chstens 40 ESS bzw. 60 % der \xFCblichen Tageslast). Bleibt der Wert \xFCber 2,5 \u2192 innerhalb 24\u201348 h echter Ruhetag oder sehr kurzer Regenerationsreiz. \xDCber 3,0 \u2192 mindestens ein echter Entlastungstag oder deutliche Reduktion. Hohe Monotonie plus schlechte Erholungswerte \u2192 keine Qualit\xE4tseinheit durchdr\xFCcken.",
   "Entscheidend ist die Kombination mit der Gesamtlast (Strain = Wochenlast \xD7 Monotonie). Monotonie senkst du durch klaren Rhythmus: harte Reize klar hart, lockere Tage wirklich locker, mindestens ein echter Erholungstag bei hoher Gesamtlast \u2013 nicht durch weniger Gesamtlast."
 ].join("\n");
+function votumBlock(kv) {
+  if (!kv || typeof kv !== "object") return "";
+  if (kv.quelle === "kern" && kv.label) {
+    const g = (kv.gruende || []).filter(Boolean).slice(0, 4).map((x) => "  - " + x).join("\n");
+    return "\n---\n**TAGESVOTUM (MASSGEBLICH, Rechenkern/Cockpit-Regel, " + kv.datum + "): " + kv.label + "**\n" + (g ? "Gr\xFCnde:\n" + g + "\n" : "") + "Richte Bewertung, Empfehlung, Plan-Status und Ton nach diesem Tagesvotum. Der Gesamtscore/die Supervisor-Ampel ist nur eine Zweitmeinung: Widerspricht sie dem Tagesvotum, erw\xE4hne das h\xF6chstens kurz als Hinweis, empfiehl aber nicht danach.\nNenne im Text einmal kurz die Grundlage, z. B. \u201EGrundlage: Tagesvotum " + kv.label + "\u201C.\n---\n";
+  }
+  return "\n---\n**TAGESVOTUM:** heute nicht verf\xFCgbar (" + (kv.rueckfall || "unbekannt") + "). Richte dich wie bisher nach Gesamtscore und Supervisor-Ampel und nenne im Text einmal kurz \u201EGrundlage: Supervisor-Ampel\u201C.\n---\n";
+}
 function erfahrungBlock(text) {
   const t = String(text || "").trim();
   if (!t) return "";
@@ -3629,7 +3637,7 @@ ${history}
 ---
 
 BERECHNETER GESAMTSTATUS (HEUTE: ${cleanDate})
-- Gesamtscore: ${gesamtScoreNum} / 100 (${gesamtScoreAmpel})
+- Gesamtscore: ${gesamtScoreNum} / 100 (${gesamtScoreAmpel})${d.kernVotum && d.kernVotum.quelle === "kern" ? " \u2013 nur Zweitmeinung, ma\xDFgeblich ist das TAGESVOTUM unten" : ""}
 - HEUTIGER Original-Load (ESS): ${heutigerSollLoad}
 - HEUTIGER IST-Load (load_fb_day): ${heutigerIstLoad}
 - HEUTIGER Wochentag: ${cleanTag}
@@ -3657,6 +3665,7 @@ DEINE AUFGABE (MAXIMALER KONTEXT & SPORTWISSENSCHAFTLICHE ANALYSE):
 
 **Ber\xFCcksichtige bei allen Empfehlungen die 'Allgemeinen Ziele' UND die 'Vergangene 14 Tage (Historie)', um konsistent zu planen.**
 
+${votumBlock(d.kernVotum)}
 1.  **ANALYSIERE ERN\xC4HRUNG ('bewertung_ernaehrung_7d'):**
     * Bewerte die 7-Tage-Bilanz (Score ${nutritionScore.num_score}, Wert ${nutritionScore.raw_wert} kcal) **in maximal 2 S\xE4tzen**.
     * (REGEL: Der Wert ${nutritionScore.raw_wert} kcal ist ein ${ernaehrungLabel}).
@@ -3796,7 +3805,7 @@ ANTWORTE AUSSCHLIESSLICH IM FOLGENDEN JSON-FORMAT (ohne Markdown):
 }
 function briefingMessages(type, daten) {
   const res = briefingRoh(type, daten);
-  if (res.messages.length && res.messages[0].role === "system") res.messages[0].content = String(res.messages[0].content) + "\n\n" + MONOTONIE_REGEL + erfahrungBlock(daten && daten.erfahrung);
+  if (res.messages.length && res.messages[0].role === "system") res.messages[0].content = String(res.messages[0].content) + "\n\n" + MONOTONIE_REGEL + erfahrungBlock(daten && daten.erfahrung) + votumBlock(daten && daten.kernVotum);
   return res;
 }
 function briefingRoh(type, daten) {
@@ -3918,7 +3927,7 @@ function telegramMessages(frage, ctx) {
     "Du antwortest auf Telegram: kurz (max. 6 S\xE4tze), konkret, auf Deutsch, ohne Markdown-Tabellen und ohne Emojis.",
     "Nutze die Daten unten. Erfinde keine Werte. Keine medizinischen Diagnosen.",
     MONOTONIE_REGEL
-  ].join("\n") + erfahrungBlock(ctx.erfahrung);
+  ].join("\n") + erfahrungBlock(ctx.erfahrung) + votumBlock(ctx.kernVotum);
   const daten = [
     ctx.status ? "STATUS (Cockpit):\n" + JSON.stringify(ctx.status).slice(0, 6e3) : "",
     ctx.vorausblick ? "VORAUSBLICK:\n" + String(ctx.vorausblick).slice(0, 3e3) : ""
@@ -4033,12 +4042,19 @@ var MONOTONIE_REGEL_TEXT = [
   "Entscheidend ist die Kombination mit der Gesamtlast (Strain = Wochenlast \xD7 Monotonie). Monotonie senkst du durch klaren Rhythmus: harte Reize klar hart, lockere Tage wirklich locker, mindestens ein echter Erholungstag bei hoher Gesamtlast \u2013 nicht durch weniger Gesamtlast."
 ].join("\n");
 
+// src/lib/cloudLLM.ts
+var SENTINEL = "__PORT_5000__";
+var SERVER_BASE = SENTINEL.startsWith("__PORT") ? "" : "/" + SENTINEL.replace(/^\/+/, "");
+
 // src/lib/chatContext.ts
 var OLLAMA_HTTP = "http://localhost:11434";
 var OLLAMA_HTTPS = "https://localhost:11435";
-var IST_SAFARI = typeof navigator !== "undefined" && /Safari\//.test(navigator.userAgent) && !/Chrome|Chromium|CriOS|Edg|Comet/i.test(navigator.userAgent);
+var IST_MAC_APP = typeof window !== "undefined" && !!window.webkit?.messageHandlers?.kiraMac;
+var IST_SAFARI = IST_MAC_APP || typeof navigator !== "undefined" && /Safari\//.test(navigator.userAgent) && !/Chrome|Chromium|CriOS|Edg|Comet/i.test(navigator.userAgent);
 var KANDIDATEN = IST_SAFARI ? [OLLAMA_HTTPS, OLLAMA_HTTP] : [OLLAMA_HTTP, OLLAMA_HTTPS];
-var ollamaBasis = KANDIDATEN[0];
+var IST_APP = typeof window !== "undefined" && !!window.webkit?.messageHandlers?.kira;
+var UEBER_MAC = "mac";
+var ollamaBasis = IST_APP ? UEBER_MAC : KANDIDATEN[0];
 var KIRA_SYSTEM = [
   "Du bist Kira, Sportwissenschaftlerin und pers\xF6nliche Ausdauer-Trainerin von Marc (Jahrgang 1975; Rennrad, Gravel, Laufen, Bergsport).",
   "Sprich Marc per Du an, antworte auf Deutsch, klar und konkret, ohne Emojis.",
@@ -4105,8 +4121,7 @@ var VAR = Object.fromEntries(VARS.map((v) => [v.key, v]));
 var import_react7 = __toESM(require_react(), 1);
 var import_jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
 
-// src/screens/RecoveryPanel.tsx
-var import_jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
+// src/kern/votumRegeln.ts
 var SLEEP_GOAL_H = 7.5;
 var RHR_BASELINE_DAYS = 28;
 var RHR_BASELINE_MIN_VALUES = 7;
@@ -4323,6 +4338,9 @@ function buildDays(raw) {
     return { ...base, vote, reasons, bind };
   });
 }
+
+// src/screens/RecoveryPanel.tsx
+var import_jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
 function plannedDemand(p) {
   const zone = (p.zone || "").toUpperCase();
   const sport = (p.sport || "").toLowerCase();
@@ -4498,9 +4516,46 @@ function erfahrungText(e, max = 8) {
   ].join("\n");
 }
 
+// src/lib/kernVotumKi.ts
+var heuteBerlin = (d = /* @__PURE__ */ new Date()) => d.toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" });
+function kernVotumAusRohdaten(raw, schalter2, heute = heuteBerlin()) {
+  const leer = (grund) => ({ quelle: "ampel", datum: heute, vote: null, label: null, gruende: [], rueckfall: grund });
+  if (schalter2 === "ampel") return leer("Schalter steht auf Supervisor-Ampel");
+  let t = null;
+  try {
+    t = buildDays(raw || []).find((d) => d.date === heute) || null;
+  } catch {
+    t = null;
+  }
+  if (!t || !t.vote) return leer("Tagesvotum f\xFCr heute fehlt");
+  return {
+    quelle: "kern",
+    datum: heute,
+    vote: t.vote,
+    label: VOTE_LABEL[t.vote] || t.vote,
+    gruende: (t.reasons || []).slice(0, 4).map(String),
+    rueckfall: null
+  };
+}
+
 // server/kira_prompts_cli.ts
+var COCKPIT_STATUS = "https://coachkira.pplx.app/port/5000/api/texte/status";
 var APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbxCEN11KRlFaLL7uVJyeBLCrRJVmfBWagSmqvyJ8Ci7nwxi8HbolzTy23Z-G2mivC2h/exec";
-async function erfahrung() {
+async function schalter(d) {
+  if (d && (d.votumQuelle === "kern" || d.votumQuelle === "ampel")) return d.votumQuelle;
+  try {
+    const ctl = new AbortController();
+    const to = setTimeout(() => ctl.abort(), 8e3);
+    const j = await (await fetch(COCKPIT_STATUS + "?cb=" + Date.now(), { signal: ctl.signal })).json();
+    clearTimeout(to);
+    const q = j && j.einstellung && j.einstellung.votumQuelle;
+    return q === "ampel" ? "ampel" : "kern";
+  } catch {
+    return "kern";
+  }
+}
+async function erfahrung(d) {
+  const q = await schalter(d);
   try {
     const ctl = new AbortController();
     const to = setTimeout(() => ctl.abort(), 3e4);
@@ -4508,9 +4563,9 @@ async function erfahrung() {
     const j = await (await fetch(url, { redirect: "follow", signal: ctl.signal })).json();
     clearTimeout(to);
     const e = erfahrungAusRohdaten(j.data || []);
-    return { text: erfahrungText(e), gruppen: e.gruppen.filter((g) => g.n >= 8) };
+    return { text: erfahrungText(e), gruppen: e.gruppen.filter((g) => g.n >= 8), kernVotum: kernVotumAusRohdaten(j.data || [], q) };
   } catch {
-    return { text: "", gruppen: [] };
+    return { text: "", gruppen: [], kernVotum: kernVotumAusRohdaten([], q) };
   }
 }
 async function lesen() {
@@ -4522,12 +4577,15 @@ async function lesen() {
   const art = process.argv[2];
   const d = JSON.parse(await lesen() || "{}");
   let out;
-  const erf = art === "supervisor" || art === "briefing" || art === "telegram" || art === "erfahrung" ? await erfahrung() : { text: "", gruppen: [] };
-  if (art === "supervisor") out = supervisorPrompt({ ...d, erfahrung: d.erfahrung ?? erf.text });
-  else if (art === "briefing") out = briefingMessages(d.type, { ...d.daten || {}, erfahrung: (d.daten || {}).erfahrung ?? erf.text });
-  else if (art === "telegram") out = { messages: telegramMessages(String(d.frage || ""), { ...d, erfahrung: d.erfahrung ?? erf.text }) };
-  else if (art === "erfahrung") out = erf;
-  else throw new Error("Unbekannte Art: " + art + " (supervisor | briefing | telegram | erfahrung)");
+  const mitDaten = ["supervisor", "briefing", "telegram", "erfahrung", "votum"].includes(art);
+  const erf = mitDaten ? await erfahrung(d) : { text: "", gruppen: [], kernVotum: null };
+  const kv = d.kernVotum ?? erf.kernVotum;
+  if (art === "supervisor") out = supervisorPrompt({ ...d, erfahrung: d.erfahrung ?? erf.text, kernVotum: kv });
+  else if (art === "briefing") out = briefingMessages(d.type, { ...d.daten || {}, erfahrung: (d.daten || {}).erfahrung ?? erf.text, kernVotum: kv });
+  else if (art === "telegram") out = { messages: telegramMessages(String(d.frage || ""), { ...d, erfahrung: d.erfahrung ?? erf.text, kernVotum: kv }) };
+  else if (art === "erfahrung") out = { text: erf.text, gruppen: erf.gruppen };
+  else if (art === "votum") out = kv;
+  else throw new Error("Unbekannte Art: " + art + " (supervisor | briefing | telegram | erfahrung | votum)");
   process.stdout.write(JSON.stringify(out));
 })().catch((e) => {
   process.stderr.write(String(e && e.message || e));

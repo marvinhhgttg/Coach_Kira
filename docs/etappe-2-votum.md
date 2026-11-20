@@ -90,8 +90,8 @@ Was Live anzeigt, bleibt unverändert, denn kein bestehendes Blatt und keine bes
 | Supervisor protokolliert Kern-Votum und eigene Ampel (Patch C) | erledigt, ab heute dauerhaft im Sheet |
 | v2 zeigt die Supervisor-Ampel nur als Zweitmeinung | erledigt |
 | Abnahme: 14 Tage lückenlos, jede Abweichung mit Grund | läuft, 1/14 |
-| KI-Texte (Briefing, Analyse) richten sich nach dem Kern-Votum | offen. Der Prompt-Bau liegt im Cockpit- und Mac-Server, das betrifft Live. Kommt mit der Umschaltung |
-| Soll-ESS aus dem Kern (2b) | offen |
+| KI-Texte (Briefing, Analyse) richten sich nach dem Kern-Votum | umgesetzt 20.11.2026, siehe unten (Schalter unter Technik) |
+| Soll-ESS aus dem Kern (2b) | Schattenbetrieb seit 20.11.2026, siehe unten |
 
 ## Warum Gelb, obwohl das Cockpit Rest sagt (20.11.2026)
 
@@ -163,3 +163,37 @@ Gute Werte wie Ruhepuls, TE-Balance, Schlafdauer und Ernährung gleichen die sch
   - Sie meldet sich nur bei einem Fehler, sonst erst am 04.12. mit dem Abnahmeprotokoll.
   - Die Automation prüft selbst und zählt unabhängig von Neuveröffentlichungen.
 - **Formales Urteil:** Am 04.12.2026, wenn 14 Tage in Folge bestanden sind.
+
+## Umschaltung der KI-Texte auf das Kern-Votum (20.11.2026, Abend)
+
+Marc hat entschieden, nicht bis zum 04.12. zu warten, sondern mit Rückfallweg sofort umzuschalten.
+
+- **Was sich ändert:** Briefing (Status, Plan, Konsolidiert), Supervisor-Analyse und Telegram bekommen den Block „TAGESVOTUM (MASSGEBLICH …)“ mit Votum und Gründen. Der Gesamtscore bzw. die Supervisor-Ampel ist im Prompt nur noch Zweitmeinung. Der Text soll einmal „Grundlage: Tagesvotum …“ nennen.
+- **Rückfall:** Fehlt für heute ein Tagesvotum, z. B. weil die Morgenwerte noch nicht erfasst sind, gilt wie bisher die Ampel, und der Text nennt „Grundlage: Supervisor-Ampel“.
+- **Schalter:** Technik › Kira-Texte › „Texte nach Tagesvotum (Kern) statt Supervisor-Ampel“, gespeichert als `texte_einstellung.votumQuelle` (`kern` | `ampel`, Standard `kern`). Er wirkt sofort und ohne neue Veröffentlichung auf Mac und Server.
+- **Code:**
+  - `src/lib/kernVotumKi.ts`: Tagesvotum mit Rückfall. Nutzt `buildDays`, die Regel ist dieselbe wie im Kern.
+  - `src/lib/kiraPrompts.ts`: `votumBlock`. Fehlt `kernVotum`, bleibt der Prompt unverändert.
+  - `server/kira_prompts_cli.ts`: rechnet das Votum aus der Timeline. Den Schalter übergibt der Server, der Mac liest ihn aus `/api/texte/status`. Neue Art `votum` zum Prüfen.
+  - `server/texte.mjs`: Cloud-Ersatz mit Schalter.
+  - `src/lib/briefingLocal.ts`: Briefing aus dem Cockpit.
+- **Mac:** `~/coach-kira-runner/kira_prompts.mjs` ist ersetzt. Prüfsumme 1a88e006…, gleich der Live-Kopie. Die Sicherung liegt in `kira_prompts.vor-umschaltung.mjs`.
+- **Nachweis:**
+  - Der Befehl `votum` liefert am 20.11. REST mit denselben Gründen wie `/api/rechenkern/votum`.
+  - Die Prompts zeigen den Block in allen drei Arten, in der Stellung „ampel“ den Rückfall-Hinweis.
+  - Der Schalter ist lokal getestet: Ohne Sitzung kommt 401, mit Sitzung lässt er sich umstellen, der Cloud-Ersatz bleibt unberührt.
+- **Rückweg:** Den Schalter ausschalten. Oder auf dem Mac `kira_prompts.vor-umschaltung.mjs` zurückkopieren und live die vorige Version veröffentlichen.
+- **Offen:** Der erste echte Lauf auf dem Mac. Im Mac-Protokoll steht die Prompt-Länge des Supervisors: am 20.11. waren es 27.573 Zeichen, mit dem Block etwa 700 mehr. Die tägliche Abnahme notiert die Texte-Quelle.
+
+## Etappe 2b – Soll-Rahmen aus dem Kern (Schattenbetrieb v2, 20.11.2026)
+
+- **Befund:** `coachE_ESS_day` in `timeline` ist keine Formel, sondern ein Planwert. Ihn schreiben Plan, KI-Plan oder Sperren; für vergangene Tage kopiert ihn `copyObservedToForecast` aus der Ist-Last. Der Kern kann diesen Wert nicht nachrechnen und soll ihn auch nicht ersetzen, denn er ist deine Planung.
+- **Kern:** `src/kern/soll.ts` mit `lastEmpfehlung`, unverändert aus `RecoveryPanel.tsx` verschoben. Das Band je Votum wird mit der Last für „Fitness halten“ multipliziert, die Obergrenze ist durch ACWR ≤ 1,3 gedeckelt. Dazu kommt `lageImRahmen`.
+- **Nachweis Umzug:** Über 451 Tage (26.08.2025–20.11.2026) ist das Ergebnis identisch mit der bisherigen Cockpit-Funktion, an 429 Tagen gibt es einen Rahmen.
+- **Schattenabgleich:**
+  - `/api/rechenkern/soll` in v2 liefert den Rahmen, den Plan heute (Plan-Simulation bzw. `coachE_ESS_day`), die Lage und die Ist-Last.
+  - Der Server schreibt ab 12 Uhr täglich `soll_historie` mit.
+  - Der Rückblick über 30 Tage zeigt die Ist-Last gegen den Rahmen, am 20.11.: 12 im Rahmen, 8 darüber, 9 darunter.
+  - In v2 zeigt Technik die Kachel „Soll-Abgleich“.
+- **Erster Tag (20.11.):** Votum Rest, Rahmen 0–20 ESS, Plan 0 ESS (Off), also im Rahmen.
+- **Live:** unverändert. Die tägliche Abnahme beobachtet 2b mit, als Beobachtung ohne Abnahmekriterium.

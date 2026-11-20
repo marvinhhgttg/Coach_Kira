@@ -9,6 +9,28 @@ import { LOCAL_MODEL, ollamaAufruf, pingLocal } from './chatContext';
 import { getEngine } from './engine';
 import { cloudChat } from './cloudLLM';
 import { briefingMessages, type KiMsg } from './kiraPrompts';
+import { fetchChartData } from './api';
+import { rangeFor } from './windows';
+import { SERVER_BASE } from './cloudLLM';
+import { RECOVERY_FETCH_METRICS } from '../screens/RecoveryPanel';
+import { kernVotumAusRohdaten, type KernVotumKi } from './kernVotumKi';
+
+/** Umschaltung 20.11.2026: Tagesvotum für den Prompt (Schalter vom Cockpit-Server, Standard kern). */
+async function ladeKernVotumKi(): Promise<KernVotumKi> {
+  let q = 'kern';
+  try {
+    const j: any = await (await fetch(`${SERVER_BASE}/api/texte/status?cb=${Date.now()}`, { cache: 'no-store' })).json();
+    if (j && j.einstellung && j.einstellung.votumQuelle === 'ampel') q = 'ampel';
+  } catch {
+    /* Standard kern */
+  }
+  try {
+    const res: any = await fetchChartData(rangeFor(30, 28, 90), [...RECOVERY_FETCH_METRICS] as any);
+    return kernVotumAusRohdaten(res?.data || [], q);
+  } catch {
+    return kernVotumAusRohdaten([], q);
+  }
+}
 
 export type BriefingType = 'status' | 'consolidated' | 'plan';
 export type BriefingSource = { engine: 'local' | 'cloud'; model: string | null; timestamp: string | null };
@@ -62,7 +84,8 @@ export async function runLocalBriefing(type: BriefingType, onProgress?: (text: s
   }
   if (dj && dj.ok && dj.daten) {
     const erfText = erfahrungText(await ladeErfahrung());
-    const b = briefingMessages(type, erfText ? { ...dj.daten, erfahrung: erfText } : dj.daten);
+    const kernVotum = await ladeKernVotumKi();
+    const b = briefingMessages(type, { ...dj.daten, ...(erfText ? { erfahrung: erfText } : {}), kernVotum });
     prompt = { ok: true, format: b.format, messages: b.messages };
   } else {
     const pr = await (await fetch(`${BASE_URL}?mode=briefingPrompt&type=${type}&cb=${Date.now()}`, { redirect: 'follow' })).text();

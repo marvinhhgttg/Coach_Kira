@@ -105,11 +105,31 @@ export function setupRechenkern(app, { getSetting, setSetting, aktiv = true } = 
     rest.push(eintrag);
     setSetting?.('vt_historie', JSON.stringify(rest.slice(-120)));
   }
+  // ---------- Etappe 2b: täglicher Soll-Abgleich (Kern-Rahmen ↔ Plan im Sheet), nur hier mitgeschrieben ----------
+  const slHistorie = () => { try { return JSON.parse(getSetting?.('soll_historie') || '[]'); } catch { return []; } };
+  async function sollTaeglich() {
+    const tag = heute();
+    const stunde = Number(new Date().toLocaleString('de-DE', { timeZone: TZ, hour: '2-digit', hour12: false }));
+    if (stunde < 12) return;
+    const d = await votum(true);
+    if (!d.ok || !d.soll || !d.soll.rahmen) return;
+    const h = slHistorie();
+    const alt = h.find((x) => x.datum === tag);
+    // Plan-Lage gilt einmal je Tag (erster Stand nach 12 Uhr); Ist wird nachgetragen, sobald die Einheit erfasst ist
+    const eintrag = alt
+      ? { ...alt, ist: d.soll.ist, istLage: d.soll.istLage, zeitIst: d.soll.ist != null ? Date.now() : alt.zeitIst }
+      : { datum: tag, vote: d.cockpit?.vote ?? null, min: d.soll.rahmen.min, max: d.soll.rahmen.max, halte: d.soll.rahmen.halte, gedeckelt: d.soll.rahmen.gedeckelt, plan: d.soll.plan?.load ?? null, planQuelle: d.soll.plan?.quelle ?? null, gesperrt: !!d.soll.plan?.gesperrt, planLage: d.soll.planLage, ist: d.soll.ist, istLage: d.soll.istLage, zeit: Date.now() };
+    const rest = h.filter((x) => x.datum !== tag);
+    rest.push(eintrag);
+    setSetting?.('soll_historie', JSON.stringify(rest.slice(-120)));
+  }
   if (aktiv && getSetting && setSetting) {
     setInterval(() => taeglich().catch(() => {}), 30 * 60 * 1000);
     setTimeout(() => taeglich().catch(() => {}), 20000);
     setInterval(() => votumTaeglich().catch(() => {}), 30 * 60 * 1000);
     setTimeout(() => votumTaeglich().catch(() => {}), 40000);
+    setInterval(() => sollTaeglich().catch(() => {}), 30 * 60 * 1000);
+    setTimeout(() => sollTaeglich().catch(() => {}), 60000);
   }
 
   app.get('/api/rechenkern/votum', async (req, res) => {
@@ -129,6 +149,16 @@ export function setupRechenkern(app, { getSetting, setSetting, aktiv = true } = 
       const h = [...tage.values()].sort((a, b) => a.datum.localeCompare(b.datum));
       const n = h.length, gleich = h.filter((x) => x.urteil === 'gleich').length;
       res.json({ ...d, historieQuelle: blatt.length ? 'AI_KERN_VOTUM' : 'v2-Server', historie: h.slice(-30), quote: { tage: n, gleich, cockpitStrenger: h.filter((x) => x.urteil === 'cockpit_strenger').length, supervisorStrenger: h.filter((x) => x.urteil === 'supervisor_strenger').length } });
+    } catch (e) {
+      res.json({ ok: false, error: String(e?.message || e).slice(0, 200) });
+    }
+  });
+
+  app.get('/api/rechenkern/soll', async (req, res) => {
+    try {
+      const d = await votum(req.query.neu === '1');
+      const h = slHistorie();
+      res.json({ ok: !!d.ok, datum: d.datum, vote: d.cockpit?.vote ?? null, soll: d.soll ?? null, rueckblick: d.sollRueckblick ?? null, historie: h.slice(-30), quote: { tage: h.length, planImRahmen: h.filter((x) => x.planLage === 'im Rahmen').length, planDarueber: h.filter((x) => x.planLage === 'darüber').length, planDarunter: h.filter((x) => x.planLage === 'darunter').length }, error: d.ok ? undefined : d.error });
     } catch (e) {
       res.json({ ok: false, error: String(e?.message || e).slice(0, 200) });
     }

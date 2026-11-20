@@ -22,7 +22,7 @@ type Status = {
   ok: boolean;
   now: number;
   takt: { letzter: number | null; naechster: number; fehler: string | null; versuche: number; minuten: number };
-  einstellung: { cloudErsatz: boolean };
+  einstellung: { cloudErsatz: boolean; votumQuelle?: 'kern' | 'ampel' };
   mac: { at: number | null; erreichbar: boolean; ollama: boolean | null; arbeit: string | null };
   items: Item[];
   auftraege?: Auftrag[];
@@ -172,6 +172,12 @@ export function TexteStatusTile({ compact = false }: { compact?: boolean }) {
     try { setSt(await laden('/api/texte/einstellung', { cloudErsatz: !st.einstellung.cloudErsatz })); } catch (e: any) { setErr(String(e.message || e)); }
     setBusy(false);
   };
+  const votumUmschalten = async () => {
+    if (!st) return;
+    setBusy(true);
+    try { setSt(await laden('/api/texte/einstellung', { votumQuelle: (st.einstellung.votumQuelle || 'kern') === 'kern' ? 'ampel' : 'kern' })); } catch (e: any) { setErr(String(e.message || e)); }
+    setBusy(false);
+  };
   const jetzt = async () => {
     setBusy(true);
     try { setSt(await laden('/api/texte/pruefen', {})); } catch (e: any) { setErr(String(e.message || e)); }
@@ -228,6 +234,10 @@ export function TexteStatusTile({ compact = false }: { compact?: boolean }) {
             <label className="inline-flex items-center gap-1.5 cursor-pointer">
               <input type="checkbox" checked={st.einstellung.cloudErsatz} onChange={umschalten} disabled={busy} data-testid="texte-cloud-ersatz" />
               Cloud-Ersatz nach {st.takt.versuche} × {st.takt.minuten} min ohne lokalen Text
+            </label>
+            <label className="inline-flex items-center gap-1.5 cursor-pointer" title="An: Briefing, Analyse und Telegram richten sich nach dem Tagesvotum (Rechenkern). Aus: wie früher nach der Supervisor-Ampel. Fehlt das Tagesvotum, gilt automatisch die Ampel.">
+              <input type="checkbox" checked={(st.einstellung.votumQuelle || 'kern') === 'kern'} onChange={votumUmschalten} disabled={busy} data-testid="texte-votum-kern" />
+              Texte nach Tagesvotum (Kern) statt Supervisor-Ampel
             </label>
           </div>
         )}

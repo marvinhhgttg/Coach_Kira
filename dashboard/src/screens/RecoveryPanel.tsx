@@ -21,6 +21,7 @@ import { fmtDateShort, fmtNum } from '../lib/format';
 import { ErrorBox, Panel, Skeleton, StorySection, StoryGrid, KpiKachel } from '../components/UI';
 import { CorrelationPanel } from './CorrelationPanel';
 import { atlStep, ctlStep, windowMean } from '../lib/ctlModel';
+import { lastEmpfehlung, type Empfehlung } from '../kern/soll';
 import { useGarminTage, fmtDauer } from '../lib/garmin';
 import { sportProfile, lastJeStunde } from '../components/GarminSportProfilTile';
 import { WINDOWS, ALL_RANGE, winLabel, winTitle, sliceWin, rangeFor, rangeDays, type WinKey } from '../lib/windows';
@@ -103,30 +104,7 @@ function doneVerdict(today: RecoveryDay): { ok: boolean; demand: Vote } | null {
   return { ok: VOTE_ORDER.indexOf(demand) <= VOTE_ORDER.indexOf(today.vote), demand };
 }
 
-// ---------------------------------------------------------------------------
-// Lastempfehlung heute (min–max): Votum × Fitness, gedeckelt durch ACWR ≤ 1,3
-// ---------------------------------------------------------------------------
-const BAND: Record<Vote, [number, number]> = { REST: [0, 0.25], EASY: [0.3, 0.8], TRAIN: [0.7, 1.25], QUALITY: [1.0, 1.7] };
-type Empfehlung = { min: number; max: number; halte: number; acwrGrenze: number | null; gedeckelt: boolean };
-
-function lastEmpfehlung(today: RecoveryDay, yesterday: RecoveryDay | null): Empfehlung | null {
-  const vote = today.vote;
-  const atl0 = yesterday?.atlPost ?? null;
-  const ctl0 = yesterday?.ctlPost ?? null;
-  if (!vote || atl0 == null || ctl0 == null || ctl0 <= 0) return null;
-  const m0 = ctl0 / 7.04; // Ø-Tageslast der letzten 28 Tage (CTL ≈ 7,04 × Ø28)
-  const ctlNach = (L: number) => ctlStep(ctl0, L, (27 * m0 + L) / 28);
-  const acwrNach = (L: number) => atlStep(atl0, L) / ctlNach(L);
-  let halte = 0;
-  for (let L = 0; L <= 500; L += 1) if (ctlNach(L) >= ctl0) { halte = L; break; }
-  let acwrGrenze: number | null = null;
-  for (let L = 0; L <= 600; L += 1) if (acwrNach(L) > 1.3) { acwrGrenze = L - 1; break; }
-  const r5 = (x: number) => Math.max(0, Math.round(x / 5) * 5);
-  let [lo, hi] = BAND[vote].map((f) => r5(f * halte));
-  let gedeckelt = false;
-  if (acwrGrenze != null && hi > acwrGrenze) { hi = r5(Math.max(0, acwrGrenze)); gedeckelt = true; if (lo > hi) lo = r5(hi * 0.6); }
-  return { min: lo, max: hi, halte: r5(halte), acwrGrenze: acwrGrenze != null ? r5(acwrGrenze) : null, gedeckelt };
-}
+// Lastempfehlung heute (Soll-Rahmen) – seit Etappe 2b im Rechenkern: src/kern/soll.ts
 
 function EmpfehlungZeile({ e, vote, plan, ist = false }: { e: Empfehlung; vote: Vote; plan: PlannedSession | null; ist?: boolean }) {
   const { tage } = useGarminTage();
