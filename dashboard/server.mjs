@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { setupTexte } from './server/texte.mjs';
 import { setupWidget } from './server/widget_api.mjs';
 import { setupLokalRelay } from './server/lokal_relay.mjs';
+import { setupZugang } from './server/zugang.mjs';
 import { setupRechenkern } from './server/rechenkern_api.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -66,7 +67,7 @@ function createSession(res) {
     sameSite: 'lax',
     secure: PROD,
     path: '/',
-    maxAge: 1000 * 60 * 60 * 24 * 45,
+    maxAge: 1000 * 60 * 60 * 24 * 400, // Ablauf steuert der Server (gleitend 45 Tage ab letzter Nutzung)
   });
   return id;
 }
@@ -85,6 +86,9 @@ function isAuthed(req) {
     if (row) db.prepare('DELETE FROM sessions WHERE id=?').run(id);
     return false;
   }
+  // gleitend: bei Nutzung wieder 45 Tage (höchstens einmal pro Stunde schreiben)
+  const neu = now() + 1000 * 60 * 60 * 24 * 45;
+  if (neu - row.expires_at > 1000 * 60 * 60) db.prepare('UPDATE sessions SET expires_at=? WHERE id=?').run(neu, id);
   return true;
 }
 
@@ -159,26 +163,27 @@ app.use((req, _res, next) => {
   next();
 });
 
+const zugang = setupZugang(app, { getSetting, setSetting, isAuthed, browserOk, scriptUrl: APPS_SCRIPT_URL, aktiv: !INSTANZ_V2 });
+
 app.get('/api/auth/status', (req, res) => {
   res.json({
     ok: true,
-    configured: !!getSetting('dashboard_token') && !!getSetting('pin_hash'),
+    configured: !!getSetting('pin_hash'),
     authenticated: isAuthed(req),
   });
 });
 
 app.post('/api/auth/setup', (req, res) => {
-  // Etappe 3a (20.11.2026): Ersteinrichtung nur noch, wenn ausdrücklich freigeschaltet (CK_SETUP_OFFEN=1),
-  // nie über eine bestehende Einrichtung hinweg und nur aus dem eigenen Cockpit.
-  const schonEingerichtet = !!getSetting('dashboard_token') && !!getSetting('pin_hash');
-  if (schonEingerichtet && !isAuthed(req)) return res.status(403).json({ ok: false, error: 'already_configured' });
-  if (!schonEingerichtet && process.env.CK_SETUP_OFFEN !== '1') return res.status(403).json({ ok: false, error: 'setup_disabled' });
+  // Etappe 3b: PIN festlegen – nur mit Einrichtungscode (CK_SETUP_HASH), nur einmal, nur aus dem Cockpit.
   if (!browserOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
-  const { token, pin } = req.body || {};
-  if (!token || String(token).length < 20) return res.status(400).json({ ok: false, error: 'token_too_short' });
-  if (!pin || String(pin).length < 6) return res.status(400).json({ ok: false, error: 'pin_too_short' });
+  if (getSetting('pin_hash') && !isAuthed(req)) return res.status(403).json({ ok: false, error: 'already_configured' });
+  const { code, pin } = req.body || {};
+  if (!/^\d{6,12}$/.test(String(pin || ''))) return res.status(400).json({ ok: false, error: 'PIN: 6 bis 12 Ziffern.' });
+  if (!getSetting('pin_hash')) {
+    const c = zugang.codeOk(code);
+    if (!c.ok) return res.status(c.status).json({ ok: false, error: c.error });
+  }
   const { salt, hash } = hashPin(pin);
-  setSetting('dashboard_token', String(token));
   setSetting('pin_salt', salt);
   setSetting('pin_hash', hash);
   createSession(res);
@@ -187,7 +192,17 @@ app.post('/api/auth/setup', (req, res) => {
 
 app.post('/api/auth/login', (req, res) => {
   const { pin } = req.body || {};
-  if (!verifyPin(pin)) return res.status(401).json({ ok: false, error: 'invalid_pin' });
+  // Etappe 3b: 5 Fehlversuche → 15 Minuten Pause
+  let f = {};
+  try { f = JSON.parse(getSetting('login_fehl') || '{}'); } catch {}
+  if ((f.bis || 0) > now()) return res.status(429).json({ ok: false, error: 'Zu viele Fehlversuche – bitte 15 Minuten warten.' });
+  if (!verifyPin(pin)) {
+    f.n = (f.n || 0) + 1;
+    if (f.n >= 5) { f.n = 0; f.bis = now() + 15 * 60 * 1000; }
+    setSetting('login_fehl', JSON.stringify(f));
+    return res.status(401).json({ ok: false, error: 'invalid_pin' });
+  }
+  setSetting('login_fehl', JSON.stringify({ n: 0, bis: 0 }));
   createSession(res);
   res.json({ ok: true, authenticated: true });
 });
@@ -271,7 +286,8 @@ async function cloudChatServer(messages, opts = {}) {
 
 app.post('/api/llm', async (req, res) => {
   try {
-    if (!browserOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
+    // Cockpit (Browser) oder Mac-Runner (ohne Herkunft, Cloud-Ersatz) – fremde Browser-Herkunft nie
+    if (!llmOriginOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
     if (!PPLX_URL || !PPLX_KEY) return res.status(503).json({ ok: false, error: 'Cloud-KI ist auf dem Server nicht eingerichtet (Perplexity-Schlüssel fehlt).' });
     const b = req.body || {};
     const msgs = Array.isArray(b.messages) ? b.messages : [];

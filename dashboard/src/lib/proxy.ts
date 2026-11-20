@@ -1,3 +1,4 @@
+import { SERVER_BASE } from './cloudLLM';
 import { ApiError, type EntryType, type SubmitEntryResponse, type SaveWellbeingResponse, type ConsolidatedAnalysisResponse, type PlanBriefingResponse, type SaveSimulationResponse, type StatusAiAnalysisResponse, type SupervisorResponse } from './api';
 
 export interface ProxyAuthStatus {
@@ -6,11 +7,10 @@ export interface ProxyAuthStatus {
   authenticated: boolean;
 }
 
+// Etappe 3b: Server liegt unter SERVER_BASE (veröffentlicht /port/5000) – vorher falsch relativ zur Seite.
 function apiUrl(path: string) {
-  const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
-  const href = window.location.href.endsWith('/') ? window.location.href : `${window.location.href}/`;
-  const base = new URL('api/', href).pathname.replace(/\/$/, '');
-  return `${base}/${normalizedPath.replace(/^api\//, '')}`;
+  const p = path.replace(/^\/+/, '').replace(/^api\//, '');
+  return `${SERVER_BASE}/api/${p}`;
 }
 
 async function proxyJson<T>(url: string, init?: RequestInit): Promise<T> {

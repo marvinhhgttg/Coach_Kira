@@ -80,7 +80,7 @@ export function setupTexte(app, { getSetting, setSetting, cloudChat, originOk, s
     }
   }
   async function senden(mode, body) {
-    const r = await fetch(`${scriptUrl}?mode=${mode}&cb=${Date.now()}`, {
+    const r = await fetch(`${scriptUrl}?mode=${mode}&cb=${Date.now()}&token=${encodeURIComponent(getSetting('dashboard_token') || '')}`, {
       method: 'POST',
       redirect: 'follow',
       headers: { 'content-type': 'text/plain;charset=utf-8', 'user-agent': 'coach-kira-texte/1.0' },

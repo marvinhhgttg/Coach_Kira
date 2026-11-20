@@ -49,6 +49,30 @@ OLLAMA = "http://127.0.0.1:11434"
 MODEL = "coach-kira"
 TZ = ZoneInfo("Europe/Berlin")
 BASE = Path.home() / "coach-kira-runner"
+
+
+# ---------------------------------------------------------------------------
+# Etappe 3b (20.11.2026): Zugang – Apps-Script-Token und Mac-Schlüssel
+# Liegen in ~/coach-kira-runner/zugang.json (nie im Code). Fehlt die Datei, läuft alles wie bisher.
+# ---------------------------------------------------------------------------
+def _zugang() -> dict:
+    try:
+        with open(BASE / "zugang.json", encoding="utf-8") as f:
+            z = json.load(f)
+        return z if isinstance(z, dict) else {}
+    except Exception:
+        return {}
+
+
+def mit_zugang(url: str, headers: dict) -> str:
+    """Hängt an Apps-Script-Aufrufe den Token und an Cockpit-Aufrufe den Mac-Schlüssel (Header X-CK-Mac)."""
+    z = _zugang()
+    if url.startswith(SCRIPT_URL) and z.get("apps_script_token") and "token=" not in url:
+        from urllib.parse import quote
+        url += ("&" if "?" in url else "?") + "token=" + quote(str(z["apps_script_token"]))
+    if url.startswith("https://coachkira.pplx.app") and z.get("mac_schluessel"):
+        headers["X-CK-Mac"] = str(z["mac_schluessel"])
+    return url
 STATE = BASE / "state.json"
 LOG = BASE / "logs" / "runner.log"
 MORNING_TYPES = ["status", "plan", "consolidated"]
@@ -100,7 +124,9 @@ def log(msg: str) -> None:
 
 def http_get_json(url: str, timeout: int = 60) -> dict:
     """urllib GET, User-Agent 'coach-kira-runner', folgt Redirects, json.loads."""
-    req = Request(url, headers={"User-Agent": "coach-kira-runner"})
+    h = {"User-Agent": "coach-kira-runner"}
+    url = mit_zugang(url, h)
+    req = Request(url, headers=h)
     with urlopen(req, timeout=timeout) as resp:
         body = resp.read().decode("utf-8")
     try:
@@ -121,13 +147,15 @@ def http_post_json(url: str, obj: object, timeout: int = 120) -> dict:
     timeout: Sekunden bis zum Schließen der Verbindung (default 120).
     """
     data = json.dumps(obj, ensure_ascii=False).encode("utf-8")
+    h = {
+        "Content-Type": "text/plain;charset=utf-8",
+        "User-Agent": "coach-kira-runner",
+    }
+    url = mit_zugang(url, h)
     req = Request(
         url,
         data=data,
-        headers={
-            "Content-Type": "text/plain;charset=utf-8",
-            "User-Agent": "coach-kira-runner",
-        },
+        headers=h,
         method="POST",
     )
     with urlopen(req, timeout=timeout) as resp:
@@ -261,10 +289,11 @@ def cloud_chat(messages: list[dict], json_out: bool = False, max_tokens: int = 4
     if json_out:
         msgs = [{"role": "system", "content": "Antworte ausschließlich mit gültigem JSON – ohne Codeblock, ohne Text davor oder danach."}] + msgs
     body = {"messages": msgs, "model": CLOUD_MODEL, "max_tokens": max_tokens}
+    h = {"Content-Type": "application/json", "Origin": "https://coachkira.pplx.app", "User-Agent": "coach-kira-runner"}
     req = Request(
-        COCKPIT_LLM,
+        mit_zugang(COCKPIT_LLM, h),
         data=json.dumps(body, ensure_ascii=False).encode("utf-8"),
-        headers={"Content-Type": "application/json", "Origin": "https://coachkira.pplx.app", "User-Agent": "coach-kira-runner"},
+        headers=h,
         method="POST",
     )
     try:
@@ -721,10 +750,12 @@ COCKPIT_GARMIN = "https://coachkira.pplx.app/port/5000/api/garmin/anfrage"
 
 
 def _cockpit_post(url: str, obj: dict, timeout: int = 20) -> dict:
+    h = {"Content-Type": "application/json", "Origin": "https://coachkira.pplx.app", "User-Agent": "coach-kira-runner"}
+    url = mit_zugang(url, h)
     req = Request(
         url,
         data=json.dumps(obj).encode("utf-8"),
-        headers={"Content-Type": "application/json", "Origin": "https://coachkira.pplx.app", "User-Agent": "coach-kira-runner"},
+        headers=h,
         method="POST",
     )
     with urlopen(req, timeout=timeout) as resp:

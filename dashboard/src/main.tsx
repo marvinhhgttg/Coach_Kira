@@ -1,12 +1,16 @@
 import './lib/v2guard'; // muss zuerst laufen (v2: nur lesend, Verlauf aus timeline)
+import './lib/gsWeg'; // live: Schreibwege über den Server (Etappe 3b)
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import { AnmeldeTor } from './components/AnmeldeTor';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <AnmeldeTor>
+      <App />
+    </AnmeldeTor>
   </StrictMode>
 );
 
