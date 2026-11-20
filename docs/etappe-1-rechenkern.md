@@ -244,6 +244,14 @@ Ersetze durch:
 - Drift zwischen der Wertekopie `KK_TIMELINE` und `timeline`: ESS an 17 von 452 Tagen, ctl_star an 255 Tagen, Morgenwerte an über 200 Tagen. Hier fehlt noch die Entscheidung, welches Blatt gilt.
 - Noch offen: der automatische tägliche Abgleich (Baustein 1.5) und die 14-Tage-Beobachtung.
 
+## Entscheidung und Etappe 1b (20.11.2026)
+
+- **Entscheidung von Marc: Das Formelblatt `timeline` ist die Wahrheit.** `KK_TIMELINE` ist nur noch eine Kopie.
+- v2 liest seine Verlaufsdaten (`mode=chartData`) jetzt über `/api/rechenkern/chartData` aus `timeline`. Format und Zeitfenster sind gleich wie bei Live, auch die Zeitumstellungs-Eigenheit, bei der aus 120 Tagen 118 Zeilen werden. Abweichungen gibt es nur an den Drift-Tagen.
+- v2 ist jetzt auch im Browser nur lesend. `src/lib/v2guard.ts` fängt alle POST-Aufrufe und alle `action=…`-Aufrufe ans Apps Script ab.
+- Der tägliche Abgleich läuft ab 10 Uhr und zählt die Tage in Folge ohne Abweichung. Am 20.11.2026 ist er bei 1/14. Die Liste liegt in der v2-Datenbank, bei einer Neuveröffentlichung kann sie verloren gehen.
+- Noch aus `KK_TIMELINE` lesen in v2: `status`, `planJsonV2`, `briefingData` und die übrigen Apps-Script-Routen. Sie kommen als Nächstes dran.
+
 ## Ablauf nach Patch A
 
 1. **Formeln ziehen:** Der Server in v2 holt `rohdaten&formeln=1` und legt die Formeln aller berechneten Spalten (`coachE_*`, `fKEI`, `load_star`, `ctl_star`, `ctl_gap`, `Monotony7`, `Strain7`, `SG_*`, `TE_Balance_Trend`) als Vorlage ab.

@@ -4,7 +4,8 @@ import { Panel } from './UI';
 
 type Spalte = { spalte: string; geprueft: number; treffer: number; sheetFehler: number; alteVersion: number; festwert: number; maxDiff: number; beispiele: string[] };
 type Drift = { spalte: string; verglichen: number; abweichend: number; beispiele: string[] };
-type Antwort = { ok: boolean; error?: string; heute?: string; stand?: number; spalten?: Spalte[]; drift?: Drift[] };
+type Lauf = { datum: string; alleOk: boolean; abweichend: { spalte: string; n: number; bsp: string }[] };
+type Antwort = { ok: boolean; error?: string; heute?: string; stand?: number; spalten?: Spalte[]; drift?: Drift[]; historie?: Lauf[]; serie?: number; ziel?: number };
 
 /** Etappe 1 (nur v2): Rechenkern im Schattenbetrieb gegen das Sheet abgleichen. */
 export function RechenkernTile() {
@@ -44,6 +45,20 @@ export function RechenkernTile() {
       </div>
       {d?.ok && (
         <>
+          <div className="mb-3 rounded border border-current/10 p-2 text-xs">
+            <div className="flex items-baseline gap-2">
+              <span className="text-lg font-semibold tabular-nums">{d.serie ?? 0}/{d.ziel ?? 14}</span>
+              <span className="opacity-80">Tage in Folge ohne Abweichung (täglicher Abgleich ab 10 Uhr)</span>
+            </div>
+            <div className="flex flex-wrap gap-1 mt-2" aria-label="Tägliche Läufe">
+              {(d.historie || []).map((h) => (
+                <span key={h.datum} title={h.alleOk ? `${h.datum}: alles gleich` : `${h.datum}: ${h.abweichend.map((x) => `${x.spalte} (${x.n})`).join(', ')}`}
+                  className="inline-block w-3 h-3 rounded-sm" style={{ background: h.alleOk ? 'var(--ck-green, #16a34a)' : 'var(--ck-orange, #ea580c)' }} />
+              ))}
+              {!d.historie?.length && <span className="opacity-60">Erster täglicher Lauf folgt heute ab 10 Uhr.</span>}
+            </div>
+            <div className="opacity-60 mt-1">Verlaufsdaten in v2 kommen bereits aus timeline (Etappe 1b).</div>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs tabular-nums">
               <thead className="opacity-60 text-left">

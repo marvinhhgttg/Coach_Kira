@@ -391,7 +391,7 @@ app.post('/api/action/:name', requireAuth, async (req, res) => {
 const INSTANZ = process.env.CK_INSTANZ || 'live';
 const texte = setupTexte(app, { getSetting, setSetting, cloudChat: cloudChatServer, originOk: llmOriginOk, scriptUrl: APPS_SCRIPT_URL, passiv: INSTANZ !== 'live' });
 app.get('/api/instanz', (_req, res) => res.json({ instanz: INSTANZ }));
-setupRechenkern(app);
+setupRechenkern(app, { getSetting, setSetting, aktiv: INSTANZ !== 'live' });
 setupWidget(app, { getSetting, setSetting, originOk: llmOriginOk, texte });
 setupLokalRelay(app, {
   originOk: llmOriginOk,
