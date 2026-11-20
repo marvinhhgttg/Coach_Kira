@@ -4,7 +4,7 @@
  * Gebaut zu server/widget.mjs:  npx esbuild server/widget_cli.ts --bundle --platform=node --format=esm --outfile=server/widget.mjs
  * Aufruf: node server/widget.mjs  → JSON auf stdout
  */
-import { buildDays, RECOVERY_FETCH_METRICS, VOTE_LABEL, VOTE_LEVEL, type RecoveryDay } from '../src/screens/RecoveryPanel';
+import { buildDays, RECOVERY_FETCH_METRICS, VOTE_LABEL, VOTE_LEVEL, type RecoveryDay } from '../src/kern/votum';
 import { fetchChartData, fetchPlanSimulationWithTimeout } from '../src/lib/api';
 import { rangeFor } from '../src/lib/windows';
 import { fetchExtras } from '../src/lib/extras';

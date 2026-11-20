@@ -5,6 +5,8 @@
 //  - Strain7: Fenster endet gestern, ctl_star: Startwert = CTL-Prognose (Sheet-Zeile 10)
 // Datenmodell: rows[i] = Sheet-Zeile i+2, Spaltennamen wie in KK_TIMELINE.
 
+import { monotonie as monoKern, smartGains, fKEI as fKEIKern } from '../src/kern/formeln';
+
 export type Zelle = number | string | null;
 export type Zeile = Record<string, Zelle>;
 export type Konstanten = Record<string, Zelle>;
@@ -23,12 +25,7 @@ export const KERN_SPALTEN = [
   'Monotony7', 'Strain7', 'coachE_ATL_morning', 'coachE_CTL_morning', 'TE_Balance_Trend',
 ] as const;
 
-function monotonie(w: number[]): number | null {
-  if (w.length < 2) return null;
-  const mu = w.reduce((s, x) => s + x, 0) / w.length;
-  const sd = Math.sqrt(w.reduce((s, x) => s + (x - mu) ** 2, 0) / w.length);
-  return sd === 0 ? null : mu / sd;
-}
+const monotonie = monoKern;
 
 /** Rechnet eine Zeile. Bezüge auf andere Spalten und Zeilen lesen die Sheet-Werte (Schattenbetrieb). */
 export function rechneZeile(rows: Zeile[], i: number, k: Konstanten): Record<string, Zelle> {
@@ -37,7 +34,7 @@ export function rechneZeile(rows: Zeile[], i: number, k: Konstanten): Record<str
   const c = (name: string) => zahl(k[name]);
 
   // 1 fKEI = MIN(1,15; MAX(0,85; 1 + 0,05 * AN))
-  const fKEI = Math.min(1.15, Math.max(0.85, 1 + 0.05 * nullWenigstens(r.coachE_Smart_Gains)));
+  const fKEI = fKEIKern(nullWenigstens(r.coachE_Smart_Gains));
 
   // 2 load_star = AF * AJ
   const load_star = nullWenigstens(r.coachE_ESS_day) * nullWenigstens(r.fKEI);
@@ -60,9 +57,7 @@ export function rechneZeile(rows: Zeile[], i: number, k: Konstanten): Record<str
   let coachE_Smart_Gains: Zelle = null;
   const ah7 = vor(7)?.coachE_CTL_forecast;
   if (!leer(r.coachE_CTL_forecast) && !leer(ah7 ?? null) && !leer(r.Monotony7)) {
-    coachE_Smart_Gains =
-      ((zahl(r.coachE_CTL_forecast) - zahl(ah7 ?? null)) * 10) /
-      (Math.max(nullWenigstens(r.coachE_ACWR_forecast), 0.8) * (1 + zahl(r.Monotony7))) * 0.1;
+    coachE_Smart_Gains = smartGains(zahl(r.coachE_CTL_forecast), zahl(ah7 ?? null), nullWenigstens(r.coachE_ACWR_forecast), zahl(r.Monotony7));
   }
 
   // 6 SG_Flags

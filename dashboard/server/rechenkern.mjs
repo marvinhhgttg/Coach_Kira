@@ -1,3 +1,24 @@
+// src/kern/formeln.ts
+var ATL_MODEL = { a: -8.819849, b: 0.83645661, c: 1.24059231 };
+var CTL_MODEL = { a: -3.95042, b: 0.97283824, c: 0.2336734, g: 0.7, k: 7.1, win: 28 };
+function atlStep(atl2, last) {
+  return ATL_MODEL.a + ATL_MODEL.b * atl2 + ATL_MODEL.c * last;
+}
+function ctlStep(ctl2, last, mittel28) {
+  const m = CTL_MODEL;
+  return m.g * (m.a + m.b * ctl2 + m.c * last) + (1 - m.g) * m.k * mittel28;
+}
+function monotonie(w) {
+  if (w.length < 2) return null;
+  const mu = w.reduce((s, x) => s + x, 0) / w.length;
+  const sd = Math.sqrt(w.reduce((s, x) => s + (x - mu) ** 2, 0) / w.length);
+  return sd === 0 ? null : mu / sd;
+}
+function smartGains(ctl2, ctlVor7, acwr, mono) {
+  return (ctl2 - ctlVor7) * 10 / (Math.max(acwr, 0.8) * (1 + mono)) * 0.1;
+}
+var fKEI = (kei) => Math.min(1.15, Math.max(0.85, 1 + 0.05 * kei));
+
 // server/rechenkern.ts
 var leer = (v) => v === null || v === void 0 || v === "";
 var zahl = (v) => {
@@ -19,17 +40,12 @@ var KERN_SPALTEN = [
   "coachE_CTL_morning",
   "TE_Balance_Trend"
 ];
-function monotonie(w) {
-  if (w.length < 2) return null;
-  const mu = w.reduce((s, x) => s + x, 0) / w.length;
-  const sd = Math.sqrt(w.reduce((s, x) => s + (x - mu) ** 2, 0) / w.length);
-  return sd === 0 ? null : mu / sd;
-}
+var monotonie2 = monotonie;
 function rechneZeile(rows, i, k) {
   const r = rows[i];
   const vor = (n) => rows[i - n];
   const c = (name) => zahl(k[name]);
-  const fKEI = Math.min(1.15, Math.max(0.85, 1 + 0.05 * nullWenigstens(r.coachE_Smart_Gains)));
+  const fKEI2 = fKEI(nullWenigstens(r.coachE_Smart_Gains));
   const load_star = nullWenigstens(r.coachE_ESS_day) * nullWenigstens(r.fKEI);
   const nach = rows[i + 1];
   const ctl_star = leer(vor(1)?.ctl_star ?? null) && i === 8 ? nullWenigstens(r.coachE_CTL_forecast) : (1 - c("alpha_CTL")) * nullWenigstens(vor(1)?.ctl_star ?? null) + c("alpha_CTL") * (c("S_CTL") * nullWenigstens(r.load_star) + c("B_CTL") + c("wH_CTL") * nullWenigstens(nach?.sleep_hours ?? null) + c("wS_CTL") * nullWenigstens(nach?.sleep_score_0_100 ?? null));
@@ -37,7 +53,7 @@ function rechneZeile(rows, i, k) {
   let coachE_Smart_Gains = null;
   const ah7 = vor(7)?.coachE_CTL_forecast;
   if (!leer(r.coachE_CTL_forecast) && !leer(ah7 ?? null) && !leer(r.Monotony7)) {
-    coachE_Smart_Gains = (zahl(r.coachE_CTL_forecast) - zahl(ah7 ?? null)) * 10 / (Math.max(nullWenigstens(r.coachE_ACWR_forecast), 0.8) * (1 + zahl(r.Monotony7))) * 0.1;
+    coachE_Smart_Gains = smartGains(zahl(r.coachE_CTL_forecast), zahl(ah7 ?? null), nullWenigstens(r.coachE_ACWR_forecast), zahl(r.Monotony7));
   }
   let SG_Flags = "";
   try {
@@ -57,13 +73,13 @@ function rechneZeile(rows, i, k) {
     const v = rows[j]?.coachE_ESS_day;
     if (!leer(v ?? null) && Number.isFinite(zahl(v ?? null))) fenster7.push(zahl(v ?? null));
   }
-  const Monotony7 = monotonie(fenster7);
+  const Monotony7 = monotonie2(fenster7);
   const fensterGestern = [];
   for (let j = Math.max(0, i - 7); j <= i - 1; j++) {
     const v = rows[j]?.coachE_ESS_day;
     if (!leer(v ?? null) && Number.isFinite(zahl(v ?? null))) fensterGestern.push(zahl(v ?? null));
   }
-  const mono2 = monotonie(fensterGestern);
+  const mono2 = monotonie2(fensterGestern);
   const Strain7 = mono2 === null ? null : mono2 * fensterGestern.reduce((s, x) => s + x, 0);
   const v2 = vor(2);
   const coachE_ATL_morning = !v2 || leer(v2.coachE_ESS_day) ? null : -3.442725 + 0.815463593 * nullWenigstens(v2.coachE_ATL_forecast) + 1.088519637 * zahl(v2.coachE_ESS_day);
@@ -78,7 +94,7 @@ function rechneZeile(rows, i, k) {
     if (treffer) gewichtet += af;
   }
   const TE_Balance_Trend = summe === 0 ? 0 : gewichtet / summe;
-  return { fKEI, load_star, ctl_star, ctl_gap, coachE_Smart_Gains, SG_Flags, Monotony7, Strain7, coachE_ATL_morning, coachE_CTL_morning, TE_Balance_Trend };
+  return { fKEI: fKEI2, load_star, ctl_star, ctl_gap, coachE_Smart_Gains, SG_Flags, Monotony7, Strain7, coachE_ATL_morning, coachE_CTL_morning, TE_Balance_Trend };
 }
 
 // server/prognose.ts
@@ -92,11 +108,11 @@ function schnitt(rows, i, spalte) {
   }
   return w.length ? w.reduce((s, x) => s + x, 0) / w.length : null;
 }
-var atl = (vorher, last) => -8.819849 + 0.83645661 * n0(vorher) + 1.24059231 * Number(last);
+var atl = (vorher, last) => atlStep(n0(vorher), Number(last));
 function ctl(rows, i, vorher, spalteLast) {
   const s = schnitt(rows, i, spalteLast);
   if (s === null) return null;
-  return 0.7 * (-3.95042 + 0.97283824 * n0(vorher) + 0.2336734 * Number(rows[i][spalteLast])) + 0.3 * 7.1 * s;
+  return ctlStep(n0(vorher), Number(rows[i][spalteLast]), s);
 }
 var quote = (a, b) => n0(b) === 0 ? null : n0(a) / n0(b);
 var PROGNOSE_SPALTEN = ["coachE_ATL_forecast", "coachE_CTL_forecast", "coachE_ACWR_forecast", "fbATL_obs", "fbCTL_obs", "fbACWR_obs"];

@@ -2,6 +2,8 @@
 // Entwurf: lokales Modell coach-kira (Ollama), in der Cloud geprüft und nur gestrafft.
 // Bezüge auf andere Zeilen lesen die Sheet-Werte (Schattenbetrieb), nicht eigene Ergebnisse.
 
+import { atlStep, ctlStep } from '../src/kern/formeln';
+
 type Zelle = number | string | null;
 type Zeile = Record<string, Zelle>;
 
@@ -18,12 +20,12 @@ function schnitt(rows: Zeile[], i: number, spalte: string): number | null {
 }
 
 /** ATL: −8,819849 + 0,83645661·ATL[r−1] + 1,24059231·Last[r] */
-const atl = (vorher: Zelle | undefined, last: Zelle) => -8.819849 + 0.83645661 * n0(vorher) + 1.24059231 * Number(last);
+const atl = (vorher: Zelle | undefined, last: Zelle) => atlStep(n0(vorher), Number(last));
 /** CTL: 0,7·(−3,95042 + 0,97283824·CTL[r−1] + 0,2336734·Last[r]) + 0,3·7,1·Ø28(Last) */
 function ctl(rows: Zeile[], i: number, vorher: Zelle | undefined, spalteLast: string): number | null {
   const s = schnitt(rows, i, spalteLast);
   if (s === null) return null;
-  return 0.7 * (-3.95042 + 0.97283824 * n0(vorher) + 0.2336734 * Number(rows[i][spalteLast])) + 0.3 * 7.1 * s;
+  return ctlStep(n0(vorher), Number(rows[i][spalteLast]), s);
 }
 const quote = (a: Zelle, b: Zelle) => (n0(b) === 0 ? null : n0(a) / n0(b));
 

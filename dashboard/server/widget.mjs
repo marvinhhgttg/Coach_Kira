@@ -3269,12 +3269,19 @@ var MONOTONIE_REGEL_TEXT = [
   "Entscheidend ist die Kombination mit der Gesamtlast (Strain = Wochenlast \xD7 Monotonie). Monotonie senkst du durch klaren Rhythmus: harte Reize klar hart, lockere Tage wirklich locker, mindestens ein echter Erholungstag bei hoher Gesamtlast \u2013 nicht durch weniger Gesamtlast."
 ].join("\n");
 
+// src/lib/cloudLLM.ts
+var SENTINEL = "__PORT_5000__";
+var SERVER_BASE = SENTINEL.startsWith("__PORT") ? "" : "/" + SENTINEL.replace(/^\/+/, "");
+
 // src/lib/chatContext.ts
 var OLLAMA_HTTP = "http://localhost:11434";
 var OLLAMA_HTTPS = "https://localhost:11435";
-var IST_SAFARI = typeof navigator !== "undefined" && /Safari\//.test(navigator.userAgent) && !/Chrome|Chromium|CriOS|Edg|Comet/i.test(navigator.userAgent);
+var IST_MAC_APP = typeof window !== "undefined" && !!window.webkit?.messageHandlers?.kiraMac;
+var IST_SAFARI = IST_MAC_APP || typeof navigator !== "undefined" && /Safari\//.test(navigator.userAgent) && !/Chrome|Chromium|CriOS|Edg|Comet/i.test(navigator.userAgent);
 var KANDIDATEN = IST_SAFARI ? [OLLAMA_HTTPS, OLLAMA_HTTP] : [OLLAMA_HTTP, OLLAMA_HTTPS];
-var ollamaBasis = KANDIDATEN[0];
+var IST_APP = typeof window !== "undefined" && !!window.webkit?.messageHandlers?.kira;
+var UEBER_MAC = "mac";
+var ollamaBasis = IST_APP ? UEBER_MAC : KANDIDATEN[0];
 var KIRA_SYSTEM = [
   "Du bist Kira, Sportwissenschaftlerin und pers\xF6nliche Ausdauer-Trainerin von Marc (Jahrgang 1975; Rennrad, Gravel, Laufen, Bergsport).",
   "Sprich Marc per Du an, antworte auf Deutsch, klar und konkret, ohne Emojis.",

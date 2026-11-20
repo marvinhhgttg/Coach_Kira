@@ -1,4 +1,19 @@
 import { abgleich, simuliere } from './rechenkern.mjs';
+import { spawn } from 'node:child_process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const VOTUM_KERN = path.join(path.dirname(fileURLToPath(import.meta.url)), 'votum.mjs');
+function votumRechnen() {
+  return new Promise((resolve) => {
+    const p = spawn(process.execPath, [VOTUM_KERN], { stdio: ['ignore', 'pipe', 'pipe'] });
+    let out = '', err = '';
+    const to = setTimeout(() => p.kill(), 90000);
+    p.stdout.on('data', (b) => (out += b));
+    p.stderr.on('data', (b) => (err += b));
+    p.on('close', () => { clearTimeout(to); try { resolve(JSON.parse(out)); } catch { resolve({ ok: false, error: (err || 'Votum-Kern ohne Antwort').slice(0, 200) }); } });
+  });
+}
 
 // Etappe 1: eigene Apps-Script-Bereitstellung „v2 Schattenbetrieb“ (nur lesend).
 // Entscheidung 20.11.2026: Das Formelblatt `timeline` ist die Wahrheit.
@@ -67,10 +82,46 @@ export function setupRechenkern(app, { getSetting, setSetting, aktiv = true } = 
     h.push({ datum: tag, alleOk: abweichend.length === 0, abweichend, zeit: Date.now() });
     setSetting?.('rk_historie', JSON.stringify(h.slice(-60)));
   }
+  // ---------- Etappe 2 (Vorbereitung): täglicher Votum-Abgleich Cockpit ↔ Supervisor ----------
+  // Der Supervisor überschreibt AI_REPORT_STATUS täglich (keine Historie) → ab jetzt hier mitschreiben.
+  const vtHistorie = () => { try { return JSON.parse(getSetting?.('vt_historie') || '[]'); } catch { return []; } };
+  let vtCache = null;
+  async function votum(neu = false) {
+    if (!neu && vtCache && Date.now() - vtCache.at < 10 * 60 * 1000) return vtCache.d;
+    const d = await votumRechnen();
+    if (d.ok) vtCache = { at: Date.now(), d };
+    return d;
+  }
+  async function votumTaeglich() {
+    const tag = heute();
+    const h = vtHistorie();
+    if (h.length && h[h.length - 1].datum === tag && h[h.length - 1].final) return;
+    const stunde = Number(new Date().toLocaleString('de-DE', { timeZone: TZ, hour: '2-digit', hour12: false }));
+    if (stunde < 12) return; // nach Morgenformular und Supervisor-Lauf
+    const d = await votum(true);
+    if (!d.ok || !d.cockpit?.vote || !d.supervisor?.aktuell) return;
+    const eintrag = { datum: tag, final: true, cockpit: d.cockpit.vote, cStufe: d.cockpit.stufe, bind: d.cockpit.bind, ampel: d.supervisor.ampel, sStufe: d.supervisor.stufe, score: d.supervisor.score, planStatus: d.supervisor.planStatus, urteil: d.vergleich.urteil, diff: d.vergleich.diff };
+    const rest = h.filter((x) => x.datum !== tag);
+    rest.push(eintrag);
+    setSetting?.('vt_historie', JSON.stringify(rest.slice(-120)));
+  }
   if (aktiv && getSetting && setSetting) {
     setInterval(() => taeglich().catch(() => {}), 30 * 60 * 1000);
     setTimeout(() => taeglich().catch(() => {}), 20000);
+    setInterval(() => votumTaeglich().catch(() => {}), 30 * 60 * 1000);
+    setTimeout(() => votumTaeglich().catch(() => {}), 40000);
   }
+
+  app.get('/api/rechenkern/votum', async (req, res) => {
+    try {
+      const d = await votum(req.query.neu === '1');
+      const h = vtHistorie();
+      const n = h.length, gleich = h.filter((x) => x.urteil === 'gleich').length;
+      res.json({ ...d, historie: h.slice(-30), quote: { tage: n, gleich, cockpitStrenger: h.filter((x) => x.urteil === 'cockpit_strenger').length, supervisorStrenger: h.filter((x) => x.urteil === 'supervisor_strenger').length } });
+    } catch (e) {
+      res.json({ ok: false, error: String(e?.message || e).slice(0, 200) });
+    }
+  });
 
   app.get('/api/rechenkern/abgleich', async (req, res) => {
     try {

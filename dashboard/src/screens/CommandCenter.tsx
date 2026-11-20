@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { TexteStatusTile } from '../components/TexteStatusTile';
 import { AppKopplungTile } from '../components/AppKopplungTile';
 import { RechenkernTile } from '../components/RechenkernTile';
+import { VotumAbgleichTile } from '../components/VotumAbgleichTile';
 import { GarminNachtTile } from '../components/GarminNachtTile';
 import { GarminGesternTile } from '../components/GarminGesternTile';
 import { SchlafkontoTile } from '../components/SchlafkontoTile';
@@ -648,6 +649,7 @@ export function CommandCenter({
       <StorySection id="technik" titel="Technik" unter="Letzter Lauf der Auswertung">
       <div className="mb-4"><AppKopplungTile /></div>
       <div className="mb-4"><RechenkernTile /></div>
+      <div className="mb-4"><VotumAbgleichTile /></div>
       {/* Letzter Lauf (ganz unten) */}
       <Panel title="Letzter Lauf · Heartbeat">
         {statusLoading ? (

@@ -266,8 +266,21 @@ Hinweis: Werte in `timeline` können sich rückwirkend ändern, etwa wenn eine K
 
 **Nächste Schritte:**
 1. Das Plan-Cockpit in v2 nutzt den Plan-Rechner statt des Umwegs über das Sheet (`planSimulationJson`).
-2. Etappe 2 vorbereiten: Supervisor-Werte für Heute (Votum, Soll-ESS) aus dem Kern ableiten und im Schattenbetrieb mit `AI_REPORT_STATUS` vergleichen.
+2. Etappe 2 vorbereiten: erledigt, siehe `docs/etappe-2-votum.md`.
 3. Absicherung von Live (Etappe 3), sobald du das freigibst.
+
+## Etappe 1 technisch abgeschlossen (20.11.2026, Abend)
+
+**Eine Formelquelle:** `src/kern/formeln.ts` enthält jetzt alle Lastformeln: ATL- und CTL-Schritt, Ø28, Monotonie, Smart Gains und fKEI. Diese Stellen nutzen sie:
+- der Server (`server/rechenkern.ts`, `server/prognose.ts`) für Abgleich, Plan-Kette und Plan-Rechner,
+- das Frontend über `src/lib/ctlModel.ts`. Die Datei reicht die Formeln nur noch weiter, die Schnittstelle bleibt gleich. Darüber laufen Plan-Cockpit, Recovery, Chat-Kontext, Paket 3 und Prognose-Check,
+- die Widgets über `server/widget.mjs`.
+
+Vorher standen dieselben Koeffizienten doppelt im Code, einmal im Frontend und einmal im Server. Die Zahlen sind identisch geblieben. Nach dem Umbau stimmen weiterhin 17/17 Spalten exakt, die Plan-Kette trifft 13/13 Tage, und die Seite zeigt keine Fehler.
+
+**Apps Script:** Für diesen Schritt war keine Änderung nötig. Live bleibt auf v978, „v2 Schattenbetrieb“ auf v980.
+
+**Formale Abnahme:** Sie gilt erst nach 14 Tagen in Folge ohne Abweichung. Der Zähler läuft ab heute neu. Er beginnt nach jeder Veröffentlichung von v2 wieder bei null, weil die Server-Datenbank dabei neu angelegt wird.
 
 ## Ablauf nach Patch A
 
