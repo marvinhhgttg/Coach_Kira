@@ -298,3 +298,14 @@ Vorher standen dieselben Koeffizienten doppelt im Code, einmal im Frontend und e
 - `npm audit`: eine kritische Lücke über express/proxy-addr, dazu mehrere hohe.
 
 In v2 sind alle schreibenden API-Aufrufe gesperrt. Live bleibt wie gewünscht unverändert. Die Absicherung von Live ist Etappe 3 und kann auf Wunsch vorgezogen werden.
+
+## Abnahme (Stand 20.11.2026, 19:45)
+
+- **Rückwirkend geprüft:**
+  - Etappe 1: Alle 17 Formeln stimmen über die gesamte Historie mit dem Sheet überein, das sind 3.422 Werte ohne Abweichung. Die Plan-Kette trifft 13/13 Tage.
+  - Etappe 2: Das Votum ist über 452 Tage vor und nach dem Umzug identisch.
+- **Dauerbetrieb:**
+  - Die tägliche Prüfung läuft als Automation „Coach Kira – Abnahme Etappe 1+2 (täglich)“, jeden Tag um 13:30 Uhr vom 21.11. bis 04.12.2026.
+  - Sie meldet sich nur bei einem Fehler, sonst erst am 04.12. mit dem Abnahmeprotokoll.
+  - Die Automation prüft selbst und zählt unabhängig von Neuveröffentlichungen.
+- **Formales Urteil:** Am 04.12.2026, wenn 14 Tage in Folge bestanden sind.
