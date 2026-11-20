@@ -30,6 +30,10 @@ struct CoachKiraMacApp: App {
                 Button("Neu laden") { steuerung.neuLaden() }.keyboardShortcut("r")
                 Button("Widgets aktualisieren") { WidgetCenter.shared.reloadAllTimelines() }.keyboardShortcut("r", modifiers: [.command, .shift])
                 Divider()
+                Button("Größer") { steuerung.zoom(+0.1) }.keyboardShortcut("+")
+                Button("Kleiner") { steuerung.zoom(-0.1) }.keyboardShortcut("-")
+                Button("Standardgröße (175 %)") { steuerung.zoomStandard() }.keyboardShortcut("0")
+                Divider()
                 Button("Im Browser öffnen") { NSWorkspace.shared.open(steuerung.aktuelleURL ?? KiraConfig.cockpit) }
             }
         }
@@ -45,6 +49,22 @@ struct CoachKiraMacApp: App {
 final class MacSteuerung: ObservableObject {
     weak var webView: WKWebView?
     var aktuelleURL: URL? { webView?.url }
+
+    /// Schriftgröße der Cockpit-Seite: Standard 175 %, wird gemerkt
+    static let zoomStandardWert: Double = 1.75
+    static var gespeicherterZoom: Double {
+        let z = UserDefaults.standard.double(forKey: "kiraMacZoom")
+        return z > 0 ? z : zoomStandardWert
+    }
+
+    func zoom(_ schritt: Double) { setzeZoom((webView?.pageZoom ?? Self.gespeicherterZoom) + schritt) }
+    func zoomStandard() { setzeZoom(Self.zoomStandardWert) }
+
+    private func setzeZoom(_ z: Double) {
+        let wert = min(max((z * 10).rounded() / 10, 0.8), 3.0)
+        webView?.pageZoom = wert
+        UserDefaults.standard.set(wert, forKey: "kiraMacZoom")
+    }
 
     func neuLaden() {
         webView?.reload()
@@ -121,6 +141,7 @@ struct MacWebView: NSViewRepresentable {
         wv.navigationDelegate = context.coordinator
         wv.allowsBackForwardNavigationGestures = true
         wv.allowsMagnification = true
+        wv.pageZoom = MacSteuerung.gespeicherterZoom
         steuerung.webView = wv
         wv.load(URLRequest(url: KiraConfig.cockpit))
         return wv
