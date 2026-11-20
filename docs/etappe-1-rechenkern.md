@@ -252,6 +252,23 @@ Ersetze durch:
 - Der tägliche Abgleich läuft ab 10 Uhr und zählt die Tage in Folge ohne Abweichung. Am 20.11.2026 ist er bei 1/14. Die Liste liegt in der v2-Datenbank, bei einer Neuveröffentlichung kann sie verloren gehen.
 - Noch aus `KK_TIMELINE` lesen in v2: `status`, `planJsonV2`, `briefingData` und die übrigen Apps-Script-Routen. Sie kommen als Nächstes dran.
 
+## Etappe 1c und 1d (20.11.2026)
+
+**Warum die beiden Blätter auseinanderlaufen (Ursache geklärt):** `copyTimelineData` kopiert nur heute und die Zukunft von `timeline` nach `KK_TIMELINE`. Vergangene Tage bleiben in `KK_TIMELINE` eingefroren, so wie sie am jeweiligen Tag waren. `timeline` rechnet sie neu, wenn später etwas nachgetragen wird. Das ist so gebaut und kein Fehler. Nach der Entscheidung gilt `timeline`.
+
+Hinweis: Werte in `timeline` können sich rückwirkend ändern, etwa wenn eine Konstante wie `alpha_CTL` angepasst wird. `KK_TIMELINE` hält dagegen den damaligen Stand fest.
+
+**Status, Plan und Briefings** lesen nicht direkt aus `KK_TIMELINE`. Sie kommen aus den Berichtsblättern (`AI_REPORT_*`, `AI_*_ANALYSIS`), die der Supervisor schreibt. Der Supervisor liest dafür die Heute-Zeile, und die ist in beiden Blättern gleich. Umgestellt werden sie erst, wenn der Supervisor-Teil in den Kern wandert (Etappe 2).
+
+**1c – Prognoseformeln:** Der Kern rechnet jetzt auch `coachE_ATL_forecast`, `coachE_CTL_forecast`, `coachE_ACWR_forecast` sowie `fbATL_obs`, `fbCTL_obs` und `fbACWR_obs`. Den Entwurf hat das lokale Modell coach-kira geschrieben, die Cloud hat ihn geprüft. Ergebnis: **17 von 17 Spalten exakt**, die Prognosen auch über 41 bzw. 130 Zukunftstage.
+
+**1d – Plan-Kette und Was-wäre-wenn:** `simuliere()` schreibt ATL, CTL und ACWR ab morgen aus den eigenen Ergebnissen fort. Gegen die Sheet-Prognose stimmen alle 13 Plantage exakt. Neue Route `GET /api/rechenkern/simulation?ess={"JJJJ-MM-TT":Wert}`. In v2 steht unter Technik der „Plan-Rechner“. Er dient nur zur Anzeige und speichert nichts.
+
+**Nächste Schritte:**
+1. Das Plan-Cockpit in v2 nutzt den Plan-Rechner statt des Umwegs über das Sheet (`planSimulationJson`).
+2. Etappe 2 vorbereiten: Supervisor-Werte für Heute (Votum, Soll-ESS) aus dem Kern ableiten und im Schattenbetrieb mit `AI_REPORT_STATUS` vergleichen.
+3. Absicherung von Live (Etappe 3), sobald du das freigibst.
+
 ## Ablauf nach Patch A
 
 1. **Formeln ziehen:** Der Server in v2 holt `rohdaten&formeln=1` und legt die Formeln aller berechneten Spalten (`coachE_*`, `fKEI`, `load_star`, `ctl_star`, `ctl_gap`, `Monotony7`, `Strain7`, `SG_*`, `TE_Balance_Trend`) als Vorlage ab.

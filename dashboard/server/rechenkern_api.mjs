@@ -1,4 +1,4 @@
-import { abgleich } from './rechenkern.mjs';
+import { abgleich, simuliere } from './rechenkern.mjs';
 
 // Etappe 1: eigene Apps-Script-Bereitstellung „v2 Schattenbetrieb“ (nur lesend).
 // Entscheidung 20.11.2026: Das Formelblatt `timeline` ist die Wahrheit.
@@ -77,6 +77,30 @@ export function setupRechenkern(app, { getSetting, setSetting, aktiv = true } = 
       const d = await abgleichen(req.query.neu === '1');
       const h = historie();
       res.json({ ...d, historie: h.slice(-21), serie: serie(h), ziel: 14 });
+    } catch (e) {
+      res.json({ ok: false, error: String(e?.message || e).slice(0, 200) });
+    }
+  });
+
+  // ---------- Etappe 1d: Plan durchrechnen (Was-wäre-wenn), nur lesend ----------
+  // GET /api/rechenkern/simulation?ess={"2026-11-22":250}
+  app.get('/api/rechenkern/simulation', async (req, res) => {
+    try {
+      let ess = {};
+      if (req.query.ess) {
+        const roh = JSON.parse(String(req.query.ess));
+        for (const [k, v] of Object.entries(roh)) if (/^\d{4}-\d{2}-\d{2}$/.test(k) && Number.isFinite(Number(v))) ess[k] = Math.max(0, Math.min(2000, Number(v)));
+      }
+      const tl = await timeline();
+      if (!tl.ok) return res.json({ ok: false, error: tl.error || 'timeline nicht verfügbar' });
+      const S = tl.spalten;
+      const rows = tl.zeilen.map((z) => Object.fromEntries(S.map((s, j) => [s, z[j]])));
+      const tag = heute();
+      const start = rows.findIndex((r) => String(r.date) > tag);
+      if (start < 0) return res.json({ ok: false, error: 'Keine Planzeilen ab morgen.' });
+      const basis = simuliere(rows, start);
+      const plan = Object.keys(ess).length ? simuliere(rows, start, ess) : basis;
+      res.json({ ok: true, ab: rows[start].date, geaendert: ess, basis, plan, quelle: 'timeline · Rechenkern' });
     } catch (e) {
       res.json({ ok: false, error: String(e?.message || e).slice(0, 200) });
     }

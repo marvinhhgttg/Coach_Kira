@@ -81,25 +81,88 @@ function rechneZeile(rows, i, k) {
   return { fKEI, load_star, ctl_star, ctl_gap, coachE_Smart_Gains, SG_Flags, Monotony7, Strain7, coachE_ATL_morning, coachE_CTL_morning, TE_Balance_Trend };
 }
 
+// server/prognose.ts
+var leer2 = (v) => v === null || v === void 0 || v === "";
+var n0 = (v) => leer2(v) ? 0 : Number(v);
+function schnitt(rows, i, spalte) {
+  const w = [];
+  for (let k = Math.max(0, i - 27); k <= i; k++) {
+    const v = rows[k]?.[spalte];
+    if (!leer2(v ?? null) && Number.isFinite(Number(v))) w.push(Number(v));
+  }
+  return w.length ? w.reduce((s, x) => s + x, 0) / w.length : null;
+}
+var atl = (vorher, last) => -8.819849 + 0.83645661 * n0(vorher) + 1.24059231 * Number(last);
+function ctl(rows, i, vorher, spalteLast) {
+  const s = schnitt(rows, i, spalteLast);
+  if (s === null) return null;
+  return 0.7 * (-3.95042 + 0.97283824 * n0(vorher) + 0.2336734 * Number(rows[i][spalteLast])) + 0.3 * 7.1 * s;
+}
+var quote = (a, b) => n0(b) === 0 ? null : n0(a) / n0(b);
+var PROGNOSE_SPALTEN = ["coachE_ATL_forecast", "coachE_CTL_forecast", "coachE_ACWR_forecast", "fbATL_obs", "fbCTL_obs", "fbACWR_obs"];
+function rechnePrognose(rows, i) {
+  const r = rows[i];
+  const v = rows[i - 1];
+  const af = r.coachE_ESS_day;
+  const e = r.load_fb_day;
+  return {
+    coachE_ATL_forecast: leer2(af) ? null : atl(v?.coachE_ATL_forecast, af),
+    coachE_CTL_forecast: leer2(af) ? null : ctl(rows, i, v?.coachE_CTL_forecast, "coachE_ESS_day"),
+    coachE_ACWR_forecast: leer2(af) ? null : quote(r.coachE_ATL_forecast, r.coachE_CTL_forecast),
+    fbATL_obs: leer2(e) ? null : atl(v?.fbATL_obs, e),
+    fbCTL_obs: leer2(e) ? null : ctl(rows, i, v?.fbCTL_obs, "load_fb_day"),
+    fbACWR_obs: leer2(e) ? null : quote(r.fbATL_obs, r.fbCTL_obs)
+  };
+}
+function simuliere(rows, start, ess = {}) {
+  const kopie = rows.map((r) => ({ ...r }));
+  const aus = [];
+  for (let i = start; i < kopie.length; i++) {
+    const r = kopie[i];
+    const d = String(r.date);
+    if (d in ess) r.coachE_ESS_day = ess[d];
+    if (leer2(r.coachE_ESS_day)) break;
+    const p = rechnePrognose(kopie, i);
+    r.coachE_ATL_forecast = p.coachE_ATL_forecast;
+    r.coachE_CTL_forecast = p.coachE_CTL_forecast;
+    r.coachE_ACWR_forecast = quote(r.coachE_ATL_forecast, r.coachE_CTL_forecast);
+    aus.push({ date: r.date, ess: r.coachE_ESS_day, atl: r.coachE_ATL_forecast, ctl: r.coachE_CTL_forecast, acwr: r.coachE_ACWR_forecast });
+  }
+  return aus;
+}
+
 // server/rechenkern_cli.ts
+var ALLE_SPALTEN = [...KERN_SPALTEN, ...PROGNOSE_SPALTEN];
+var PROGNOSE = new Set(PROGNOSE_SPALTEN);
 function normFormel(f, zeile) {
   return f.replace(/(?<![A-Z$_])(\$?)([A-Z]{1,3})(\$?)(\d+)(?![\d(])/g, (m, d1, col, d2, n) => d2 === "$" ? m : `${d1}${col}[${Number(n) - zeile}]`).replace(/\s+/g, "");
 }
-var leer2 = (v) => v === null || v === void 0 || v === "";
+var leer3 = (v) => v === null || v === void 0 || v === "";
 var istFehler = (v) => typeof v === "string" && /^#(REF|VALUE|N\/A|DIV\/0|NUM|NAME|ERROR)/.test(v);
 function abgleich(tl, kk, heute) {
   const zu = (r) => r.zeilen.map((z) => Object.fromEntries(r.spalten.map((s, j) => [s, z[j]])));
   const rows = zu(tl);
   const iHeute = rows.findIndex((r) => r.date === heute);
   const ergebnis = [];
-  for (const k of KERN_SPALTEN) {
+  const cacheKern = /* @__PURE__ */ new Map();
+  const rechne = (i, k) => {
+    if (PROGNOSE.has(k)) return rechnePrognose(rows, i)[k];
+    if (!cacheKern.has(i)) cacheKern.set(i, rechneZeile(rows, i, tl.konstanten));
+    return cacheKern.get(i)[k];
+  };
+  const zeileHeute = iHeute >= 0 ? Number(rows[iHeute].row) : Infinity;
+  for (const k of ALLE_SPALTEN) {
     const formeln = tl.formelnAlle?.[k] || {};
-    const vorlage = iHeute >= 0 && formeln[String(rows[iHeute].row)] ? normFormel(formeln[String(rows[iHeute].row)], Number(rows[iHeute].row)) : null;
+    const zeilenMitFormel = Object.keys(formeln).map(Number).sort((a, b) => a - b);
+    const bisHeute = zeilenMitFormel.filter((z) => z <= zeileHeute);
+    const vz = bisHeute.length ? bisHeute[bisHeute.length - 1] : zeilenMitFormel[zeilenMitFormel.length - 1];
+    const vorlage = vz ? normFormel(formeln[String(vz)], vz) : null;
+    let zukunft = 0;
     let geprueft = 0, treffer = 0, sheetFehler = 0, alteVersion = 0, festwert = 0, maxDiff = 0;
     const beispiele = [];
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i];
-      if (String(r.date) > heute) continue;
+      if (String(r.date) > heute && !PROGNOSE.has(k)) continue;
       const f = formeln[String(r.row)];
       if (!f) {
         festwert++;
@@ -114,10 +177,11 @@ function abgleich(tl, kk, heute) {
         sheetFehler++;
         continue;
       }
-      const ist = rechneZeile(rows, i, tl.konstanten)[k];
+      const ist = rechne(i, k);
       geprueft++;
+      if (String(r.date) > heute) zukunft++;
       let gleich;
-      if (leer2(soll) || leer2(ist)) gleich = leer2(soll) && leer2(ist);
+      if (leer3(soll) || leer3(ist)) gleich = leer3(soll) && leer3(ist);
       else if (typeof soll === "number" && typeof ist === "number") {
         const d = Math.abs(soll - ist);
         maxDiff = Math.max(maxDiff, d);
@@ -126,12 +190,12 @@ function abgleich(tl, kk, heute) {
       if (gleich) treffer++;
       else if (beispiele.length < 5) beispiele.push(`${r.date}: Sheet ${JSON.stringify(soll)} \xB7 Kern ${JSON.stringify(ist)}`);
     }
-    ergebnis.push({ spalte: k, geprueft, treffer, sheetFehler, alteVersion, festwert, maxDiff, beispiele });
+    ergebnis.push({ spalte: k, geprueft, treffer, sheetFehler, alteVersion, festwert, maxDiff, beispiele, zukunft, art: PROGNOSE.has(k) ? "prognose" : "kern" });
   }
   let drift = [];
   if (kk?.ok) {
     const kkRows = new Map(zu(kk).map((r) => [String(r.row), r]));
-    const spalten = ["coachE_ESS_day", "coachE_ATL_forecast", "coachE_CTL_forecast", "coachE_ACWR_forecast", ...KERN_SPALTEN];
+    const spalten = ["coachE_ESS_day", "load_fb_day", ...PROGNOSE_SPALTEN, ...KERN_SPALTEN];
     drift = spalten.map((s) => {
       let n = 0, ab = 0;
       const bsp = [];
@@ -150,9 +214,25 @@ function abgleich(tl, kk, heute) {
       return { spalte: s, verglichen: n, abweichend: ab, beispiele: bsp };
     });
   }
-  return { ok: true, heute, zeilen: rows.length, spalten: ergebnis, drift };
+  const fa = tl.formelnAlle?.coachE_ATL_forecast || {};
+  const start = rows.findIndex((r) => String(r.date) > heute && fa[String(r.row)]);
+  let kette = null;
+  if (start >= 0) {
+    const sim = simuliere(rows, start);
+    let exakt = 0, maxAcwr = 0;
+    for (const x of sim) {
+      const r = rows.find((z) => z.date === x.date);
+      const d = Math.abs(Number(r.coachE_ACWR_forecast) - (x.acwr ?? NaN));
+      const ok = Math.abs(Number(r.coachE_ATL_forecast) - (x.atl ?? NaN)) < 1e-6 && Math.abs(Number(r.coachE_CTL_forecast) - (x.ctl ?? NaN)) < 1e-6 && d < 1e-9;
+      if (ok) exakt++;
+      if (Number.isFinite(d)) maxAcwr = Math.max(maxAcwr, d);
+    }
+    kette = { start: String(rows[start].date), tage: sim.length, exakt, maxAcwr };
+  }
+  return { ok: true, heute, zeilen: rows.length, spalten: ergebnis, drift, kette };
 }
 export {
   abgleich,
-  normFormel
+  normFormel,
+  simuliere
 };
