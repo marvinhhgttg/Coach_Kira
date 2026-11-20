@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { setupTexte } from './server/texte.mjs';
 import { setupWidget } from './server/widget_api.mjs';
 import { setupLokalRelay } from './server/lokal_relay.mjs';
+import { setupRechenkern } from './server/rechenkern_api.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 5000);
@@ -390,6 +391,7 @@ app.post('/api/action/:name', requireAuth, async (req, res) => {
 const INSTANZ = process.env.CK_INSTANZ || 'live';
 const texte = setupTexte(app, { getSetting, setSetting, cloudChat: cloudChatServer, originOk: llmOriginOk, scriptUrl: APPS_SCRIPT_URL, passiv: INSTANZ !== 'live' });
 app.get('/api/instanz', (_req, res) => res.json({ instanz: INSTANZ }));
+setupRechenkern(app);
 setupWidget(app, { getSetting, setSetting, originOk: llmOriginOk, texte });
 setupLokalRelay(app, {
   originOk: llmOriginOk,
