@@ -80,7 +80,8 @@ struct KiraWidgetView: View {
                 switch family {
                 case .systemSmall: KleinView(d: d)
                 case .systemMedium: MittelView(d: d)
-                case .systemLarge, .systemExtraLarge: GrossView(d: d)
+                case .systemLarge: GrossView(d: d)
+                case .systemExtraLarge: ExtraGrossView(d: d)
                 #if os(iOS)
                 case .accessoryCircular: RundView(d: d)
                 case .accessoryRectangular: RechteckView(d: d)
@@ -544,12 +545,12 @@ struct TexteView: View {
 /// Widget-Größen je Plattform: Sperrbildschirm-Varianten gibt es nur auf dem iPhone
 enum KiraFamilien {
     #if os(iOS)
-    static let alle: [WidgetFamily] = [.systemSmall, .systemMedium, .systemLarge, .accessoryCircular, .accessoryRectangular, .accessoryInline]
+    static let alle: [WidgetFamily] = [.systemSmall, .systemMedium, .systemLarge, .systemExtraLarge, .accessoryCircular, .accessoryRectangular, .accessoryInline]
     static let tagesentscheid: [WidgetFamily] = [.systemSmall, .accessoryCircular, .accessoryInline]
     static let morgenLage: [WidgetFamily] = [.systemMedium, .accessoryRectangular]
     static let zieltour: [WidgetFamily] = [.systemSmall, .accessoryRectangular]
     #else
-    static let alle: [WidgetFamily] = [.systemSmall, .systemMedium, .systemLarge]
+    static let alle: [WidgetFamily] = [.systemSmall, .systemMedium, .systemLarge, .systemExtraLarge]
     static let tagesentscheid: [WidgetFamily] = [.systemSmall]
     static let morgenLage: [WidgetFamily] = [.systemMedium]
     static let zieltour: [WidgetFamily] = [.systemSmall]
@@ -609,6 +610,18 @@ struct WocheZielWidget: Widget {
     }
 }
 
+/// Extragroß: nur iPad und Mac (auf dem iPhone bietet iOS diese Größe nicht an)
+struct CockpitXLWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "KiraCockpitXL", provider: KiraProvider()) { e in
+            Huelle(eintrag: e) { d in ExtraGrossView(d: d) }
+        }
+        .configurationDisplayName("Cockpit extragroß")
+        .description("Tagesstand, ACWR, Woche, Zieltour und Kira-Texte auf einen Blick (iPad und Mac).")
+        .supportedFamilies([.systemExtraLarge])
+    }
+}
+
 struct ZieltourWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "KiraZieltour", provider: KiraProvider()) { e in ZieltourView(e: e) }
@@ -644,6 +657,7 @@ struct KiraWidgetBundle: WidgetBundle {
         TagesentscheidWidget()
         MorgenLageWidget()
         WocheZielWidget()
+        CockpitXLWidget()
         ZieltourWidget()
         TexteWidget()
         BelastungWidget()

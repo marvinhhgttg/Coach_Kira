@@ -10,7 +10,37 @@ struct CoachKiraApp: App {
             ContentView()
                 .preferredColorScheme(.dark)
         }
+        .commands {
+            // iPad mit Tastatur: ⌘1–7 springen zu den Seiten, ⌘R lädt neu
+            CommandMenu("Cockpit") {
+                ForEach(Array(KiraSeiten.alle.enumerated()), id: \.offset) { i, s in
+                    Button(s.titel) { KiraSeiten.gehe(s.hash) }
+                        .keyboardShortcut(KeyEquivalent(Character(String(i + 1))), modifiers: .command)
+                }
+                Divider()
+                Button("Neu laden") { NotificationCenter.default.post(name: .kiraNeuLaden, object: nil) }
+                    .keyboardShortcut("r", modifiers: .command)
+                Button("Widgets aktualisieren") { WidgetCenter.shared.reloadAllTimelines() }
+                    .keyboardShortcut("r", modifiers: [.command, .shift])
+            }
+        }
     }
+}
+
+/// Seiten des Cockpits für Tastenkürzel (iPad mit Tastatur)
+enum KiraSeiten {
+    static let alle: [(titel: String, hash: String)] = [
+        ("Heute", "heute"), ("Eingabe", "eingabe"), ("Plan", "plan"), ("Ziele", "ziele"),
+        ("Analyse", "analyse"), ("Berichte", "berichte"), ("Log", "log"),
+    ]
+    static func gehe(_ hash: String) {
+        NotificationCenter.default.post(name: .kiraGehe, object: hash)
+    }
+}
+
+extension Notification.Name {
+    static let kiraGehe = Notification.Name("kiraGehe")
+    static let kiraNeuLaden = Notification.Name("kiraNeuLaden")
 }
 
 /// Hauptansicht: das Cockpit in voller Größe, dazu ein kleiner Knopf für Kopplung und Widgets.
@@ -82,6 +112,7 @@ struct KiraWebView: UIViewRepresentable {
         wv.navigationDelegate = context.coordinator
         context.coordinator.webView = wv
         context.coordinator.geladen = url
+        context.coordinator.beobachten()
         wv.load(URLRequest(url: url))
         return wv
     }
@@ -94,6 +125,22 @@ struct KiraWebView: UIViewRepresentable {
     }
 
     final class Coordinator: NSObject, WKScriptMessageHandler, WKUIDelegate, WKNavigationDelegate {
+        private var beobachter: [NSObjectProtocol] = []
+
+        /// Tastenkürzel: Seite wechseln per location.hash (ohne Neuladen), ⌘R lädt neu
+        func beobachten() {
+            let nc = NotificationCenter.default
+            beobachter.append(nc.addObserver(forName: .kiraGehe, object: nil, queue: .main) { [weak self] n in
+                guard let h = n.object as? String, h.allSatisfy({ $0.isLetter }) else { return }
+                self?.webView?.evaluateJavaScript("location.hash = '\(h)'")
+            })
+            beobachter.append(nc.addObserver(forName: .kiraNeuLaden, object: nil, queue: .main) { [weak self] _ in
+                self?.webView?.reload()
+            })
+        }
+
+        deinit { beobachter.forEach { NotificationCenter.default.removeObserver($0) } }
+
         weak var webView: WKWebView?
         var geladen: URL?
 

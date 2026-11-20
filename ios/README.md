@@ -72,3 +72,20 @@ Hinweise:
 - Auch die Mac-App muss mit dem kostenlosen Konto alle 7 Tage neu aus Xcode gestartet werden.
 - Wenn Xcode beim App Group meckert: beim Mac-Target ist die Gruppe `<TeamID>.de.reichpietsch.coachkira` (macOS-Schreibweise) – Xcode legt sie beim Signieren selbst an.
 - Bei Buildfehlern: Fehlerliste (⌘5) als Screenshot schicken.
+
+## iPad (z. B. iPad Pro 3. Generation)
+
+Die iPhone-App ist universell, das iPad braucht kein eigenes Target. Voraussetzung: iPadOS 17 oder neuer.
+
+1. Neue Dateien nach `~/coach-kira-ios` (bereits übertragen), dann `cd ~/coach-kira-ios && xcodegen generate`.
+2. iPad per Kabel anschließen, „Diesem Computer vertrauen“. Beim ersten Mal: Einstellungen → Datenschutz & Sicherheit → Entwicklermodus einschalten (iPad startet neu).
+3. In Xcode Schema `CoachKira` und als Ziel das iPad wählen, dann ▶.
+4. Auf dem iPad: Einstellungen → Allgemein → VPN & Geräteverwaltung → Entwickler-App vertrauen.
+5. In der App koppeln (Code aus Technik → App-Kopplung). Das iPad wird als eigenes Gerät geführt.
+
+Auf dem iPad zusätzlich:
+- Widget „Cockpit extragroß“ für den Homescreen (Tagesstand links, Zieltour und Kira-Texte rechts). Auch das Widget „Coach Kira“ gibt es in extragroß.
+- Mit Magic Keyboard oder Smart Keyboard: ⌘1 bis ⌘7 für die Seiten, ⌘R neu laden, ⇧⌘R Widgets aktualisieren. ⌘ gedrückt halten zeigt die Übersicht.
+- Split View und Stage Manager funktionieren, das Cockpit passt sich der Fensterbreite an.
+- Lokale Texte laufen wie auf dem iPhone über deinen Mac (coach-kira).
+- Auch hier gilt das 7-Tage-Signieren mit dem kostenlosen Konto.
