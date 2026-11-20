@@ -4121,8 +4121,7 @@ var VAR = Object.fromEntries(VARS.map((v) => [v.key, v]));
 var import_react7 = __toESM(require_react(), 1);
 var import_jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
 
-// src/screens/RecoveryPanel.tsx
-var import_jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
+// src/kern/votumRegeln.ts
 var SLEEP_GOAL_H = 7.5;
 var RHR_BASELINE_DAYS = 28;
 var RHR_BASELINE_MIN_VALUES = 7;
@@ -4339,6 +4338,9 @@ function buildDays(raw) {
     return { ...base, vote, reasons, bind };
   });
 }
+
+// src/screens/RecoveryPanel.tsx
+var import_jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
 function plannedDemand(p) {
   const zone = (p.zone || "").toUpperCase();
   const sport = (p.sport || "").toLowerCase();
@@ -4556,12 +4558,22 @@ async function erfahrung(d) {
   const q = await schalter(d);
   try {
     const ctl = new AbortController();
-    const to = setTimeout(() => ctl.abort(), 3e4);
-    const url = APPS_SCRIPT + "?mode=chartData&range=9999d&metrics=" + RECOVERY_FETCH_METRICS.join(",");
-    const j = await (await fetch(url, { redirect: "follow", signal: ctl.signal })).json();
+    const to = setTimeout(() => ctl.abort(), 9e4);
+    const q2 = "?range=9999d&metrics=" + RECOVERY_FETCH_METRICS.join(",");
+    const z = process.env.CK_ZEITREIHE_URL === "aus" ? null : process.env.CK_ZEITREIHE_URL || "https://coachkira.pplx.app/port/5000/api/rechenkern/chartData";
+    let j = null;
+    if (z) {
+      try {
+        j = await (await fetch(z + q2, { signal: ctl.signal })).json();
+      } catch {
+        j = null;
+      }
+      if (!j || !j.ok || !Array.isArray(j.data) || !j.data.length) j = null;
+    }
+    if (!j) j = await (await fetch(APPS_SCRIPT + "?mode=chartData" + q2.replace("?", "&"), { redirect: "follow", signal: ctl.signal })).json();
     clearTimeout(to);
     const e = erfahrungAusRohdaten(j.data || []);
-    return { text: erfahrungText(e), gruppen: e.gruppen.filter((g) => g.n >= 8), kernVotum: kernVotumAusRohdaten(j.data || [], q) };
+    return { text: erfahrungText(e), gruppen: e.gruppen.filter((g) => g.n >= 8), kernVotum: kernVotumAusRohdaten(j.data || [], q2) };
   } catch {
     return { text: "", gruppen: [], kernVotum: kernVotumAusRohdaten([], q) };
   }

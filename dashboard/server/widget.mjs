@@ -3189,6 +3189,10 @@ var import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
 // src/lib/useErfahrung.ts
 var import_react4 = __toESM(require_react(), 1);
 
+// src/lib/cloudLLM.ts
+var SENTINEL = "__PORT_5000__";
+var SERVER_BASE = SENTINEL.startsWith("__PORT") ? "" : "/" + SENTINEL.replace(/^\/+/, "");
+
 // src/lib/format.ts
 function fmtNum(v, digits = 0) {
   if (v === null || v === void 0 || !Number.isFinite(v)) return "\u2014";
@@ -3302,10 +3306,6 @@ var MONOTONIE_REGEL_TEXT = [
 // src/screens/RecoveryPanel.tsx
 var import_jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
 
-// src/lib/cloudLLM.ts
-var SENTINEL = "__PORT_5000__";
-var SERVER_BASE = SENTINEL.startsWith("__PORT") ? "" : "/" + SENTINEL.replace(/^\/+/, "");
-
 // src/lib/chatContext.ts
 var OLLAMA_HTTP = "http://localhost:11434";
 var OLLAMA_HTTPS = "https://localhost:11435";
@@ -3406,7 +3406,37 @@ async function getJsonOnce(url, signal) {
     throw new ApiError("Antwort ist kein g\xFCltiges JSON");
   }
 }
-function fetchChartData(range, metrics, signal) {
+function zeitreiheUrl() {
+  let env;
+  try {
+    env = typeof process !== "undefined" ? process.env?.CK_ZEITREIHE_URL : void 0;
+  } catch {
+    env = void 0;
+  }
+  if (env === "aus") return null;
+  if (env) return env;
+  if (typeof window !== "undefined") return `${SERVER_BASE}/api/rechenkern/chartData`;
+  return "https://coachkira.pplx.app/port/5000/api/rechenkern/chartData";
+}
+async function fetchChartData(range, metrics, signal) {
+  const z2 = zeitreiheUrl();
+  if (z2 && !signal?.aborted) {
+    const ctl = new AbortController();
+    const ab = () => ctl.abort();
+    signal?.addEventListener("abort", ab);
+    const to = setTimeout(ab, 9e4);
+    try {
+      const usp = new URLSearchParams({ range: String(range), metrics: metrics.join(","), cb: cb() });
+      const r = await fetch(`${z2}?${usp}`, { signal: ctl.signal, cache: "no-store" });
+      const j = await r.json();
+      if (j && j.ok && Array.isArray(j.data) && j.data.length) return j;
+    } catch {
+    } finally {
+      clearTimeout(to);
+      signal?.removeEventListener("abort", ab);
+    }
+    if (signal?.aborted) throw new ApiError("abgebrochen");
+  }
   return getJson2(
     buildUrl({ mode: "chartData", range, metrics: metrics.join(",") }),
     signal

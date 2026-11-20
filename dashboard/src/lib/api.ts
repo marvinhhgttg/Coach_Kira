@@ -1,4 +1,5 @@
 import { getEngine } from './engine';
+import { SERVER_BASE } from './cloudLLM';
 // Coach Kira Apps Script API client.
 // All requests are GET with a cache-buster `cb` parameter.
 // Token is never persisted — it lives in React state only.
@@ -326,11 +327,46 @@ export const ACTIVITY_METRICS = [
 
 export type Range = '7d' | '14d' | '28d' | '30d' | '60d' | '90d' | '120d' | '180d' | '240d' | '360d' | '9999d';
 
-export function fetchChartData(
+/**
+ * Etappe 6 (20.11.2026): Verlauf aus dem Formelblatt `timeline` (der Wahrheit) über den Cockpit-Server
+ * (/api/rechenkern/chartData). Rückfall bei Fehler oder Zeitüberschreitung: Apps Script mode=chartData
+ * (Wertekopie KK_TIMELINE) wie bisher.
+ *   Browser: ${SERVER_BASE}/api/rechenkern/chartData · Node (Server, CLIs): process.env.CK_ZEITREIHE_URL
+ *   CK_ZEITREIHE_URL=aus schaltet zurück auf den alten Weg.
+ */
+function zeitreiheUrl(): string | null {
+  let env: string | undefined;
+  try { env = typeof process !== 'undefined' ? (process as any).env?.CK_ZEITREIHE_URL : undefined; } catch { env = undefined; }
+  if (env === 'aus') return null;
+  if (env) return env;
+  if (typeof window !== 'undefined') return `${SERVER_BASE}/api/rechenkern/chartData`;
+  return 'https://coachkira.pplx.app/port/5000/api/rechenkern/chartData';
+}
+
+export async function fetchChartData(
   range: Range,
   metrics: readonly string[],
   signal?: AbortSignal
-) {
+): Promise<ChartDataResponse> {
+  const z = zeitreiheUrl();
+  if (z && !signal?.aborted) {
+    const ctl = new AbortController();
+    const ab = () => ctl.abort();
+    signal?.addEventListener('abort', ab);
+    const to = setTimeout(ab, 90000);
+    try {
+      const usp = new URLSearchParams({ range: String(range), metrics: metrics.join(','), cb: cb() });
+      const r = await fetch(`${z}?${usp}`, { signal: ctl.signal, cache: 'no-store' } as RequestInit);
+      const j: any = await r.json();
+      if (j && j.ok && Array.isArray(j.data) && j.data.length) return j as ChartDataResponse;
+    } catch {
+      /* Rückfall auf Apps Script */
+    } finally {
+      clearTimeout(to);
+      signal?.removeEventListener('abort', ab);
+    }
+    if (signal?.aborted) throw new ApiError('abgebrochen');
+  }
   return getJson<ChartDataResponse>(
     buildUrl({ mode: 'chartData', range, metrics: metrics.join(',') }),
     signal

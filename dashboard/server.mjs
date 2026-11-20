@@ -13,6 +13,8 @@ import { setupRechenkern } from './server/rechenkern_api.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 5000);
+// Etappe 6: Server-seitige Rechner (Widget, Votum, Prompts) lesen den Verlauf aus timeline über diesen Server
+if (!process.env.CK_ZEITREIHE_URL) process.env.CK_ZEITREIHE_URL = `http://127.0.0.1:${PORT}/api/rechenkern/chartData`;
 const APP_BASE = (process.env.APP_BASE || '').replace(/\/$/, '');
 const APPS_SCRIPT_URL =
   'https://script.google.com/macros/s/AKfycbxCEN11KRlFaLL7uVJyeBLCrRJVmfBWagSmqvyJ8Ci7nwxi8HbolzTy23Z-G2mivC2h/exec';

@@ -1,6 +1,6 @@
-# Etappe 6 – Live auf den Kern umstellen (Plan)
+# Etappe 6 – Live auf den Kern umstellen
 
-Stand 20.11.2026. Der Start ist nach dem Abschlussbericht am 04.12.2026 vorgesehen, nur mit Marcs Freigabe.
+Stand 20.11.2026. **Umgesetzt am 20.11.2026, abends.** Marc wollte nicht bis zum 04.12. warten („Fang direkt an“). Ergebnis und Nachweise stehen am Ende.
 
 ## Ziel
 
@@ -79,3 +79,56 @@ Die betroffenen Tage zeigen danach den Wert aus `timeline`, also den richtigen.
 
 - Den Live-Arbeitsordner aus dem Tar-Archiv bzw. dem Tag `vor-etappe-6` wiederherstellen und veröffentlichen.
 - Apps Script und Mac sind in Etappe 6 nicht betroffen.
+
+## Umsetzung (20.11.2026)
+
+**Sicherung:**
+- Git-Tag `vor-etappe-6`.
+- `backups/live-vor-etappe-6.tgz` (Live-Ordner ohne `node_modules`), `backups/data.db.vor-etappe-6` und `backups/runcmd.vor-etappe-6.txt`, alle nur im Arbeitsbereich, nicht im Repo.
+
+**Code:**
+- Der Live-Ordner ist jetzt identisch mit v2. Unterschiede gibt es nur bei der Datenbank und beim Startbefehl: live ohne `CK_INSTANZ`, v2 mit `CK_INSTANZ=v2`.
+- `src/lib/api.ts` › `fetchChartData`: liest zuerst `timeline` über `/api/rechenkern/chartData`, bei Fehler oder nach 90 s wie bisher Apps Script `mode=chartData` (`KK_TIMELINE`).
+  - Im Browser über `SERVER_BASE`.
+  - Auf dem Server über `CK_ZEITREIHE_URL`, die `server.mjs` auf den eigenen Port setzt.
+  - `CK_ZEITREIHE_URL=aus` schaltet den alten Weg wieder ein.
+- `server/kira_prompts_cli.ts`: dieselbe Quelle, auch auf dem Mac (öffentliche Route des Live-Servers). Das Mac-Werkzeug ist ersetzt, die Sicherung heißt `kira_prompts.vor-etappe-6.mjs`.
+- `server/rechenkern_api.mjs`: Gleichzeitige Abrufe von `timeline` teilen sich eine Anfrage. Ist Apps Script gestört, gilt der letzte gute Stand.
+- `server/zugang.mjs`: `/api/rechenkern/abgleich` live nur mit Sitzung oder Mac-Schlüssel. `chartData`, `votum` und `soll` bleiben lesbar, genau wie die Apps-Script-Web-App.
+
+**Messung vor dem Umschalten, korrigiert:**
+- Die erste Schätzung oben (Tages-ESS 17 Tage, Morgenwerte 2 Tage) betraf nur die Felder für Votum und Soll.
+- Der Vergleich über alle 62 Spalten nach Datum zeigt mehr Abweichungen, alle vor dem 10.10.2026. Seitdem sind beide Blätter identisch.
+
+| Spalte | Tage anders |
+|---|---|
+| `ctl_star`, `ctl_gap` | 310 |
+| `coachE_ATL_morning` / `coachE_CTL_morning` | 229 / 226 |
+| `coachE_Smart_Gains` | 135 |
+| `TE_Balance_Trend` | 122 |
+| `Strain7` / `Monotony7` | 76 / 74 |
+| `load_star` | 22 |
+| `coachE_ESS_day` | 17 |
+| Forecast-ATL/CTL/ACWR | 13–14 |
+| alle Tageswerte am 28./29.04.2026 | 2 (in `KK_TIMELINE` vertauscht) |
+
+- Das Tagesvotum ist an allen 451 Tagen gleich.
+
+**Nachweise:**
+- **Widget:** alt (Live-Sicherung) gegen neu, alle 45 Felder gleich.
+- **Zeilenzahl:** `chartData` neu gegen Apps Script für 7, 14, 28, 30, 60, 90, 120 Tage und die ganze Historie, jeweils gleiche Anzahl Zeilen, gleiches erstes und letztes Datum und gleiches Datumsformat.
+- **Rückfall:** geprüft mit unerreichbarer URL und mit `aus`, beide Male Apps Script.
+- **Ansichten alt gegen neu** (Heute, Plan, Analyse): keine Fehler im Browser. Die Unterschiede liegen nur in historischen Auswertungen, zum Beispiel ESS-Klassen 147–207 → 147–209, HRV-Bänder ±1, Ø Monotonie über 120 Tage 1,59 → 1,54, CTL-Modellfehler ±22,7 → ±19,8.
+- **Live danach:**
+  - `chartData` mit Quelle `timeline`.
+  - PIN-Einrichtung, Mac, Text-Schalter und Warteschlange unverändert.
+  - Abgleich ohne Sitzung 401.
+  - Votum und Soll-Rahmen live und in v2 identisch (Rest, 0–20 ESS).
+- **v2:** Abgleich weiter 17/17, Kette 13/13.
+
+**Beobachtung:** Die tägliche Prüfung vergleicht bis 27.11. zusätzlich live gegen v2 (Votum, Soll-Rahmen, Quelle `timeline`) und meldet Abweichungen.
+
+**Rückweg:**
+- Schnell: in `/tmp/runcmd.txt` `CK_ZEITREIHE_URL=aus` voranstellen und neu veröffentlichen. Dann liest live wieder `KK_TIMELINE`, der Code bleibt neu.
+- Vollständig: `backups/live-vor-etappe-6.tgz` in den Live-Ordner entpacken und veröffentlichen.
+- Mac: `kira_prompts.vor-etappe-6.mjs` zurückkopieren.

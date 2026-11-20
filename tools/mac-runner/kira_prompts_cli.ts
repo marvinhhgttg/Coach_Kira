@@ -36,9 +36,16 @@ async function erfahrung(d: any): Promise<{ text: string; gruppen: unknown[]; ke
   const q = await schalter(d);
   try {
     const ctl = new AbortController();
-    const to = setTimeout(() => ctl.abort(), 30000);
-    const url = APPS_SCRIPT + '?mode=chartData&range=9999d&metrics=' + RECOVERY_FETCH_METRICS.join(',');
-    const j: any = await (await fetch(url, { redirect: 'follow', signal: ctl.signal })).json();
+    const to = setTimeout(() => ctl.abort(), 90000);
+    // Etappe 6: zuerst timeline (Wahrheit) über den Cockpit-Server, Rückfall Apps Script (KK_TIMELINE)
+    const q = '?range=9999d&metrics=' + RECOVERY_FETCH_METRICS.join(',');
+    const z = process.env.CK_ZEITREIHE_URL === 'aus' ? null : process.env.CK_ZEITREIHE_URL || 'https://coachkira.pplx.app/port/5000/api/rechenkern/chartData';
+    let j: any = null;
+    if (z) {
+      try { j = await (await fetch(z + q, { signal: ctl.signal })).json(); } catch { j = null; }
+      if (!j || !j.ok || !Array.isArray(j.data) || !j.data.length) j = null;
+    }
+    if (!j) j = await (await fetch(APPS_SCRIPT + '?mode=chartData' + q.replace('?', '&'), { redirect: 'follow', signal: ctl.signal })).json();
     clearTimeout(to);
     const e = erfahrungAusRohdaten(j.data || []);
     return { text: erfahrungText(e), gruppen: e.gruppen.filter((g) => g.n >= 8), kernVotum: kernVotumAusRohdaten(j.data || [], q) };

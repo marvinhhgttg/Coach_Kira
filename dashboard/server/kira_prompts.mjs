@@ -4558,12 +4558,22 @@ async function erfahrung(d) {
   const q = await schalter(d);
   try {
     const ctl = new AbortController();
-    const to = setTimeout(() => ctl.abort(), 3e4);
-    const url = APPS_SCRIPT + "?mode=chartData&range=9999d&metrics=" + RECOVERY_FETCH_METRICS.join(",");
-    const j = await (await fetch(url, { redirect: "follow", signal: ctl.signal })).json();
+    const to = setTimeout(() => ctl.abort(), 9e4);
+    const q2 = "?range=9999d&metrics=" + RECOVERY_FETCH_METRICS.join(",");
+    const z = process.env.CK_ZEITREIHE_URL === "aus" ? null : process.env.CK_ZEITREIHE_URL || "https://coachkira.pplx.app/port/5000/api/rechenkern/chartData";
+    let j = null;
+    if (z) {
+      try {
+        j = await (await fetch(z + q2, { signal: ctl.signal })).json();
+      } catch {
+        j = null;
+      }
+      if (!j || !j.ok || !Array.isArray(j.data) || !j.data.length) j = null;
+    }
+    if (!j) j = await (await fetch(APPS_SCRIPT + "?mode=chartData" + q2.replace("?", "&"), { redirect: "follow", signal: ctl.signal })).json();
     clearTimeout(to);
     const e = erfahrungAusRohdaten(j.data || []);
-    return { text: erfahrungText(e), gruppen: e.gruppen.filter((g) => g.n >= 8), kernVotum: kernVotumAusRohdaten(j.data || [], q) };
+    return { text: erfahrungText(e), gruppen: e.gruppen.filter((g) => g.n >= 8), kernVotum: kernVotumAusRohdaten(j.data || [], q2) };
   } catch {
     return { text: "", gruppen: [], kernVotum: kernVotumAusRohdaten([], q) };
   }

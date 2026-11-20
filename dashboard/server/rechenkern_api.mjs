@@ -44,11 +44,21 @@ function berlin(datum, h = 0, m = 0, s = 0) {
 export function setupRechenkern(app, { getSetting, setSetting, aktiv = true } = {}) {
   // ---------- Rohdaten aus `timeline` (5 Minuten zwischengespeichert) ----------
   let tlCache = null;
+  let tlLaeuft = null; // Etappe 6: gleichzeitige Anfragen teilen sich einen Abruf
   async function timeline(neu = false) {
     if (!neu && tlCache && Date.now() - tlCache.at < 5 * 60 * 1000) return tlCache.d;
-    const d = await holen({ blatt: 'timeline', formeln: 'alle' });
-    if (d.ok && d.blatt === 'timeline') tlCache = { at: Date.now(), d };
-    return d;
+    if (tlLaeuft) return tlLaeuft;
+    tlLaeuft = (async () => {
+      try {
+        const d = await holen({ blatt: 'timeline', formeln: 'alle' });
+        if (d.ok && d.blatt === 'timeline') tlCache = { at: Date.now(), d };
+        else if (tlCache) return tlCache.d; // Apps Script gestört: letzter guter Stand
+        return d;
+      } finally {
+        tlLaeuft = null;
+      }
+    })();
+    return tlLaeuft;
   }
 
   // ---------- Abgleich ----------

@@ -3422,7 +3422,37 @@ async function getJsonOnce(url, signal) {
     throw new ApiError("Antwort ist kein g\xFCltiges JSON");
   }
 }
-function fetchChartData(range, metrics, signal) {
+function zeitreiheUrl() {
+  let env;
+  try {
+    env = typeof process !== "undefined" ? process.env?.CK_ZEITREIHE_URL : void 0;
+  } catch {
+    env = void 0;
+  }
+  if (env === "aus") return null;
+  if (env) return env;
+  if (typeof window !== "undefined") return `${SERVER_BASE}/api/rechenkern/chartData`;
+  return "https://coachkira.pplx.app/port/5000/api/rechenkern/chartData";
+}
+async function fetchChartData(range, metrics, signal) {
+  const z = zeitreiheUrl();
+  if (z && !signal?.aborted) {
+    const ctl = new AbortController();
+    const ab = () => ctl.abort();
+    signal?.addEventListener("abort", ab);
+    const to = setTimeout(ab, 9e4);
+    try {
+      const usp = new URLSearchParams({ range: String(range), metrics: metrics.join(","), cb: cb() });
+      const r = await fetch(`${z}?${usp}`, { signal: ctl.signal, cache: "no-store" });
+      const j = await r.json();
+      if (j && j.ok && Array.isArray(j.data) && j.data.length) return j;
+    } catch {
+    } finally {
+      clearTimeout(to);
+      signal?.removeEventListener("abort", ab);
+    }
+    if (signal?.aborted) throw new ApiError("abgebrochen");
+  }
   return getJson(
     buildUrl({ mode: "chartData", range, metrics: metrics.join(",") }),
     signal
