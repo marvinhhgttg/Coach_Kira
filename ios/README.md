@@ -89,3 +89,25 @@ Auf dem iPad zusätzlich:
 - Split View und Stage Manager funktionieren, das Cockpit passt sich der Fensterbreite an.
 - Lokale Texte laufen wie auf dem iPhone über deinen Mac (coach-kira).
 - Auch hier gilt das 7-Tage-Signieren mit dem kostenlosen Konto.
+
+## Native Heute-Seite (auch ohne Netz)
+
+Seit 20.11.2026 gibt es auf iPhone und iPad eine native Heute-Seite (`App/HeuteNativView.swift`). Sie zeigt:
+- das Tagesvotum mit Gründen,
+- die Morgenwerte,
+- Soll, Ist und ACWR,
+- die letzten 7 Tage,
+- das Ziel mit Tourform,
+- den Stand der Kira-Texte.
+
+Die Daten kommen aus derselben Quelle wie die Widgets. Ohne Netz zeigt sie den zuletzt gespeicherten Stand mit Uhrzeit.
+
+- **Öffnen:** runder Knopf unten rechts → „Heute (auch ohne Netz)“. Kopplung & Widgets liegen im selben Menü.
+- **Automatisch:** Lädt das Cockpit nicht, weil kein Netz da ist, öffnet sich die Seite von selbst. „Cockpit“ oben rechts führt zurück.
+- **Aktualisieren:** nach unten ziehen oder „Aktualisieren“ tippen.
+
+Einspielen: neue Datei, deshalb einmal neu erzeugen und bauen:
+```
+cd ~/coach-kira-ios && xcodegen generate && open CoachKira.xcodeproj
+```
+Dann Ziel iPhone bzw. iPad wählen und ▶ klicken. Die Mac-App bleibt unverändert. Die Sicherung der vorigen `CoachKiraApp.swift` liegt in `~/coach-kira-ios-backup/2026-11-20/`.

@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 import UIKit
 import WebKit
@@ -41,12 +42,16 @@ enum KiraSeiten {
 extension Notification.Name {
     static let kiraGehe = Notification.Name("kiraGehe")
     static let kiraNeuLaden = Notification.Name("kiraNeuLaden")
+    /// Cockpit konnte nicht geladen werden (kein Netz) → native Heute-Seite zeigen
+    static let kiraOffline = Notification.Name("kiraOffline")
 }
 
 /// Hauptansicht: das Cockpit in voller Größe, dazu ein kleiner Knopf für Kopplung und Widgets.
 struct ContentView: View {
     @State private var ziel: URL = KiraConfig.cockpit
     @State private var zeigeKopplung = false
+    @State private var zeigeHeute = false
+    @State private var heuteOffline = false
     @Environment(\.scenePhase) private var phase
 
     var body: some View {
@@ -54,8 +59,18 @@ struct ContentView: View {
             KiraWebView(url: ziel)
                 .ignoresSafeArea(edges: .bottom)
                 .background(KiraStil.hintergrund)
-            Button {
-                zeigeKopplung = true
+            Menu {
+                Button {
+                    heuteOffline = false
+                    zeigeHeute = true
+                } label: {
+                    Label("Heute (auch ohne Netz)", systemImage: "sun.max")
+                }
+                Button {
+                    zeigeKopplung = true
+                } label: {
+                    Label("Kopplung & Widgets", systemImage: "square.grid.2x2")
+                }
             } label: {
                 Image(systemName: KiraStore.token == nil ? "link.badge.plus" : "square.grid.2x2")
                     .font(.system(size: 15, weight: .semibold))
@@ -68,6 +83,13 @@ struct ContentView: View {
             .accessibilityLabel("Kopplung und Widgets")
         }
         .sheet(isPresented: $zeigeKopplung) { KopplungView() }
+        .fullScreenCover(isPresented: $zeigeHeute) { HeuteNativView(offline: heuteOffline) }
+        .onReceive(NotificationCenter.default.publisher(for: .kiraOffline)) { _ in
+            // Nur wenn gekoppelt und nicht schon offen; sonst bleibt die Fehlerseite des Cockpits
+            guard KiraStore.token != nil, !zeigeHeute, !zeigeKopplung else { return }
+            heuteOffline = true
+            zeigeHeute = true
+        }
         .onOpenURL { url in ziel = KiraLinks.cockpitURL(fuer: url) }
         .onChange(of: phase) { _, neu in
             if neu == .active { WidgetCenter.shared.reloadAllTimelines() }
@@ -148,6 +170,21 @@ struct KiraWebView: UIViewRepresentable {
             webView?.reload()
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { rc.endRefreshing() }
             WidgetCenter.shared.reloadAllTimelines()
+        }
+
+        // Kein Netz o. Ä.: Cockpit lädt nicht → native Heute-Seite mit letztem Stand
+        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+            meldeOffline(error)
+        }
+
+        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+            meldeOffline(error)
+        }
+
+        private func meldeOffline(_ error: Error) {
+            let e = error as NSError
+            guard e.domain == NSURLErrorDomain, e.code != NSURLErrorCancelled else { return }
+            NotificationCenter.default.post(name: .kiraOffline, object: nil)
         }
 
         // target="_blank" (z. B. Garmin-Connect-Links im Log) → Safari bzw. Garmin-App
