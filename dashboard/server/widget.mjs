@@ -3113,46 +3113,11 @@ var require_jsx_runtime = __commonJS({
   }
 });
 
-// src/screens/RecoveryPanel.tsx
+// src/lib/engine.ts
 var import_react8 = __toESM(require_react(), 1);
 
-// src/components/ZeitraumWahl.tsx
-var import_react = __toESM(require_react(), 1);
-
-// src/lib/windows.ts
-var ALL_RANGE = "9999d";
-var isCustom = (w) => typeof w === "object" && w !== null;
-var heute = () => (/* @__PURE__ */ new Date()).toLocaleDateString("sv-SE");
-var tageZwischen = (a, b) => Math.round((Date.parse(b + "T12:00:00Z") - Date.parse(a + "T12:00:00Z")) / 864e5);
-var STEPS = [
-  [14, "14d"],
-  [30, "30d"],
-  [60, "60d"],
-  [90, "90d"],
-  [120, "120d"],
-  [180, "180d"],
-  [240, "240d"],
-  [360, "360d"]
-];
-function rangeFor(w, lead = 0, min = 0) {
-  if (!isCustom(w) && w === 0) return ALL_RANGE;
-  const tage = isCustom(w) ? tageZwischen(w.von, heute()) + 1 : w;
-  const n = Math.max(tage + lead, min);
-  for (const [d, r] of STEPS) if (n <= d) return r;
-  return ALL_RANGE;
-}
-
-// src/components/ZeitraumWahl.tsx
-var import_jsx_runtime = __toESM(require_jsx_runtime(), 1);
-
-// src/components/BefindenHinweis.tsx
-var import_react5 = __toESM(require_react(), 1);
-
-// src/lib/engine.ts
-var import_react4 = __toESM(require_react(), 1);
-
 // src/lib/garmin.ts
-var import_react2 = __toESM(require_react(), 1);
+var import_react = __toESM(require_react(), 1);
 
 // src/lib/extras.ts
 async function getJson(url) {
@@ -3185,8 +3150,73 @@ function fetchGarminTage() {
   return p;
 }
 
-// src/lib/useErfahrung.ts
+// src/screens/RecoveryPanel.tsx
+var import_react7 = __toESM(require_react(), 1);
+
+// src/components/ZeitraumWahl.tsx
+var import_react2 = __toESM(require_react(), 1);
+
+// src/lib/windows.ts
+var ALL_RANGE = "9999d";
+var isCustom = (w) => typeof w === "object" && w !== null;
+var heute = () => (/* @__PURE__ */ new Date()).toLocaleDateString("sv-SE");
+var tageZwischen = (a, b) => Math.round((Date.parse(b + "T12:00:00Z") - Date.parse(a + "T12:00:00Z")) / 864e5);
+var STEPS = [
+  [14, "14d"],
+  [30, "30d"],
+  [60, "60d"],
+  [90, "90d"],
+  [120, "120d"],
+  [180, "180d"],
+  [240, "240d"],
+  [360, "360d"]
+];
+function rangeFor(w, lead = 0, min = 0) {
+  if (!isCustom(w) && w === 0) return ALL_RANGE;
+  const tage = isCustom(w) ? tageZwischen(w.von, heute()) + 1 : w;
+  const n = Math.max(tage + lead, min);
+  for (const [d, r] of STEPS) if (n <= d) return r;
+  return ALL_RANGE;
+}
+
+// src/components/ZeitraumWahl.tsx
+var import_jsx_runtime = __toESM(require_jsx_runtime(), 1);
+
+// src/components/BefindenHinweis.tsx
 var import_react3 = __toESM(require_react(), 1);
+var import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
+
+// src/lib/useErfahrung.ts
+var import_react4 = __toESM(require_react(), 1);
+
+// src/lib/format.ts
+function fmtNum(v, digits = 0) {
+  if (v === null || v === void 0 || !Number.isFinite(v)) return "\u2014";
+  return v.toLocaleString("de-DE", {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits
+  });
+}
+
+// src/components/UI.tsx
+var import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
+
+// src/screens/CorrelationPanel.tsx
+var import_react5 = __toESM(require_react(), 1);
+var import_jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
+var VARS = [
+  { key: "readiness", label: "Readiness", short: "Ready", unit: "" },
+  { key: "hrv", label: "HRV", short: "HRV", unit: "ms" },
+  { key: "rhr", label: "RHR", short: "RHR", unit: "bpm" },
+  { key: "sleepH", label: "Schlafdauer", short: "Schlaf h", unit: "h" },
+  { key: "sleepScore", label: "Schlafscore", short: "Score", unit: "" },
+  { key: "essDay", label: "Last", short: "Last", unit: "ESS" }
+];
+var VAR = Object.fromEntries(VARS.map((v) => [v.key, v]));
+
+// src/components/GarminSportProfilTile.tsx
+var import_react6 = __toESM(require_react(), 1);
+var import_jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
 
 // src/lib/monotony.ts
 var MONO = { GUT: 1.5, NORMAL: 2, UNGUENSTIG: 2.5, WARNUNG: 3 };
@@ -3268,6 +3298,9 @@ var MONOTONIE_REGEL_TEXT = [
   "Steuerung: Ein hoher Wert an einem Tag ist praktisch bedeutungslos. Liegt die 7-Tage-Monotonie an 2 Tagen in Folge \xFCber etwa 2,0 und hast du schon 4\u20135 fordernde Tage gesammelt \u2192 n\xE4chster Tag sehr locker oder frei. Als Entlastung z\xE4hlt ein lockerer oder freier Tag (h\xF6chstens 40 ESS bzw. 60 % deiner \xFCblichen Tageslast). Bleibt der Wert \xFCber 2,5 \u2192 innerhalb 24\u201348 h echter Ruhetag oder sehr kurzer Regenerationsreiz. \xDCber 3,0 \u2192 mindestens ein echter Entlastungstag oder deutliche Reduktion. Hohe Monotonie plus schlechte Erholungswerte \u2192 keine Qualit\xE4tseinheit durchdr\xFCcken.",
   "Entscheidend ist die Kombination mit der Gesamtlast (Strain = Wochenlast \xD7 Monotonie). Monotonie senkst du durch klaren Rhythmus: harte Reize klar hart, lockere Tage wirklich locker, mindestens ein echter Erholungstag bei hoher Gesamtlast \u2013 nicht durch weniger Gesamtlast."
 ].join("\n");
+
+// src/screens/RecoveryPanel.tsx
+var import_jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
 
 // src/lib/cloudLLM.ts
 var SENTINEL = "__PORT_5000__";
@@ -3385,7 +3418,7 @@ function fetchPlanSimulation(signal) {
 function fetchPlanSimulationWithTimeout(ms = 8e3) {
   return withTimeout(ms, (signal) => fetchPlanSimulation(signal));
 }
-function dedupeByDateKeepLast(rows) {
+function dedupeByDateKeepLast2(rows) {
   const map = /* @__PURE__ */ new Map();
   rows.forEach((row) => map.set(row.date, row));
   return Array.from(map.values()).sort((a, b) => a.date.localeCompare(b.date));
@@ -3396,40 +3429,7 @@ function toNum(v) {
   return Number.isFinite(n) ? n : null;
 }
 
-// src/components/BefindenHinweis.tsx
-var import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
-
-// src/lib/format.ts
-function fmtNum(v, digits = 0) {
-  if (v === null || v === void 0 || !Number.isFinite(v)) return "\u2014";
-  return v.toLocaleString("de-DE", {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits
-  });
-}
-
-// src/components/UI.tsx
-var import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
-
-// src/screens/CorrelationPanel.tsx
-var import_react6 = __toESM(require_react(), 1);
-var import_jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
-var VARS = [
-  { key: "readiness", label: "Readiness", short: "Ready", unit: "" },
-  { key: "hrv", label: "HRV", short: "HRV", unit: "ms" },
-  { key: "rhr", label: "RHR", short: "RHR", unit: "bpm" },
-  { key: "sleepH", label: "Schlafdauer", short: "Schlaf h", unit: "h" },
-  { key: "sleepScore", label: "Schlafscore", short: "Score", unit: "" },
-  { key: "essDay", label: "Last", short: "Last", unit: "ESS" }
-];
-var VAR = Object.fromEntries(VARS.map((v) => [v.key, v]));
-
-// src/components/GarminSportProfilTile.tsx
-var import_react7 = __toESM(require_react(), 1);
-var import_jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
-
-// src/screens/RecoveryPanel.tsx
-var import_jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
+// src/kern/votumRegeln.ts
 var SLEEP_GOAL_H = 7.5;
 var RHR_BASELINE_DAYS = 28;
 var RHR_BASELINE_MIN_VALUES = 7;
@@ -3587,7 +3587,7 @@ function decideVote(d) {
   return { vote, reasons, bind };
 }
 function buildDays(raw) {
-  const rows = dedupeByDateKeepLast(
+  const rows = dedupeByDateKeepLast2(
     raw.filter((r) => r && typeof r.date === "string").map((r) => ({ ...r, date: String(r.date).slice(0, 10) }))
   ).sort((a, b) => a.date < b.date ? -1 : 1);
   return rows.map((r, idx) => {

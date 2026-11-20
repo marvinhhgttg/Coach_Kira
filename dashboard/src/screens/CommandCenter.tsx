@@ -3,6 +3,7 @@ import { TexteStatusTile } from '../components/TexteStatusTile';
 import { AppKopplungTile } from '../components/AppKopplungTile';
 import { RechenkernTile } from '../components/RechenkernTile';
 import { VotumAbgleichTile } from '../components/VotumAbgleichTile';
+import { IST_V2 } from '../lib/v2guard';
 import { GarminNachtTile } from '../components/GarminNachtTile';
 import { GarminGesternTile } from '../components/GarminGesternTile';
 import { SchlafkontoTile } from '../components/SchlafkontoTile';
@@ -514,7 +515,7 @@ export function CommandCenter({
       <section className="panel overflow-hidden">
         <div>
           <div className="p-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <ArcGauge label="Gesamt" value={summary?.gesamtScore} sub={summary?.gesamtAmpel || 'Status'} />
+            <ArcGauge label={IST_V2 ? 'Supervisor-Score' : 'Gesamt'} value={summary?.gesamtScore} sub={IST_V2 ? `Zweitmeinung · ${summary?.gesamtAmpel || '–'}` : summary?.gesamtAmpel || 'Status'} />
             <ArcGauge label="Training" value={summary?.trainingScore} sub="Training Score" />
             <ArcGauge label="Recovery" value={summary?.recoveryScore} sub="Recovery Score" />
             <ArcGauge
@@ -657,7 +658,7 @@ export function CommandCenter({
         ) : (
           <dl className="grid gap-x-8 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
             <div>
-              <dt className="label">Letzter KI-Report</dt>
+              <dt className="label">{IST_V2 ? 'Letzter Supervisor-Lauf' : 'Letzter KI-Report'}</dt>
               <dd className="tnum mt-1 flex items-center gap-2">
                 {summary?.gesamtAmpel && <AmpelDot ampel={summary.gesamtAmpel as any} size={7} />}
                 {summary?.gesamtScore != null ? `Score ${summary.gesamtScore}` : '—'}

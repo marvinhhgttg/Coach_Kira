@@ -35,10 +35,10 @@ export function VotumAbgleichTile() {
   const u = d?.vergleich?.urteil || 'offen';
   const q = d?.quote;
   return (
-    <Panel title="Votum-Abgleich · Cockpit und Supervisor (Etappe 2, Vorbereitung)">
+    <Panel title="Votum-Abgleich · Cockpit-Regel gegen Supervisor (Etappe 2)">
       <div className="flex items-center justify-between gap-3 mb-3">
         <p className="text-sm opacity-80">
-          {laedt ? 'Lese beide Voten …' : !d ? '' : !d.ok ? `Kein Abgleich: ${d.error}` : 'Zwei unabhängige Regelwerke bewerten denselben Tag. Ziel von Etappe 2: eine Regel, ein Votum.'}
+          {laedt ? 'Lese beide Voten …' : !d ? '' : !d.ok ? `Kein Abgleich: ${d.error}` : 'Es gilt die Cockpit-Regel (Entscheidung 20.11.2026). Die Supervisor-Ampel ist nur noch Zweitmeinung und wird zum Vergleich mitgeschrieben.'}
         </p>
         <button className="text-xs px-2 py-1 rounded border border-current/20 whitespace-nowrap shrink-0" onClick={() => laden(true)} disabled={laedt}>Neu lesen</button>
       </div>
@@ -46,13 +46,14 @@ export function VotumAbgleichTile() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs mb-3">
             <div className="rounded border border-current/10 p-2">
-              <div className="opacity-60">Cockpit (Regeln im Frontend)</div>
+              <div className="opacity-60">Tagesvotum · Cockpit-Regel (gilt)</div>
               <div className="text-base font-semibold">{d.cockpit?.vote ? VOTE_DE[d.cockpit.vote] : 'Morgenwerte fehlen'}</div>
               {d.cockpit?.gruende?.map((g) => <div key={g} className="opacity-70">{g}</div>)}
             </div>
             <div className="rounded border border-current/10 p-2">
-              <div className="opacity-60">Supervisor (Apps Script)</div>
+              <div className="opacity-60">Supervisor-Ampel (Zweitmeinung)</div>
               <div className="text-base font-semibold">{d.supervisor?.ampel ?? '–'}{d.supervisor?.score != null ? ` · ${d.supervisor.score}` : ''}</div>
+              <div className="opacity-70">gewichteter Mittelwert der Einzelscores, ohne Veto</div>
               <div className="opacity-70">Plan-Status {d.supervisor?.planStatus ?? '–'}</div>
               <div className="opacity-70">{d.supervisor?.aktuell ? `Lauf ${new Date(d.supervisor.lauf || '').toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr` : 'heute noch kein Supervisor-Lauf'}</div>
             </div>

@@ -1,11 +1,10 @@
 /**
- * Coach-Kira-Rechenkern – Tagesvotum (Etappe 2, Vorbereitung).
- * Einstiegspunkt für Cockpit, Widgets und Server. Die Regeln liegen heute noch in
- * src/screens/RecoveryPanel.tsx (decideVote/buildDays); Etappe 2 verschiebt sie hierher,
- * ohne dass sich ein Aufrufer ändert.
+ * Coach-Kira-Rechenkern – Tagesvotum.
+ * Entscheidung 20.11.2026: Es gilt die Cockpit-Regel. Die Regeln stehen in ./votumRegeln.ts
+ * (decideVote/buildDays). Cockpit, Widgets und Server greifen nur über den Kern darauf zu.
  */
-export { buildDays, RECOVERY_FETCH_METRICS, VOTE_LABEL, VOTE_LEVEL, VOTE_ORDER } from '../screens/RecoveryPanel';
-export type { RecoveryDay, Vote, VoteGrund } from '../screens/RecoveryPanel';
+export { buildDays, RECOVERY_FETCH_METRICS, VOTE_LABEL, VOTE_LEVEL, VOTE_ORDER } from './votumRegeln';
+export type { RecoveryDay, Vote, VoteGrund } from './votumRegeln';
 
 /** Gemeinsame Stufenleiter: 0 rot · 1 gelb · 2 grün · 3 blau/lila */
 export const STUFE_COCKPIT: Record<string, number> = { REST: 0, EASY: 1, TRAIN: 2, QUALITY: 3 };

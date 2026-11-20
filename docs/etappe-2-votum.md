@@ -1,4 +1,4 @@
-# Etappe 2 – Ein Votum statt zwei (Vorbereitung)
+# Etappe 2 – Ein Votum statt zwei
 
 Stand 20.11.2026. Nur v2 (coachkira-v2.pplx.app), nur lesend. Live bleibt unverändert.
 
@@ -29,7 +29,54 @@ Cockpit und Widgets sind schon einheitlich. Der Supervisor rechnet seine Ampel g
 
 **Apps Script:** Patch C ist nicht nötig, weil die vorhandene Route `mode=status` reicht.
 
-## Plan für Etappe 2
+## Entscheidung und Umsetzung (20.11.2026, Abend)
+
+**Entscheidung (Marc):** Es gilt die Cockpit-Regel.
+
+**Umgesetzt in v2:**
+- Die Regel liegt jetzt in `src/kern/votumRegeln.ts`. Dorthin sind `decideVote`, `buildDays`, die Stufen und Schwellen umgezogen.
+- `RecoveryPanel.tsx` liest die Regel nur noch aus dem Kern. Cockpit, Widgets und Server nutzen dieselbe Datei.
+- Gegenprobe: Ich habe alle 452 Tage vom 26.08.2025 bis 20.11.2026 vor und nach dem Umzug gerechnet. Votum, Grund, Begründung und Stufen der Einzelwerte sind **byte-identisch**.
+- In der Anzeige von v2 heißt die Supervisor-Ampel jetzt „Supervisor-Score · Zweitmeinung“, der Heartbeat-Eintrag „Letzter Supervisor-Lauf“. Das Tagesvotum kommt allein aus der Cockpit-Regel.
+- Die Kachel „Votum-Abgleich“ schreibt die Zweitmeinung weiter mit. So sieht man, wann und warum beide Voten auseinanderlaufen.
+
+**Apps Script ist bewusst nicht geändert.** Der Supervisor läuft über einen Zeit-Trigger. Ein Trigger führt immer den zuletzt *gespeicherten* Code aus, nicht eine Bereitstellung. Deshalb würde jede Änderung im Editor sofort auch Live treffen, nicht nur „v2 Schattenbetrieb“. Patch C kommt erst mit der Umschaltung.
+
+## Warum Gelb, obwohl das Cockpit Rest sagt (20.11.2026)
+
+Der Supervisor kennt kein Veto. Seine Gesamtampel ist ein gewichteter Mittelwert der gültigen Einzelscores (`calculateGesamtScore`), heute 10, weil Protein-Invest offen ist. HRV, Readiness und KEI zählen doppelt. Die Grenzen sind: unter 50 rot, unter 80 gelb, sonst grün.
+
+| Einzelscore | Wert | Score | Gewicht |
+|---|---|---|---|
+| RHR | 53 | 100 (LILA) | 1 |
+| Schlafdauer | 7,2 h | 85 | 1 |
+| Schlafscore | 64 | 64 | 1 |
+| HRV | 38 ms | 50 | 2 |
+| Training Readiness | 35 | 35 | 2 |
+| TE-Balance | 26,6 % | 100 (LILA) | 1 |
+| ACWR | 0,72 | 10 | 1 |
+| Training Status | – | 70 | 1 |
+| 7-Tage-Bilanz Ernährung | – | 100 | 1 |
+| KEI | −146 | 25 | 2 |
+
+Daraus ergibt sich (Summe Score × Gewicht) / Summe Gewichte = 749 / 13 = **57,6 → 58 → GELB**.
+
+Gute Werte wie Ruhepuls, TE-Balance, Schlafdauer und Ernährung gleichen die schlechte Readiness rechnerisch aus. Die Cockpit-Regel geht anders vor. Sie startet bei der Readiness (32, also Basis Rest), und Warnsignale können das Votum nur senken.
+
+**Off-Tag:** Heute ist ein Off-Tag (Sport Off, ESS 0). Er ist **nicht** der Grund für das Gelb. Er drückt den Supervisor-Wert sogar nach unten, weil das niedrige ACWR von 0,72 dort mit 10 Punkten bewertet wird. Das Cockpit-Votum Rest passt zum Off-Tag.
+
+**Readiness 35 statt 32:** Der Supervisor ist um 11:28 Uhr gelaufen und hat zu diesem Zeitpunkt den Wert 35 gesehen. Das Cockpit nutzt den späteren Wert 32.
+
+## Nächste Schritte
+
+1. Zweitmeinung 14 Tage weiter mitschreiben. Das dient als Beleg und als Prüfung, ob Kern-Votum und Daten stabil sind.
+2. **Patch C bei der Umschaltung:**
+   - Der Supervisor übernimmt das Kern-Votum über `GET /api/rechenkern/votum` als Zeile „Tagesvotum“ in `AI_REPORT_STATUS`.
+   - Die KI-Texte sollen sich daran ausrichten statt an der Mittelwert-Ampel.
+   - Patch C kommt als Streiche-Ersetze-Patch und wird gemeinsam mit der Umschaltung von Live eingespielt.
+3. Soll-ESS aus dem Kern ableiten (Etappe 2b).
+
+## Ursprünglicher Plan für Etappe 2
 
 1. **Beobachten (14 Tage):**
    - Täglich beide Voten mitschreiben.
