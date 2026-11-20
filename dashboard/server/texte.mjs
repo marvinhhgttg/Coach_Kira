@@ -55,7 +55,7 @@ const istAktivitaet = (r) => {
 };
 const f = (v, d = 0) => (v === null || v === undefined ? 'unbekannt' : Number(v).toFixed(d));
 
-export function setupTexte(app, { getSetting, setSetting, cloudChat, originOk, scriptUrl }) {
+export function setupTexte(app, { getSetting, setSetting, cloudChat, originOk, scriptUrl, passiv = false }) {
   const lesen = (k, def) => {
     try {
       const v = getSetting(k);
@@ -412,10 +412,13 @@ export function setupTexte(app, { getSetting, setSetting, cloudChat, originOk, s
     }
   }
 
-  setInterval(() => {
-    if (Date.now() - (zustand().letzterTakt || 0) >= TAKT_MS * 0.95) takt(true);
-  }, Math.min(60000, TAKT_MS / 4));
-  setTimeout(() => takt(false), 5000);
+  // Zweitinstanz (v2): kein automatischer Wächter, damit nichts doppelt ins Sheet geschrieben wird
+  if (!passiv) {
+    setInterval(() => {
+      if (Date.now() - (zustand().letzterTakt || 0) >= TAKT_MS * 0.95) takt(true);
+    }, Math.min(60000, TAKT_MS / 4));
+    setTimeout(() => takt(false), 5000);
+  }
 
   // ---------- Manuelle Läufe (Knopf im Cockpit) ----------
   const auftraege = () => lesen('texte_auftraege', []);
@@ -475,6 +478,7 @@ export function setupTexte(app, { getSetting, setSetting, cloudChat, originOk, s
     return [200, { ok: true, auftrag: a }];
   }
   app.post('/api/texte/starten', (req, res) => {
+    if (passiv) return res.status(409).json({ ok: false, error: 'In der v2-Testinstanz deaktiviert. Bitte im Cockpit auf coachkira.pplx.app starten.' });
     if (!originOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
     const [code, body] = auftragStarten(req.body || {});
     res.status(code).json(body);

@@ -143,6 +143,15 @@ const app = express();
 app.set('trust proxy', 1);
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
+// Zweitinstanz (v2): nur lesend. Alle schreibenden API-Aufrufe sind gesperrt –
+// keine Ersteinrichtung/PIN, keine Cloud-KI, keine Gerätekopplung, keine Aufträge an den Mac.
+const INSTANZ_V2 = (process.env.CK_INSTANZ || 'live') !== 'live';
+app.use((req, res, next) => {
+  if (INSTANZ_V2 && req.method !== 'GET' && req.method !== 'HEAD' && req.path.startsWith('/api/')) {
+    return res.status(409).json({ ok: false, error: 'v2-Testinstanz ist nur lesend. Schreiben bitte im Cockpit auf coachkira.pplx.app.' });
+  }
+  next();
+});
 app.use((req, _res, next) => {
   if (APP_BASE && req.url === APP_BASE) req.url = '/';
   else if (APP_BASE && req.url.startsWith(`${APP_BASE}/`)) req.url = req.url.slice(APP_BASE.length) || '/';
@@ -378,7 +387,9 @@ app.post('/api/action/:name', requireAuth, async (req, res) => {
   }
 });
 
-const texte = setupTexte(app, { getSetting, setSetting, cloudChat: cloudChatServer, originOk: llmOriginOk, scriptUrl: APPS_SCRIPT_URL });
+const INSTANZ = process.env.CK_INSTANZ || 'live';
+const texte = setupTexte(app, { getSetting, setSetting, cloudChat: cloudChatServer, originOk: llmOriginOk, scriptUrl: APPS_SCRIPT_URL, passiv: INSTANZ !== 'live' });
+app.get('/api/instanz', (_req, res) => res.json({ instanz: INSTANZ }));
 setupWidget(app, { getSetting, setSetting, originOk: llmOriginOk, texte });
 setupLokalRelay(app, {
   originOk: llmOriginOk,
