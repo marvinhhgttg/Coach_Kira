@@ -14,7 +14,13 @@ export function EsHebelTile() {
   const [error, setError] = useState<string | null>(null);
 
   // Ziel-Rechner state
-  const [zielScore, setZielScore] = useState<number>(7000);
+  const [zielScore, setZielScore] = useState<number>(() => {
+    try {
+      const n = Number(localStorage.getItem('ck_es_ziel'));
+      if (Number.isFinite(n) && n >= 1000 && n <= 20000) return n;
+    } catch {}
+    return 7000;
+  });
   const [zielDatum, setZielDatum] = useState<string>(() => {
     try {
       const saved = localStorage.getItem('ck_es_datum');

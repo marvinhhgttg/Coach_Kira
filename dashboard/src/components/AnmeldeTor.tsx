@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { SERVER_BASE } from '../lib/cloudLLM';
 import { Logo } from './Logo';
+import { geraeteEinstellungenStarten } from '../lib/geraeteSync';
 
 type Status = { configured: boolean; authenticated: boolean } | null;
 
@@ -57,6 +58,7 @@ export function AnmeldeTor({ children }: { children: ReactNode }) {
       const s = await jsonAnfrage('auth/status');
       if (!s.j || typeof s.j.authenticated !== 'boolean') { setFrei(true); return; } // ohne Server (z. B. Vorschau): nicht sperren
       setSt(s.j);
+      if (s.j.authenticated) await geraeteEinstellungenStarten(); // Etappe 5: zentrale Einstellungen vor dem ersten Anzeigen
       setFrei(!!s.j.authenticated);
     } catch {
       setFrei(true);
@@ -89,6 +91,7 @@ export function AnmeldeTor({ children }: { children: ReactNode }) {
       if (r.j?.authenticated) {
         setPin(''); setPin2(''); setCode('');
         window.dispatchEvent(new Event('ck-angemeldet'));
+        await geraeteEinstellungenStarten();
         setFrei(true);
       } else {
         setFehler(FEHLER[r.j?.error] || r.j?.error || `Anmeldung fehlgeschlagen (HTTP ${r.status}).`);

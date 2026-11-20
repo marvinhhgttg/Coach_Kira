@@ -39,6 +39,7 @@ const REGELN = [
   ['POST', /^\/api\/action\//, 'cockpit'],
   ['*', /^\/api\/gs$/, 'cockpit'],
   ['GET', /^\/api\/zugang\/status$/, 'cockpit'],
+  ['*', /^\/api\/einstellungen$/, 'cockpit'],
 ];
 
 function klasse(method, pfad) {

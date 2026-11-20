@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { setupTexte } from './server/texte.mjs';
 import { setupWidget } from './server/widget_api.mjs';
 import { setupLokalRelay } from './server/lokal_relay.mjs';
+import { setupEinstellungen } from './server/einstellungen.mjs';
 import { setupZugang } from './server/zugang.mjs';
 import { setupRechenkern } from './server/rechenkern_api.mjs';
 
@@ -430,7 +431,10 @@ const texte = setupTexte(app, { getSetting, setSetting, cloudChat: cloudChatServ
 app.get('/api/instanz', (_req, res) => res.json({ instanz: INSTANZ }));
 setupRechenkern(app, { getSetting, setSetting, aktiv: INSTANZ !== 'live' });
 setupWidget(app, { getSetting, setSetting, originOk: browserOk, texte });
+setupEinstellungen(app, { getSetting, setSetting });
 setupLokalRelay(app, {
+  getSetting,
+  setSetting,
   originOk: llmOriginOk,
   macStatus: () => {
     const m = texte.statusAntwort().mac;
