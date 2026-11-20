@@ -42,6 +42,57 @@ Cockpit und Widgets sind schon einheitlich. Der Supervisor rechnet seine Ampel g
 
 **Apps Script ist bewusst nicht geändert.** Der Supervisor läuft über einen Zeit-Trigger. Ein Trigger führt immer den zuletzt *gespeicherten* Code aus, nicht eine Bereitstellung. Deshalb würde jede Änderung im Editor sofort auch Live treffen, nicht nur „v2 Schattenbetrieb“. Patch C kommt erst mit der Umschaltung.
 
+## Patch C eingespielt (20.11.2026, 19:16)
+
+Patch C ist eingespielt (Marc: „Bitte wende Patch C selbst an“). Er ist rein additiv: keine Zeile entfernt, 94 Zeilen ergänzt.
+
+**Sicherung:**
+- Vorher: `apps-script-backup/2026-11-20-vor-patch-c/`, mit allen 5 Skriptdateien und 10 HTML-Dateien, vollständig.
+- Nachher: `apps-script-backup/2026-11-20-nach-patch-c/`.
+
+**Änderungen in `KiraGeminiSupervisor.gs`:**
+1. **Neue Funktion `ckKern_votumProtokoll_(ss)`.** Sie läuft am Ende jedes Supervisor-Laufs, direkt vor END_OK, und ist in try/catch gekapselt. Ein Fehler bricht den Supervisor deshalb nie ab. Sie arbeitet in drei Schritten:
+   - Sie liest das Kern-Votum (Cockpit-Regel) aus `coachkira-v2 …/api/rechenkern/votum`.
+   - Sie liest die eigene, gerade geschriebene Ampel aus `AI_REPORT_STATUS`.
+   - Sie schreibt eine Zeile je Tag in das **neue Blatt `AI_KERN_VOTUM`**. Läuft der Supervisor mehrmals am Tag, gilt der letzte Lauf.
+
+   Spalten: Datum, Kern-Votum, Kern-Stufe, Grund, Begründung, Supervisor-Ampel, Supervisor-Stufe, Gesamtscore, Recovery Score, Training Score, Plan Status, Urteil, Zeit, Quelle.
+2. **Neue Route `doGet ?mode=kernVotum[&tage=120]`**, nur lesend.
+3. **`ckKern_votumJetzt()`** zum manuellen Test im Editor.
+
+**Änderung in `appsscript.json`:** `https://coachkira-v2.pplx.app/` steht jetzt in `urlFetchWhitelist`. Ohne den Eintrag meldet Google: „URL nicht auf die Zulassungsliste gesetzt“.
+
+**Bereitstellung:**
+- Nur die v2-Bereitstellung (ID `AKfycbwfLq…`) läuft jetzt auf **v981**. Im Dialog heißt sie „Unbenannt“, neue Beschreibung: „v2 Schattenbetrieb – Patch C (Kern-Votum)“.
+- Live `AKfycbxCEN…` bleibt auf **v978** und kennt `mode=kernVotum` nicht. Das ist geprüft.
+
+**Test:**
+- `ckKern_votumJetzt` hat um 19:15 diese Zeile geschrieben: 2026-11-20 · REST · readiness · GELB · 58 · cockpit_strenger.
+- `mode=kernVotum` liefert die Zeile.
+- v2 liest seine Historie jetzt aus diesem Blatt. Sie bleibt deshalb auch nach einer Neuveröffentlichung erhalten.
+
+**Bitte beachten:** Der Supervisor-Trigger führt den gespeicherten Code aus, auch für Live. Zwei Dinge sind bei Live deshalb neu:
+- Ein zusätzlicher Abruf von wenigen Sekunden am Ende jedes Laufs.
+- Das Schreiben ins neue Blatt `AI_KERN_VOTUM`.
+
+Was Live anzeigt, bleibt unverändert, denn kein bestehendes Blatt und keine bestehende Route wurde verändert.
+
+**Rückweg:**
+- Den Inhalt von `2026-11-20-vor-patch-c/KiraGeminiSupervisor.gs` und `appsscript.json` zurück in den Editor kopieren und speichern.
+- Das Blatt `AI_KERN_VOTUM` löschen.
+
+## Stand Etappe 2
+
+| Teil | Stand |
+|---|---|
+| Eine Regel (Cockpit-Regel) im Kern | erledigt, 452 Tage identisch |
+| Cockpit, Widgets und Server nutzen sie | erledigt |
+| Supervisor protokolliert Kern-Votum und eigene Ampel (Patch C) | erledigt, ab heute dauerhaft im Sheet |
+| v2 zeigt die Supervisor-Ampel nur als Zweitmeinung | erledigt |
+| Abnahme: 14 Tage lückenlos, jede Abweichung mit Grund | läuft, 1/14 |
+| KI-Texte (Briefing, Analyse) richten sich nach dem Kern-Votum | offen. Der Prompt-Bau liegt im Cockpit- und Mac-Server, das betrifft Live. Kommt mit der Umschaltung |
+| Soll-ESS aus dem Kern (2b) | offen |
+
 ## Warum Gelb, obwohl das Cockpit Rest sagt (20.11.2026)
 
 Der Supervisor kennt kein Veto. Seine Gesamtampel ist ein gewichteter Mittelwert der gültigen Einzelscores (`calculateGesamtScore`), heute 10, weil Protein-Invest offen ist. HRV, Readiness und KEI zählen doppelt. Die Grenzen sind: unter 50 rot, unter 80 gelb, sonst grün.
@@ -70,7 +121,7 @@ Gute Werte wie Ruhepuls, TE-Balance, Schlafdauer und Ernährung gleichen die sch
 ## Nächste Schritte
 
 1. Zweitmeinung 14 Tage weiter mitschreiben. Das dient als Beleg und als Prüfung, ob Kern-Votum und Daten stabil sind.
-2. **Patch C bei der Umschaltung:**
+2. **Patch C:** erledigt, siehe oben. Offen ist noch, dass die KI-Texte bei der Umschaltung dem Kern-Votum folgen. Der frühere Plan dazu lautete:
    - Der Supervisor übernimmt das Kern-Votum über `GET /api/rechenkern/votum` als Zeile „Tagesvotum“ in `AI_REPORT_STATUS`.
    - Die KI-Texte sollen sich daran ausrichten statt an der Mittelwert-Ampel.
    - Patch C kommt als Streiche-Ersetze-Patch und wird gemeinsam mit der Umschaltung von Live eingespielt.

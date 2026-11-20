@@ -66,15 +66,15 @@ export function VotumAbgleichTile() {
           <div className="rounded border border-current/10 p-2 text-xs">
             <div className="flex items-baseline gap-2">
               <span className="text-lg font-semibold tabular-nums">{q?.gleich ?? 0}/{q?.tage ?? 0}</span>
-              <span className="opacity-80">Tage mit gleicher Stufe (täglich ab 12 Uhr mitgeschrieben)</span>
+              <span className="opacity-80">Tage mit gleicher Stufe (der Supervisor schreibt nach jedem Lauf ins Blatt AI_KERN_VOTUM)</span>
             </div>
             <div className="flex flex-wrap gap-1 mt-2" aria-label="Tägliche Votum-Vergleiche">
               {(d.historie || []).map((h) => (
                 <span key={h.datum} title={`${h.datum}: Cockpit ${h.cockpit}, Supervisor ${h.ampel} → ${TEXT[h.urteil]}`} className="inline-block w-3 h-3 rounded-sm" style={{ background: FARBE[h.urteil] }} />
               ))}
-              {!d.historie?.length && <span className="opacity-60">Erster Eintrag folgt heute ab 12 Uhr.</span>}
+              {!d.historie?.length && <span className="opacity-60">Erster Eintrag folgt nach dem nächsten Supervisor-Lauf.</span>}
             </div>
-            <div className="opacity-60 mt-1">Der Supervisor überschreibt seine Ampel täglich und führt keine Historie, deshalb beginnt die Reihe erst jetzt.</div>
+            <div className="opacity-60 mt-1">Dauerhafte Historie seit Patch C (20.11.2026) im Sheet, unabhängig von Neuveröffentlichungen.</div>
           </div>
         </>
       )}

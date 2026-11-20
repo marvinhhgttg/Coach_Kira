@@ -115,9 +115,20 @@ export function setupRechenkern(app, { getSetting, setSetting, aktiv = true } = 
   app.get('/api/rechenkern/votum', async (req, res) => {
     try {
       const d = await votum(req.query.neu === '1');
-      const h = vtHistorie();
+      // Patch C: dauerhafte Historie aus AI_KERN_VOTUM (schreibt der Supervisor), lokale Reihe als Ergänzung
+      const lokal = vtHistorie();
+      let blatt = [];
+      try {
+        const r = await fetch(`${V2_URL}?mode=kernVotum&tage=120&cb=${Date.now()}`, { redirect: 'follow' });
+        const j = JSON.parse(await r.text());
+        if (j.ok) blatt = (j.zeilen || []).filter((z) => z['Kern-Votum']).map((z) => ({ datum: z.Datum, final: true, cockpit: z['Kern-Votum'], cStufe: Number(z['Kern-Stufe']), bind: z.Grund || null, ampel: z['Supervisor-Ampel'], sStufe: z['Supervisor-Stufe'] === '' ? null : Number(z['Supervisor-Stufe']), score: z.Gesamtscore === '' ? null : Number(z.Gesamtscore), planStatus: z['Plan Status'] || null, urteil: z.Urteil, quelle: 'AI_KERN_VOTUM', zeit: z.Zeit }));
+      } catch {}
+      const tage = new Map();
+      for (const x of lokal) tage.set(x.datum, x);
+      for (const x of blatt) tage.set(x.datum, x); // Blatt gewinnt
+      const h = [...tage.values()].sort((a, b) => a.datum.localeCompare(b.datum));
       const n = h.length, gleich = h.filter((x) => x.urteil === 'gleich').length;
-      res.json({ ...d, historie: h.slice(-30), quote: { tage: n, gleich, cockpitStrenger: h.filter((x) => x.urteil === 'cockpit_strenger').length, supervisorStrenger: h.filter((x) => x.urteil === 'supervisor_strenger').length } });
+      res.json({ ...d, historieQuelle: blatt.length ? 'AI_KERN_VOTUM' : 'v2-Server', historie: h.slice(-30), quote: { tage: n, gleich, cockpitStrenger: h.filter((x) => x.urteil === 'cockpit_strenger').length, supervisorStrenger: h.filter((x) => x.urteil === 'supervisor_strenger').length } });
     } catch (e) {
       res.json({ ok: false, error: String(e?.message || e).slice(0, 200) });
     }
