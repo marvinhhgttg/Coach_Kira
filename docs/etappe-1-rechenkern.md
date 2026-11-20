@@ -237,6 +237,13 @@ Ersetze durch:
 
 ---
 
+## Stand nach Patch B (20.11.2026, 17:19)
+
+- „v2 Schattenbetrieb“ steht auf **Version 980** (Patch A + B). Live bleibt auf v978 und kennt die Route nicht.
+- coachkira-v2 → Technik → „Rechenkern · Abgleich mit dem Sheet“ rechnet live nach. Alle 11 Formeln stimmen zu 100 %, und es gibt eine Sheet-Fehlerzelle (2025-09-01, `#VALUE!`).
+- Drift zwischen der Wertekopie `KK_TIMELINE` und `timeline`: ESS an 17 von 452 Tagen, ctl_star an 255 Tagen, Morgenwerte an über 200 Tagen. Hier fehlt noch die Entscheidung, welches Blatt gilt.
+- Noch offen: der automatische tägliche Abgleich (Baustein 1.5) und die 14-Tage-Beobachtung.
+
 ## Ablauf nach Patch A
 
 1. **Formeln ziehen:** Der Server in v2 holt `rohdaten&formeln=1` und legt die Formeln aller berechneten Spalten (`coachE_*`, `fKEI`, `load_star`, `ctl_star`, `ctl_gap`, `Monotony7`, `Strain7`, `SG_*`, `TE_Balance_Trend`) als Vorlage ab.
