@@ -159,36 +159,37 @@ function scoreValue(item: StatusItemLike) {
   return Number.isFinite(w) ? Math.max(0, Math.min(100, w)) : 0;
 }
 
-function DetailScoreRow({ item }: { item: StatusItemLike }) {
-  const score = scoreValue(item);
-  const marker = `${score}%`;
-  const rawValue = item.wert !== undefined && item.wert !== null && String(item.wert) !== ''
-    ? item.wert
-    : score;
+function MiniRing({ score, farbe }: { score: number | null; farbe: string }) {
+  const r = 22, u = 2 * Math.PI * r;
+  const anteil = score == null ? 0 : Math.max(0, Math.min(100, score)) / 100;
   return (
-    <div className="grid gap-3 py-3 md:grid-cols-[220px_1fr_150px_1.4fr] md:items-center border-b border-border/70 last:border-b-0">
-      <div>
+    <div className="relative flex items-center justify-center shrink-0" style={{ width: 56, height: 56 }}>
+      <svg width="56" height="56" viewBox="0 0 56 56" className="absolute inset-0">
+        <circle cx="28" cy="28" r={r} fill="none" stroke="currentColor" strokeOpacity="0.12" strokeWidth="5" />
+        {score != null && <circle cx="28" cy="28" r={r} fill="none" stroke={farbe} strokeWidth="5" strokeLinecap="round"
+          strokeDasharray={`${u * anteil} ${u}`} transform="rotate(-90 28 28)" />}
+      </svg>
+      <span className="relative tnum text-sm font-semibold text-ink">{score == null ? '—' : Math.round(score)}</span>
+    </div>
+  );
+}
+
+function DetailScoreRow({ item }: { item: StatusItemLike }) {
+  const roh = zahlOderNull(item.score);
+  const score = roh != null ? Math.max(0, Math.min(100, roh)) : null;
+  const wert = item.wert !== undefined && item.wert !== null && String(item.wert) !== '' ? String(item.wert) : null;
+  const farbe = scoreFarbe(score);
+  return (
+    <div className="grid gap-3 py-3 grid-cols-[56px_1fr] md:grid-cols-[56px_200px_1fr] items-center border-b border-border/70 last:border-b-0">
+      <MiniRing score={score} farbe={farbe} />
+      <div className="min-w-0">
         <div className="text-sm font-semibold text-ink">{item.metrik || '—'}</div>
-        <div className="text-2xs text-ink-dim tnum mt-0.5">{item.kategorie || 'Score'}</div>
-      </div>
-      <div>
-        <div className="relative h-2.5 rounded-full overflow-hidden bg-bg-subtle">
-          <div className="absolute inset-y-0 left-0 bg-ampel-rot" style={{ width: '23%' }} />
-          <div className="absolute inset-y-0 left-[23%] bg-ampel-orange" style={{ width: '25%' }} />
-          <div className="absolute inset-y-0 left-[48%] bg-ampel-gruen" style={{ width: '25%' }} />
-          <div className="absolute inset-y-0 left-[73%] bg-accent-strong" style={{ width: '22%' }} />
-          <div className="absolute inset-y-0 right-0 bg-ampel-lila" style={{ width: '5%' }} />
-          <div
-            className="absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border-2 border-bg shadow"
-            style={{ left: `calc(${marker} - 8px)`, backgroundColor: '#38bdf8' }}
-          />
+        <div className="flex items-baseline gap-2 mt-0.5">
+          {wert && <span className="tnum text-base font-semibold text-ink">{wert}</span>}
+          <span className="text-2xs font-medium" style={{ color: farbe }}>{score == null ? 'kein Score' : `Score ${Math.round(score)}`}</span>
         </div>
       </div>
-      <div className="tnum">
-        <div className="text-lg font-semibold text-accent">{String(rawValue)}</div>
-        <div className="text-2xs text-ink-muted">SCORE: {fmtNum(score)}</div>
-      </div>
-      <p className="text-xs text-ink-muted leading-relaxed max-w-none">{item.text || '—'}</p>
+      <p className="col-span-2 md:col-span-1 text-xs text-ink-muted leading-relaxed max-w-none">{item.text || '—'}</p>
     </div>
   );
 }
@@ -240,8 +241,8 @@ function DetailScores({ items }: { items: StatusItemLike[] }) {
     <div className="space-y-5">
       {groups.map((g) => (
         <section key={g.title}>
-          <h3 className="text-base font-semibold uppercase tracking-wide text-ink mb-2">{g.title}</h3>
-          <div className="panel-raised px-4">
+          <h3 className="text-base font-semibold text-ink mb-2">{g.title}</h3>
+          <div className="panel px-4">
             {g.items.map((item, i) => <DetailScoreRow key={`${g.title}-${item.metrik}-${i}`} item={item} />)}
           </div>
         </section>
