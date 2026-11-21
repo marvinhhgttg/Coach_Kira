@@ -31,15 +31,22 @@ export function EsHebelTile() {
   const tagUmschalten = (wt: number) =>
     langSpeichern({ ...langEin, tage: langEin.tage.includes(wt) ? langEin.tage.filter((x) => x !== wt) : [...langEin.tage, wt].sort((a, b) => a - b) });
   // Kiras Vorschlag aus dem letzten Plan-Briefing (Feld lange_einheit je Tag)
-  const [kiVorschlag, setKiVorschlag] = useState<{ stand: string | null; tage: Record<string, { dauer_h?: number; sport?: string; es_effekt?: number; hinweis?: string }> } | null>(null);
+  const [kiVorschlag, setKiVorschlag] = useState<{ stand: string | null; quelle?: string; tage: Record<string, { dauer_h?: number; sport?: string; es_effekt?: number; hinweis?: string }> } | null>(null);
   useEffect(() => {
     let alive = true;
+    // zuerst Kiras Wochenplan (Plan › Diese Woche, liegt im Browser), sonst das Plan-Briefing vom Morgenlauf
+    try {
+      const wp = JSON.parse(localStorage.getItem('ck_kira_wochenplan_v1') || 'null');
+      const tage: Record<string, any> = {};
+      for (const x of (wp && wp.tage) || []) if (x && x.date && x.langH != null) tage[x.date] = { dauer_h: x.langH, sport: x.sport, es_effekt: x.esEffekt ?? undefined, hinweis: x.why || undefined };
+      if (Object.keys(tage).length) { setKiVorschlag({ stand: wp.erstellt || null, quelle: 'Wochenplan', tage }); return () => { alive = false; }; }
+    } catch { /* weiter mit dem Plan-Briefing */ }
     fetchPlanBriefing()
       .then((r: any) => {
         if (!alive || !r || !r.ok) return;
         const tage: Record<string, any> = {};
         for (const x of r.recommendations || []) if (x && x.date && x.lange_einheit && typeof x.lange_einheit === 'object') tage[String(x.date).slice(0, 10)] = x.lange_einheit;
-        setKiVorschlag({ stand: r.briefingTimestamp || null, tage });
+        setKiVorschlag({ stand: r.briefingTimestamp || null, quelle: 'Plan-Briefing', tage });
       })
       .catch(() => {});
     return () => { alive = false; };
@@ -253,7 +260,7 @@ export function EsHebelTile() {
                 >
                   {[0, 1, 2, 3, 4].map((n) => <option key={n} value={n}>{n}</option>)}
                 </select>
-                <span className="text-2xs text-ink-muted">gilt auf allen Geräten und fließt ins nächste Plan-Briefing ein</span>
+                <span className="text-2xs text-ink-muted">gilt auf allen Geräten; Kira berücksichtigt es beim nächsten Wochenplan („Neu planen“ unter Plan › Diese Woche) und im Plan-Briefing</span>
               </div>
             </div>
 
@@ -299,8 +306,8 @@ export function EsHebelTile() {
                   </table>
                 </div>
                 <p className="mt-1 text-2xs text-ink-muted">
-                  Richtwert und Zusatzwirkung aus deiner Historie. Kiras Vorschlag kommt aus dem Plan-Briefing
-                  {kiVorschlag?.stand ? ` vom ${new Date(kiVorschlag.stand).toLocaleString('de-DE', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })}` : ''} – neue Vorgaben wirken ab dem nächsten Lauf.
+                  Richtwert und Zusatzwirkung aus deiner Historie. Kiras Vorschlag kommt aus {kiVorschlag?.quelle === 'Wochenplan' ? 'dem Wochenplan (Plan › Diese Woche)' : 'dem Plan-Briefing des Morgenlaufs'}
+                  {kiVorschlag?.stand ? ` vom ${new Date(kiVorschlag.stand).toLocaleString('de-DE', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })}` : ''} – neue Vorgaben wirken nach „Neu planen“.
                 </p>
               </div>
             )}

@@ -19,7 +19,7 @@ import { fetchGarminTage } from './garmin';
 import { langKontext, parseLangEinstellung, type LangKontext } from './esLang';
 
 /** 21.11.2026: lange Einheiten fürs Plan-Briefing (Einstellung aus den Geräte-Einstellungen). */
-async function ladeLangKontext(): Promise<LangKontext | null> {
+export async function ladeLangKontext(): Promise<LangKontext | null> {
   try {
     const [t, g] = await Promise.all([ladeP3(), fetchGarminTage()]);
     if (!t.length || !g.size) return null;

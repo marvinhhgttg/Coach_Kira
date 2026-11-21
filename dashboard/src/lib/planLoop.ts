@@ -9,7 +9,7 @@ import { MONOTONIE_REGEL_TEXT, monotonyPlanViolations } from './monotony';
 export type LoopDay = { date: string; day?: string; load: number; zone: string; sport: string; locked: boolean };
 export type LoopSimRow = { sim_load: number; acwr: number; monotony: number; kei?: number; ctl: number; atl: number };
 export type LoopCheck = { issues: string[]; level: 'ok' | 'warn' | 'bad'; cap?: string };
-export type LoopRound = { loads: number[]; zones: string[]; why: string[]; summary: string; violations: string[]; maxAcwr: number; restDays: number; finalCtl: number; sports?: string[]; training?: string[]; alt?: string[] };
+export type LoopRound = { loads: number[]; zones: string[]; why: string[]; summary: string; violations: string[]; maxAcwr: number; restDays: number; finalCtl: number; sports?: string[]; training?: string[]; alt?: string[]; langH?: (number | null)[]; esEffekt?: (number | null)[] };
 export type Llm = (msgs: LlmMsg[]) => Promise<string>;
 export const localLlm: Llm = (msgs) => localChat(msgs, { format: 'json', numCtx: 16384 });
 
@@ -79,7 +79,7 @@ export async function runPlanLoop(args: {
     (wp
       ? 'Antworte ausschließlich als JSON: {"summary": "2-3 Sätze auf Deutsch", "days": [{"date": "YYYY-MM-DD", "load": Zahl 0-300, "zone": "Off|Z1|Z2|Z3|Z4|Z5", "sport": "' +
         args.sportsAllowed!.join('|') +
-        '", "training": "Einheit in max. 6 Wörtern", "alt": "Alternative in max. 5 Wörtern", "why": "max. 10 Wörter"}]} mit genau den 14 Tagen. Ruhetage: load 0, zone Off, sport Off.'
+        '", "training": "Einheit in max. 6 Wörtern", "alt": "Alternative in max. 5 Wörtern", "why": "max. 10 Wörter"}]} mit genau den 14 Tagen. Ruhetage: load 0, zone Off, sport Off. An Tagen mit langer Einheit zusätzlich "lang_h": Stunden und "es_effekt": Punkte Endurance Score.'
       : 'Antworte ausschließlich als JSON: {"summary": "2-3 Sätze auf Deutsch", "days": [{"date": "YYYY-MM-DD", "load": Zahl 0-300, "zone": "Off|Z1|Z2|Z3|Z4|Z5", "why": "kurz"}]} mit genau den 14 Tagen.');
   const rules =
     `REGELN (werden nach deinem Vorschlag automatisch nachgerechnet):\n` +
@@ -106,7 +106,7 @@ export async function runPlanLoop(args: {
   for (let r = 1; r <= MAX_ROUNDS; r++) {
     onProgress?.(`Runde ${r}/${MAX_ROUNDS}: Kira plant…`);
     const text = await llm(msgs);
-    const j = parseJsonLoose<{ summary?: string; days?: { date: string; load: number; zone: string; why?: string; sport?: string; training?: string; alt?: string }[] }>(text);
+    const j = parseJsonLoose<{ summary?: string; days?: { date: string; load: number; zone: string; why?: string; sport?: string; training?: string; alt?: string; lang_h?: number; es_effekt?: number }[] }>(text);
     const byDate = new Map((j.days || []).map((x) => [x.date, x]));
     const loads = days.map((d, i) => {
       const x = byDate.get(d.date);
@@ -126,9 +126,12 @@ export async function runPlanLoop(args: {
     });
     const training = days.map((d) => String(byDate.get(d.date)?.training || ''));
     const alt = days.map((d) => String(byDate.get(d.date)?.alt || ''));
+    const zahl = (v: unknown) => { const n = Number(v); return v != null && v !== '' && Number.isFinite(n) ? n : null; };
+    const langH = days.map((d, i) => { const n = zahl(byDate.get(d.date)?.lang_h); return n != null && n > 0 && n <= 12 && loads[i] > 0 ? Math.round(n * 4) / 4 : null; });
+    const esEffekt = days.map((d, i) => (langH[i] != null ? zahl(byDate.get(d.date)?.es_effekt) : null));
     onProgress?.(`Runde ${r}/${MAX_ROUNDS}: Simulation prüft…`);
     const ev = evaluate(days, loads, zones, simulate, check);
-    rounds.push({ loads, zones, why, summary: String(j.summary || ''), violations: ev.violations, maxAcwr: ev.maxAcwr, restDays: ev.restDays, finalCtl: ev.finalCtl, ...(wp ? { sports, training, alt } : {}) });
+    rounds.push({ loads, zones, why, summary: String(j.summary || ''), violations: ev.violations, maxAcwr: ev.maxAcwr, restDays: ev.restDays, finalCtl: ev.finalCtl, ...(wp ? { sports, training, alt, langH, esEffekt } : {}) });
     if (!ev.violations.length) break;
     msgs.push({ role: 'assistant', content: text });
     msgs.push({

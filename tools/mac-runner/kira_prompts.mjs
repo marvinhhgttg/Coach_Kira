@@ -3817,7 +3817,7 @@ var hTxt = (h) => {
   const m = Math.round(h * 60);
   return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, "0")} h`;
 };
-function langeEinheitenBlock(k) {
+function langeEinheitenBlock(k, modus = "plan") {
   if (!k || !k.einstellung || !k.status || !k.effekt) return "";
   const WT = ["", "Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
   const e = k.einstellung, st = k.status, eff = k.effekt;
@@ -3842,8 +3842,8 @@ function langeEinheitenBlock(k) {
     "- Sch\xE4tze den Einfluss auf den Endurance Score in Punkten (Zusatzwirkung plus Wirkung der Last) und begr\xFCnde kurz.",
     "- recommended_load_ess am langen Tag passend zur Dauer (Dauer \xD7 ESS pro Stunde der Sportart).",
     "- Tagesvotum Recover/Rest, Readiness kritisch oder ACWR > 1,3: verschieben auf den n\xE4chsten passenden Tag oder k\xFCrzen \u2013 und das sagen.",
-    '- Erg\xE4nze an diesen Tagen im Empfehlungs-Objekt: "lange_einheit": {"dauer_h": 2.5, "sport": "Rad", "es_effekt": 25, "hinweis": "kurze Begr\xFCndung"}. An anderen Tagen das Feld weglassen.',
-    "- Nenne die langen Einheiten im briefing mit Dauer und erwartetem Einfluss."
+    modus === "plan" ? '- Erg\xE4nze an diesen Tagen im Empfehlungs-Objekt: "lange_einheit": {"dauer_h": 2.5, "sport": "Rad", "es_effekt": 25, "hinweis": "kurze Begr\xFCndung"}. An anderen Tagen das Feld weglassen.' : '- Erg\xE4nze an diesen Tagen im Tages-Objekt "lang_h": Dauer in Stunden (z. B. 2.5) und "es_effekt": erwarteter Einfluss auf den Endurance Score in Punkten. An anderen Tagen beide Felder weglassen.',
+    modus === "plan" ? "- Nenne die langen Einheiten im briefing mit Dauer und erwartetem Einfluss." : "- Nenne die langen Einheiten in der summary mit Dauer und erwartetem Einfluss."
   ].join("\n");
 }
 function briefingRoh(type, daten) {

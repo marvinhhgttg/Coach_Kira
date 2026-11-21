@@ -12,6 +12,9 @@ import { fetchExtras } from '../lib/extras';
 import { fmtDateShort, fmtNum } from '../lib/format';
 import { WorkoutPanel } from './WorkoutPanel';
 import type { PlanDay } from '../lib/api';
+import { ladeLangKontext } from '../lib/briefingLocal';
+import { langeEinheitenBlock } from '../lib/kiraPrompts';
+import type { LangKontext } from '../lib/esLang';
 
 const KEY = 'ck_kira_wochenplan_v1';
 
@@ -26,6 +29,9 @@ export type WochenplanTag = {
   why: string;
   locked: boolean;
   vorher: number;
+  /** 21.11.2026: lange Einheit – Dauer (h) und erwarteter Einfluss auf den Endurance Score (Punkte) von Kira */
+  langH?: number | null;
+  esEffekt?: number | null;
 };
 export type Wochenplan = {
   erstellt: string;
@@ -77,6 +83,7 @@ export function KiraWochenplanTile({
   const [plan, setPlan] = useState<Wochenplan | null>(() => loadWochenplan());
   const [openDate, setOpenDate] = useState<string | null>(null);
   const [extraCtx, setExtraCtx] = useState('');
+  const [langK, setLangK] = useState<LangKontext | null>(null);
 
   // Nur Pläne zeigen, die zum aktuellen 14-Tage-Fenster passen
   const fenster = sim.map((r) => r.date);
@@ -84,6 +91,13 @@ export function KiraWochenplanTile({
   useEffect(() => {
     onPlan?.(gueltig);
   }, [gueltig?.erstellt]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Lange Einheiten (Vorgabe aus dem Endurance-Score-Hebel, Stand und Termine) – vor jedem Planen frisch
+  useEffect(() => {
+    let off = false;
+    ladeLangKontext().then((k) => { if (!off) setLangK(k); }).catch(() => {});
+    return () => { off = true; };
+  }, [fenster[0]]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Zusatzwissen aus den Extras (nur lesen): Vorausblick, Saisonrahmen, Ziele
   useEffect(() => {
@@ -140,9 +154,13 @@ export function KiraWochenplanTile({
     setErr(null);
     try {
       const s = sim[0];
+      const lk = (await ladeLangKontext().catch(() => null)) || langK; // Vorgabe evtl. gerade geändert
+      if (lk) setLangK(lk);
+      const langTxt = lk ? langeEinheitenBlock(lk, 'wochenplan').trim() + '\n' : '';
       const context =
         `STAND HEUTE (${s?.date || ''}): ATL ${fmtNum(s?.atl)}, CTL ${fmtNum(s?.ctl)}, ACWR ${fmtNum(s?.acwr, 2)}, Monotonie ${fmtNum(s?.monotony, 2)}.\n` +
         (extraCtx ? extraCtx + '\n' : '') +
+        langTxt +
         'AUFGABE: Plane die 14 Tage als Wochenplan – passend zu Saisonrahmen, Zielen und Garmin-Lage. Wochenlast möglichst nah an Fitness halten bzw. Saison-Ziel, Entlastung wo der Körper es braucht. Sport je Tag aus der erlaubten Liste.';
       const r = await runPlanLoop({
         days,
@@ -173,6 +191,8 @@ export function KiraWochenplanTile({
           why: b.why[i] || '',
           locked: d.locked || i === 0,
           vorher: d.load,
+          langH: b.langH?.[i] ?? null,
+          esEffekt: b.esEffekt?.[i] ?? null,
         })),
       };
       setPlan(neu);
@@ -187,7 +207,7 @@ export function KiraWochenplanTile({
       setBusy(false);
       setProgress('');
     }
-  }, [sim, days, simulate, check, sportsAllowed, engine, extraCtx]);
+  }, [sim, days, simulate, check, sportsAllowed, engine, extraCtx, langK]);
 
   const apply = () => {
     if (!gueltig) return;
@@ -220,6 +240,11 @@ export function KiraWochenplanTile({
     return out;
   }, [gueltig]);
 
+  // Termine aus der Vorgabe (Endurance-Score-Hebel): Datum → Richtwert
+  const langTermin = useMemo(
+    () => new Map((langK?.termine || []).map((t) => [t.date, `Richtwert ${fmtH(t.dauerH)}${t.art === 'sehr_lang' ? ' (sehr lang)' : ''}`])),
+    [langK],
+  );
   const openTag = gueltig?.tage.find((t) => t.date === openDate) || null;
   const openDay: PlanDay | null = openTag
     ? { date: openTag.date, day: openTag.day, recommended_load_ess: openTag.load, original_load_ess: openTag.vorher, recommended_zone: openTag.zone, training_1: `${openTag.sport}${openTag.training ? ' – ' + openTag.training : ''}`, training_2: openTag.alt, projected_effect: openTag.why }
@@ -252,7 +277,7 @@ export function KiraWochenplanTile({
 
       {!gueltig && !busy && !err && (
         <p className="mt-3 text-sm text-ink-muted">
-          Kira plant die nächsten 14 Tage direkt – mit Fitness, Garmin-Lage, Saisonrahmen, Zielen und gesperrten Tagen. Die Simulation prüft jeden Vorschlag
+          Kira plant die nächsten 14 Tage direkt – mit Fitness, Garmin-Lage, Saisonrahmen, Zielen, langen Einheiten (Vorgabe im Endurance-Score-Hebel) und gesperrten Tagen. Die Simulation prüft jeden Vorschlag
           und schickt Regelverstöße bis zu dreimal zurück. Lokal dauert das etwa 1–3 Minuten.
         </p>
       )}
@@ -301,6 +326,13 @@ export function KiraWochenplanTile({
                   <div className="text-2xs text-ink-muted">
                     {t.sport} · {t.zone || 'Zone offen'}
                   </div>
+                  {(t.langH != null || langTermin.has(t.date)) && (
+                    <div className={`text-2xs rounded px-1.5 py-0.5 self-start border ${t.langH != null ? 'border-accent-strong/50 text-accent' : 'border-orange-400/60 text-orange-500'}`}>
+                      {t.langH != null
+                        ? `Lange Einheit ${fmtH(t.langH)}${t.esEffekt != null ? ` · Endurance ${t.esEffekt >= 0 ? '+' : '−'}${Math.abs(Math.round(t.esEffekt))}` : ''}`
+                        : `Langer Tag laut Vorgabe – ${langTermin.get(t.date)}, von Kira nicht eingeplant`}
+                    </div>
+                  )}
                   {t.training && <div className="text-xs text-ink">{t.training}</div>}
                   {t.alt && <div className="text-2xs text-ink-dim">Alternative: {t.alt}</div>}
                   {t.why && <p className="text-2xs text-ink-muted leading-snug">{t.why}</p>}
@@ -324,6 +356,10 @@ export function KiraWochenplanTile({
   );
 }
 
+function fmtH(h: number) {
+  const m = Math.round(h * 60);
+  return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')} h`;
+}
 function addDays(iso: string, n: number) {
   const d = new Date(iso + 'T12:00:00');
   d.setDate(d.getDate() + n);
