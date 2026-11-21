@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Bar, BarChart, CartesianGrid, ComposedChart, Legend, Line, ReferenceLine, ResponsiveContainer, Scatter, Tooltip, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, ComposedChart, Legend, Line, ReferenceArea, ReferenceLine, ResponsiveContainer, Scatter, Tooltip, XAxis, YAxis } from 'recharts';
 import { Panel } from './UI';
 import { KiraFazit } from './KiraFazit';
-import { Hinweis, Kz, Laedt, SportSchalter } from './AnalysenTraining';
+import { EntLueckenHinweis, Hinweis, Kz, Laedt, SportSchalter, luckeText, tsVon } from './AnalysenTraining';
 import { useGarminTage } from '../lib/garmin';
 import { useTimeline } from '../lib/analysenErholung';
 import { ALLTAG_KALENDER } from '../lib/extras';
@@ -114,11 +114,13 @@ export function EntSaisonTile() {
   const r = useMemo(() => entSaison(tage, sport), [tage, sport]);
   const facts = [
     `${sport === 'lauf' ? 'Laufen' : 'Rad'}, flach, ab 60 min, ${r.n} Einheiten. Modell: Entkopplung = Dauer + Zeit. Je Stunde länger ${vz(r.proStunde, 1)} Punkte, Trend bei gleicher Dauer ${vz(r.trendJe90, 1)} Punkte je 90 Tage (negativ = Grundlage wächst).`,
-    ...r.tabelle.map((t) => `${t.lab}: ${t.n} Einheiten, Median ${de(t.alle, 1)} %${DAUER_BINS.map((b, i) => (t.b[i] != null ? `, ${b.lab} ${de(t.b[i], 1)} %` : '')).join('')}`),
+    `Nur gleichmäßige Einheiten (Tempo bzw. Leistung ändert sich zwischen den Hälften um höchstens 10 %); ${r.ungleich.length} aussortiert.`,
+    ...r.luecken.map((l) => `Lücke ${kurz(l.von)} bis ${l.offen ? 'heute' : kurz(l.bis)}: ${luckeText(l, sport)}.`),
+    ...r.tabelle.filter((t) => t.n > 0).map((t) => `${t.lab}: ${t.n} Einheiten, Median ${de(t.alle, 1)} %${DAUER_BINS.map((b, i) => (t.b[i] != null ? `, ${b.lab} ${de(t.b[i], 1)} %` : '')).join('')}`),
   ];
   return (
     <Panel title="Entkopplung über die Saison" right={<SportSchalter sport={sport} setSport={setSport} />}>
-      <Hinweis>Wächst deine Grundlage? Entkopplung langer Einheiten je Quartal und nach Dauer getrennt – längere Einheiten entkoppeln naturgemäß stärker, deshalb ist die Dauer herausgerechnet.</Hinweis>
+      <Hinweis>Wächst deine Grundlage? Entkopplung langer Einheiten je Quartal und nach Dauer getrennt – längere Einheiten entkoppeln naturgemäß stärker, deshalb ist die Dauer herausgerechnet. Nur gleichmäßige Einheiten; graue Flächen = Zeiträume ohne auswertbare Einheit.</Hinweis>
       {tage === null ? <Laedt /> : r.n < 6 ? <p className="text-2xs text-ink-dim">Zu wenige Einheiten mit Entkopplung ({r.n}).</p> : (
         <>
           <div className="grid grid-cols-3 gap-2 mb-2">
@@ -130,8 +132,11 @@ export function EntSaisonTile() {
             <ResponsiveContainer>
               <ComposedChart data={r.linie} margin={{ left: -10, right: 20 }}>
                 <CartesianGrid strokeOpacity={0.12} />
-                <XAxis dataKey="ts" type="number" domain={['dataMin', 'dataMax']} tickFormatter={(t) => new Date(t).toLocaleDateString('de-DE', { month: 'short', year: '2-digit' })} tick={AX} />
-                <YAxis tick={AX} unit=" %" width={44} />
+                {r.luecken.map((l) => (
+                  <ReferenceArea key={l.von} x1={tsVon(l.von)} x2={tsVon(l.bis)} fill="#9aa5b1" fillOpacity={0.12} strokeOpacity={0} ifOverflow="extendDomain" />
+                ))}
+                <XAxis dataKey="ts" type="number" domain={['dataMin', r.luecken.some((l) => l.offen) ? tsVon(new Date().toLocaleDateString('sv-SE')) : 'dataMax']} tickFormatter={(t) => new Date(t).toLocaleDateString('de-DE', { month: 'short', year: '2-digit' })} tick={AX} />
+                <YAxis tick={AX} unit=" %" width={44} domain={[(min: number) => Math.floor(Math.min(0, min) - 1), (max: number) => Math.ceil(Math.max(5, max) + 1)]} allowDecimals={false} />
                 <ReferenceLine y={5} stroke="#22c55e" strokeDasharray="3 3" />
                 <Tooltip {...TT} labelFormatter={(t) => kurz(new Date(t as number).toLocaleDateString('sv-SE'))} formatter={(v: any, n: any) => [`${de(v, 1)} %`, n]} />
                 <Scatter dataKey="y" name="Einheit" fill="#64748b" />
@@ -143,10 +148,15 @@ export function EntSaisonTile() {
             <table className="w-full text-2xs tnum">
               <thead className="text-ink-dim"><tr><th className="text-left font-normal">Quartal</th><th className="text-right font-normal">n</th><th className="text-right font-normal">alle</th>{DAUER_BINS.map((b) => <th key={b.lab} className="text-right font-normal">{b.lab}</th>)}</tr></thead>
               <tbody>{r.tabelle.map((t) => (
+                t.n === 0 ? (
+                  <tr key={t.q} className="border-t border-border text-ink-dim"><td>{t.lab}</td><td className="text-right">0</td><td colSpan={DAUER_BINS.length + 1} className="text-right">keine auswertbare Einheit</td></tr>
+                ) : (
                 <tr key={t.q} className="border-t border-border"><td>{t.lab}</td><td className="text-right">{t.n}</td><td className="text-right">{de(t.alle, 1)} %</td>{DAUER_BINS.map((_, i) => <td key={i} className="text-right">{t.b[i] == null ? '–' : `${de(t.b[i], 1)} %`}</td>)}</tr>
+                )
               ))}</tbody>
             </table>
           </div>
+          <EntLueckenHinweis luecken={r.luecken} ungleich={r.ungleich} sport={sport} />
           <KiraFazit title={`Entkopplung Saison ${sport}`} facts={facts} evidenz={r.n < 30 ? 'schwach' : 'mittel'} evidenzText={`${evidenz(r.n)} – ${r.n} Einheiten`} regeln={['Quartale mit weniger als 5 Einheiten nicht einzeln deuten.']} />
         </>
       )}

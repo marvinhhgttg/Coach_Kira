@@ -31,12 +31,33 @@ export const Kz = ({ lab, wert, sub, ton }: { lab: string; wert: ReactNode; sub?
 );
 
 // ─── 1 Aerobe Entkopplung ───────────────────────────────────────────────────
-const tsVon = (d: string) => new Date(d + 'T12:00:00').getTime();
-function luckeText(l: EntLuecke, sport: Sport) {
+export const tsVon = (d: string) => new Date(d + 'T12:00:00').getTime();
+export function luckeText(l: EntLuecke, sport: Sport) {
   const was = sport === 'lauf' ? 'Läufe' : 'Radeinheiten';
   return l.lang === 0
     ? `keine ${was} ab 60 min`
     : `${l.lang} ${l.lang === 1 ? (sport === 'lauf' ? 'Lauf' : 'Radeinheit') : was} ab 60 min, aber hügelig, ungleichmäßig oder ohne Rundendaten`;
+}
+
+/** Graue Lücken und aussortierte ungleichmäßige Einheiten erklären (Entkopplung und Saison). */
+export function EntLueckenHinweis({ luecken, ungleich, sport }: { luecken: EntLuecke[]; ungleich: { datum: string; aenderungPct: number }[]; sport: Sport }) {
+  if (!luecken.length && !ungleich.length) return null;
+  return (
+    <div className="mt-2 space-y-1 text-2xs text-ink-muted" data-testid="entkopplung-luecken">
+      {luecken.map((l) => (
+        <div key={l.von} className="flex items-start gap-2">
+          <span className="mt-0.5 inline-block h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: 'rgba(154,165,177,0.35)' }} />
+          <span>{kurz(l.von)} bis {l.offen ? 'heute' : kurz(l.bis)}: {luckeText(l, sport)}.</span>
+        </div>
+      ))}
+      {ungleich.length > 0 && (
+        <div>
+          Nicht gezählt, weil ungleichmäßig (Tempo bzw. Leistung ändert sich um mehr als 10 %):{' '}
+          {ungleich.map((u) => `${kurz(u.datum)} (${u.aenderungPct} %)`).join(', ')}.
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function EntkopplungTile() {
@@ -78,22 +99,7 @@ export function EntkopplungTile() {
               </ComposedChart>
             </ResponsiveContainer>
           </div>
-          {(r.luecken.length > 0 || r.ungleich.length > 0) && (
-            <div className="mt-2 space-y-1 text-2xs text-ink-muted" data-testid="entkopplung-luecken">
-              {r.luecken.map((l) => (
-                <div key={l.von} className="flex items-start gap-2">
-                  <span className="mt-0.5 inline-block h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: 'rgba(154,165,177,0.35)' }} />
-                  <span>{kurz(l.von)} bis {l.offen ? 'heute' : kurz(l.bis)}: {luckeText(l, sport)}.</span>
-                </div>
-              ))}
-              {r.ungleich.length > 0 && (
-                <div>
-                  Nicht gezählt, weil ungleichmäßig (Tempo bzw. Leistung ändert sich um mehr als 10 %):{' '}
-                  {r.ungleich.map((u) => `${kurz(u.datum)} (${u.aenderungPct} %)`).join(', ')}.
-                </div>
-              )}
-            </div>
-          )}
+          <EntLueckenHinweis luecken={r.luecken} ungleich={r.ungleich} sport={sport} />
           <KiraFazit title={`Entkopplung ${sport}`} facts={facts} />
         </>
       )}

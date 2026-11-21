@@ -10,7 +10,7 @@ import {
   LAUF, RAD, RAD_ALLE, cohenD, eintraege, flachGeeignet, hart, median, minuten, mittel, plusTage, quantil,
   startMin, tageSeit, theilSen, vBewegt, wochentag, type E,
 } from './stat';
-import type { Sport } from './analysenTraining';
+import { ENT_MAX_AENDERUNG, entkopplung, type Sport } from './analysenTraining';
 
 // ─── Hilfen ─────────────────────────────────────────────────────────────────
 /** Kleinste Quadrate (Normalgleichungen, Gauß). X ohne Konstante, gibt [a, b1..bk] und R². */
@@ -113,6 +113,8 @@ export function entPunkte(tage: GarminTage | null, sport: Sport): EntPunkt[] {
   return eintraege(tage)
     .filter((e) => (sport === 'lauf' ? LAUF : RAD_ALLE).has(e.a.typ || '') && minuten(e.a) >= 60 && e.a.ent && Number.isFinite(e.a.ent.pct))
     .filter((e) => hpk(e.a) <= (sport === 'lauf' ? 5 : 4) || indoor(e.a))
+    // 21.11.2026: nur gleichmäßige Einheiten, gleiche Regel wie „Aerobe Entkopplung“
+    .filter((e) => { const x = e.a.ent!; return x.x1 > 0 && Math.abs(x.x2 - x.x1) / x.x1 <= ENT_MAX_AENDERUNG; })
     .map((e) => ({ datum: e.datum, a: e.a, pct: e.a.ent!.pct, min: minuten(e.a) }));
 }
 const quartal = (d: string) => `${d.slice(0, 4)}-Q${Math.floor((Number(d.slice(5, 7)) - 1) / 3) + 1}`;
@@ -120,14 +122,21 @@ export function entSaison(tage: GarminTage | null, sport: Sport) {
   const ps = entPunkte(tage, sport);
   // Dauer und Zeit gemeinsam: pct = a + b·Stunden + c·Zeit
   const fit = ols(ps.map((p) => [p.min / 60, tageSeit(p.datum) / 90]), ps.map((p) => p.pct));
-  const qs = [...new Set(ps.map((p) => quartal(p.datum)))].sort();
+  // Alle Quartale vom ersten Punkt bis heute, auch leere (Lücken sichtbar machen)
+  const qs: string[] = [];
+  if (ps.length) {
+    const ende = quartal(new Date().toLocaleDateString('sv-SE'));
+    let [j, k] = [Number(ps[0].datum.slice(0, 4)), Math.floor((Number(ps[0].datum.slice(5, 7)) - 1) / 3) + 1];
+    for (let i = 0; i < 80; i++) { const q = `${j}-Q${k}`; qs.push(q); if (q >= ende) break; k++; if (k > 4) { k = 1; j++; } }
+  }
   const tabelle = qs.map((q) => {
     const xs = ps.filter((p) => quartal(p.datum) === q);
     return { q, lab: q.replace('-Q', ' Q'), n: xs.length, alle: median(xs.map((p) => p.pct)), b: DAUER_BINS.map((b) => median(xs.filter((p) => p.min >= b.lo && p.min < b.hi).map((p) => p.pct))) };
   });
   // Gleitender Median (8 Einheiten) für die Linie
   const linie = ps.map((p, i) => ({ ts: new Date(p.datum + 'T12:00:00').getTime(), y: p.pct, m: median(ps.slice(Math.max(0, i - 7), i + 1).map((q) => q.pct)), min: p.min, name: p.a.name }));
-  return { n: ps.length, proStunde: fit ? fit.beta[1] : null, trendJe90: fit ? fit.beta[2] : null, tabelle, linie };
+  const basis = entkopplung(tage, sport);
+  return { n: ps.length, proStunde: fit ? fit.beta[1] : null, trendJe90: fit ? fit.beta[2] : null, tabelle, linie, luecken: basis.luecken, ungleich: basis.ungleich };
 }
 
 // ─── 4 Was die Entkopplung beeinflusst ──────────────────────────────────────
