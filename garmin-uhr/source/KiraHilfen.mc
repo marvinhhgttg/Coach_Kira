@@ -17,7 +17,7 @@ module KiraHilfen {
 
     // Zahl als Text, Dezimalkomma; null → "–"
     function zahl(v, stellen as Number) as String {
-        if (v == null) { return "–"; }
+        if (v == null) { return "-"; }
         var s;
         if (v instanceof Float || v instanceof Double) {
             s = v.format("%." + stellen + "f");
@@ -33,6 +33,21 @@ module KiraHilfen {
         return s;
     }
 
+    // Zeichen, die die Uhrschrift nicht kennt, ersetzen
+    function sauber(t as String) as String {
+        var ersatz = [["→", ">"], ["✓", ""], ["–", "-"], ["—", "-"], ["…", "..."], ["≥", ">="], ["≤", "<="], ["×", "x"]];
+        for (var i = 0; i < ersatz.size(); i++) {
+            var a = ersatz[i][0];
+            var b = ersatz[i][1];
+            var p = t.find(a);
+            while (p != null) {
+                t = t.substring(0, p) + b + t.substring(p + a.length(), t.length());
+                p = t.find(a);
+            }
+        }
+        return t;
+    }
+
     function feld(d, a as String, b as String) {
         if (!(d instanceof Dictionary)) { return null; }
         var x = d.get(a);
@@ -41,7 +56,7 @@ module KiraHilfen {
     }
 
     function uhrzeit(sek) as String {
-        if (sek == null) { return "–"; }
+        if (sek == null) { return "-"; }
         var i = Gregorian.info(new Time.Moment(sek), Time.FORMAT_SHORT);
         return i.hour.format("%02d") + ":" + i.min.format("%02d");
     }

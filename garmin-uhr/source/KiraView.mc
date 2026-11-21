@@ -3,6 +3,7 @@ import Toybox.Application.Storage;
 import Toybox.Communications;
 import Toybox.Graphics;
 import Toybox.Lang;
+import Toybox.Math;
 import Toybox.PersistedContent;
 import Toybox.System;
 import Toybox.Time;
@@ -129,6 +130,8 @@ class KiraNetz {
 }
 
 class KiraView extends WatchUi.View {
+    var seite as Number = 0;   // 0 = Votum, 1 = Werte
+
     function initialize() {
         View.initialize();
     }
@@ -139,124 +142,183 @@ class KiraView extends WatchUi.View {
         }
     }
 
-    function onUpdate(dc as Graphics.Dc) as Void {
+    function blaettern(n as Number) as Void {
+        seite = (seite + n + 2) % 2;
+        WatchUi.requestUpdate();
+    }
+
+    // Zeile mittig, auf die Kreisbreite bei y gekürzt; gibt die nächste y-Position zurück
+    function zeile(dc as Graphics.Dc, y as Number, font as Graphics.FontType, text as String, farbe as Number) as Number {
         var w = dc.getWidth();
+        var r = w / 2;
+        var fh = dc.getFontHeight(font);
+        var mitte = y + fh / 2 - r;
+        var halb = r * r - mitte * mitte;
+        var breite = halb > 0 ? (2 * Math.sqrt(halb) * 0.86).toNumber() : 0;
+        if (breite < 40) { return y + fh; }
+        var t = Graphics.fitTextToArea(KiraHilfen.sauber(text), font, breite, fh, true);
+        dc.setColor(farbe, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(r, y, font, t, Graphics.TEXT_JUSTIFY_CENTER);
+        return y + fh;
+    }
+
+    function onUpdate(dc as Graphics.Dc) as Void {
         var h = dc.getHeight();
-        var cx = w / 2;
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         dc.clear();
-
         if (Storage.getValue("tok") == null) {
-            zeigeKopplung(dc, w, h);
+            zeigeKopplung(dc, h);
             return;
         }
         var d = KiraHilfen.daten();
-        dc.setColor(0x9A9A9A, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, h * 0.08, Graphics.FONT_XTINY, "COACH KIRA", Graphics.TEXT_JUSTIFY_CENTER);
         if (!(d instanceof Dictionary)) {
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, h / 2, Graphics.FONT_SMALL, netz().status != null && !netz().status.equals("laedt") ? netz().status : "Lädt …",
-                Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            zeile(dc, (h * 0.12).toNumber(), Graphics.FONT_XTINY, "COACH KIRA", 0x9A9A9A);
+            var st = netz().status;
+            zeile(dc, (h * 0.45).toNumber(), Graphics.FONT_SMALL, st != null && !st.equals("laedt") ? st : "Lädt ...", Graphics.COLOR_WHITE);
             return;
         }
-        var heute = KiraHilfen.vonHeute(d);
-        var farbe = heute ? KiraHilfen.farbe(KiraHilfen.feld(d, "votum", "stufe")) : 0x888888;
-
-        // Votum
-        var label = KiraHilfen.feld(d, "votum", "label");
-        dc.setColor(farbe, Graphics.COLOR_TRANSPARENT);
-        dc.fillCircle(cx, h * 0.205, 13);
-        dc.drawText(cx, h * 0.255, Graphics.FONT_LARGE, label == null ? "–" : label.toUpper(), Graphics.TEXT_JUSTIFY_CENTER);
-        var txt = KiraHilfen.feld(d, "votum", "text");
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, h * 0.37, Graphics.FONT_XTINY, (txt == null ? "" : txt) + (heute ? "" : " · Stand gestern"), Graphics.TEXT_JUSTIFY_CENTER);
-        var gr = KiraHilfen.feld(d, "votum", "gruende");
-        if (gr instanceof Array && gr.size() > 0) {
-            var g = Graphics.fitTextToArea(gr[0].toString(), Graphics.FONT_XTINY, w * 0.74, h * 0.11, true);
-            dc.setColor(0xBBBBBB, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, h * 0.43, Graphics.FONT_XTINY, g, Graphics.TEXT_JUSTIFY_CENTER);
+        if (seite == 0) { seiteVotum(dc, d, h); } else { seiteWerte(dc, d, h); }
+        // Seitenanzeige rechts
+        var w = dc.getWidth();
+        for (var i = 0; i < 2; i++) {
+            dc.setColor(i == seite ? Graphics.COLOR_WHITE : 0x555555, Graphics.COLOR_TRANSPARENT);
+            dc.fillCircle(w - 16, h / 2 - 9 + i * 18, 4);
         }
-
-        // Morgenwerte
-        var m = d.get("morgen");
-        var y = h * 0.56;
-        if (m instanceof Dictionary) {
-            if (m.get("eingetragen") == false) {
-                dc.setColor(0xE67E22, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(cx, y, Graphics.FONT_XTINY, "Morgenwerte fehlen", Graphics.TEXT_JUSTIFY_CENTER);
-            } else {
-                wert(dc, w * 0.22, y, "Ready", KiraHilfen.zahl(m.get("readiness"), 0));
-                wert(dc, w * 0.41, y, "Schlaf", KiraHilfen.zahl(m.get("schlaf"), 0));
-                wert(dc, w * 0.59, y, "HRV", KiraHilfen.zahl(m.get("hrv"), 0));
-                wert(dc, w * 0.78, y, "RHR", KiraHilfen.zahl(m.get("rhr"), 0));
-            }
-        }
-
-        // Last heute
-        var l = d.get("last");
-        if (l instanceof Dictionary) {
-            var soll = "Soll " + KiraHilfen.zahl(l.get("sollHeute"), 0) + " ESS";
-            var sp = l.get("sportHeute");
-            var zo = l.get("zoneHeute");
-            if (sp != null) { soll += " · " + sp; }
-            if (zo != null) { soll += " " + zo; }
-            if (l.get("erledigt") == true) { soll += " ✓"; }
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, h * 0.70, Graphics.FONT_TINY, soll, Graphics.TEXT_JUSTIFY_CENTER);
-            var band = l.get("acwrBand");
-            dc.setColor(0xBBBBBB, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, h * 0.775, Graphics.FONT_XTINY, "ACWR " + KiraHilfen.zahl(l.get("acwr"), 2) + (band != null ? " (" + band + ")" : ""), Graphics.TEXT_JUSTIFY_CENTER);
-        }
-
-        // Ziel
-        var z = d.get("ziel");
-        if (z instanceof Dictionary && z.get("name") != null) {
-            var zt = z.get("name") + " in " + KiraHilfen.zahl(z.get("tage"), 0) + " T";
-            if (z.get("tourform") != null) { zt += " · Form " + KiraHilfen.zahl(z.get("tourform"), 0) + " %"; }
-            dc.setColor(0x9AD0FF, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, h * 0.83, Graphics.FONT_XTINY, zt, Graphics.TEXT_JUSTIFY_CENTER);
-        }
-
-        // Stand
-        var st = netz().status;
-        var unten = st == null ? "Stand " + KiraHilfen.uhrzeit(Storage.getValue("at")) : st.equals("laedt") ? "aktualisiert …" : st;
-        dc.setColor(st != null && !st.equals("laedt") ? 0xE67E22 : 0x777777, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, h * 0.895, Graphics.FONT_XTINY, unten, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
-    function wert(dc as Graphics.Dc, x, y, titel as String, v as String) as Void {
+    function seiteVotum(dc as Graphics.Dc, d as Dictionary, h as Number) as Void {
+        var w = dc.getWidth();
+        var heute = KiraHilfen.vonHeute(d);
+        var farbe = heute ? KiraHilfen.farbe(KiraHilfen.feld(d, "votum", "stufe")) : 0x888888;
+        var y = (h * 0.11).toNumber();
+        y = zeile(dc, y, Graphics.FONT_XTINY, heute ? "COACH KIRA" : "COACH KIRA - STAND GESTERN", 0x9A9A9A);
+        y += 10;
+        dc.setColor(farbe, Graphics.COLOR_TRANSPARENT);
+        dc.fillCircle(w / 2, y + 12, 12);
+        y += 30;
+        var label = KiraHilfen.feld(d, "votum", "label");
+        y = zeile(dc, y, Graphics.FONT_LARGE, label == null ? "-" : label.toString().toUpper(), farbe);
+        var txt = KiraHilfen.feld(d, "votum", "text");
+        if (txt != null) { y = zeile(dc, y, Graphics.FONT_SMALL, txt.toString(), Graphics.COLOR_WHITE); }
+        var gr = KiraHilfen.feld(d, "votum", "gruende");
+        if (gr instanceof Array && gr.size() > 0) {
+            y = zeile(dc, y + 4, Graphics.FONT_XTINY, gr[0].toString(), 0xBBBBBB);
+        }
+        // Soll heute – das Wichtigste nach dem Votum
+        var l = d.get("last");
+        if (y < (h * 0.62).toNumber()) { y = (h * 0.62).toNumber(); } else { y += 6; }
+        if (l instanceof Dictionary) {
+            y = zeile(dc, y, Graphics.FONT_SMALL, "Heute " + KiraHilfen.zahl(l.get("sollHeute"), 0) + " ESS", Graphics.COLOR_WHITE);
+            var sp = l.get("sportHeute");
+            var zo = l.get("zoneHeute");
+            var sz = (sp != null ? sp.toString() : "") + (zo != null ? " " + zo.toString() : "");
+            if (l.get("erledigt") == true) { sz += (sz.length() > 0 ? " · " : "") + "erledigt"; }
+            if (sz.length() > 0) { zeile(dc, y, Graphics.FONT_XTINY, sz, 0xBBBBBB); }
+        }
+        unten(dc, h, d);
+    }
+
+    function seiteWerte(dc as Graphics.Dc, d as Dictionary, h as Number) as Void {
+        var w = dc.getWidth();
+        var y = (h * 0.11).toNumber();
+        y = zeile(dc, y, Graphics.FONT_XTINY, "MORGENWERTE", 0x9A9A9A);
+        var m = d.get("morgen");
+        y += 6;
+        if (m instanceof Dictionary && m.get("eingetragen") != false) {
+            var zh = dc.getFontHeight(Graphics.FONT_XTINY) + dc.getFontHeight(Graphics.FONT_SMALL) + 2;
+            kachel(dc, w * 0.33, y, "Readiness", KiraHilfen.zahl(m.get("readiness"), 0));
+            kachel(dc, w * 0.67, y, "Schlaf", KiraHilfen.zahl(m.get("schlaf"), 0));
+            y += zh;
+            kachel(dc, w * 0.33, y, "HRV", KiraHilfen.zahl(m.get("hrv"), 0));
+            kachel(dc, w * 0.67, y, "Ruhepuls", KiraHilfen.zahl(m.get("rhr"), 0));
+            y += zh;
+        } else {
+            y = zeile(dc, y + 20, Graphics.FONT_SMALL, "Morgenwerte fehlen", 0xE67E22) + 20;
+        }
+        var z = d.get("ziel");
+        if (z instanceof Dictionary && z.get("name") != null) {
+            var zt = z.get("name").toString() + " in " + KiraHilfen.zahl(z.get("tage"), 0) + " T";
+            if (z.get("tourform") != null) { zt += " · " + KiraHilfen.zahl(z.get("tourform"), 0) + " %"; }
+            y = zeile(dc, y, Graphics.FONT_XTINY, zt, 0x9AD0FF);
+        }
+        var l = d.get("last");
+        if (l instanceof Dictionary) {
+            var band = l.get("acwrBand");
+            y = zeile(dc, y, Graphics.FONT_XTINY, "ACWR " + KiraHilfen.zahl(l.get("acwr"), 2) + (band != null ? " · " + band.toString() : ""), Graphics.COLOR_WHITE);
+            var woche = l.get("woche");
+            if (woche instanceof Array && woche.size() > 0) { balken(dc, y + 6, woche); }
+        }
+    }
+
+    function kachel(dc as Graphics.Dc, x, y as Number, titel as String, v as String) as Void {
         dc.setColor(0x9A9A9A, Graphics.COLOR_TRANSPARENT);
         dc.drawText(x, y, Graphics.FONT_XTINY, titel, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(x, y + 30, Graphics.FONT_SMALL, v, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(x, y + dc.getFontHeight(Graphics.FONT_XTINY), Graphics.FONT_SMALL, v, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
-    function zeigeKopplung(dc as Graphics.Dc, w, h) as Void {
-        var cx = w / 2;
-        dc.setColor(0x9A9A9A, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, h * 0.12, Graphics.FONT_XTINY, "COACH KIRA", Graphics.TEXT_JUSTIFY_CENTER);
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        if (netz().code != null) {
-            dc.drawText(cx, h * 0.25, Graphics.FONT_SMALL, "Code im Cockpit eingeben", Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(cx, h * 0.33, Graphics.FONT_XTINY, "Technik › Garmin-Uhr", Graphics.TEXT_JUSTIFY_CENTER);
-            dc.setColor(0x2ECC71, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, h * 0.45, Graphics.FONT_NUMBER_MEDIUM, netz().code, Graphics.TEXT_JUSTIFY_CENTER);
-            dc.setColor(0x777777, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, h * 0.75, Graphics.FONT_XTINY, "wartet auf Bestätigung …", Graphics.TEXT_JUSTIFY_CENTER);
+    // 7 Balken der letzten Tage (Ist-ESS), heute rechts
+    function balken(dc as Graphics.Dc, y as Number, woche as Array) as Number {
+        var w = dc.getWidth();
+        var hoch = 36;
+        var mx = 1;
+        for (var i = 0; i < woche.size(); i++) {
+            var e = woche[i];
+            if (e instanceof Dictionary && e.get("ist") != null && e.get("ist") > mx) { mx = e.get("ist"); }
+        }
+        var n = woche.size();
+        var breite = (w * 0.5 / n).toNumber();
+        var x0 = (w * 0.25).toNumber();
+        for (var i = 0; i < n; i++) {
+            var e = woche[i];
+            var v = e instanceof Dictionary && e.get("ist") != null ? e.get("ist") : 0;
+            var bh = v > 0 ? (hoch * v / mx).toNumber() : 2;
+            if (bh < 2) { bh = 2; }
+            dc.setColor(i == n - 1 ? 0x2ECC71 : 0x777777, Graphics.COLOR_TRANSPARENT);
+            dc.fillRectangle(x0 + i * breite + 3, y + hoch - bh, breite - 6, bh);
+        }
+        return y + hoch;
+    }
+
+    function unten(dc as Graphics.Dc, h as Number, d as Dictionary) as Void {
+        var st = netz().status;
+        var t = st == null ? "Stand " + KiraHilfen.uhrzeit(Storage.getValue("at")) : st.equals("laedt") ? "aktualisiert ..." : st;
+        zeile(dc, (h * 0.86).toNumber(), Graphics.FONT_XTINY, t, st != null && !st.equals("laedt") ? 0xE67E22 : 0x777777);
+    }
+
+    function zeigeKopplung(dc as Graphics.Dc, h as Number) as Void {
+        var n = netz();
+        zeile(dc, (h * 0.12).toNumber(), Graphics.FONT_XTINY, "COACH KIRA", 0x9A9A9A);
+        if (n.code != null) {
+            var y = zeile(dc, (h * 0.24).toNumber(), Graphics.FONT_SMALL, "Code im Cockpit eingeben", Graphics.COLOR_WHITE);
+            y = zeile(dc, y, Graphics.FONT_XTINY, "Heute > Technik", 0x9A9A9A);
+            zeile(dc, y + 16, Graphics.FONT_NUMBER_MEDIUM, n.code as String, 0x2ECC71);
+            zeile(dc, (h * 0.74).toNumber(), Graphics.FONT_XTINY, "wartet auf Bestätigung ...", 0x777777);
         } else {
-            dc.drawText(cx, h * 0.35, Graphics.FONT_SMALL, "Mit Cockpit koppeln", Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(cx, h * 0.47, Graphics.FONT_XTINY, netz().status != null && netz().status.equals("koppelt") ? "fordert Code an …" : "START drücken", Graphics.TEXT_JUSTIFY_CENTER);
-            if (netz().status != null && !netz().status.equals("koppelt")) {
-                dc.setColor(0xE67E22, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(cx, h * 0.62, Graphics.FONT_XTINY, netz().status, Graphics.TEXT_JUSTIFY_CENTER);
-            }
+            var st = n.status;
+            var y = zeile(dc, (h * 0.36).toNumber(), Graphics.FONT_SMALL, "Mit Cockpit koppeln", Graphics.COLOR_WHITE);
+            zeile(dc, y + 4, Graphics.FONT_XTINY, st != null && st.equals("koppelt") ? "fordert Code an ..." : "START drücken", 0x9A9A9A);
+            if (st != null && !st.equals("koppelt")) { zeile(dc, (h * 0.62).toNumber(), Graphics.FONT_XTINY, st, 0xE67E22); }
         }
     }
 }
 
 class KiraDelegate extends WatchUi.BehaviorDelegate {
-    function initialize() {
+    var view as KiraView;
+
+    function initialize(v as KiraView) {
         BehaviorDelegate.initialize();
+        view = v;
+    }
+
+    function onNextPage() as Boolean {
+        view.blaettern(1);
+        return true;
+    }
+
+    function onPreviousPage() as Boolean {
+        view.blaettern(-1);
+        return true;
     }
 
     // START: koppeln bzw. neu laden

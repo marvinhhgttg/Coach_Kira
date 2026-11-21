@@ -28,7 +28,8 @@ class KiraApp extends Application.AppBase {
 
     function getInitialView() {
         hintergrundAn();
-        return [new KiraView(), new KiraDelegate()];
+        var v = new KiraView();
+        return [v, new KiraDelegate(v)];
     }
 
     (:glance)
