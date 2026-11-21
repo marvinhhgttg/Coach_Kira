@@ -345,3 +345,17 @@
 /* Aktive Cloud-KI: blau markieren (lokal bleibt grün) */
 .engine-cloud-on { color: #93c5fd !important; background-color: rgba(59, 130, 246, 0.16) !important; }
 .garmin-mode .engine-cloud-on { color: #1d6fd6 !important; background-color: #e6f0fc !important; }
+
+/* Heller Modus: Browser-Steuerelemente (Datumsauswahl, Zahlenfelder, Auswahllisten) hell zeichnen.
+   index.html meldet color-scheme dark – ohne das hier malen Safari/WebView Felder ohne .input schwarz (21.11.2026). */
+.garmin-mode {
+  color-scheme: light;
+}
+.garmin-mode :where(input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']), select, textarea) {
+  background-color: #ffffff;
+  border-color: #cfd9e4;
+  color: #1f2933;
+}
+.dark-mode {
+  color-scheme: dark;
+}
