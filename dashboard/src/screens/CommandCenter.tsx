@@ -25,7 +25,7 @@ import {
 import { fmtDateTime, fmtRelative, fmtTime, fmtNum } from '../lib/format';
 import { proxyRunConsolidatedAnalysis, proxyRunStatusAiAnalysis, proxyRunSupervisor } from '../lib/proxy';
 import { AmpelChip, AmpelDot } from '../components/Ampel';
-import { ArcGauge, ErrorBox, Modal, Panel, Skeleton, Spinner, StorySection, StoryGrid } from '../components/UI';
+import { ArcGauge, ErrorBox, KpiKachel, Modal, Panel, Skeleton, Spinner, StorySection, StoryGrid } from '../components/UI';
 import { RecoveryPanel } from './RecoveryPanel';
 import { AnomalyPanel } from './AnomalyPanel';
 import { KiraChat } from './KiraChat';
@@ -190,6 +190,34 @@ function DetailScoreRow({ item }: { item: StatusItemLike }) {
       </div>
       <p className="text-xs text-ink-muted leading-relaxed max-w-none">{item.text || '—'}</p>
     </div>
+  );
+}
+
+// Kiras Einordnung im Stil von „Wichtigste Daten“
+const SCORE_HEX = { gruen: '#22a15a', gelb: '#e0a800', orange: '#ef7d00', rot: '#d64545', grau: '#9aa5b1' };
+function zahlOderNull(v: unknown): number | null {
+  const n = typeof v === 'number' ? v : v == null || v === '' ? NaN : Number(String(v).replace(',', '.'));
+  return Number.isFinite(n) ? n : null;
+}
+const wertText = (v: unknown) => { const n = zahlOderNull(v); return n == null ? '—' : Math.round(n); };
+function scoreFarbe(v: unknown) {
+  const n = zahlOderNull(v);
+  return n == null ? SCORE_HEX.grau : n >= 70 ? SCORE_HEX.gruen : n >= 50 ? SCORE_HEX.gelb : n >= 30 ? SCORE_HEX.orange : SCORE_HEX.rot;
+}
+const ampelText = (a: unknown) => { const t = String(a || '').trim().toLowerCase(); return t ? t.charAt(0).toUpperCase() + t.slice(1) : 'Status'; };
+function acwrText(a: number | null) {
+  if (a == null) return 'Belastungsquotient';
+  if (a > 1.5) return 'hoch · Korridor 0,8–1,3';
+  if (a > 1.3) return 'erhöht · Korridor 0,8–1,3';
+  if (a < 0.8) return 'niedrig · Korridor 0,8–1,3';
+  return 'im Korridor 0,8–1,3';
+}
+function AcwrPunkt({ acwr }: { acwr: number | null }) {
+  const f = acwr == null ? SCORE_HEX.grau : acwr > 1.5 ? SCORE_HEX.rot : acwr > 1.3 ? SCORE_HEX.orange : acwr < 0.8 ? SCORE_HEX.gelb : SCORE_HEX.gruen;
+  return (
+    <span className="inline-flex items-center justify-center rounded-full" style={{ width: 44, height: 44, background: `${f}22` }}>
+      <span className="rounded-full" style={{ width: 18, height: 18, background: f }} />
+    </span>
   );
 }
 
@@ -513,40 +541,21 @@ export function CommandCenter({
       </StorySection>
       <StorySection id="kira" titel="Kiras Einordnung" unter="Scores, KI-Analysen und Auffälligkeiten">
       <div className="space-y-4">
-      <section className="panel overflow-hidden">
-        <div>
-          <div className="p-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <ArcGauge label={IST_V2 ? 'Supervisor-Score' : 'Gesamt'} value={summary?.gesamtScore} sub={IST_V2 ? `Zweitmeinung · ${summary?.gesamtAmpel || '–'}` : summary?.gesamtAmpel || 'Status'} />
-            <ArcGauge label="Training" value={summary?.trainingScore} sub="Training Score" />
-            <ArcGauge label="Recovery" value={summary?.recoveryScore} sub="Recovery Score" />
-            <ArcGauge
-              label="Readiness"
-              value={toGaugeValue(readiness)}
-              sub="Garmin TR"
-              tone={toGaugeValue(readiness) < 50 ? 'orange' : 'auto'}
-            />
-            <ArcGauge label="KEI" value={toGaugeValue(kei)} sub="Effizienz" />
-            <ArcGauge label="Ernährung" value={toGaugeValue(nutrition)} sub="Bilanz / Score" />
-            <div className="panel-raised p-4 sm:col-span-2 flex flex-col justify-between">
-              <div>
-                <div className="label">ACWR / Belastungsfenster</div>
-                <div className="mt-3 flex items-baseline gap-3">
-                  <div className="tnum text-4xl font-semibold text-accent">
-                    {typeof acwr === 'number' ? acwr.toFixed(2).replace('.', ',') : String(acwr || '—')}
-                  </div>
-                  <span className="chip border border-ampel-gruen/40 bg-ampel-gruen/10 text-green-300">
-                    Orientierung 0,8–1,3
-                  </span>
-                </div>
-              </div>
-              <p className="text-xs text-ink-muted leading-relaxed mt-4">
-                Ergänzt die bestehende Hauptanzeige um den wichtigsten Belastungsquotienten für die
-                Plan-Simulation.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* 21.11.2026: gleicher Stil wie „Wichtigste Daten“ (Ring, Wert, Unterzeile); Readiness steht oben schon */}
+      <StoryGrid spalten={3}>
+        <KpiKachel testid="score-gesamt" titel={IST_V2 ? 'Supervisor-Score' : 'Gesamt'} ring={zahlOderNull(summary?.gesamtScore)} wert={wertText(summary?.gesamtScore)} farbe={scoreFarbe(summary?.gesamtScore)} unter={IST_V2 ? `Zweitmeinung · ${ampelText(summary?.gesamtAmpel)}` : ampelText(summary?.gesamtAmpel)} />
+        <KpiKachel testid="score-training" titel="Training" ring={zahlOderNull(summary?.trainingScore)} wert={wertText(summary?.trainingScore)} farbe={scoreFarbe(summary?.trainingScore)} unter="Training Score" />
+        <KpiKachel testid="score-recovery" titel="Recovery" ring={zahlOderNull(summary?.recoveryScore)} wert={wertText(summary?.recoveryScore)} farbe={scoreFarbe(summary?.recoveryScore)} unter="Recovery Score" />
+        <KpiKachel testid="score-kei" titel="KEI" ring={zahlOderNull(kei)} wert={wertText(kei)} farbe={scoreFarbe(kei)} unter="Effizienz" />
+        <KpiKachel testid="score-ernaehrung" titel="Ernährung" ring={zahlOderNull(nutrition)} wert={wertText(nutrition)} farbe={scoreFarbe(nutrition)} unter="Bilanz / Score" />
+        <KpiKachel
+          testid="score-acwr"
+          titel="ACWR"
+          symbol={<AcwrPunkt acwr={zahlOderNull(acwr)} />}
+          wert={zahlOderNull(acwr) != null ? (zahlOderNull(acwr) as number).toFixed(2).replace('.', ',') : '—'}
+          unter={acwrText(zahlOderNull(acwr))}
+        />
+      </StoryGrid>
 
       {statusErr && <ErrorBox message={statusErr} onRetry={loadStatus} />}
 
