@@ -7,9 +7,12 @@ import { zielBereitschaft, type Ziel } from '../lib/planning';
 import { useGarminTage } from '../lib/garmin';
 import { lerneModelle } from '../lib/essRechner';
 import { eigeneBergtouren, eigeneSkitouren, setzeGarminTage, tourLastPersoenlich } from '../lib/tourEss';
+import { ladeLangKontext } from '../lib/briefingLocal';
+import { getEngine } from '../lib/engine';
+import { WT_NAME, zielRahmen, zielplanAusrollen, zielplanCsv, zielplanLesen, zielplanPrompt, zielplanWochen, type Zielplan } from '../lib/zielplan';
 
 interface Block { titel: string; von: string; bis: string; wochen_ess: number; schluesseleinheiten: string[] }
-interface ZielDaten { ziel: Ziel; plan?: { bloecke: Block[]; hinweise: string[]; tapering?: string; erstellt?: string } }
+interface ZielDaten { ziel: Ziel; plan?: { bloecke: Block[]; hinweise: string[]; tapering?: string; erstellt?: string }; zielplan?: Zielplan }
 
 const ARTEN: { v: Ziel['art']; l: string }[] = [
   { v: 'bergtour', l: 'Bergtour' },
@@ -94,7 +97,8 @@ export function GoalPlannerTile() {
     try {
       const txt = `${form.name} (${artLabel(form.art)}, Priorität ${form.prioritaet}): ${form.hm} Hm, ${form.dauer_h} h, ${form.distanz_km} km${form.notiz ? ` – ${form.notiz}` : ''}`;
       const alt = items.find((x) => x.datum === form.datum)?.data;
-      await saveExtra('ziel', form.datum, txt, { ziel: form, plan: alt?.ziel?.name === form.name ? alt?.plan : undefined });
+      const gleich = alt?.ziel?.name === form.name;
+      await saveExtra('ziel', form.datum, txt, { ziel: form, plan: gleich ? alt?.plan : undefined, zielplan: gleich ? alt?.zielplan : undefined });
       setForm(null);
       setSel(form.datum);
       await reload();
@@ -149,7 +153,7 @@ export function GoalPlannerTile() {
       }));
       if (!bloecke.length) throw new Error('Kira hat keinen verwertbaren Plan geliefert – bitte noch einmal versuchen.');
       const plan = { bloecke, hinweise: (Array.isArray(j.hinweise) ? j.hinweise : []).map(String), tapering: j.tapering ? String(j.tapering) : '', erstellt: new Date().toISOString() };
-      await saveExtra('ziel', z.datum, cur.text, { ziel: z, plan });
+      await saveExtra('ziel', z.datum, cur.text, { ziel: z, plan, zielplan: cur.data.zielplan });
       await reload();
     } catch (e) {
       setErr(String(e instanceof Error ? e.message : e));
@@ -157,6 +161,54 @@ export function GoalPlannerTile() {
       setBusy(null);
     }
   }
+
+  // Zielplan Tag für Tag: Kern legt den Rahmen fest, Kira (lokal) entscheidet Einstieg, Phasen und Wochenmuster, der Kern rollt aus und prüft
+  const [zpLokal, setZpLokal] = useState<Record<string, Zielplan>>({});
+  const [zpOffen, setZpOffen] = useState<Record<number, boolean>>({});
+  const [zpHinweis, setZpHinweis] = useState<string | null>(null);
+  const zp: Zielplan | null = (cur && (zpLokal[cur.datum] || cur.data?.zielplan)) || null;
+  async function onZielplan() {
+    if (!cur?.data?.ziel || !bereit) return;
+    const z = cur.data.ziel;
+    setBusy('Kira plant den Zielplan Tag für Tag…');
+    setErr(null);
+    setZpHinweis(null);
+    try {
+      const lk = await ladeLangKontext().catch(() => null);
+      const h = hist.filter((x) => x.date < heute()).map((x) => ({ date: x.date, load: x.load }));
+      const r = zielRahmen(z, bereit.tourLast, h, lk, heute());
+      const extra = [`Stand Vorbereitung: ${bereit.punkte.join(' | ')}`, cur.data.plan?.bloecke?.length ? `Bisherige Grobplanung: ${cur.data.plan.bloecke.map((b) => `${b.titel} (${b.wochen_ess} ESS/Woche)`).join(', ')} – Daten darin nicht übernehmen.` : ''].filter(Boolean).join('\n');
+      const t = await localChat(zielplanPrompt(z, r, extra), { format: 'json', temperature: 0.3, numCtx: 16384 });
+      const k = zielplanLesen(parseJsonLoose<any>(t) || {}, r, z.datum);
+      const engine = getEngine() === 'pplx' ? 'Cloud' : 'lokal';
+      const p = zielplanAusrollen(z, r, k, h, engine);
+      setZpLokal((m) => ({ ...m, [z.datum]: p }));
+      const heuteW = p.tage.find((x) => x.date >= heute())?.woche ?? 0;
+      setZpOffen({ [heuteW]: true, [heuteW + 1]: true });
+      try {
+        await saveExtra('ziel', z.datum, cur.text, { ziel: z, plan: cur.data.plan, zielplan: p });
+        await reload();
+      } catch (e) {
+        setZpHinweis(`Plan erstellt, aber nicht gespeichert: ${String(e instanceof Error ? e.message : e)}`);
+      }
+    } catch (e) {
+      setErr(String(e instanceof Error ? e.message : e));
+    } finally {
+      setBusy(null);
+    }
+  }
+  function zpCsv() {
+    if (!zp) return;
+    const b = new Blob(['\ufeff' + zielplanCsv(zp)], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = `zielplan-${zp.ziel.datum}.csv`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }
+  const zoneCls = (z: string) => (z === 'Z4' || z === 'Z5' ? 'text-orange-400' : z === 'Z3' ? 'text-yellow-500' : z === 'Off' ? 'text-ink-dim' : 'text-ink');
+  const dt = (d: string) => `${d.slice(8, 10)}.${d.slice(5, 7)}.`;
+  const hh = (h: number | null) => (h == null ? '' : `${Math.floor(h)}:${String(Math.round((h % 1) * 60)).padStart(2, '0')}`);
 
   const ampelCls = (a?: string) => (a === 'gruen' ? 'text-green-300' : a === 'gelb' ? 'text-yellow-300' : 'text-orange-300');
   const setF = (k: keyof Ziel, v: any) => setForm((f) => (f ? { ...f, [k]: v } : f));
@@ -253,6 +305,93 @@ export function GoalPlannerTile() {
                 </div>
               )}
             </div>
+          )}
+        </div>
+      )}
+      {cur?.data?.ziel && (
+        <div className="mt-3 rounded border border-border p-3 flex flex-col gap-2" data-testid="zielplan">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <div className="text-sm text-ink font-semibold">Zielplan Tag für Tag</div>
+              <p className="text-2xs text-ink-dim">
+                Kira entscheidet Einstieg, Phasen und Wochenmuster; der Rechenkern rollt das Tag für Tag aus, steigert die lange Einheit, legt Entlastungswochen, Tapering, Zieltag und Erholung an und prüft ACWR.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button className="btn btn-primary text-xs px-2 py-1" onClick={onZielplan} disabled={!!busy || !bereit}>
+                {busy && busy.startsWith('Kira plant den Zielplan') ? busy : zp ? 'Zielplan neu erstellen' : 'Zielplan erstellen'}
+              </button>
+              {zp && <button className="btn btn-ghost text-xs px-2 py-1" onClick={zpCsv}>CSV</button>}
+            </div>
+          </div>
+          {zpHinweis && <p className="text-2xs text-orange-300">{zpHinweis}</p>}
+          {zp && (
+            <>
+              <div className="text-xs">
+                <span className="text-ink">Einstieg {fmtDateShort(zp.einstieg)}</span>
+                <span className="text-ink-muted"> · {Math.round((new Date(zp.ziel.datum).getTime() - new Date(zp.einstieg).getTime()) / 86400000 / 7)} Wochen · {zp.rahmen.klasseText} · {zp.rahmen.knapp ? 'Einstieg sofort (Ziel ist nah)' : `Rahmen ${fmtDateShort(zp.rahmen.fruehestens)}–${fmtDateShort(zp.rahmen.spaetestens)}`} · Tapering ab {fmtDateShort(zp.rahmen.taperAb)} · lange Einheit bis {hh(zp.rahmen.zielH)} h</span>
+              </div>
+              {zp.begruendung && <p className="text-xs text-ink-muted">{zp.begruendung}</p>}
+              <div className="flex flex-wrap gap-1.5 text-2xs">
+                {zp.phasen.map((p) => (
+                  <span key={p.name + p.von} className="rounded border border-border px-1.5 py-0.5" title={p.fokus}>
+                    {p.name} {dt(p.von)}–{dt(p.bis)} · {p.wochen_ess} ESS/Wo
+                  </span>
+                ))}
+                <span className="rounded border border-border px-1.5 py-0.5">ACWR max {String(zp.maxAcwr).replace('.', ',')}</span>
+                <span className="rounded border border-border px-1.5 py-0.5">CTL {zp.ctlStart} → {zp.ctlZiel}</span>
+                <span className="rounded border border-border px-1.5 py-0.5 text-ink-dim">{zp.engine} · {fmtDateShort(zp.erstellt.slice(0, 10))}</span>
+              </div>
+              {zp.korrekturen.length > 0 && (
+                <details className="text-2xs text-ink-muted">
+                  <summary className="cursor-pointer">Rechenkern hat {zp.korrekturen.length} Punkt{zp.korrekturen.length === 1 ? '' : 'e'} angepasst</summary>
+                  <ul className="mt-1 list-disc pl-4">{zp.korrekturen.map((k, i) => <li key={i}>{k}</li>)}</ul>
+                </details>
+              )}
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs tnum">
+                  <thead>
+                    <tr className="text-2xs text-ink-dim text-left">
+                      <th className="py-1 pr-2 font-normal">Datum</th><th className="pr-2 font-normal">Sportart</th><th className="pr-2 font-normal">Zone</th>
+                      <th className="pr-2 font-normal">Intensität</th><th className="pr-2 font-normal text-right">ESS</th><th className="pr-2 font-normal text-right">Dauer</th><th className="font-normal">Einheit</th>
+                    </tr>
+                  </thead>
+                  {zielplanWochen(zp).map((w) => {
+                    const offen = !!zpOffen[w.woche];
+                    const vorbei = w.tage[w.tage.length - 1].date < heute();
+                    return (
+                      <tbody key={w.woche} className={vorbei ? 'opacity-50' : ''}>
+                        <tr className="border-t border-border cursor-pointer hover:bg-bg-subtle/40" onClick={() => setZpOffen((o) => ({ ...o, [w.woche]: !offen }))}>
+                          <td colSpan={7} className="py-1 text-2xs">
+                            <span className="text-ink-dim">{offen ? '▾' : '▸'} </span>
+                            <span className="text-ink font-medium">Woche {w.woche + 1} · ab {dt(w.mo)}</span>
+                            <span className="text-ink-muted"> · {w.phase}{w.entl ? ' · Entlastung' : ''} · {w.ess} ESS</span>
+                          </td>
+                        </tr>
+                        {offen && w.tage.map((t) => (
+                          <tr key={t.date} className={`${t.date === heute() ? 'bg-accent/10' : ''} ${t.art === 'ziel' ? 'font-semibold' : ''}`}>
+                            <td className="py-0.5 pr-2 whitespace-nowrap">{WT_NAME[t.wt]} {dt(t.date)}</td>
+                            <td className="pr-2">{t.sport}{t.art === 'lang' ? ' · lang' : ''}</td>
+                            <td className={`pr-2 ${zoneCls(t.zone)}`}>{t.zone}</td>
+                            <td className="pr-2 text-ink-muted">{t.intensitaet}</td>
+                            <td className="pr-2 text-right">{t.ess}</td>
+                            <td className="pr-2 text-right">{hh(t.dauerH)}</td>
+                            <td className="text-ink-muted">{t.training}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    );
+                  })}
+                </table>
+              </div>
+              {(zp.tapering || zp.hinweise.length > 0) && (
+                <div className="text-2xs text-ink-muted">
+                  {zp.tapering && <p>Tapering: {zp.tapering}</p>}
+                  {zp.hinweise.map((h, i) => <p key={i}>– {h}</p>)}
+                </div>
+              )}
+              <p className="text-2xs text-ink-dim">Die nächsten 14 Tage dieses Plans gibt Kira beim Wochenplan als Vorgabe mit. Dauer ist ein Richtwert aus deinen ESS pro Stunde.</p>
+            </>
           )}
         </div>
       )}

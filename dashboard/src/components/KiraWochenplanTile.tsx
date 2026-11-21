@@ -9,6 +9,7 @@ import { useEngine } from '../lib/engine';
 import { runPlanLoop, evaluate, localLlm, type LoopDay, type LoopSimRow } from '../lib/planLoop';
 import { planChecks, type PlanRow } from '../screens/StrategyPanel';
 import { fetchExtras } from '../lib/extras';
+import { zielplanVorgabe } from '../lib/zielplan';
 import { fmtDateShort, fmtNum } from '../lib/format';
 import { WorkoutPanel } from './WorkoutPanel';
 import type { PlanDay } from '../lib/api';
@@ -142,6 +143,12 @@ export function KiraWochenplanTile({
         }
         const ziele = items.filter((x) => x.typ === 'ziel').map((x) => (x.data as any)?.ziel).filter(Boolean);
         if (ziele.length) z.push('ZIELE: ' + ziele.map((g: any) => `${g.name} am ${g.datum} (Prio ${g.prioritaet})`).join('; '));
+        // Zielpläne (Ziele & Touren › Zielplan Tag für Tag): Vorgaben für die nächsten 14 Tage
+        const hz = new Date().toLocaleDateString('sv-SE');
+        for (const x of items.filter((y) => y.typ === 'ziel' && y.datum >= hz).sort((a, b) => (a.datum < b.datum ? -1 : 1))) {
+          const v = zielplanVorgabe((x.data as any)?.zielplan, hz, 14);
+          if (v) z.push(v);
+        }
         setExtraCtx(z.join('\n'));
         // Tourform je kommender Zieltour (gleiche Rechnung wie die Kachel Tourform)
         const heuteIso = new Date().toLocaleDateString('sv-SE');
