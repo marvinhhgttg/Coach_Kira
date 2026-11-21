@@ -9,44 +9,56 @@ import Toybox.Time;
 import Toybox.Timer;
 import Toybox.WatchUi;
 
-// Laden und Koppeln im Vordergrund
-class KiraNetz {
-    static var status as String? = null;   // "laedt", "koppelt", Fehlertext
-    static var code as String? = null;     // Kopplungscode zum Anzeigen
-    static var anfrageId as String? = null;
-    static var timer as Timer.Timer? = null;
-    static var versuche as Number = 0;
+// Laden und Koppeln im Vordergrund (ein Objekt, Rückrufe über method(:…))
+var kiraNetz as KiraNetz? = null;
+function netz() as KiraNetz {
+    if (kiraNetz == null) { kiraNetz = new KiraNetz(); }
+    return kiraNetz as KiraNetz;
+}
 
-    static function laden() as Void {
+class KiraNetz {
+    var status as String? = null;   // "laedt", "koppelt", Fehlertext
+    var code as String? = null;     // Kopplungscode zum Anzeigen
+    var anfrageId as String? = null;
+    var timer as Timer.Timer? = null;
+    var versuche as Number = 0;
+
+    function initialize() {
+    }
+
+    function laden() as Void {
         var tok = Storage.getValue("tok");
         if (tok == null) { return; }
         status = "laedt";
         WatchUi.requestUpdate();
-        Communications.makeWebRequest(KIRA_BASIS + "/api/widget", { "uhr" => "1", "frisch" => "0" },
+        Communications.makeWebRequest(KIRA_BASIS + "/api/widget", { "uhr" => "1" },
             {
                 :method => Communications.HTTP_REQUEST_METHOD_GET,
                 :headers => { "Authorization" => "Bearer " + tok },
                 :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
             },
-            new Lang.Method(KiraNetz, :geladen));
+            method(:geladen));
     }
 
-    static function geladen(code as Number, data as Null or ByteArray or Dictionary or String or PersistedContent.Iterator) as Void {
-        if (code == 200 && data instanceof Dictionary) {
-            Storage.setValue("d", data);
-            Storage.setValue("at", Time.now().value());
-            Storage.deleteValue("fehler");
-            status = null;
-        } else if (code == 401) {
-            Storage.deleteValue("tok");
-            status = "Kopplung im Cockpit widerrufen";
-        } else {
-            status = code < 0 ? "Kein Handy/Netz (" + code + ")" : "Server " + code;
+    function geladen(rc as Number, data as Null or ByteArray or Dictionary or String or PersistedContent.Iterator) as Void {
+        try {
+            if (rc == 200 && data instanceof Dictionary) {
+                Storage.setValue("d", data);
+                Storage.setValue("at", Time.now().value());
+                status = null;
+            } else if (rc == 401) {
+                Storage.deleteValue("tok");
+                status = "Kopplung widerrufen";
+            } else {
+                status = rc < 0 ? "Kein Netz (" + rc.toString() + ")" : "Server " + rc.toString();
+            }
+        } catch (e) {
+            status = "Fehler: " + e.getErrorMessage();
         }
         WatchUi.requestUpdate();
     }
 
-    static function koppeln() as Void {
+    function koppeln() as Void {
         status = "koppelt";
         code = null;
         WatchUi.requestUpdate();
@@ -56,26 +68,31 @@ class KiraNetz {
                 :headers => { "Content-Type" => Communications.REQUEST_CONTENT_TYPE_JSON },
                 :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
             },
-            new Lang.Method(KiraNetz, :angefragt));
+            method(:angefragt));
     }
 
-    static function angefragt(rc as Number, data as Null or ByteArray or Dictionary or String or PersistedContent.Iterator) as Void {
-        if (rc == 200 && data instanceof Dictionary && data.get("id") != null) {
-            anfrageId = data.get("id");
-            code = data.get("code");
-            versuche = 0;
-            if (timer == null) { timer = new Timer.Timer(); }
-            timer.start(new Lang.Method(KiraNetz, :abfragen), 4000, true);
-        } else {
-            status = rc < 0 ? "Kein Handy/Netz (" + rc + ")" : "Kopplung: Server " + rc;
+    function angefragt(rc as Number, data as Null or ByteArray or Dictionary or String or PersistedContent.Iterator) as Void {
+        try {
+            if (rc == 200 && data instanceof Dictionary && data.get("id") != null) {
+                anfrageId = data.get("id").toString();
+                code = data.get("code").toString();
+                status = null;
+                versuche = 0;
+                if (timer == null) { timer = new Timer.Timer(); }
+                (timer as Timer.Timer).start(method(:abfragen), 4000, true);
+            } else {
+                status = rc < 0 ? "Kein Netz (" + rc.toString() + ")" : "Kopplung: Server " + rc.toString();
+            }
+        } catch (e) {
+            status = "Fehler: " + e.getErrorMessage();
         }
         WatchUi.requestUpdate();
     }
 
-    static function abfragen() as Void {
+    function abfragen() as Void {
         versuche += 1;
         if (versuche > 150 || anfrageId == null) {   // 10 min
-            stop("Code abgelaufen – START für neuen Code");
+            stop("Code abgelaufen – START");
             return;
         }
         Communications.makeWebRequest(KIRA_BASIS + "/api/widget/uhr/status", { "id" => anfrageId },
@@ -83,24 +100,28 @@ class KiraNetz {
                 :method => Communications.HTTP_REQUEST_METHOD_GET,
                 :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
             },
-            new Lang.Method(KiraNetz, :abgefragt));
+            method(:abgefragt));
     }
 
-    static function abgefragt(rc as Number, data as Null or ByteArray or Dictionary or String or PersistedContent.Iterator) as Void {
-        if (rc == 200 && data instanceof Dictionary && data.get("token") != null) {
-            Storage.setValue("tok", data.get("token"));
-            stop(null);
-            code = null;
-            var app = Application.getApp() as KiraApp;
-            app.hintergrundAn();
-            laden();
-        } else if (rc == 404) {
-            stop("Code abgelaufen – START für neuen Code");
+    function abgefragt(rc as Number, data as Null or ByteArray or Dictionary or String or PersistedContent.Iterator) as Void {
+        try {
+            if (rc == 200 && data instanceof Dictionary && data.get("token") != null) {
+                Storage.setValue("tok", data.get("token").toString());
+                stop(null);
+                code = null;
+                var app = Application.getApp();
+                if (app instanceof KiraApp) { app.hintergrundAn(); }
+                laden();
+            } else if (rc == 404) {
+                stop("Code abgelaufen – START");
+            }
+        } catch (e) {
+            stop("Fehler: " + e.getErrorMessage());
         }
     }
 
-    static function stop(meldung as String?) as Void {
-        if (timer != null) { timer.stop(); }
+    function stop(meldung as String?) as Void {
+        if (timer != null) { (timer as Timer.Timer).stop(); }
         anfrageId = null;
         status = meldung;
         WatchUi.requestUpdate();
@@ -114,7 +135,7 @@ class KiraView extends WatchUi.View {
 
     function onShow() as Void {
         if (Storage.getValue("tok") != null) {
-            KiraNetz.laden();
+            netz().laden();
         }
     }
 
@@ -134,7 +155,7 @@ class KiraView extends WatchUi.View {
         dc.drawText(cx, h * 0.08, Graphics.FONT_XTINY, "COACH KIRA", Graphics.TEXT_JUSTIFY_CENTER);
         if (!(d instanceof Dictionary)) {
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, h / 2, Graphics.FONT_SMALL, KiraNetz.status != null && !KiraNetz.status.equals("laedt") ? KiraNetz.status : "Lädt …",
+            dc.drawText(cx, h / 2, Graphics.FONT_SMALL, netz().status != null && !netz().status.equals("laedt") ? netz().status : "Lädt …",
                 Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
             return;
         }
@@ -197,7 +218,7 @@ class KiraView extends WatchUi.View {
         }
 
         // Stand
-        var st = KiraNetz.status;
+        var st = netz().status;
         var unten = st == null ? "Stand " + KiraHilfen.uhrzeit(Storage.getValue("at")) : st.equals("laedt") ? "aktualisiert …" : st;
         dc.setColor(st != null && !st.equals("laedt") ? 0xE67E22 : 0x777777, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, h * 0.895, Graphics.FONT_XTINY, unten, Graphics.TEXT_JUSTIFY_CENTER);
@@ -215,19 +236,19 @@ class KiraView extends WatchUi.View {
         dc.setColor(0x9A9A9A, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, h * 0.12, Graphics.FONT_XTINY, "COACH KIRA", Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        if (KiraNetz.code != null) {
+        if (netz().code != null) {
             dc.drawText(cx, h * 0.25, Graphics.FONT_SMALL, "Code im Cockpit eingeben", Graphics.TEXT_JUSTIFY_CENTER);
             dc.drawText(cx, h * 0.33, Graphics.FONT_XTINY, "Technik › Garmin-Uhr", Graphics.TEXT_JUSTIFY_CENTER);
             dc.setColor(0x2ECC71, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, h * 0.45, Graphics.FONT_NUMBER_MEDIUM, KiraNetz.code, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(cx, h * 0.45, Graphics.FONT_NUMBER_MEDIUM, netz().code, Graphics.TEXT_JUSTIFY_CENTER);
             dc.setColor(0x777777, Graphics.COLOR_TRANSPARENT);
             dc.drawText(cx, h * 0.75, Graphics.FONT_XTINY, "wartet auf Bestätigung …", Graphics.TEXT_JUSTIFY_CENTER);
         } else {
             dc.drawText(cx, h * 0.35, Graphics.FONT_SMALL, "Mit Cockpit koppeln", Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(cx, h * 0.47, Graphics.FONT_XTINY, KiraNetz.status != null && KiraNetz.status.equals("koppelt") ? "fordert Code an …" : "START drücken", Graphics.TEXT_JUSTIFY_CENTER);
-            if (KiraNetz.status != null && !KiraNetz.status.equals("koppelt")) {
+            dc.drawText(cx, h * 0.47, Graphics.FONT_XTINY, netz().status != null && netz().status.equals("koppelt") ? "fordert Code an …" : "START drücken", Graphics.TEXT_JUSTIFY_CENTER);
+            if (netz().status != null && !netz().status.equals("koppelt")) {
                 dc.setColor(0xE67E22, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(cx, h * 0.62, Graphics.FONT_XTINY, KiraNetz.status, Graphics.TEXT_JUSTIFY_CENTER);
+                dc.drawText(cx, h * 0.62, Graphics.FONT_XTINY, netz().status, Graphics.TEXT_JUSTIFY_CENTER);
             }
         }
     }
@@ -241,9 +262,9 @@ class KiraDelegate extends WatchUi.BehaviorDelegate {
     // START: koppeln bzw. neu laden
     function onSelect() as Boolean {
         if (Storage.getValue("tok") == null) {
-            KiraNetz.koppeln();
+            netz().koppeln();
         } else {
-            KiraNetz.laden();
+            netz().laden();
         }
         return true;
     }
