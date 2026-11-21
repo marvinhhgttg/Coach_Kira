@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ladeP4, tourform as berechneTourform, type P4Tag } from '../lib/paket4';
+import { ladeP4, type P4Tag } from '../lib/paket4';
+import { ladeP3, type P3Tag } from '../lib/paket3';
+import { tourformFuerZiele } from '../lib/tourformZiele';
+import { laengsteProTag, langEffekt, langStatus, langPlan, zielBedarf, essProStunde, parseLangEinstellung } from '../lib/esLang';
+import { heuteBerlin } from '../lib/kernVotumKi';
 import { fetchExtras } from '../lib/extras';
-import { zielArt, type Ziel } from '../lib/planning';
+import { type Ziel } from '../lib/planning';
 import { useGarminTage } from '../lib/garmin';
-import { lerneModelle } from '../lib/essRechner';
-import { eigeneBergtouren, eigeneSkitouren, setzeGarminTage, tourLastPersoenlich } from '../lib/tourEss';
 
 // ── Hilfsfunktionen ────────────────────────────────────────────────
 function fmtDateShort(iso: string): string {
@@ -111,20 +113,22 @@ function TourformBody({ p4 }: { p4: P4Tag[] }) {
     return () => { cancelled = true; };
   }, []);
   const { tage: garmin } = useGarminTage();
-  setzeGarminTage(garmin);
-  const modelle = useMemo(() => (garmin ? lerneModelle(garmin) : []), [garmin]);
-  // Für Märsche: längste Strecke zu Fuß und längste Zeit unterwegs an einem Tag (letzte 8 Wochen, Garmin)
-  const fuss = useMemo(() => {
-    if (!garmin || !garmin.size) return null;
-    const ab = new Date(Date.now() - 56 * 86400000).toLocaleDateString('sv-SE');
-    let km = 0, h = 0;
-    for (const [d, t] of garmin) {
-      if (d < ab) continue;
-      km = Math.max(km, (t.akt || []).filter((x) => /hiking|walking|mountaineering/i.test(String(x.typ || ''))).reduce((a, x) => a + (x.km || 0), 0));
-      h = Math.max(h, (t.summe?.dauer_s ?? (t.akt || []).reduce((a, x) => a + (x.dauer_s || 0), 0)) / 3600);
-    }
-    return { km, h };
-  }, [garmin]);
+  const liste = useMemo(() => tourformFuerZiele(p4, ziele, garmin), [p4, ziele, garmin]);
+  // Brücke zum Endurance-Score-Hebel: Zielbedarf und nächste lange Einheit (gleiche Rechnung wie dort)
+  const [p3, setP3] = useState<P3Tag[]>([]);
+  useEffect(() => { ladeP3().then(setP3).catch(() => {}); }, []);
+  const hebel = useMemo(() => {
+    if (!garmin || !garmin.size || !p3.length) return null;
+    const lang = laengsteProTag(garmin);
+    const st = langStatus(lang, heuteBerlin());
+    const eff = langEffekt(p3, lang);
+    let e = parseLangEinstellung(null, null);
+    try { e = parseLangEinstellung(localStorage.getItem('ck_lang_tage'), localStorage.getItem('ck_lang_sehr')); } catch { /* Standard */ }
+    const zb = zielBedarf(ziele as any, st);
+    const termine = langPlan(e, st, eff, 28, essProStunde(p3, lang), zb);
+    return { st, zb, termine };
+  }, [garmin, p3, ziele]);
+  const fmtH = (h: number) => { const m = Math.round(h * 60); return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')} h`; };
 
   if (ziele.length === 0) {
     return (
@@ -146,31 +150,16 @@ function TourformBody({ p4 }: { p4: P4Tag[] }) {
       <div>
         <div className="label">Coach Kira · Tourform</div>
         <p className="mt-1 text-2xs text-ink-dim">
-          Wie gut du für deine Zieltouren vorbereitet bist – nach dem Vorbild der Marathonform: Wochenumfang, lange Tage, Höhenmeter.
+          Wie gut du für deine Zieltouren vorbereitet bist – nach dem Vorbild der Marathonform: Wochenumfang, lange Tage (nach ESS oder Dauer), Höhenmeter. Die Zieltouren steuern die langen Einheiten im Endurance-Score-Hebel und im Wochenplan.
         </p>
       </div>
 
       {/* Ziel-Karten */}
       <div className="mt-3 space-y-2">
-        {ziele.map((z, i) => {
-          const pers = modelle.length ? tourLastPersoenlich(z, modelle, eigeneSkitouren(garmin), eigeneBergtouren(garmin)) : null;
-          const wf0 = berechneTourform(p4, z, pers?.ess);
-          // Marsch: Strecke und Zeit am Stück statt lange Lasttage und Höhenmeter
-          const marsch = zielArt(z) === 'marsch' && fuss;
-          const strecke = marsch && z.distanz_km > 0 ? Math.min(1, fuss!.km / (z.distanz_km * 0.6)) : null;
-          const zeit = marsch && z.dauer_h > 0 ? Math.min(1, fuss!.h / (z.dauer_h * 0.7)) : null;
-          const wf = marsch
-            ? {
-                ...wf0,
-                lange: strecke ?? wf0.lange,
-                hoehe: zeit,
-                prozent: Math.round(100 * (0.2 * wf0.volumen + 0.45 * (strecke ?? wf0.lange) + 0.35 * (zeit ?? 1))),
-                hinweise: [
-                  `Strecke: zuletzt höchstens ${Math.round(fuss!.km)} km zu Fuß an einem Tag – Ziel vor dem Marsch etwa ${Math.round(z.distanz_km * 0.6)} km.`,
-                  `Zeit: zuletzt höchstens ${(Math.round(fuss!.h * 10) / 10).toLocaleString('de-DE')} h unterwegs – Ziel etwa ${(Math.round(z.dauer_h * 0.7 * 10) / 10).toLocaleString('de-DE')} h am Stück.`,
-                ],
-              }
-            : wf0;
+        {liste.map(({ ziel: z, wf, marsch, persoenlich }) => {
+          const pers = persoenlich;
+          const zb = hebel?.zb.find((b) => b.ziel.datum === z.datum && b.ziel.name === z.name) || null;
+          const naechste = zb && hebel!.zb[0] === zb ? hebel!.termine.find((t) => t.art !== 'ziel' && t.date <= zb.ziel.datum) || null : null;
           const wo = wochenBisZiel(z);
 
           // Prozent-Farbe: >= 80 grün, >= 60 gelb, sonst orange
@@ -228,9 +217,19 @@ function TourformBody({ p4 }: { p4: P4Tag[] }) {
               {/* Zahlen darunter */}
               <p className="mt-2 text-2xs text-ink-muted">
                 Wochenlast {fmtNum(Math.round(wf.wochenLastIst))} von {fmtNum(Math.round(wf.wochenLastZiel))} ESS ·{' '}
-                {marsch ? '' : `lange Tage ${wf.langeTage}/${wf.langeZiel} · `}
+                {marsch ? '' : `lange Tage ${wf.langeTage}/${wf.langeZiel} (${wf.langeNurDauer ? `ab ${fmtH(wf.langeSchwelleH)}` : `ab ${fmtNum(Math.round(0.6 * wf.tourLast))} ESS oder ${fmtH(wf.langeSchwelleH)}`}) · `}
                 Tourlast ≈ {fmtNum(wf.tourLast)} ESS{pers ? ' (ESS-Rechner)' : ' (Faustregel)'}
               </p>
+
+              {zb && (
+                <p className="mt-2 text-2xs rounded border border-accent-strong/40 px-2 py-1">
+                  <span className="font-medium">Lange Einheit (Endurance-Score-Hebel): </span>
+                  längste der letzten 4 Wochen {fmtH(hebel!.st.laengste28h)} – bis {fmtDateShort(zb.aufbauBis)} auf etwa {fmtH(zb.zielH)} ({zb.sport}
+                  {zb.hmZiel ? `, ${fmtNum(zb.hmZiel)} Hm` : ''}),{' '}
+                  {zb.machbar ? 'machbar' : <span className="text-orange-500">knapp – nicht erzwingen</span>}; Tapering ab {fmtDateShort(zb.taperAb)}.
+                  {naechste ? ` Nächste: ${naechste.wt} ${fmtDateShort(naechste.date).slice(0, -5)} ${fmtH(naechste.dauerH)}${naechste.art === 'taper' ? ' (Tapering)' : ''}.` : ''}
+                </p>
+              )}
 
               {/* Hinweise */}
               {wf.hinweise.length > 0 && (

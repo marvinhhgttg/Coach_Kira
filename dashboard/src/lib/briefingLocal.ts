@@ -16,16 +16,18 @@ import { RECOVERY_FETCH_METRICS } from '../screens/RecoveryPanel';
 import { kernVotumAusRohdaten, heuteBerlin, type KernVotumKi } from './kernVotumKi';
 import { ladeP3 } from './paket3';
 import { fetchGarminTage } from './garmin';
+import { fetchExtras } from './extras';
 import { langKontext, parseLangEinstellung, type LangKontext } from './esLang';
 
 /** 21.11.2026: lange Einheiten fürs Plan-Briefing (Einstellung aus den Geräte-Einstellungen). */
 export async function ladeLangKontext(): Promise<LangKontext | null> {
   try {
-    const [t, g] = await Promise.all([ladeP3(), fetchGarminTage()]);
+    const [t, g, zi] = await Promise.all([ladeP3(), fetchGarminTage(), fetchExtras<{ ziel?: any }>('ziel', 60).catch(() => [])]);
     if (!t.length || !g.size) return null;
     let tage: string | null = null, sehr: string | null = null;
     try { tage = localStorage.getItem('ck_lang_tage'); sehr = localStorage.getItem('ck_lang_sehr'); } catch { /* Standard */ }
-    return langKontext(t, g, parseLangEinstellung(tage, sehr), heuteBerlin());
+    const ziele = (zi || []).map((x: any) => x?.data?.ziel).filter((z: any) => z && z.datum);
+    return langKontext(t, g, parseLangEinstellung(tage, sehr), heuteBerlin(), ziele);
   } catch {
     return null;
   }

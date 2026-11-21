@@ -15,6 +15,9 @@ import type { PlanDay } from '../lib/api';
 import { ladeLangKontext } from '../lib/briefingLocal';
 import { langeEinheitenBlock } from '../lib/kiraPrompts';
 import { esGesamt, essSpanne, type LangKontext } from '../lib/esLang';
+import { ladeP4 } from '../lib/paket4';
+import { fetchGarminTage } from '../lib/garmin';
+import { tourformFuerZiele, tourformText } from '../lib/tourformZiele';
 
 const KEY = 'ck_kira_wochenplan_v1';
 
@@ -131,6 +134,17 @@ export function KiraWochenplanTile({
         const ziele = items.filter((x) => x.typ === 'ziel').map((x) => (x.data as any)?.ziel).filter(Boolean);
         if (ziele.length) z.push('ZIELE: ' + ziele.map((g: any) => `${g.name} am ${g.datum} (Prio ${g.prioritaet})`).join('; '));
         setExtraCtx(z.join('\n'));
+        // Tourform je kommender Zieltour (gleiche Rechnung wie die Kachel Tourform)
+        const heuteIso = new Date().toLocaleDateString('sv-SE');
+        const kommend = ziele.filter((g: any) => g.datum && g.datum >= heuteIso).sort((a: any, b: any) => (a.datum < b.datum ? -1 : 1));
+        if (kommend.length)
+          Promise.all([ladeP4(), fetchGarminTage()])
+            .then(([p4, g]) => {
+              if (off) return;
+              const tf = tourformText(tourformFuerZiele(p4, kommend, g));
+              if (tf) setExtraCtx(z.concat(tf).join('\n'));
+            })
+            .catch(() => {});
       })
       .catch(() => setExtraCtx(''));
     return () => {
@@ -161,7 +175,8 @@ export function KiraWochenplanTile({
         `STAND HEUTE (${s?.date || ''}): ATL ${fmtNum(s?.atl)}, CTL ${fmtNum(s?.ctl)}, ACWR ${fmtNum(s?.acwr, 2)}, Monotonie ${fmtNum(s?.monotony, 2)}.\n` +
         (extraCtx ? extraCtx + '\n' : '') +
         langTxt +
-        'AUFGABE: Plane die 14 Tage als Wochenplan – passend zu Saisonrahmen, Zielen und Garmin-Lage. Wochenlast möglichst nah an Fitness halten bzw. Saison-Ziel, Entlastung wo der Körper es braucht. Sport je Tag aus der erlaubten Liste.';
+        'AUFGABE: Plane die 14 Tage als Wochenplan – passend zu Saisonrahmen, Zielen, Tourform, langen Einheiten und Garmin-Lage. Wochenlast möglichst nah an Fitness halten bzw. Saison-Ziel, Entlastung wo der Körper es braucht. Sport je Tag aus der erlaubten Liste.';
+      // Kira soll Tourform und lange Einheiten zusammen lesen
       const r = await runPlanLoop({
         days,
         simulate,

@@ -179,7 +179,8 @@ export function essProStunde(t: P3Tag[], lang: Map<string, LangTag>): { gesamt: 
   for (const d of t) {
     const l = lang.get(d.date);
     if (!l || l.h < 1.5 || !d.load || d.load <= 0) continue;
-    if (l.z12 != null && l.z12 < 0.85) continue; // nur ruhige Einheiten
+    const skitour = sportDe(l.sport) === 'Skitour';
+    if (!skitour && l.z12 != null && l.z12 < 0.85) continue; // nur ruhige Einheiten (Skitouren sind bergauf nie ganz ruhig)
     const v = d.load / l.h;
     if (v < 10 && sportDe(l.sport) === 'Rad') continue; // Aufzeichnung ohne Puls o. Ä.
     alle.push(v);
@@ -188,8 +189,10 @@ export function essProStunde(t: P3Tag[], lang: Map<string, LangTag>): { gesamt: 
   const q = (a: number[], p: number) => { const b = [...a].sort((x, y) => x - y); return b.length ? b[Math.min(b.length - 1, Math.floor(p * (b.length - 1) + 0.5))] : 0; };
   const sport: Record<string, number> = {};
   const spanne: Record<string, EssRate> = {};
-  for (const [k, v] of Object.entries(proSport)) if (v.length >= 3) {
-    spanne[k] = { med: Math.round(q(v, 0.5)), p25: Math.round(q(v, 0.25)), p75: Math.round(q(v, 0.75)), n: v.length };
+  for (const [k, v] of Object.entries(proSport)) {
+    if (v.length >= 3) spanne[k] = { med: Math.round(q(v, 0.5)), p25: Math.round(q(v, 0.25)), p75: Math.round(q(v, 0.75)), n: v.length };
+    else if (k === 'Skitour' && v.length >= 1) { const m = q(v, 0.5); spanne[k] = { med: Math.round(m), p25: Math.round(m * 0.8), p75: Math.round(m * 1.2), n: v.length }; } // wenige Skitouren: ±20 %
+    else continue;
     sport[k] = spanne[k].med;
   }
   return { gesamt: alle.length ? Math.round(q(alle, 0.5)) : null, sport, spanne };
@@ -218,7 +221,10 @@ export function essSpanne(h: number, sport: string | null | undefined, ep: { spa
 }
 
 export type LangSlot = {
-  date: string; wt: string; art: 'lang' | 'sehr_lang';
+  date: string; wt: string; art: 'lang' | 'sehr_lang' | 'ziel' | 'taper';
+  /** Sport-Hinweis aus der Zieltour (z. B. Skitour) */
+  sport?: string | null;
+  hinweis?: string | null;
   dauerH: number; vonH: number; bisH: number;
   /** Dauer-Zuschlag aus der Historie (Punkte) */
   esEffekt: number;
@@ -234,13 +240,47 @@ export function effektFuer(h: number, eff: LangEffekt): number {
   return Math.round((k.extra * k.n) / (k.n + 3));
 }
 
+/** Zieltour (aus dem Zielplaner) – nur was der Hebel braucht. */
+export type ZielKurz = { datum: string; name: string; art: string; dauer_h: number; hm: number; distanz_km: number; prioritaet: string };
+export type ZielBedarf = {
+  ziel: ZielKurz; wochen: number;
+  /** so lang sollte die längste Einheit vor der Tour werden (70 % der Tourdauer, mindestens 2 h) */
+  zielH: number;
+  aufbauBis: string; taperAb: string; sport: string;
+  /** erlaubte Steigerung pro Woche (Rad/Lauf 30 min, Gehen/Skitour 1 h) */
+  schrittH: number; noetigProWoche: number; machbar: boolean; hmZiel: number;
+};
+const ZIEL_SPORT: Record<string, string> = { skitour: 'Skitour', bergtour: 'Bergtour', marsch: 'Wandern', bike_hike: 'Rad oder Wandern', rad: 'Rad', lauf: 'Lauf' };
+const zielArtKurz = (z: ZielKurz) => (z.art === 'sonstiges' && /marsch|wander|walk|hike|trekking|pilger/i.test(z.name) ? 'marsch' : z.art);
+/** Bedarf je kommender Zieltour (bis 30 Wochen voraus), nächste zuerst. */
+export function zielBedarf(ziele: ZielKurz[], s: LangStatus): ZielBedarf[] {
+  return ziele
+    .filter((z) => z && z.datum >= s.heute && (z.dauer_h || 0) > 0 && diffTage(s.heute, z.datum) <= 210)
+    .sort((a, b) => (a.datum < b.datum ? -1 : 1))
+    .map((z) => {
+      const art = zielArtKurz(z);
+      const geh = art === 'marsch' || art === 'skitour' || art === 'bergtour';
+      const zielH = Math.max(2, Math.round(z.dauer_h * 0.7 * 4) / 4);
+      const aufbauBis = addTage(z.datum, art === 'marsch' ? -21 : -14);
+      const taperAb = addTage(z.datum, art === 'marsch' ? -14 : -10);
+      const schrittH = geh ? 1 : 0.5;
+      const wochenAufbau = Math.max(1, Math.round(diffTage(s.heute, aufbauBis) / 7));
+      const noetigProWoche = Math.max(0, (zielH - s.laengste28h) / wochenAufbau);
+      return {
+        ziel: z, wochen: Math.max(0, Math.round(diffTage(s.heute, z.datum) / 7)), zielH, aufbauBis, taperAb,
+        sport: ZIEL_SPORT[art] || 'Rad', schrittH, noetigProWoche: Math.round(noetigProWoche * 100) / 100,
+        machbar: diffTage(s.heute, aufbauBis) >= 0 && noetigProWoche <= schrittH + 1e-9, hmZiel: Math.round((z.hm || 0) * 0.7),
+      };
+    });
+}
+
 /**
  * Termine im Planfenster (ab heute, tageVoraus Tage) an den gewählten Wochentagen.
  * Je Woche ist der letzte gewählte Tag der Haupttag (Dauer wächst um 30 min pro Woche, ab der Empfehlung),
  * weitere gewählte Tage 2 h. Ein Haupttag wird sehr lang (4–5 h), wenn die nächste sehr lange fällig ist
  * und der Aufbau (längste ≥ 3 h) erreicht ist.
  */
-export function langPlan(e: LangEinstellung, s: LangStatus, eff: LangEffekt, tageVoraus = 14, ep?: { spanne: Record<string, EssRate> }): LangSlot[] {
+export function langPlan(e: LangEinstellung, s: LangStatus, eff: LangEffekt, tageVoraus = 14, ep?: { spanne: Record<string, EssRate> }, bedarf: ZielBedarf[] = []): LangSlot[] {
   const emp = langEmpfehlung(s, e);
   const out: LangSlot[] = [];
   if (!e.tage.length) return out;
@@ -248,38 +288,69 @@ export function langPlan(e: LangEinstellung, s: LangStatus, eff: LangEffekt, tag
   const abstand = e.sehrProMonat > 0 ? Math.max(7, Math.round(30 / e.sehrProMonat)) : 0;
   let naechsteSehr = e.sehrProMonat > 0 && !emp.sehrLangAufbau ? emp.sehrLangFaellig : null;
   const ersteWoche = montag(s.heute);
+  const zb = bedarf.find((b) => b.ziel.datum >= s.heute) || null; // nächste Zieltour steuert Länge, Sport und Tapering
+  const esFuer = (h: number, sport: string | null) => {
+    const roh = sport === 'Skitour' ? ['Ski', 'Hike'] : sport === 'Bergtour' || sport === 'Wandern' ? ['Hike'] : sport === 'Lauf' ? ['Run'] : ['Bike'];
+    const sp = ep ? roh.map((r) => essSpanne(h, r, ep)).find((x) => x) || null : null;
+    return { essRad: sp, esGes: sp ? esGesamt(sp.richt, h, eff).gesamt : null };
+  };
   for (let i = 0; i < tageVoraus; i++) {
     const d = addTage(s.heute, i);
     const wt = wochentag(d);
+    if (zb && d === zb.ziel.datum) {
+      const h = zb.ziel.dauer_h;
+      out.push({ date: d, wt: WT_KURZ[wt], art: 'ziel', sport: zb.sport, hinweis: zb.ziel.name, dauerH: h, vonH: h, bisH: h, esEffekt: effektFuer(h, eff), ...esFuer(h, zb.sport) });
+      continue;
+    }
     if (!e.tage.includes(wt)) continue;
     const woche = Math.round(diffTage(ersteWoche, montag(d)) / 7);
     let art: LangSlot['art'] = 'lang';
     let dauerH = 2;
-    if (wt === haupt) {
-      dauerH = Math.min(emp.sehrLangAufbau ? 3.5 : 4, emp.wocheDauerH + 0.5 * woche);
-      if (naechsteSehr && d >= naechsteSehr) {
+    let sport: string | null = null;
+    let hinweis: string | null = null;
+    if (zb && d >= zb.taperAb && d < zb.ziel.datum) {
+      art = 'taper';
+      dauerH = Math.min(2, Math.max(1.5, zb.zielH * 0.5));
+      sport = zb.sport;
+      hinweis = `Tapering vor ${zb.ziel.name}`;
+    } else if (zb && d > zb.aufbauBis && d < zb.taperAb && wt === haupt) {
+      // zwischen Aufbauende und Tapering: Form halten, nicht weiter steigern
+      dauerH = Math.max(2, Math.round(zb.zielH * 0.8 * 4) / 4);
+      sport = zb.sport;
+      hinweis = `Form halten vor ${zb.ziel.name}`;
+    } else if (wt === haupt) {
+      const schritt = zb && d <= zb.aufbauBis ? zb.schrittH : 0.5;
+      // im Aufbau für eine Zieltour ist deren Ziellänge der Deckel (nicht darüber hinaus steigern)
+      const deckel = zb && d <= zb.aufbauBis ? zb.zielH : emp.sehrLangAufbau ? 3.5 : 4;
+      const start = Math.min(deckel, Math.max(2, Math.round((s.laengste28h + schritt) * 4) / 4));
+      dauerH = Math.min(deckel, start + schritt * woche);
+      if (zb && d <= zb.aufbauBis) {
+        sport = zb.sport;
+        hinweis = `Aufbau für ${zb.ziel.name} (Ziel ${String(zb.zielH).replace('.', ',')} h${zb.hmZiel ? `, ${zb.hmZiel} Hm` : ''})${zb.sport === 'Skitour' ? ' – ohne Schnee: Bergtour mit Höhenmetern' : ''}`;
+      }
+      if (naechsteSehr && d >= naechsteSehr && !(zb && d <= zb.ziel.datum && diffTage(d, zb.ziel.datum) <= 28)) {
         art = 'sehr_lang';
-        dauerH = 4.5;
+        dauerH = Math.max(4.5, dauerH);
         naechsteSehr = addTage(d, abstand);
       }
     }
-    const vonH = art === 'sehr_lang' ? 4 : Math.max(2, dauerH - 0.5);
-    const bisH = art === 'sehr_lang' ? 5.5 : dauerH + 0.5;
-    const essRad = ep ? essSpanne(dauerH, 'Bike', ep) : null;
-    out.push({ date: d, wt: WT_KURZ[wt], art, dauerH, vonH, bisH, esEffekt: effektFuer(dauerH, eff), essRad, esGes: essRad ? esGesamt(essRad.richt, dauerH, eff).gesamt : null });
+    const vonH = art === 'sehr_lang' ? 4 : Math.max(art === 'taper' ? 1 : 2, dauerH - 0.5);
+    const bisH = art === 'sehr_lang' ? Math.max(5.5, dauerH + 0.5) : dauerH + 0.5;
+    out.push({ date: d, wt: WT_KURZ[wt], art, sport, hinweis, dauerH, vonH, bisH, esEffekt: effektFuer(dauerH, eff), ...esFuer(dauerH, sport) });
   }
   return out;
 }
 
 /** Datenpaket für das Plan-Briefing (Kira legt Dauer und Einfluss fest). */
 export type LangKontext = {
-  einstellung: LangEinstellung; status: LangStatus; effekt: LangEffekt;
+  einstellung: LangEinstellung; status: LangStatus; effekt: LangEffekt; ziele?: ZielBedarf[];
   essProStunde: { gesamt: number | null; sport: Record<string, number>; spanne: Record<string, EssRate> }; termine: LangSlot[];
 };
-export function langKontext(t: P3Tag[], g: GarminTage, e: LangEinstellung, heute: string): LangKontext {
+export function langKontext(t: P3Tag[], g: GarminTage, e: LangEinstellung, heute: string, ziele: ZielKurz[] = []): LangKontext {
   const lang = laengsteProTag(g);
   const effekt = langEffekt(t, lang);
   const status = langStatus(lang, heute);
   const ep = essProStunde(t, lang);
-  return { einstellung: e, status, effekt, essProStunde: ep, termine: langPlan(e, status, effekt, 14, ep) };
+  const zb = zielBedarf(ziele, status);
+  return { einstellung: e, status, effekt, ziele: zb, essProStunde: ep, termine: langPlan(e, status, effekt, 14, ep, zb) };
 }

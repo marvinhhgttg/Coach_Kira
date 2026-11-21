@@ -789,8 +789,13 @@ export function langeEinheitenBlock(k: any, modus: 'plan' | 'wochenplan' = 'plan
     const c = (eff.klassen || []).find((x: any) => h >= x.von && h < x.bis);
     return c && c.extra != null && c.extra > 0 ? Math.round((c.extra * c.n) / (c.n + 3)) : 0;
   };
+  const ART: Record<string, string> = { sehr_lang: 'SEHR LANG', lang: 'lang', ziel: 'ZIELTOUR', taper: 'Tapering (kürzer, locker)' };
   const termine = (k.termine || []).map((t: any) =>
-    `- ${t.date} (${t.wt}): ${t.art === 'sehr_lang' ? 'SEHR LANG' : 'lang'}, Rahmen ${hTxt(t.vonH)}–${hTxt(t.bisH)}, Richtwert ${hTxt(t.dauerH)}${essFuer(t.dauerH) ? ' (' + essFuer(t.dauerH) + ')' : ''}, Dauer-Zuschlag ${zus(t.dauerH) >= 0 ? '+' : ''}${zus(t.dauerH)} Punkte`).join('\n');
+    t.art === 'ziel'
+      ? `- ${t.date} (${t.wt}): ZIELTOUR ${t.hinweis || ''} (${hTxt(t.dauerH)}${t.sport ? ', ' + t.sport : ''}) – als Tourtag planen, Vortag locker oder frei`
+      : `- ${t.date} (${t.wt}): ${ART[t.art] || t.art}${t.sport ? ', Sport ' + t.sport : ''}, Rahmen ${hTxt(t.vonH)}–${hTxt(t.bisH)}, Richtwert ${hTxt(t.dauerH)}${t.essRad ? ' (' + t.essRad.von + '–' + t.essRad.bis + ' ESS)' : essFuer(t.dauerH) ? ' (' + essFuer(t.dauerH) + ')' : ''}, Dauer-Zuschlag ${zus(t.dauerH) >= 0 ? '+' : ''}${zus(t.dauerH)} Punkte${t.hinweis ? ' – ' + t.hinweis : ''}`).join('\n');
+  const zielZeilen = (k.ziele || []).slice(0, 3).map((b: any) =>
+    `- ${b.ziel.name} am ${b.ziel.datum} (${b.wochen} Wochen, ${b.ziel.dauer_h} h, ${b.ziel.hm} Hm): längste Einheit bis ${b.aufbauBis} auf etwa ${hTxt(b.zielH)} bringen (${b.sport}${b.hmZiel ? ', mit etwa ' + b.hmZiel + ' Hm' : ''}), Steigerung höchstens ${hTxt(b.schrittH)} pro Woche – nötig ${hTxt(b.noetigProWoche)} pro Woche (${b.machbar ? 'machbar' : 'knapp, nicht erzwingen'}); Tapering ab ${b.taperAb}.`).join('\n');
   return [
     '',
     '',
@@ -802,10 +807,12 @@ export function langeEinheitenBlock(k: any, modus: 'plan' | 'wochenplan' = 'plan
     `Stand: längste Einheit der letzten 14 Tage ${st.laengste14 ? hTxt(st.laengste14.h) + ' am ' + st.laengste14.date : 'keine'}; längste der letzten 4 Wochen ${hTxt(st.laengste28h || 0)}; ab 2 h: ${st.n2_28} in 28 / ${st.n2_84} in 84 Tagen; ab 4 h: ${st.n4_84} in 84 Tagen${st.letzte4 ? ', zuletzt ' + st.letzte4.date : ''}.`,
     `Marcs eigene Zusatzwirkung über die ESS-Last hinaus (Score-Punkte in den Tagen 0–3): ${kl}. Der Dauer-Zuschlag ist bei wenigen Fällen vorsichtig verkleinert.`,
     `ESS pro Stunde bei ruhigen langen Einheiten (Z1–Z2, Median und übliche Spanne): ${essSport || 'unbekannt'}. Die Last wächst bei Marc kaum mit der Dauer, stark mit der Herzfrequenz.`,
-    termine ? 'Termine im Planfenster (Vorschlag aus Marcs Wochentagen):\n' + termine : 'Keine Termine im Planfenster.',
+    zielZeilen ? 'Zieltouren (aus Tourform/Zielplaner) – sie bestimmen Länge, Sport und Tapering der langen Einheiten:\n' + zielZeilen : '',
+    termine ? 'Termine im Planfenster (Vorschlag aus Marcs Wochentagen und Zieltouren):\n' + termine : 'Keine Termine im Planfenster.',
     '',
     'Regeln für lange Einheiten:',
-    '- Plane an diesen Terminen die lange Einheit ein, ruhig in Z1–Z2. Lege die Dauer selbst fest (im Rahmen; höchstens 30 min länger als die längste der letzten 4 Wochen, außer bei ruhigen Wanderungen/Skitouren).',
+    '- Plane an diesen Terminen die lange Einheit ein, ruhig in Z1–Z2, in der angegebenen Sportart. Lege die Dauer selbst fest (im Rahmen; höchstens 30 min länger als die längste der letzten 4 Wochen, bei Wandern/Skitour/Bergtour höchstens 1 h).',
+    '- Tapering-Tage kürzer und locker, keine sehr lange Einheit in den 10 Tagen vor einer Zieltour.',
     '- ESS am langen Tag = Dauer × ESS pro Stunde der Sportart, innerhalb der Spanne (ruhig fahren heißt unteres Ende).',
     '- Einfluss auf den Endurance Score NICHT schätzen, sondern so rechnen: Dauer-Zuschlag (wie oben je Dauerklasse) + 0,17 × ESS. Beispiel: 2:30 h mit 125 ESS = ' + (zus(2.5)) + ' + 21 = ' + (zus(2.5) + 21) + ' Punkte. Mehr ist nicht belegt.',
     '- Tagesvotum Recover/Rest, Readiness kritisch oder ACWR > 1,3: verschieben auf den nächsten passenden Tag oder kürzen – und das sagen.',

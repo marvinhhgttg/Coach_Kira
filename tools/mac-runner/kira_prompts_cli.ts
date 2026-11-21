@@ -75,11 +75,15 @@ async function langeEinheiten(): Promise<LangKontext | null> {
     const num = (x: any) => { const n = parseFloat(String(x ?? '').replace(',', '.')); return Number.isFinite(n) ? n : null; };
     const heute = heuteBerlin();
     const t = (j.data || []).filter((r: any) => String(r.date || '').slice(0, 10) <= heute).map((r: any) => ({ date: String(r.date).slice(0, 10), load: num(r.load_fb_day), es: num(r.garminEnduranceScore) }));
-    const g: any = await mitZeit(APPS_SCRIPT + '?mode=extras&typ=garmin_tag&n=1000', 90000);
+    const [g, zj]: any[] = await Promise.all([
+      mitZeit(APPS_SCRIPT + '?mode=extras&typ=garmin_tag&n=1000', 90000),
+      mitZeit(APPS_SCRIPT + '?mode=extras&typ=ziel&n=60', 60000).catch(() => null),
+    ]);
+    const ziele = ((zj && zj.items) || []).map((x: any) => x && x.data && x.data.ziel).filter((z: any) => z && z.datum);
     const m = new Map<string, any>();
     for (const it of (g && g.items) || []) if (it && it.data && typeof it.data === 'object') m.set(it.datum, it.data);
     if (!t.length || !m.size) return null;
-    return langKontext(t as any, m as any, e, heute);
+    return langKontext(t as any, m as any, e, heute, ziele);
   } catch {
     return null;
   }

@@ -3835,7 +3835,9 @@ function langeEinheitenBlock(k, modus = "plan") {
     const c = (eff.klassen || []).find((x) => h >= x.von && h < x.bis);
     return c && c.extra != null && c.extra > 0 ? Math.round(c.extra * c.n / (c.n + 3)) : 0;
   };
-  const termine = (k.termine || []).map((t) => `- ${t.date} (${t.wt}): ${t.art === "sehr_lang" ? "SEHR LANG" : "lang"}, Rahmen ${hTxt(t.vonH)}\u2013${hTxt(t.bisH)}, Richtwert ${hTxt(t.dauerH)}${essFuer(t.dauerH) ? " (" + essFuer(t.dauerH) + ")" : ""}, Dauer-Zuschlag ${zus(t.dauerH) >= 0 ? "+" : ""}${zus(t.dauerH)} Punkte`).join("\n");
+  const ART = { sehr_lang: "SEHR LANG", lang: "lang", ziel: "ZIELTOUR", taper: "Tapering (k\xFCrzer, locker)" };
+  const termine = (k.termine || []).map((t) => t.art === "ziel" ? `- ${t.date} (${t.wt}): ZIELTOUR ${t.hinweis || ""} (${hTxt(t.dauerH)}${t.sport ? ", " + t.sport : ""}) \u2013 als Tourtag planen, Vortag locker oder frei` : `- ${t.date} (${t.wt}): ${ART[t.art] || t.art}${t.sport ? ", Sport " + t.sport : ""}, Rahmen ${hTxt(t.vonH)}\u2013${hTxt(t.bisH)}, Richtwert ${hTxt(t.dauerH)}${t.essRad ? " (" + t.essRad.von + "\u2013" + t.essRad.bis + " ESS)" : essFuer(t.dauerH) ? " (" + essFuer(t.dauerH) + ")" : ""}, Dauer-Zuschlag ${zus(t.dauerH) >= 0 ? "+" : ""}${zus(t.dauerH)} Punkte${t.hinweis ? " \u2013 " + t.hinweis : ""}`).join("\n");
+  const zielZeilen = (k.ziele || []).slice(0, 3).map((b) => `- ${b.ziel.name} am ${b.ziel.datum} (${b.wochen} Wochen, ${b.ziel.dauer_h} h, ${b.ziel.hm} Hm): l\xE4ngste Einheit bis ${b.aufbauBis} auf etwa ${hTxt(b.zielH)} bringen (${b.sport}${b.hmZiel ? ", mit etwa " + b.hmZiel + " Hm" : ""}), Steigerung h\xF6chstens ${hTxt(b.schrittH)} pro Woche \u2013 n\xF6tig ${hTxt(b.noetigProWoche)} pro Woche (${b.machbar ? "machbar" : "knapp, nicht erzwingen"}); Tapering ab ${b.taperAb}.`).join("\n");
   return [
     "",
     "",
@@ -3845,10 +3847,12 @@ function langeEinheitenBlock(k, modus = "plan") {
     `Stand: l\xE4ngste Einheit der letzten 14 Tage ${st.laengste14 ? hTxt(st.laengste14.h) + " am " + st.laengste14.date : "keine"}; l\xE4ngste der letzten 4 Wochen ${hTxt(st.laengste28h || 0)}; ab 2 h: ${st.n2_28} in 28 / ${st.n2_84} in 84 Tagen; ab 4 h: ${st.n4_84} in 84 Tagen${st.letzte4 ? ", zuletzt " + st.letzte4.date : ""}.`,
     `Marcs eigene Zusatzwirkung \xFCber die ESS-Last hinaus (Score-Punkte in den Tagen 0\u20133): ${kl}. Der Dauer-Zuschlag ist bei wenigen F\xE4llen vorsichtig verkleinert.`,
     `ESS pro Stunde bei ruhigen langen Einheiten (Z1\u2013Z2, Median und \xFCbliche Spanne): ${essSport || "unbekannt"}. Die Last w\xE4chst bei Marc kaum mit der Dauer, stark mit der Herzfrequenz.`,
-    termine ? "Termine im Planfenster (Vorschlag aus Marcs Wochentagen):\n" + termine : "Keine Termine im Planfenster.",
+    zielZeilen ? "Zieltouren (aus Tourform/Zielplaner) \u2013 sie bestimmen L\xE4nge, Sport und Tapering der langen Einheiten:\n" + zielZeilen : "",
+    termine ? "Termine im Planfenster (Vorschlag aus Marcs Wochentagen und Zieltouren):\n" + termine : "Keine Termine im Planfenster.",
     "",
     "Regeln f\xFCr lange Einheiten:",
-    "- Plane an diesen Terminen die lange Einheit ein, ruhig in Z1\u2013Z2. Lege die Dauer selbst fest (im Rahmen; h\xF6chstens 30 min l\xE4nger als die l\xE4ngste der letzten 4 Wochen, au\xDFer bei ruhigen Wanderungen/Skitouren).",
+    "- Plane an diesen Terminen die lange Einheit ein, ruhig in Z1\u2013Z2, in der angegebenen Sportart. Lege die Dauer selbst fest (im Rahmen; h\xF6chstens 30 min l\xE4nger als die l\xE4ngste der letzten 4 Wochen, bei Wandern/Skitour/Bergtour h\xF6chstens 1 h).",
+    "- Tapering-Tage k\xFCrzer und locker, keine sehr lange Einheit in den 10 Tagen vor einer Zieltour.",
     "- ESS am langen Tag = Dauer \xD7 ESS pro Stunde der Sportart, innerhalb der Spanne (ruhig fahren hei\xDFt unteres Ende).",
     "- Einfluss auf den Endurance Score NICHT sch\xE4tzen, sondern so rechnen: Dauer-Zuschlag (wie oben je Dauerklasse) + 0,17 \xD7 ESS. Beispiel: 2:30 h mit 125 ESS = " + zus(2.5) + " + 21 = " + (zus(2.5) + 21) + " Punkte. Mehr ist nicht belegt.",
     "- Tagesvotum Recover/Rest, Readiness kritisch oder ACWR > 1,3: verschieben auf den n\xE4chsten passenden Tag oder k\xFCrzen \u2013 und das sagen.",
@@ -4721,7 +4725,8 @@ function essProStunde(t, lang) {
   for (const d of t) {
     const l = lang.get(d.date);
     if (!l || l.h < 1.5 || !d.load || d.load <= 0) continue;
-    if (l.z12 != null && l.z12 < 0.85) continue;
+    const skitour = sportDe(l.sport) === "Skitour";
+    if (!skitour && l.z12 != null && l.z12 < 0.85) continue;
     const v = d.load / l.h;
     if (v < 10 && sportDe(l.sport) === "Rad") continue;
     alle.push(v);
@@ -4733,8 +4738,12 @@ function essProStunde(t, lang) {
   };
   const sport = {};
   const spanne = {};
-  for (const [k, v] of Object.entries(proSport)) if (v.length >= 3) {
-    spanne[k] = { med: Math.round(q(v, 0.5)), p25: Math.round(q(v, 0.25)), p75: Math.round(q(v, 0.75)), n: v.length };
+  for (const [k, v] of Object.entries(proSport)) {
+    if (v.length >= 3) spanne[k] = { med: Math.round(q(v, 0.5)), p25: Math.round(q(v, 0.25)), p75: Math.round(q(v, 0.75)), n: v.length };
+    else if (k === "Skitour" && v.length >= 1) {
+      const m = q(v, 0.5);
+      spanne[k] = { med: Math.round(m), p25: Math.round(m * 0.8), p75: Math.round(m * 1.2), n: v.length };
+    } else continue;
     sport[k] = spanne[k].med;
   }
   return { gesamt: alle.length ? Math.round(q(alle, 0.5)) : null, sport, spanne };
@@ -4762,7 +4771,33 @@ function effektFuer(h, eff) {
   if (!k || k.extra == null || k.extra <= 0) return 0;
   return Math.round(k.extra * k.n / (k.n + 3));
 }
-function langPlan(e, s, eff, tageVoraus = 14, ep) {
+var ZIEL_SPORT = { skitour: "Skitour", bergtour: "Bergtour", marsch: "Wandern", bike_hike: "Rad oder Wandern", rad: "Rad", lauf: "Lauf" };
+var zielArtKurz = (z) => z.art === "sonstiges" && /marsch|wander|walk|hike|trekking|pilger/i.test(z.name) ? "marsch" : z.art;
+function zielBedarf(ziele, s) {
+  return ziele.filter((z) => z && z.datum >= s.heute && (z.dauer_h || 0) > 0 && diffTage(s.heute, z.datum) <= 210).sort((a, b) => a.datum < b.datum ? -1 : 1).map((z) => {
+    const art = zielArtKurz(z);
+    const geh = art === "marsch" || art === "skitour" || art === "bergtour";
+    const zielH = Math.max(2, Math.round(z.dauer_h * 0.7 * 4) / 4);
+    const aufbauBis = addTage(z.datum, art === "marsch" ? -21 : -14);
+    const taperAb = addTage(z.datum, art === "marsch" ? -14 : -10);
+    const schrittH = geh ? 1 : 0.5;
+    const wochenAufbau = Math.max(1, Math.round(diffTage(s.heute, aufbauBis) / 7));
+    const noetigProWoche = Math.max(0, (zielH - s.laengste28h) / wochenAufbau);
+    return {
+      ziel: z,
+      wochen: Math.max(0, Math.round(diffTage(s.heute, z.datum) / 7)),
+      zielH,
+      aufbauBis,
+      taperAb,
+      sport: ZIEL_SPORT[art] || "Rad",
+      schrittH,
+      noetigProWoche: Math.round(noetigProWoche * 100) / 100,
+      machbar: diffTage(s.heute, aufbauBis) >= 0 && noetigProWoche <= schrittH + 1e-9,
+      hmZiel: Math.round((z.hm || 0) * 0.7)
+    };
+  });
+}
+function langPlan(e, s, eff, tageVoraus = 14, ep, bedarf = []) {
   const emp = langEmpfehlung(s, e);
   const out = [];
   if (!e.tage.length) return out;
@@ -4770,34 +4805,63 @@ function langPlan(e, s, eff, tageVoraus = 14, ep) {
   const abstand = e.sehrProMonat > 0 ? Math.max(7, Math.round(30 / e.sehrProMonat)) : 0;
   let naechsteSehr = e.sehrProMonat > 0 && !emp.sehrLangAufbau ? emp.sehrLangFaellig : null;
   const ersteWoche = montag(s.heute);
+  const zb = bedarf.find((b) => b.ziel.datum >= s.heute) || null;
+  const esFuer = (h, sport) => {
+    const roh = sport === "Skitour" ? ["Ski", "Hike"] : sport === "Bergtour" || sport === "Wandern" ? ["Hike"] : sport === "Lauf" ? ["Run"] : ["Bike"];
+    const sp = ep ? roh.map((r) => essSpanne(h, r, ep)).find((x) => x) || null : null;
+    return { essRad: sp, esGes: sp ? esGesamt(sp.richt, h, eff).gesamt : null };
+  };
   for (let i = 0; i < tageVoraus; i++) {
     const d = addTage(s.heute, i);
     const wt = wochentag(d);
+    if (zb && d === zb.ziel.datum) {
+      const h = zb.ziel.dauer_h;
+      out.push({ date: d, wt: WT_KURZ[wt], art: "ziel", sport: zb.sport, hinweis: zb.ziel.name, dauerH: h, vonH: h, bisH: h, esEffekt: effektFuer(h, eff), ...esFuer(h, zb.sport) });
+      continue;
+    }
     if (!e.tage.includes(wt)) continue;
     const woche = Math.round(diffTage(ersteWoche, montag(d)) / 7);
     let art = "lang";
     let dauerH = 2;
-    if (wt === haupt) {
-      dauerH = Math.min(emp.sehrLangAufbau ? 3.5 : 4, emp.wocheDauerH + 0.5 * woche);
-      if (naechsteSehr && d >= naechsteSehr) {
+    let sport = null;
+    let hinweis = null;
+    if (zb && d >= zb.taperAb && d < zb.ziel.datum) {
+      art = "taper";
+      dauerH = Math.min(2, Math.max(1.5, zb.zielH * 0.5));
+      sport = zb.sport;
+      hinweis = `Tapering vor ${zb.ziel.name}`;
+    } else if (zb && d > zb.aufbauBis && d < zb.taperAb && wt === haupt) {
+      dauerH = Math.max(2, Math.round(zb.zielH * 0.8 * 4) / 4);
+      sport = zb.sport;
+      hinweis = `Form halten vor ${zb.ziel.name}`;
+    } else if (wt === haupt) {
+      const schritt = zb && d <= zb.aufbauBis ? zb.schrittH : 0.5;
+      const deckel = zb && d <= zb.aufbauBis ? zb.zielH : emp.sehrLangAufbau ? 3.5 : 4;
+      const start = Math.min(deckel, Math.max(2, Math.round((s.laengste28h + schritt) * 4) / 4));
+      dauerH = Math.min(deckel, start + schritt * woche);
+      if (zb && d <= zb.aufbauBis) {
+        sport = zb.sport;
+        hinweis = `Aufbau f\xFCr ${zb.ziel.name} (Ziel ${String(zb.zielH).replace(".", ",")} h${zb.hmZiel ? `, ${zb.hmZiel} Hm` : ""})${zb.sport === "Skitour" ? " \u2013 ohne Schnee: Bergtour mit H\xF6henmetern" : ""}`;
+      }
+      if (naechsteSehr && d >= naechsteSehr && !(zb && d <= zb.ziel.datum && diffTage(d, zb.ziel.datum) <= 28)) {
         art = "sehr_lang";
-        dauerH = 4.5;
+        dauerH = Math.max(4.5, dauerH);
         naechsteSehr = addTage(d, abstand);
       }
     }
-    const vonH = art === "sehr_lang" ? 4 : Math.max(2, dauerH - 0.5);
-    const bisH = art === "sehr_lang" ? 5.5 : dauerH + 0.5;
-    const essRad = ep ? essSpanne(dauerH, "Bike", ep) : null;
-    out.push({ date: d, wt: WT_KURZ[wt], art, dauerH, vonH, bisH, esEffekt: effektFuer(dauerH, eff), essRad, esGes: essRad ? esGesamt(essRad.richt, dauerH, eff).gesamt : null });
+    const vonH = art === "sehr_lang" ? 4 : Math.max(art === "taper" ? 1 : 2, dauerH - 0.5);
+    const bisH = art === "sehr_lang" ? Math.max(5.5, dauerH + 0.5) : dauerH + 0.5;
+    out.push({ date: d, wt: WT_KURZ[wt], art, sport, hinweis, dauerH, vonH, bisH, esEffekt: effektFuer(dauerH, eff), ...esFuer(dauerH, sport) });
   }
   return out;
 }
-function langKontext(t, g, e, heute) {
+function langKontext(t, g, e, heute, ziele = []) {
   const lang = laengsteProTag(g);
   const effekt = langEffekt(t, lang);
   const status = langStatus(lang, heute);
   const ep = essProStunde(t, lang);
-  return { einstellung: e, status, effekt, essProStunde: ep, termine: langPlan(e, status, effekt, 14, ep) };
+  const zb = zielBedarf(ziele, status);
+  return { einstellung: e, status, effekt, ziele: zb, essProStunde: ep, termine: langPlan(e, status, effekt, 14, ep, zb) };
 }
 
 // server/kira_prompts_cli.ts
@@ -4876,11 +4940,15 @@ async function langeEinheiten() {
     };
     const heute = heuteBerlin();
     const t = (j.data || []).filter((r) => String(r.date || "").slice(0, 10) <= heute).map((r) => ({ date: String(r.date).slice(0, 10), load: num(r.load_fb_day), es: num(r.garminEnduranceScore) }));
-    const g = await mitZeit(APPS_SCRIPT + "?mode=extras&typ=garmin_tag&n=1000", 9e4);
+    const [g, zj] = await Promise.all([
+      mitZeit(APPS_SCRIPT + "?mode=extras&typ=garmin_tag&n=1000", 9e4),
+      mitZeit(APPS_SCRIPT + "?mode=extras&typ=ziel&n=60", 6e4).catch(() => null)
+    ]);
+    const ziele = (zj && zj.items || []).map((x) => x && x.data && x.data.ziel).filter((z2) => z2 && z2.datum);
     const m = /* @__PURE__ */ new Map();
     for (const it of g && g.items || []) if (it && it.data && typeof it.data === "object") m.set(it.datum, it.data);
     if (!t.length || !m.size) return null;
-    return langKontext(t, m, e, heute);
+    return langKontext(t, m, e, heute, ziele);
   } catch {
     return null;
   }

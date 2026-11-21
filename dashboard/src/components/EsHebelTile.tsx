@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { ladeP3, esBacktest, esBreakEven, esZiel, type P3Tag } from '../lib/paket3';
 import { useGarminTage, fmtDauer } from '../lib/garmin';
-import { laengsteProTag, langEffekt, langStatus, langEmpfehlung, langPlan, sportDe, parseLangEinstellung, essProStunde, esGesamt, WT_KURZ, type LangEinstellung } from '../lib/esLang';
+import { laengsteProTag, langEffekt, langStatus, langEmpfehlung, langPlan, sportDe, parseLangEinstellung, essProStunde, esGesamt, zielBedarf, WT_KURZ, type LangEinstellung, type ZielKurz } from '../lib/esLang';
+import { fetchExtras } from '../lib/extras';
 import { fetchPlanBriefing } from '../lib/api';
 import { heuteBerlin } from '../lib/kernVotumKi';
 
@@ -30,6 +31,15 @@ export function EsHebelTile() {
   };
   const tagUmschalten = (wt: number) =>
     langSpeichern({ ...langEin, tage: langEin.tage.includes(wt) ? langEin.tage.filter((x) => x !== wt) : [...langEin.tage, wt].sort((a, b) => a - b) });
+  // Zieltouren (Zielplaner/Tourform) steuern Länge, Sport und Tapering der langen Einheiten
+  const [ziele, setZiele] = useState<ZielKurz[]>([]);
+  useEffect(() => {
+    let alive = true;
+    fetchExtras<{ ziel?: ZielKurz }>('ziel', 60)
+      .then((it) => { if (alive) setZiele(it.map((x) => x.data?.ziel).filter((z): z is ZielKurz => !!z && !!z.datum)); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
   // Kiras Vorschlag aus dem letzten Plan-Briefing (Feld lange_einheit je Tag)
   const [kiVorschlag, setKiVorschlag] = useState<{ stand: string | null; quelle?: string; tage: Record<string, { dauer_h?: number; sport?: string; es_effekt?: number; hinweis?: string; ess?: number }> } | null>(null);
   useEffect(() => {
@@ -147,7 +157,8 @@ export function EsHebelTile() {
   const st = lang ? langStatus(lang, heute) : null;
   const emp = st ? langEmpfehlung(st, langEin) : null;
   const ep = lang ? essProStunde(tage, lang) : null;
-  const termine = st && eff ? langPlan(langEin, st, eff, 14, ep || undefined) : [];
+  const zb = st ? zielBedarf(ziele, st) : [];
+  const termine = st && eff ? langPlan(langEin, st, eff, 14, ep || undefined, zb) : [];
   const extraProTag = eff && emp ? (eff.bonus4 * emp.sehrLangProMonat) / 30 : 0;
   const zLang = eff && eff.bonus4 > 0 && emp && emp.sehrLangProMonat > 0 && z && z.tage > 0 ? esZiel(tage, zielScore, zielDatum, extraProTag) : null;
   const fmtH = (h: number) => fmtDauer(h * 3600);
@@ -265,6 +276,22 @@ export function EsHebelTile() {
               </div>
             </div>
 
+            {zb.length > 0 && (
+              <div className="mt-3">
+                <p className="text-xs font-medium">Zieltouren (aus der Tourform)</p>
+                <ul className="mt-1 text-xs space-y-1">
+                  {zb.slice(0, 3).map((b) => (
+                    <li key={b.ziel.datum + b.ziel.name}>
+                      <span className="font-medium">{b.ziel.name}</span> am {fmtDateShort(b.ziel.datum)} ({b.wochen} Wochen, {b.ziel.dauer_h} h): längste Einheit bis{' '}
+                      {fmtDateShort(b.aufbauBis)} auf etwa {fmtH(b.zielH)} ({b.sport}{b.hmZiel ? `, ${b.hmZiel.toLocaleString('de-DE')} Hm` : ''}) – nötig{' '}
+                      {fmtH(b.noetigProWoche)} pro Woche, erlaubt {fmtH(b.schrittH)}:{' '}
+                      {b.machbar ? <span className="text-green-600">machbar</span> : <span className="text-orange-300">knapp, nicht erzwingen</span>}. Tapering ab {fmtDateShort(b.taperAb)}.
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {termine.length > 0 && (
               <div className="mt-3">
                 <p className="text-xs font-medium">Termine in den nächsten 14 Tagen</p>
@@ -275,7 +302,7 @@ export function EsHebelTile() {
                         <th className="py-1 pr-2 font-normal">Tag</th>
                         <th className="py-1 pr-2 font-normal">Art</th>
                         <th className="py-1 pr-2 font-normal">Richtwert</th>
-                        <th className="py-1 pr-2 font-normal">ESS Rad</th>
+                        <th className="py-1 pr-2 font-normal">ESS</th>
                         <th className="py-1 pr-2 font-normal">Endurance</th>
                         <th className="py-1 font-normal">Kira schlägt vor</th>
                       </tr>
@@ -286,7 +313,10 @@ export function EsHebelTile() {
                         return (
                           <tr key={t.date} className="border-t border-border align-top">
                             <td className="py-1 pr-2 whitespace-nowrap">{t.wt} {fmtDateShort(t.date).slice(0, -5)}</td>
-                            <td className="py-1 pr-2">{t.art === 'sehr_lang' ? 'sehr lang' : 'lang'}</td>
+                            <td className="py-1 pr-2">
+                              {{ sehr_lang: 'sehr lang', lang: 'lang', ziel: 'Zieltour', taper: 'Tapering' }[t.art]}
+                              {t.sport ? <span className="text-2xs text-ink-muted"> · {t.sport}</span> : null}
+                            </td>
                             <td className="py-1 pr-2 font-mono whitespace-nowrap">{fmtH(t.dauerH)}</td>
                             <td className="py-1 pr-2 font-mono whitespace-nowrap">{t.essRad ? `${t.essRad.von}–${t.essRad.bis}` : '—'}</td>
                             <td className="py-1 pr-2 font-mono whitespace-nowrap" title={`Dauer-Zuschlag ${vz(t.esEffekt)}, Rest aus der Last`}>{t.esGes != null ? vz(t.esGes) : vz(t.esEffekt)}</td>
@@ -314,7 +344,7 @@ export function EsHebelTile() {
                   </table>
                 </div>
                 <p className="mt-1 text-2xs text-ink-muted">
-                  Richtwert, ESS-Spanne (ruhige lange Radtouren) und Endurance (Dauer-Zuschlag + 0,17 Punkte je ESS gegenüber einem Ruhetag) aus deiner Historie. Kiras Vorschlag kommt aus {kiVorschlag?.quelle === 'Wochenplan' ? 'dem Wochenplan (Plan › Diese Woche)' : 'dem Plan-Briefing des Morgenlaufs'}
+                  Richtwert, ESS-Spanne (ruhige lange Einheiten der Sportart, sonst Rad) und Endurance (Dauer-Zuschlag + 0,17 Punkte je ESS gegenüber einem Ruhetag) aus deiner Historie. Kiras Vorschlag kommt aus {kiVorschlag?.quelle === 'Wochenplan' ? 'dem Wochenplan (Plan › Diese Woche)' : 'dem Plan-Briefing des Morgenlaufs'}
                   {kiVorschlag?.stand ? ` vom ${new Date(kiVorschlag.stand).toLocaleString('de-DE', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })}` : ''} – neue Vorgaben wirken nach „Neu planen“.
                 </p>
               </div>
