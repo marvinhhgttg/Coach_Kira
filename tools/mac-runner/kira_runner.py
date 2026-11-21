@@ -1043,7 +1043,10 @@ def _supervisor_once() -> str:
     heute = jetzt.strftime("%Y-%m-%d")
     if WINDOW[0] <= jetzt.hour < WINDOW[1] and st.get("morning_done") != heute and (st.get("tries", {}).get("date") != heute or st.get("tries", {}).get("n", 0) < MAX_TRIES):
         try:
-            bereit, _ = morning_data_ready(heute)
+            bereit, zeile = morning_data_ready(heute)
+            # Vorrang nur, wenn die Briefings wirklich rechnen können: sie brauchen den Status von heute,
+            # und den schreibt erst dieser Supervisor-Lauf (sonst Briefings mit Vortageswerten, 21.11.2026)
+            bereit = bereit and status_aktuell(zeile)
         except Exception:
             bereit = False
         if bereit:
@@ -1238,6 +1241,31 @@ def morning_data_ready(today_str: str) -> tuple[bool, dict | None]:
                 return True, row
             return False, row
     return False, None
+
+
+def status_aktuell(row: dict | None) -> bool:
+    """True, wenn der Supervisor-Status (briefingData type=status) schon die heutigen Morgenwerte trägt:
+    Training Readiness und Schlafscore gleich der heutigen timeline-Zeile. Bei Fehler False."""
+    if not row:
+        return False
+    try:
+        s = ((http_get_json(SCRIPT_URL + "?mode=briefingData&type=status").get("daten")) or {}).get("status") or {}
+    except Exception:
+        return False
+    werte = {str(i.get("metrik")): i.get("wert") for i in (s.get("items") or [])}
+
+    def gleich(a, b) -> bool:
+        try:
+            return abs(float(str(a).replace(",", ".")) - float(str(b).replace(",", "."))) < 0.01
+        except Exception:
+            return False
+
+    return gleich(werte.get("Training Readiness"), row.get("Garmin_Training_Readiness")) and gleich(
+        werte.get("Schlafscore"), row.get("sleep_score_0_100")
+    )
+
+
+STATUS_WARTEN_MIN = 25  # so lange warten die Briefings höchstens auf den Supervisor-Status von heute
 
 
 # ---------------------------------------------------------------------------
@@ -1548,6 +1576,22 @@ def cmd_morning(force: bool = False) -> None:
             st["last_wait_log"] = hour
             save_state(st)
         return
+    # Briefings lesen den Supervisor-Status (Scores, Einzelwerte). Erst rechnen, wenn er die heutigen
+    # Morgenwerte zeigt – sonst stehen Vortageswerte in den Texten. Spätestens nach STATUS_WARTEN_MIN trotzdem.
+    if not force and not status_aktuell(row):
+        sw = st.get("status_wait") or {}
+        if sw.get("date") != today:
+            sw = {"date": today, "at": time.time()}
+            st["status_wait"] = sw
+            save_state(st)
+            log("Morgen-Briefings: warten auf den Supervisor-Status von heute")
+        if time.time() - float(sw.get("at") or 0) < STATUS_WARTEN_MIN * 60:
+            return
+        if not sw.get("trotzdem"):
+            sw["trotzdem"] = True
+            st["status_wait"] = sw
+            save_state(st)
+            log(f"Morgen-Briefings: Supervisor-Status nach {STATUS_WARTEN_MIN} min noch nicht von heute – rechne trotzdem")
     if not force:
         tries = st.get("tries", {})
         if tries.get("date") != today:
