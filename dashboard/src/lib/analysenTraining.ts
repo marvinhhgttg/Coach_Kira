@@ -15,15 +15,40 @@ export type Sport = 'lauf' | 'rad';
 export interface Entkopplung { pct: number; basis: 'tempo' | 'watt'; hf1: number; hf2: number; x1: number; x2: number; runden: number }
 type AktMitEnt = GarminAkt & { ent?: Entkopplung | null };
 
-export function entkopplung(tage: GarminTage | null, sport: Sport) {
+/** Ab dieser Tempo- bzw. Leistungsänderung zwischen 1. und 2. Hälfte gilt eine Einheit als ungleichmäßig. */
+export const ENT_MAX_AENDERUNG = 0.10;
+/** Ab so vielen Tagen ohne auswertbare Einheit wird eine Lücke im Diagramm erklärt. */
+export const ENT_LUECKE_TAGE = 45;
+
+export interface EntLuecke { von: string; bis: string; tage: number; lang: number; offen: boolean }
+
+export function entkopplung(tage: GarminTage | null, sport: Sport, heute = new Date().toLocaleDateString('sv-SE')) {
   const es = eintraege(tage).filter((e) => (sport === 'lauf' ? LAUF : RAD_ALLE).has(e.a.typ || '') && minuten(e.a) >= 60);
   const mitEnt = es.filter((e) => (e.a as AktMitEnt).ent && Number.isFinite((e.a as AktMitEnt).ent!.pct));
   const flach = mitEnt.filter((e) => (e.a.hm || 0) / Math.max(e.a.km || 1, 1) <= (sport === 'lauf' ? 5 : 4) || (e.a.typ || '').startsWith('indoor') || e.a.typ === 'virtual_ride');
-  const pts = flach.map((e) => ({ datum: e.datum, t: tageSeit(e.datum), y: (e.a as AktMitEnt).ent!.pct, a: e.a as AktMitEnt }));
+  // 21.11.2026: nur gleichmäßige Einheiten (Tempo bzw. Leistung ändert sich um höchstens 10 %)
+  const aenderung = (e: E) => { const x = (e.a as AktMitEnt).ent!; return x.x1 > 0 ? Math.abs(x.x2 - x.x1) / x.x1 : 1; };
+  const gleichmaessig = flach.filter((e) => aenderung(e) <= ENT_MAX_AENDERUNG);
+  const ungleich = flach.filter((e) => aenderung(e) > ENT_MAX_AENDERUNG)
+    .map((e) => ({ datum: e.datum, name: e.a.name, aenderungPct: Math.round(aenderung(e) * 100) }));
+  const pts = gleichmaessig.map((e) => ({ datum: e.datum, t: tageSeit(e.datum), y: (e.a as AktMitEnt).ent!.pct, a: e.a as AktMitEnt }))
+    .sort((a, b) => a.datum.localeCompare(b.datum));
+  // Lücken: zwischen zwei Punkten bzw. vom letzten Punkt bis heute
+  const diff = (a: string, b: string) => Math.round((new Date(b + 'T12:00:00').getTime() - new Date(a + 'T12:00:00').getTime()) / 86400000);
+  const luecken: EntLuecke[] = [];
+  const grenzen = pts.map((p) => p.datum);
+  if (grenzen.length) grenzen.push(heute);
+  for (let i = 0; i + 1 < grenzen.length; i++) {
+    const a = grenzen[i], b = grenzen[i + 1], offen = i + 2 === grenzen.length;
+    const t = diff(a, b);
+    if (t < ENT_LUECKE_TAGE) continue;
+    const von = plusTage(a, 1), bis = offen ? b : plusTage(b, -1);
+    luecken.push({ von, bis, tage: t, offen, lang: es.filter((e) => e.datum >= von && e.datum <= bis).length });
+  }
   const ts = theilSen(pts);
   const letzte = pts.slice(-6).map((p) => p.y);
   return {
-    kandidaten: es.length, mitDaten: mitEnt.length, punkte: pts,
+    kandidaten: es.length, mitDaten: mitEnt.length, punkte: pts, ungleich, luecken,
     trendJe90: ts ? ts.b * 90 : null,
     median: median(pts.map((p) => p.y)), aktuell: median(letzte),
     unter5: pts.filter((p) => p.y < 5).length,

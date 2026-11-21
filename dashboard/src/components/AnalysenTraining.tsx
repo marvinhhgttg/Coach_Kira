@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Bar, BarChart, CartesianGrid, ComposedChart, Legend, Line, LineChart, ResponsiveContainer, Scatter, Tooltip, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, ComposedChart, Legend, Line, LineChart, ReferenceArea, ResponsiveContainer, Scatter, Tooltip, XAxis, YAxis } from 'recharts';
 import { Panel } from './UI';
 import { KiraFazit } from './KiraFazit';
 import { useGarminTage } from '../lib/garmin';
 import {
-  entkopplung, fetchWetterStunden, hausrunden, laufoekonomie, leistungskurve, tageszeit, temperatur, trainingswirkung, TE_LABELS, type Sport,
+  entkopplung, type EntLuecke, fetchWetterStunden, hausrunden, laufoekonomie, leistungskurve, tageszeit, temperatur, trainingswirkung, TE_LABELS, type Sport,
 } from '../lib/analysenTraining';
 import { de, dauerTxt, kurz, monatName, tempoTxt, vz } from '../lib/stat';
 
@@ -31,17 +31,27 @@ export const Kz = ({ lab, wert, sub, ton }: { lab: string; wert: ReactNode; sub?
 );
 
 // ─── 1 Aerobe Entkopplung ───────────────────────────────────────────────────
+const tsVon = (d: string) => new Date(d + 'T12:00:00').getTime();
+function luckeText(l: EntLuecke, sport: Sport) {
+  const was = sport === 'lauf' ? 'Läufe' : 'Radeinheiten';
+  return l.lang === 0
+    ? `keine ${was} ab 60 min`
+    : `${l.lang} ${l.lang === 1 ? (sport === 'lauf' ? 'Lauf' : 'Radeinheit') : was} ab 60 min, aber hügelig, ungleichmäßig oder ohne Rundendaten`;
+}
+
 export function EntkopplungTile() {
   const { tage } = useGarminTage();
   const [sport, setSport] = useState<Sport>('lauf');
   const r = useMemo(() => entkopplung(tage, sport), [tage, sport]);
   const facts = [
     `${sport === 'lauf' ? 'Laufen' : 'Rad'}, Einheiten ab 60 min, flach: Entkopplung = wie stark Tempo (bzw. Leistung) je Herzschlag in der 2. Hälfte gegenüber der 1. Hälfte sinkt. Unter 5 % gilt als gute Grundlagenausdauer.`,
+    `Ungleichmäßige Einheiten (Tempo bzw. Leistung ändert sich zwischen den Hälften um mehr als 10 %) zählen nicht: ${r.ungleich.length} aussortiert.`,
+    ...r.luecken.map((l) => `Lücke ${kurz(l.von)} bis ${l.offen ? 'heute' : kurz(l.bis)}: ${luckeText(l, sport)}.`),
     `${r.punkte.length} Einheiten mit Rundendaten, Median ${de(r.median, 1)} %, letzte 6 Einheiten ${de(r.aktuell, 1)} %, Trend ${vz(r.trendJe90, 1)} Prozentpunkte je 90 Tage, ${r.unter5} Einheiten unter 5 %.`,
   ];
   return (
     <Panel title="Aerobe Entkopplung" right={<SportSchalter sport={sport} setSport={setSport} />}>
-      <Hinweis>Wie stark steigt dein Puls in der zweiten Hälfte langer, flacher Einheiten bei gleichem Tempo bzw. gleicher Leistung? Unter 5 % = stabile Grundlage. Berechnet vom Mac aus den Garmin-Runden.</Hinweis>
+      <Hinweis>Wie stark steigt dein Puls in der zweiten Hälfte langer, flacher und gleichmäßiger Einheiten (ab 60 min) bei gleichem Tempo bzw. gleicher Leistung? Unter 5 % = stabile Grundlage. Graue Flächen = Zeiträume ohne auswertbare Einheit. Berechnet vom Mac aus den Garmin-Runden.</Hinweis>
       {tage === null ? <Laedt /> : !r.punkte.length ? (
         <p className="text-2xs text-amber-400">
           Noch keine Rundendaten: {r.kandidaten} passende lange Einheiten gefunden. Der Mac lädt die Runden nach, sobald das Mac-Update eingespielt ist
@@ -56,15 +66,34 @@ export function EntkopplungTile() {
           </div>
           <div className="h-44">
             <ResponsiveContainer>
-              <ComposedChart data={r.punkte.map((p) => ({ ts: new Date(p.datum + 'T12:00:00').getTime(), y: p.y, name: p.a.name, km: p.a.km }))} margin={{ left: -10, right: 8 }}>
+              <ComposedChart data={r.punkte.map((p) => ({ ts: tsVon(p.datum), y: p.y, name: p.a.name, km: p.a.km }))} margin={{ left: -10, right: 8 }}>
                 <CartesianGrid strokeOpacity={0.12} />
-                <XAxis dataKey="ts" type="number" domain={['dataMin', 'dataMax']} tickFormatter={(t) => new Date(t).toLocaleDateString('de-DE', { month: 'short', year: '2-digit' })} tick={AX} />
-                <YAxis tick={AX} unit=" %" width={48} />
+                {r.luecken.map((l) => (
+                  <ReferenceArea key={l.von} x1={tsVon(l.von)} x2={tsVon(l.bis)} fill="#9aa5b1" fillOpacity={0.12} strokeOpacity={0} ifOverflow="extendDomain" />
+                ))}
+                <XAxis dataKey="ts" type="number" domain={['dataMin', r.luecken.some((l) => l.offen) ? tsVon(new Date().toLocaleDateString('sv-SE')) : 'dataMax']} tickFormatter={(t) => new Date(t).toLocaleDateString('de-DE', { month: 'short', year: '2-digit' })} tick={AX} />
+                <YAxis tick={AX} unit=" %" width={48} domain={[(min: number) => Math.floor(Math.min(0, min) - 1), (max: number) => Math.ceil(max + 1)]} allowDecimals={false} />
                 <Tooltip {...TT} labelFormatter={(t) => kurz(new Date(t as number).toLocaleDateString('sv-SE'))} formatter={(v: any) => [`${de(v, 1)} %`, 'Entkopplung']} />
                 <Scatter dataKey="y" fill="#22c55e" />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
+          {(r.luecken.length > 0 || r.ungleich.length > 0) && (
+            <div className="mt-2 space-y-1 text-2xs text-ink-muted" data-testid="entkopplung-luecken">
+              {r.luecken.map((l) => (
+                <div key={l.von} className="flex items-start gap-2">
+                  <span className="mt-0.5 inline-block h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: 'rgba(154,165,177,0.35)' }} />
+                  <span>{kurz(l.von)} bis {l.offen ? 'heute' : kurz(l.bis)}: {luckeText(l, sport)}.</span>
+                </div>
+              ))}
+              {r.ungleich.length > 0 && (
+                <div>
+                  Nicht gezählt, weil ungleichmäßig (Tempo bzw. Leistung ändert sich um mehr als 10 %):{' '}
+                  {r.ungleich.map((u) => `${kurz(u.datum)} (${u.aenderungPct} %)`).join(', ')}.
+                </div>
+              )}
+            </div>
+          )}
           <KiraFazit title={`Entkopplung ${sport}`} facts={facts} />
         </>
       )}
