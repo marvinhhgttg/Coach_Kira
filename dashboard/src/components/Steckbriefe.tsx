@@ -4,6 +4,7 @@ import { KiraFazit, fazitAusCache } from './KiraFazit';
 import { Hinweis, Kz, Laedt } from './AnalysenTraining';
 import { useGarminTage, type GarminAkt, type GarminTage } from '../lib/garmin';
 import { fetchChartData } from '../lib/api';
+import { jahresberichtDaten, jahresberichtFakten, jahresberichtHtml, JB_CSS, type Zeitreihen } from '../lib/jahresbericht';
 import { rekorde, GRUPPEN } from '../lib/rekorde';
 const GLAB: Record<string, string> = Object.fromEntries(GRUPPEN.map((g) => [g.id, g.label]));
 import { effPunkte, nachGelaende, trend, GRENZEN_STANDARD } from '../lib/effizienz';
@@ -20,10 +21,10 @@ table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}td,t
 .faz{background:#f6f7f9;border-radius:6px;padding:10px 12px;white-space:pre-wrap}.neu{color:#15803d;font-weight:600}.foot{margin-top:18px;color:#888;font-size:9.5px}
 svg text{font-size:9px;fill:#555}@media print{body{padding:10mm 12mm}h2{break-after:avoid}.k,tr{break-inside:avoid}}@page{size:A4;margin:0}
 `;
-export function drucken(titel: string, html: string) {
+export function drucken(titel: string, html: string, extraCss = '') {
   const w = window.open('', '_blank');
   if (!w) { alert('Bitte Pop-ups für coachkira.pplx.app erlauben.'); return; }
-  w.document.write(`<!doctype html><html lang="de"><head><meta charset="utf-8"><title>${esc(titel)}</title><style>${CSS}</style></head><body>${html}<div class="foot">Coach Kira · erstellt ${new Date().toLocaleString('de-DE')} · Daten: Garmin Connect und Coach-Kira-Sheet</div><script>setTimeout(()=>print(),400)<\/script></body></html>`);
+  w.document.write(`<!doctype html><html lang="de"><head><meta charset="utf-8"><title>${esc(titel)}</title><style>${CSS}${extraCss}</style></head><body>${html}<div class="foot">Coach Kira · erstellt ${new Date().toLocaleString('de-DE')} · Daten: Garmin Connect und Coach-Kira-Sheet</div><script>setTimeout(()=>print(),400)<\/script></body></html>`);
   w.document.close();
 }
 /** Einfache Balken als SVG (für den Druck). */
@@ -59,8 +60,14 @@ export function SaisonSteckbriefTile() {
   const { tage } = useGarminTage();
   const [zr, setZr] = useState<Zeitraum>('12m');
   const [ctl, setCtl] = useState<{ d: string; v: number }[] | null>(null);
+  const [zr2, setZr2] = useState<Zeitreihen>({ es: [], ctl: [], atl: [] });
   useEffect(() => {
-    fetchChartData('9999d', ['fbCTL_obs']).then((r: any) => setCtl(((r && r.data) || []).map((x: any) => ({ d: String(x.date).slice(0, 10), v: Number(x.fbCTL_obs) })).filter((x: any) => Number.isFinite(x.v) && x.v > 0))).catch(() => setCtl([]));
+    fetchChartData('9999d', ['fbCTL_obs', 'fbATL_obs', 'garminEnduranceScore']).then((r: any) => {
+      const rows = (r && r.data) || [];
+      const reihe = (k: string) => rows.map((x: any) => ({ d: String(x.date).slice(0, 10), v: Number(x[k]) })).filter((x: any) => Number.isFinite(x.v) && x.v > 0);
+      setCtl(reihe('fbCTL_obs'));
+      setZr2({ es: reihe('garminEnduranceScore'), ctl: reihe('fbCTL_obs'), atl: reihe('fbATL_obs') });
+    }).catch(() => setCtl([]));
   }, []);
   const heute = new Date().toLocaleDateString('sv-SE');
   const von = zr === 'jahr' ? heute.slice(0, 4) + '-01-01' : zr === '12m' ? plusTage(heute, -365) : '2000-01-01';
@@ -92,12 +99,14 @@ export function SaisonSteckbriefTile() {
     };
   }, [tage, von, heute, ctl]);
 
+  const jb = useMemo(() => (tage && tage.size ? jahresberichtDaten(tage, zr2, von, heute) : null), [tage, zr2, von, heute]);
   const facts = s ? [
     `Zeitraum ${kurz(s.von)}–${kurz(s.bis)}: ${s.ges.n} Einheiten, ${de(s.ges.km)} km, ${de(s.ges.hm)} hm, ${dauerTxt(s.ges.s)}.`,
     ...s.gr.map((g) => `${g.lab}: ${g.n}×, ${de(g.km)} km, ${de(g.hm)} hm, ${dauerTxt(g.s)}`),
     s.ctl ? `Fitness (CTL) ${de(s.ctl.a)} → ${de(s.ctl.b)}, Höchstwert ${de(s.ctl.max)} am ${kurz(s.ctl.maxD)}.` : '',
     `Effizienz flach (Herzschläge je km): Laufen ${vz(s.effL.prozent, 1)} %, Rad ${vz(s.effR.prozent, 1)} % (negativ = effizienter).`,
     `Ruhepuls erster vs. letzter Monat ${de(s.rhr.a)} → ${de(s.rhr.b)}, HRV ${de(s.hrv.a)} → ${de(s.hrv.b)} ms.`,
+    ...(jb ? jahresberichtFakten(jb) : []),
     `Rekorde: ${s.rek.filter((r) => ['lauf', 'rad', 'berg', 'gesamt'].includes(r.gruppe)).slice(0, 12).map((r) => `${r.titel} ${r.text}`).join('; ')}.`,
   ].filter(Boolean) : [];
   const titel = `Saison-Steckbrief ${zr === 'jahr' ? heute.slice(0, 4) : zr === '12m' ? 'letzte 12 Monate' : 'gesamt'}`;
@@ -105,21 +114,9 @@ export function SaisonSteckbriefTile() {
   useEffect(() => { setFazit(fazitAusCache(titel, facts)); }, [titel, facts.join('|')]); // eslint-disable-line
 
   function pdf() {
-    if (!s) return;
-    const k = (lab: string, v: string, sub = '') => `<div class="k"><span>${esc(lab)}</span><b>${esc(v)}</b><span>${esc(sub)}</span></div>`;
-    const html = `
-<h1>${esc(titel)}</h1><div class="sub">Marc Reichpietsch · ${kurz(s.von)} bis ${kurz(s.bis)}</div>
-<div class="grid">${k('Einheiten', de(s.ges.n))}${k('Distanz', de(s.ges.km) + ' km')}${k('Höhenmeter', de(s.ges.hm) + ' hm')}${k('Trainingszeit', dauerTxt(s.ges.s))}
-${s.ctl ? k('Fitness (CTL)', `${de(s.ctl.a)} → ${de(s.ctl.b)}`, `Höchstwert ${de(s.ctl.max)} am ${kurz(s.ctl.maxD)}`) : ''}
-${k('Effizienz Laufen flach', vz(s.effL.prozent, 1) + ' %', 'Herzschläge je km, − = besser')}${k('Effizienz Rad flach', vz(s.effR.prozent, 1) + ' %', 'Herzschläge je km, − = besser')}
-${k('Ruhepuls / HRV', `${de(s.rhr.a)} → ${de(s.rhr.b)} · ${de(s.hrv.a)} → ${de(s.hrv.b)} ms`, 'erster vs. letzter Monat')}</div>
-${fazit ? `<h2>Kiras Fazit</h2><div class="faz">${esc(fazit)}</div>` : ''}
-<h2>Nach Sportart</h2><table><tr><th>Sport</th><th>Einheiten</th><th>km</th><th>hm</th><th>Zeit</th></tr>${s.gr.map((g) => `<tr><td>${esc(g.lab)}</td><td>${g.n}</td><td>${de(g.km)}</td><td>${de(g.hm)}</td><td>${dauerTxt(g.s)}</td></tr>`).join('')}</table>
-<h2>Trainingszeit je Monat (Stunden)</h2>${svgBalken(s.monate.map((m) => ({ lab: monatName(m.monat), v: Math.round(m.s / 360) / 10 })), 'h')}
-${s.ctl ? `<h2>Fitnessverlauf (CTL)</h2>${svgLinie(s.ctl.reihe.filter((_, i) => i % 3 === 0).map((x) => ({ lab: kurz(x.d).slice(3), v: x.v })), 'CTL')}` : ''}
-<h2>Rekorde</h2><table><tr><th>Bereich</th><th>Rekord</th><th>Wert</th><th>Datum</th><th>Einheit</th></tr>${s.rek.filter((r) => r.gruppe !== 'koerper').map((r) => `<tr><td>${esc(GLAB[r.gruppe] || r.gruppe)}</td><td>${esc(r.titel)}</td><td>${esc(r.text)}${r.neu ? ' <span class="neu">neu</span>' : ''}</td><td>${r.bis ? kurz(r.datum) + '–' + kurz(r.bis) : kurz(r.datum)}</td><td>${esc(r.detail || '')}</td></tr>`).join('')}</table>
-<h2>Größte Touren nach Höhenmetern</h2><table><tr><th>Datum</th><th>Tour</th><th>km</th><th>hm</th><th>Dauer</th></tr>${s.groesste.map((e) => `<tr><td>${kurz(e.datum)}</td><td>${esc(e.a.name || '')}</td><td>${de(e.a.km, 1)}</td><td>${de(e.a.hm)}</td><td>${dauerTxt(e.a.dauer_s)}</td></tr>`).join('')}</table>`;
-    drucken(titel, html);
+    if (!jb) return;
+    // 21.11.2026: ausführlicher Jahresbericht mit Ausdauerwert, Diagrammen und Analysen
+    drucken(titel, jahresberichtHtml(jb, { titel, fazit }), JB_CSS);
   }
   const btn = (a: boolean) => `px-2 py-1 text-xs rounded ${a ? 'bg-bg-subtle text-ink' : 'text-ink-muted hover:text-ink'}`;
   return (
@@ -130,7 +127,7 @@ ${s.ctl ? `<h2>Fitnessverlauf (CTL)</h2>${svgLinie(s.ctl.reihe.filter((_, i) => 
         <button className={btn(zr === 'alles')} onClick={() => setZr('alles')}>gesamt</button>
       </div>
     }>
-      <Hinweis>Umfang, Fitness, Effizienz, Rekorde und größte Touren auf einen Blick – mit Kiras Fazit als PDF. Erst das Fazit erstellen (lokal), dann „Als PDF“: Im Druckdialog „Als PDF sichern“ wählen.</Hinweis>
+      <Hinweis>Umfang, Ausdauerwert, Fitness, Intensität, Erholung, Analysen, Highlights und Rekorde – als ausführlicher Jahresbericht (PDF, 5 Seiten) mit Kiras Fazit. Erst das Fazit erstellen (lokal), dann „Als PDF“: Im Druckdialog „Als PDF sichern“ wählen.</Hinweis>
       {!s ? <Laedt /> : (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">
