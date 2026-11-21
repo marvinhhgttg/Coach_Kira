@@ -311,6 +311,8 @@ export function esZiel(
   t: P3Tag[],
   zielEs: number,
   zielDatum: string,
+  /** Zusatzwirkung je Tag (Punkte ES), z. B. aus langen Einheiten (esLang: Bonus × Anzahl / 30) */
+  extraProTag = 0,
 ): { tage: number; ladeProTag: number | null; machbar: boolean } {
   if (t.length === 0) return { tage: 0, ladeProTag: null, machbar: false };
   const lastTag = t[t.length - 1];
@@ -326,10 +328,13 @@ export function esZiel(
     let ctlVal = ctlStart;
     let atlVal = atlStart;
     const histLoads: number[] = [];
-    for (let i = 0; i < t.length && i < 56; i++) {
+    // die letzten 56 Tage als Startfenster (bis 21.11.2026 fälschlich die ersten 56 der Historie)
+    for (let i = Math.max(0, t.length - 56); i < t.length; i++) {
       histLoads.push(t[i].load ?? 0);
     }
-    let esVal = lastTag.es ?? 0;
+    // letzter bekannter Score (die heutige Zeile hat oft noch keinen; bis 21.11.2026 Start bei 0)
+    let esVal = 0;
+    for (let i = t.length - 1; i >= 0; i--) if (t[i].es != null) { esVal = t[i].es as number; break; }
 
     for (let day = 0; day < tage; day++) {
       // Update ATL
@@ -344,7 +349,7 @@ export function esZiel(
       const histLen = Math.min(histLoads.length, 56);
       const m56val = histLen > 0 ? histLoads.slice(-histLen).reduce((s, v) => s + v, 0) / histLen : L;
       // Update ES
-      esVal = esStep(esVal, L, m56val);
+      esVal = esStep(esVal, L, m56val) + extraProTag;
 
       histLoads.push(L);
     }

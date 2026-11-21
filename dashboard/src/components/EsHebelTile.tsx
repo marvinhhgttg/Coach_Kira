@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { ladeP3, esBacktest, esBreakEven, esZiel, type P3Tag } from '../lib/paket3';
+import { useGarminTage, fmtDauer } from '../lib/garmin';
+import { laengsteProTag, langEffekt, langStatus, langEmpfehlung, sportDe } from '../lib/esLang';
+import { heuteBerlin } from '../lib/kernVotumKi';
 
 function fmtDateShort(iso: string): string {
   const p = iso.slice(0, 10).split('-');
@@ -12,6 +15,7 @@ export function EsHebelTile() {
   const [tage, setTage] = useState<P3Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { tage: garmin } = useGarminTage();
 
   // Ziel-Rechner state
   const [zielScore, setZielScore] = useState<number>(() => {
@@ -101,13 +105,24 @@ export function EsHebelTile() {
   const datum = zielDatum;
   const z = zielErgebnis;
 
+  // Lange Einheiten (Garmin-Tagesdetails): Status, eigene Wirkung, Empfehlung
+  const lang = garmin ? laengsteProTag(garmin) : null;
+  const heute = heuteBerlin();
+  const eff = lang ? langEffekt(tage, lang) : null;
+  const st = lang ? langStatus(lang, heute) : null;
+  const emp = st ? langEmpfehlung(st) : null;
+  const extraProTag = eff && emp ? (eff.bonus4 * emp.sehrLangProMonat) / 30 : 0;
+  const zLang = eff && eff.bonus4 > 0 && z && z.tage > 0 ? esZiel(tage, zielScore, zielDatum, extraProTag) : null;
+  const fmtH = (h: number) => fmtDauer(h * 3600);
+  const vz = (x: number | null) => (x == null ? '—' : `${x >= 0 ? '+' : '−'}${Math.abs(Math.round(x))}`);
+
   return (
     <div className="panel-raised p-4">
       {/* Kopf */}
       <div>
         <div className="label">Coach Kira · Endurance-Score-Hebel</div>
         <p className="mt-1 text-2xs text-ink-muted">
-          Wie deine mittlere Tageslast deinen Garmin Endurance Score bewegt – mit deinem eigenen Fortschreibungsmodell.
+          Wie deine mittlere Tageslast und deine langen Einheiten deinen Garmin Endurance Score bewegen – mit deinem eigenen Fortschreibungsmodell.
         </p>
       </div>
 
@@ -147,6 +162,81 @@ export function EsHebelTile() {
             Das Modell ist derzeit nicht besser als „bleibt gleich" – Werte nur als Richtung lesen.
           </p>
         )}
+      </div>
+
+      {/* Lange Einheiten */}
+      <div className="mt-4">
+        <p className="text-xs text-ink-muted mb-2">Lange Einheiten:</p>
+        {!lang ? (
+          <p className="text-xs text-ink-dim">Garmin-Tagesdetails laden…</p>
+        ) : st && emp && eff ? (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className={`rounded-lg border p-3 ${emp.fenster14Leer ? 'border-orange-400/60' : 'border-border'}`}>
+                <p className="text-xs text-ink-muted">Längste der letzten 14 Tage</p>
+                <p className="mt-1 text-lg font-mono">{st.laengste14 ? fmtH(st.laengste14.h) : '—'}</p>
+                <p className="mt-1 text-2xs text-ink-muted">
+                  {st.laengste14 ? `${sportDe(st.laengste14.sport)} am ${fmtDateShort(st.laengste14.date)}` : 'keine Aktivität'}
+                  {emp.fenster14Leer ? ' – Garmins 2-Wochen-Fenster hat keine lange Einheit' : ''}
+                </p>
+              </div>
+              <div className="rounded-lg border border-border p-3">
+                <p className="text-xs text-ink-muted">Ab 2 h</p>
+                <p className="mt-1 text-lg font-mono">{st.n2_28} / {st.n2_84}</p>
+                <p className="mt-1 text-2xs text-ink-muted">in 28 / 84 Tagen (Ziel etwa 4 / 12)</p>
+              </div>
+              <div className="rounded-lg border border-border p-3">
+                <p className="text-xs text-ink-muted">Ab 4 h</p>
+                <p className="mt-1 text-lg font-mono">{st.n4_84}</p>
+                <p className="mt-1 text-2xs text-ink-muted">
+                  in 84 Tagen (Ziel etwa 6){st.letzte4 ? `, zuletzt ${fmtDateShort(st.letzte4.date)}` : ''}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-3">
+              <p className="text-xs font-medium">Empfehlung</p>
+              <ul className="mt-1 text-xs space-y-1 list-disc pl-4">
+                {emp.punkte.map((p) => <li key={p}>{p}</li>)}
+              </ul>
+              <p className="mt-2 text-xs">
+                Nächste lange Einheit ({String(emp.wocheDauerH).replace('.', ',')} h):{' '}
+                <span className={emp.wocheUeberfaellig ? 'text-orange-300' : ''}>
+                  {emp.wocheUeberfaellig ? `überfällig seit ${fmtDateShort(emp.wocheFaellig)}` : `bis ${fmtDateShort(emp.wocheFaellig)}`}
+                </span>
+                {' · '}Nächste sehr lange (ab 4 h):{' '}
+                {emp.sehrLangAufbau ? (
+                  <span className="text-ink-muted">nach dem Aufbau auf etwa 3 h</span>
+                ) : (
+                  <span className={emp.sehrLangUeberfaellig ? 'text-orange-300' : ''}>
+                    {emp.sehrLangUeberfaellig ? `überfällig seit ${fmtDateShort(emp.sehrLangFaellig)}` : `bis ${fmtDateShort(emp.sehrLangFaellig)}`}
+                  </span>
+                )}
+              </p>
+            </div>
+
+            <div className="mt-3">
+              <p className="text-xs font-medium">Was lange Einheiten bei dir zusätzlich bringen</p>
+              <p className="mt-1 text-2xs text-ink-muted">
+                Score-Punkte in den Tagen 0–3 danach, über das hinaus, was ihre ESS-Last schon erklärt ({eff.basisTage} Tage geprüft):
+              </p>
+              <div className="mt-1 grid grid-cols-3 gap-2 text-xs">
+                {eff.klassen.map((k) => (
+                  <div key={k.lab} className="rounded border border-border px-2 py-1">
+                    <span className="text-ink-muted">{k.lab}: </span>
+                    <span className="font-mono">{vz(k.extra)}</span>
+                    <span className="text-2xs text-ink-muted"> (n={k.n})</span>
+                  </div>
+                ))}
+              </div>
+              {eff.n4 < 8 && (
+                <p className="mt-1 text-2xs text-orange-300">
+                  Erst {eff.n4} sehr lange Einheiten mit Score-Verlauf – Größenordnung, keine feste Zahl. Gerechnet wird vorsichtig mit {vz(eff.bonus4)} je Einheit.
+                </p>
+              )}
+            </div>
+          </>
+        ) : null}
       </div>
 
       {/* Ziel-Rechner */}
@@ -189,6 +279,12 @@ export function EsHebelTile() {
             ) : (
               <p className="text-xs text-orange-300">
                 Mit bis zu 250 ESS pro Tag nicht erreichbar – Ziel oder Datum anpassen.
+              </p>
+            )}
+            {zLang && zLang.machbar && zLang.ladeProTag !== null && z.ladeProTag !== null && (
+              <p className="mt-1 text-xs">
+                Mit 2 sehr langen Einheiten (ab 4 h) pro Monat reichen etwa {Math.round(zLang.ladeProTag)} ESS pro Tag
+                {z.ladeProTag - zLang.ladeProTag >= 1 ? ` (${Math.round(z.ladeProTag - zLang.ladeProTag)} weniger)` : ''}.
               </p>
             )}
             {last28 !== null && (
