@@ -48,6 +48,33 @@ module KiraHilfen {
         return t;
     }
 
+    function sportDe(s) as String {
+        if (s == null) { return ""; }
+        var t = s.toString();
+        if (t.equals("Bike")) { return "Rad"; }
+        if (t.equals("Run")) { return "Lauf"; }
+        if (t.equals("Hike")) { return "Wandern"; }
+        if (t.equals("Ski")) { return "Skitour"; }
+        if (t.equals("Walk")) { return "Gehen"; }
+        if (t.equals("Off") || t.length() == 0) { return "Ruhe"; }
+        return t;
+    }
+
+    // "2026-11-22" → "So 22."
+    function wochentag(iso as String) as String {
+        if (iso.length() < 10) { return iso; }
+        var m = Gregorian.moment({ :year => iso.substring(0, 4).toNumber(), :month => iso.substring(5, 7).toNumber(), :day => iso.substring(8, 10).toNumber(), :hour => 12 });
+        var i = Gregorian.info(m, Time.FORMAT_SHORT);
+        var wt = ["", "So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+        return wt[i.day_of_week as Number] + " " + iso.substring(8, 10) + ".";
+    }
+
+    function stunden(v) as String {
+        if (v == null) { return ""; }
+        var m = (v.toFloat() * 60).toNumber();
+        return (m / 60).toString() + ":" + (m % 60).format("%02d") + " h";
+    }
+
     function feld(d, a as String, b as String) {
         if (!(d instanceof Dictionary)) { return null; }
         var x = d.get(a);

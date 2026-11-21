@@ -28,9 +28,16 @@ async function heuteTeil() {
   const days: RecoveryDay[] = buildDays(res.data || []).filter((d) => d.date <= heute);
   const t = days.length && days[days.length - 1].date === heute ? days[days.length - 1] : null;
   let plan: any = null;
+  let naechste: { d: string; ess: number | null; sport: string; zone: string }[] = [];
   try {
     const sim: any = await fetchPlanSimulationWithTimeout(45000);
     plan = sim?.ok ? (sim.days || []).find((x: any) => String(x.date).slice(0, 10) === heute) || null : null;
+    // Uhr Seite 3: die nächsten 4 Tage aus der Plan-Simulation (Timeline)
+    if (sim?.ok)
+      naechste = (sim.days || [])
+        .filter((x: any) => String(x.date).slice(0, 10) > heute)
+        .slice(0, 4)
+        .map((x: any) => ({ d: String(x.date).slice(0, 10), ess: num(x.sim_load ?? x.load), sport: String(x.sport || ''), zone: String(x.zone || '') }));
   } catch {}
   const woche = days.slice(-7).map((d) => ({ d: d.date, ist: d.activityDone ? d.actual?.load ?? d.load ?? 0 : 0 }));
   return {
@@ -61,7 +68,31 @@ async function heuteTeil() {
       acwrBand: t?.acwr == null ? null : t.acwr > 1.5 ? 'hoch' : t.acwr > 1.3 ? 'erhoeht' : t.acwr < 0.8 ? 'niedrig' : 'korridor',
       woche,
     },
+    naechste,
   };
+}
+
+/** Uhr Seite 4: Form (CTL/ATL/Monotonie, Endurance Score mit 28-Tage-Änderung) und Garmin-Tag. */
+async function formTeil() {
+  const heute = iso();
+  const res: any = await fetchChartData('35d' as any, ['fbCTL_obs', 'fbATL_obs', 'garminEnduranceScore', 'Monotony7'] as any);
+  const rows = (res?.data || []).filter((r: any) => String(r.date).slice(0, 10) <= heute);
+  const letzter = (k: string) => { for (let i = rows.length - 1; i >= 0; i--) { const v = num(rows[i][k]); if (v != null && v !== 0) return { v, d: String(rows[i].date).slice(0, 10), i }; } return null; };
+  const es = letzter('garminEnduranceScore');
+  let es28: number | null = null;
+  if (es) {
+    const ziel = new Date(es.d + 'T12:00:00Z'); ziel.setUTCDate(ziel.getUTCDate() - 28);
+    const zIso = ziel.toISOString().slice(0, 10);
+    const alt = rows.find((r: any) => String(r.date).slice(0, 10) >= zIso && num(r.garminEnduranceScore));
+    es28 = alt ? Math.round(es.v - (num(alt.garminEnduranceScore) as number)) : null;
+  }
+  let tag: any = null;
+  try {
+    const g = await fetchGarminTage();
+    const t = g.get(heute);
+    if (t) tag = { bbAufwachen: t.bb_aufwachen ?? null, bbMax: t.tag?.bb_max ?? null, stress: t.tag?.stress_avg ?? null, schritte: t.tag?.schritte ?? null };
+  } catch {}
+  return { ctl: letzter('fbCTL_obs')?.v ?? null, atl: letzter('fbATL_obs')?.v ?? null, monotonie: letzter('Monotony7')?.v ?? null, es: es?.v ?? null, es28, tag };
 }
 
 async function zielTeil() {
@@ -99,5 +130,5 @@ async function zielTeil() {
   return { name: z.name, datum: z.datum, tage, prio: (z as any).prio ?? null, tourform: prozent, weitere: ziele.length - 1 };
 }
 
-const [h, z] = await Promise.all([heuteTeil(), zielTeil().catch(() => null)]);
-process.stdout.write(JSON.stringify({ ok: true, stand: new Date().toISOString(), ...h, ziel: z }));
+const [h, z, f] = await Promise.all([heuteTeil(), zielTeil().catch(() => null), formTeil().catch(() => null)]);
+process.stdout.write(JSON.stringify({ ok: true, stand: new Date().toISOString(), ...h, ziel: z, form: f }));

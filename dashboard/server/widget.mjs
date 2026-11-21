@@ -90,8 +90,8 @@ var require_react_production_min = __commonJS({
       var g = arguments.length - 2;
       if (1 === g) c.children = e;
       else if (1 < g) {
-        for (var f = Array(g), m = 0; m < g; m++) f[m] = arguments[m + 2];
-        c.children = f;
+        for (var f3 = Array(g), m = 0; m < g; m++) f3[m] = arguments[m + 2];
+        c.children = f3;
       }
       if (a && a.defaultProps) for (d in g = a.defaultProps, g) void 0 === c[d] && (c[d] = g[d]);
       return { $$typeof: l, type: a, key: k, ref: h2, props: c, _owner: K.current };
@@ -136,10 +136,10 @@ var require_react_production_min = __commonJS({
       d = "" === d ? "." : d + ":";
       if (I(a)) for (var g = 0; g < a.length; g++) {
         k = a[g];
-        var f = d + Q(k, g);
-        h2 += R(k, b, e, f, c);
+        var f3 = d + Q(k, g);
+        h2 += R(k, b, e, f3, c);
       }
-      else if (f = A(a), "function" === typeof f) for (a = f.call(a), g = 0; !(k = a.next()).done; ) k = k.value, f = d + Q(k, g++), h2 += R(k, b, e, f, c);
+      else if (f3 = A(a), "function" === typeof f3) for (a = f3.call(a), g = 0; !(k = a.next()).done; ) k = k.value, f3 = d + Q(k, g++), h2 += R(k, b, e, f3, c);
       else if ("object" === k) throw b = String(a), Error("Objects are not valid as a React child (found: " + ("[object Object]" === b ? "object with keys {" + Object.keys(a).join(", ") + "}" : b) + "). If you meant to render a collection of children, use an array instead.");
       return h2;
     }
@@ -204,13 +204,13 @@ var require_react_production_min = __commonJS({
         void 0 !== b.ref && (k = b.ref, h2 = K.current);
         void 0 !== b.key && (c = "" + b.key);
         if (a.type && a.type.defaultProps) var g = a.type.defaultProps;
-        for (f in b) J.call(b, f) && !L.hasOwnProperty(f) && (d[f] = void 0 === b[f] && void 0 !== g ? g[f] : b[f]);
+        for (f3 in b) J.call(b, f3) && !L.hasOwnProperty(f3) && (d[f3] = void 0 === b[f3] && void 0 !== g ? g[f3] : b[f3]);
       }
-      var f = arguments.length - 2;
-      if (1 === f) d.children = e;
-      else if (1 < f) {
-        g = Array(f);
-        for (var m = 0; m < f; m++) g[m] = arguments[m + 2];
+      var f3 = arguments.length - 2;
+      if (1 === f3) d.children = e;
+      else if (1 < f3) {
+        g = Array(f3);
+        for (var m = 0; m < f3; m++) g[m] = arguments[m + 2];
         d.children = g;
       }
       return { $$typeof: l, type: a.type, key: c, ref: k, props: d, _owner: h2 };
@@ -2187,11 +2187,11 @@ var require_react = __commonJS({
 var require_react_jsx_runtime_production_min = __commonJS({
   "node_modules/react/cjs/react-jsx-runtime.production.min.js"(exports) {
     "use strict";
-    var f = require_react();
+    var f3 = require_react();
     var k = Symbol.for("react.element");
     var l = Symbol.for("react.fragment");
     var m = Object.prototype.hasOwnProperty;
-    var n = f.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner;
+    var n = f3.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner;
     var p = { key: true, ref: true, __self: true, __source: true };
     function q(c, a, g) {
       var b, d = {}, e = null, h2 = null;
@@ -3692,8 +3692,8 @@ function zielArt(z2) {
 function tourLast(z2, faktoren) {
   if (zielArt(z2) === "marsch") return Math.round(2 * z2.dauer_h + z2.hm / 100 * 1);
   const typ = z2.art === "rad" ? "Bike" : z2.art === "lauf" ? "Run" : z2.art === "skitour" ? "Skitour" : "Other";
-  const f = (faktoren?.load || []).find((x) => String(x.ActivityType) === typ && /Z2|Default/.test(String(x.Zone)));
-  const perH = Number(f?.Factor) || (typ === "Bike" ? 85 : typ === "Run" ? 120 : 50);
+  const f3 = (faktoren?.load || []).find((x) => String(x.ActivityType) === typ && /Z2|Default/.test(String(x.Zone)));
+  const perH = Number(f3?.Factor) || (typ === "Bike" ? 85 : typ === "Run" ? 120 : 50);
   const ef = (faktoren?.elev || []).find((x) => String(x.ActivityType) === (typ === "Skitour" ? "Other" : typ));
   const per100 = Number(ef?.ElevFactor_per_100m) || (typ === "Run" ? 10 : typ === "Bike" ? 4 : 6);
   const bikeHike = z2.art === "bike_hike" ? 0.5 * 85 * z2.dauer_h * 0.5 : 0;
@@ -3889,9 +3889,9 @@ function wls(X, y, w, ridge = 1e-6) {
     [b[c], b[piv]] = [b[piv], b[c]];
     for (let r = 0; r < k; r++) {
       if (r === c) continue;
-      const f = A[r][c] / A[c][c];
-      for (let q = c; q < k; q++) A[r][q] -= f * A[c][q];
-      b[r] -= f * b[c];
+      const f3 = A[r][c] / A[c][c];
+      for (let q = c; q < k; q++) A[r][q] -= f3 * A[c][q];
+      b[r] -= f3 * b[c];
     }
   }
   return b.map((v, i) => v / A[i][i]);
@@ -4832,14 +4832,14 @@ function tourLastPersoenlich(z2, modelle, skitouren = [], bergtouren = []) {
         const k = ratios.length ? Math.min(1.5, Math.max(0.7, median(ratios))) : 1;
         const e = vorwaerts(m, { min, km, hm, hf });
         if (!e) return null;
-        const f = (v) => Math.round(v * k);
+        const f3 = (v) => Math.round(v * k);
         const jahre = `${skitouren[0].datum.slice(0, 4)}\u2013${skitouren[skitouren.length - 1].datum.slice(0, 4)}`;
         const letzte = skitouren[skitouren.length - 1];
         hinweise.push(
           `Skitour mit deiner Skitour-Herzfrequenz (\xD8 HF ${Math.round(hf)}) gerechnet und an ${skitouren.length} eigene${skitouren.length === 1 ? "r" : "n"} Skitour${skitouren.length === 1 ? "" : "en"} aus Garmin abgeglichen (${jahre}, Faktor ${k.toLocaleString("de-DE", { maximumFractionDigits: 2 })}; zuletzt ${de(letzte.datum)}: ${(Math.round(letzte.min / 6) / 10).toLocaleString("de-DE")} h, ${letzte.hm} Hm, ${letzte.ess} ESS).` + (ausgeschl ? ` ${ausgeschl} Touren von 12/2022\u201312/2023 nicht verwendet: Garmin-Last dort etwa doppelt so hoch, anderer Ma\xDFstab.` : "") + (skitouren.length < 3 ? " Wenige eigene Skitouren \u2013 Sch\xE4tzung wird mit jeder Tour genauer." : "")
         );
-        const teile2 = [{ profil: "hike", min: Math.round(min), km, hm: Math.round(hm), ess: f(e.ess), lo: f(e.lo), hi: f(e.hi), n: skitouren.length }];
-        return { ess: f(e.ess), lo: f(e.lo), hi: f(e.hi), teile: teile2, hinweise };
+        const teile2 = [{ profil: "hike", min: Math.round(min), km, hm: Math.round(hm), ess: f3(e.ess), lo: f3(e.lo), hi: f3(e.hi), n: skitouren.length }];
+        return { ess: f3(e.ess), lo: f3(e.lo), hi: f3(e.hi), teile: teile2, hinweise };
       }
     } else {
       const e = vorwaerts(m, { min, km, hm });
@@ -4852,8 +4852,8 @@ function tourLastPersoenlich(z2, modelle, skitouren = [], bergtouren = []) {
           `Bergtour an ${ratios.length} eigenen Bergtouren seit 08/2025 abgeglichen (\u2265 700 Hm, Faktor ${k.toLocaleString("de-DE", { maximumFractionDigits: 2 })}; zuletzt ${de(letzte.datum)}: ${(Math.round(letzte.min / 6) / 10).toLocaleString("de-DE")} h, ${letzte.hm} Hm, ${letzte.ess} ESS). \xC4ltere Bergtouren (2020\u201307/2025) hatten bei gleicher Tour rund 30 % weniger Garmin-Last und z\xE4hlen nicht.`
         );
       } else hinweise.push("Bergtour \xFCber dein Wandermodell \u2013 noch zu wenige eigene Bergtouren ab 700 Hm f\xFCr einen Abgleich.");
-      const f = (v) => Math.round(v * k);
-      return { ess: f(e.ess), lo: f(e.lo), hi: f(e.hi), teile: [{ profil: "hike", min: Math.round(min), km, hm: Math.round(hm), ess: f(e.ess), lo: f(e.lo), hi: f(e.hi), n: m.n }], hinweise: [...hinweise, ...e.hinweise.filter((h2) => !hinweise.includes(h2))] };
+      const f3 = (v) => Math.round(v * k);
+      return { ess: f3(e.ess), lo: f3(e.lo), hi: f3(e.hi), teile: [{ profil: "hike", min: Math.round(min), km, hm: Math.round(hm), ess: f3(e.ess), lo: f3(e.lo), hi: f3(e.hi), n: m.n }], hinweise: [...hinweise, ...e.hinweise.filter((h2) => !hinweise.includes(h2))] };
     }
   } else if (art === "bike_hike") {
     const rad = finde(modelle, "bike_gravel", "bike_road");
@@ -4890,9 +4890,12 @@ async function heuteTeil() {
   const days = buildDays(res.data || []).filter((d) => d.date <= heute2);
   const t = days.length && days[days.length - 1].date === heute2 ? days[days.length - 1] : null;
   let plan = null;
+  let naechste = [];
   try {
     const sim = await fetchPlanSimulationWithTimeout(45e3);
     plan = sim?.ok ? (sim.days || []).find((x) => String(x.date).slice(0, 10) === heute2) || null : null;
+    if (sim?.ok)
+      naechste = (sim.days || []).filter((x) => String(x.date).slice(0, 10) > heute2).slice(0, 4).map((x) => ({ d: String(x.date).slice(0, 10), ess: num(x.sim_load ?? x.load), sport: String(x.sport || ""), zone: String(x.zone || "") }));
   } catch {
   }
   const woche = days.slice(-7).map((d) => ({ d: d.date, ist: d.activityDone ? d.actual?.load ?? d.load ?? 0 : 0 }));
@@ -4919,8 +4922,38 @@ async function heuteTeil() {
       acwr: t?.acwr ?? null,
       acwrBand: t?.acwr == null ? null : t.acwr > 1.5 ? "hoch" : t.acwr > 1.3 ? "erhoeht" : t.acwr < 0.8 ? "niedrig" : "korridor",
       woche
-    }
+    },
+    naechste
   };
+}
+async function formTeil() {
+  const heute2 = iso();
+  const res = await fetchChartData("35d", ["fbCTL_obs", "fbATL_obs", "garminEnduranceScore", "Monotony7"]);
+  const rows = (res?.data || []).filter((r) => String(r.date).slice(0, 10) <= heute2);
+  const letzter = (k) => {
+    for (let i = rows.length - 1; i >= 0; i--) {
+      const v = num(rows[i][k]);
+      if (v != null && v !== 0) return { v, d: String(rows[i].date).slice(0, 10), i };
+    }
+    return null;
+  };
+  const es = letzter("garminEnduranceScore");
+  let es28 = null;
+  if (es) {
+    const ziel = /* @__PURE__ */ new Date(es.d + "T12:00:00Z");
+    ziel.setUTCDate(ziel.getUTCDate() - 28);
+    const zIso = ziel.toISOString().slice(0, 10);
+    const alt = rows.find((r) => String(r.date).slice(0, 10) >= zIso && num(r.garminEnduranceScore));
+    es28 = alt ? Math.round(es.v - num(alt.garminEnduranceScore)) : null;
+  }
+  let tag = null;
+  try {
+    const g = await fetchGarminTage();
+    const t = g.get(heute2);
+    if (t) tag = { bbAufwachen: t.bb_aufwachen ?? null, bbMax: t.tag?.bb_max ?? null, stress: t.tag?.stress_avg ?? null, schritte: t.tag?.schritte ?? null };
+  } catch {
+  }
+  return { ctl: letzter("fbCTL_obs")?.v ?? null, atl: letzter("fbATL_obs")?.v ?? null, monotonie: letzter("Monotony7")?.v ?? null, es: es?.v ?? null, es28, tag };
 }
 async function zielTeil() {
   const heute2 = iso();
@@ -4953,8 +4986,8 @@ async function zielTeil() {
   }
   return { name: z2.name, datum: z2.datum, tage, prio: z2.prio ?? null, tourform: prozent, weitere: ziele.length - 1 };
 }
-var [h, z] = await Promise.all([heuteTeil(), zielTeil().catch(() => null)]);
-process.stdout.write(JSON.stringify({ ok: true, stand: (/* @__PURE__ */ new Date()).toISOString(), ...h, ziel: z }));
+var [h, z, f] = await Promise.all([heuteTeil(), zielTeil().catch(() => null), formTeil().catch(() => null)]);
+process.stdout.write(JSON.stringify({ ok: true, stand: (/* @__PURE__ */ new Date()).toISOString(), ...h, ziel: z, form: f }));
 /*! Bundled license information:
 
 react/cjs/react.production.min.js:

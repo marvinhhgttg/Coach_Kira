@@ -130,7 +130,8 @@ class KiraNetz {
 }
 
 class KiraView extends WatchUi.View {
-    var seite as Number = 0;   // 0 = Votum, 1 = Werte
+    var seite as Number = 0;   // 0 Votum, 1 Werte, 2 Nächste Tage, 3 Form
+    const SEITEN = 4;
 
     function initialize() {
         View.initialize();
@@ -143,7 +144,7 @@ class KiraView extends WatchUi.View {
     }
 
     function blaettern(n as Number) as Void {
-        seite = (seite + n + 2) % 2;
+        seite = (seite + n + SEITEN) % SEITEN;
         WatchUi.requestUpdate();
     }
 
@@ -177,12 +178,15 @@ class KiraView extends WatchUi.View {
             zeile(dc, (h * 0.45).toNumber(), Graphics.FONT_SMALL, st != null && !st.equals("laedt") ? st : "Lädt ...", Graphics.COLOR_WHITE);
             return;
         }
-        if (seite == 0) { seiteVotum(dc, d, h); } else { seiteWerte(dc, d, h); }
+        if (seite == 0) { seiteVotum(dc, d, h); }
+        else if (seite == 1) { seiteWerte(dc, d, h); }
+        else if (seite == 2) { seiteTage(dc, d, h); }
+        else { seiteForm(dc, d, h); }
         // Seitenanzeige rechts
         var w = dc.getWidth();
-        for (var i = 0; i < 2; i++) {
+        for (var i = 0; i < SEITEN; i++) {
             dc.setColor(i == seite ? Graphics.COLOR_WHITE : 0x555555, Graphics.COLOR_TRANSPARENT);
-            dc.fillCircle(w - 16, h / 2 - 9 + i * 18, 4);
+            dc.fillCircle(w - 16, h / 2 - 27 + i * 18, 4);
         }
     }
 
@@ -247,6 +251,72 @@ class KiraView extends WatchUi.View {
             y = zeile(dc, y, Graphics.FONT_XTINY, "ACWR " + KiraHilfen.zahl(l.get("acwr"), 2) + (band != null ? " · " + band.toString() : ""), Graphics.COLOR_WHITE);
             var woche = l.get("woche");
             if (woche instanceof Array && woche.size() > 0) { balken(dc, y + 6, woche); }
+        }
+    }
+
+    // Seite 3: die nächsten 4 Tage aus dem Plan, lange Einheiten aus Kiras Wochenplan
+    function seiteTage(dc as Graphics.Dc, d as Dictionary, h as Number) as Void {
+        var w = dc.getWidth();
+        var y = (h * 0.11).toNumber();
+        y = zeile(dc, y, Graphics.FONT_XTINY, "NÄCHSTE TAGE", 0x9A9A9A);
+        y += 8;
+        var xs = d.get("naechste");
+        if (!(xs instanceof Array) || xs.size() == 0) {
+            zeile(dc, (h * 0.42).toNumber(), Graphics.FONT_SMALL, "Kein Plan", 0xBBBBBB);
+            return;
+        }
+        var fh = dc.getFontHeight(Graphics.FONT_TINY);
+        var lang = "";
+        for (var i = 0; i < xs.size() && i < 4; i++) {
+            var x = xs[i];
+            if (!(x instanceof Dictionary)) { continue; }
+            var dt = x.get("d") != null ? x.get("d").toString() : "";
+            var ess = x.get("ess");
+            var sp = KiraHilfen.sportDe(x.get("sport"));
+            var zo = x.get("zone") != null ? x.get("zone").toString() : "";
+            var ruhe = ess == null || ess == 0 || sp.equals("Ruhe");
+            var lh = x.get("langH");
+            dc.setColor(0x9A9A9A, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(w * 0.17, y, Graphics.FONT_TINY, KiraHilfen.wochentag(dt).substring(0, 2), Graphics.TEXT_JUSTIFY_LEFT);
+            dc.setColor(ruhe ? 0x777777 : Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(w * 0.48, y, Graphics.FONT_TINY, ruhe ? "-" : KiraHilfen.zahl(ess, 0), Graphics.TEXT_JUSTIFY_RIGHT);
+            dc.setColor(lh != null ? 0x9AD0FF : (ruhe ? 0x777777 : 0xBBBBBB), Graphics.COLOR_TRANSPARENT);
+            dc.drawText(w * 0.53, y, Graphics.FONT_TINY, ruhe ? "Ruhe" : sp + (zo.length() > 0 && !zo.equals("Off") ? " " + zo : ""), Graphics.TEXT_JUSTIFY_LEFT);
+            if (lh != null && lang.length() == 0) { lang = "Lang " + KiraHilfen.wochentag(dt) + " " + KiraHilfen.stunden(lh); }
+            y += fh + 4;
+        }
+        y += 6;
+        zeile(dc, y, Graphics.FONT_XTINY, lang.length() > 0 ? lang : "ESS · Sport · Zone", lang.length() > 0 ? 0x9AD0FF : 0x777777);
+    }
+
+    // Seite 4: Endurance Score, Fitness, Garmin-Tag
+    function seiteForm(dc as Graphics.Dc, d as Dictionary, h as Number) as Void {
+        var w = dc.getWidth();
+        var y = (h * 0.11).toNumber();
+        y = zeile(dc, y, Graphics.FONT_XTINY, "FORM", 0x9A9A9A);
+        var f = d.get("form");
+        if (!(f instanceof Dictionary)) {
+            zeile(dc, (h * 0.42).toNumber(), Graphics.FONT_SMALL, "Keine Daten", 0xBBBBBB);
+            return;
+        }
+        y = zeile(dc, y + 4, Graphics.FONT_XTINY, "Endurance Score", 0x9A9A9A);
+        y = zeile(dc, y, Graphics.FONT_MEDIUM, KiraHilfen.zahl(f.get("es"), 0), Graphics.COLOR_WHITE);
+        var e28 = f.get("es28");
+        if (e28 != null) {
+            var plus = e28 >= 0 ? "+" : "";
+            y = zeile(dc, y, Graphics.FONT_XTINY, plus + KiraHilfen.zahl(e28, 0) + " in 28 Tagen", e28 >= 0 ? 0x2ECC71 : 0xE67E22);
+        }
+        y += 6;
+        var zh = dc.getFontHeight(Graphics.FONT_XTINY) + dc.getFontHeight(Graphics.FONT_SMALL) + 2;
+        kachel(dc, w * 0.27, y, "CTL", KiraHilfen.zahl(f.get("ctl"), 0));
+        kachel(dc, w * 0.50, y, "ATL", KiraHilfen.zahl(f.get("atl"), 0));
+        kachel(dc, w * 0.73, y, "Mono", KiraHilfen.zahl(f.get("monotonie"), 1));
+        y += zh + 4;
+        var t = f.get("tag");
+        if (t instanceof Dictionary) {
+            var bb = t.get("bbAufwachen") != null ? t.get("bbAufwachen") : t.get("bbMax");
+            y = zeile(dc, y, Graphics.FONT_XTINY, "BB " + KiraHilfen.zahl(bb, 0) + " · Stress " + KiraHilfen.zahl(t.get("stress"), 0), 0xBBBBBB);
+            if (t.get("schritte") != null) { zeile(dc, y, Graphics.FONT_XTINY, KiraHilfen.zahl(t.get("schritte"), 0) + " Schritte", 0x777777); }
         }
     }
 

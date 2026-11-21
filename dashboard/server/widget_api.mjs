@@ -104,7 +104,12 @@ export function setupWidget(app, { getSetting, setSetting, originOk, texte }) {
       if (req.query.uhr === '1') {
         // Garmin-Uhr: wenig Speicher im Hintergrund – nur was die Uhr anzeigt
         const { texte: _t, ...rest } = a;
-        return res.json({ ...rest, votum: a.votum ? { ...a.votum, gruende: (a.votum.gruende || []).slice(0, 2) } : null });
+        // lange Einheiten aus Kiras Wochenplan (Server) an die nächsten Tage hängen
+        let wp = null;
+        try { wp = JSON.parse(getSetting('wochenplan') || 'null'); } catch { wp = null; }
+        const lang = new Map(((wp && wp.plan && wp.plan.tage) || []).filter((t) => t && t.langH != null).map((t) => [t.date, t.langH]));
+        const naechste = (a.naechste || []).map((x) => (lang.has(x.d) ? { ...x, langH: lang.get(x.d) } : x));
+        return res.json({ ...rest, naechste, votum: a.votum ? { ...a.votum, gruende: (a.votum.gruende || []).slice(0, 2) } : null });
       }
       res.json(a);
     } catch (e) {
