@@ -776,11 +776,21 @@ export function langeEinheitenBlock(k: any, modus: 'plan' | 'wochenplan' = 'plan
   const WT = ['', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
   const e = k.einstellung, st = k.status, eff = k.effekt;
   const tage = (e.tage || []).map((x: number) => WT[x]).join(', ');
-  const kl = (eff.klassen || []).map((c: any) => `${c.lab}: ${c.extra == null ? 'k. A.' : (c.extra >= 0 ? '+' : '') + Math.round(c.extra)} (n=${c.n})`).join(' · ');
+  const kl = (eff.klassen || []).map((c: any) => {
+    if (c.extra == null) return `${c.lab}: k. A.`;
+    const roh = Math.round(c.extra), ger = c.extra > 0 ? Math.round((c.extra * c.n) / (c.n + 3)) : 0;
+    return `${c.lab}: gemessen ${roh >= 0 ? '+' : ''}${roh} (n=${c.n}), Dauer-Zuschlag ${ger >= 0 ? '+' : ''}${ger}`;
+  }).join(' · ');
   const essH = k.essProStunde || {};
-  const essSport = Object.entries(essH.sport || {}).map(([s, v]) => `${s} ${v}`).join(', ');
+  const sp = essH.spanne || {};
+  const essSport = Object.entries(sp).map(([s, v]: [string, any]) => `${s} ${v.med} (${v.p25}–${v.p75}, n=${v.n})`).join(', ') || Object.entries(essH.sport || {}).map(([s, v]) => `${s} ${v}`).join(', ');
+  const essFuer = (h: number) => Object.entries(sp).map(([s, v]: [string, any]) => `${s} ${Math.round(v.p25 * h)}–${Math.round(v.p75 * h)} ESS`).join(', ');
+  const zus = (h: number) => {
+    const c = (eff.klassen || []).find((x: any) => h >= x.von && h < x.bis);
+    return c && c.extra != null && c.extra > 0 ? Math.round((c.extra * c.n) / (c.n + 3)) : 0;
+  };
   const termine = (k.termine || []).map((t: any) =>
-    `- ${t.date} (${t.wt}): ${t.art === 'sehr_lang' ? 'SEHR LANG' : 'lang'}, Rahmen ${hTxt(t.vonH)}–${hTxt(t.bisH)}, Richtwert ${hTxt(t.dauerH)}, Zusatzwirkung laut Historie etwa ${t.esEffekt >= 0 ? '+' : ''}${t.esEffekt} Punkte`).join('\n');
+    `- ${t.date} (${t.wt}): ${t.art === 'sehr_lang' ? 'SEHR LANG' : 'lang'}, Rahmen ${hTxt(t.vonH)}–${hTxt(t.bisH)}, Richtwert ${hTxt(t.dauerH)}${essFuer(t.dauerH) ? ' (' + essFuer(t.dauerH) + ')' : ''}, Dauer-Zuschlag ${zus(t.dauerH) >= 0 ? '+' : ''}${zus(t.dauerH)} Punkte`).join('\n');
   return [
     '',
     '',
@@ -790,14 +800,14 @@ export function langeEinheitenBlock(k: any, modus: 'plan' | 'wochenplan' = 'plan
       ? `Marcs Vorgabe: lange Einheiten am ${tage} (${e.tage.length} pro Woche); sehr lange ab 4 h: ${e.sehrProMonat} pro Monat.`
       : `Marcs Vorgabe: keine festen Tage für lange Einheiten; sehr lange ab 4 h: ${e.sehrProMonat} pro Monat.`,
     `Stand: längste Einheit der letzten 14 Tage ${st.laengste14 ? hTxt(st.laengste14.h) + ' am ' + st.laengste14.date : 'keine'}; längste der letzten 4 Wochen ${hTxt(st.laengste28h || 0)}; ab 2 h: ${st.n2_28} in 28 / ${st.n2_84} in 84 Tagen; ab 4 h: ${st.n4_84} in 84 Tagen${st.letzte4 ? ', zuletzt ' + st.letzte4.date : ''}.`,
-    `Marcs eigene Zusatzwirkung über die ESS-Last hinaus (Score-Punkte in den Tagen 0–3): ${kl}. Wenige Fälle = nur Größenordnung.`,
-    `Typische Last langer Einheiten: ${essH.gesamt != null ? essH.gesamt + ' ESS pro Stunde' : 'unbekannt'}${essSport ? ' (' + essSport + ')' : ''}.`,
+    `Marcs eigene Zusatzwirkung über die ESS-Last hinaus (Score-Punkte in den Tagen 0–3): ${kl}. Der Dauer-Zuschlag ist bei wenigen Fällen vorsichtig verkleinert.`,
+    `ESS pro Stunde bei ruhigen langen Einheiten (Z1–Z2, Median und übliche Spanne): ${essSport || 'unbekannt'}. Die Last wächst bei Marc kaum mit der Dauer, stark mit der Herzfrequenz.`,
     termine ? 'Termine im Planfenster (Vorschlag aus Marcs Wochentagen):\n' + termine : 'Keine Termine im Planfenster.',
     '',
     'Regeln für lange Einheiten:',
     '- Plane an diesen Terminen die lange Einheit ein, ruhig in Z1–Z2. Lege die Dauer selbst fest (im Rahmen; höchstens 30 min länger als die längste der letzten 4 Wochen, außer bei ruhigen Wanderungen/Skitouren).',
-    '- Schätze den Einfluss auf den Endurance Score in Punkten (Zusatzwirkung plus Wirkung der Last) und begründe kurz.',
-    '- recommended_load_ess am langen Tag passend zur Dauer (Dauer × ESS pro Stunde der Sportart).',
+    '- ESS am langen Tag = Dauer × ESS pro Stunde der Sportart, innerhalb der Spanne (ruhig fahren heißt unteres Ende).',
+    '- Einfluss auf den Endurance Score NICHT schätzen, sondern so rechnen: Dauer-Zuschlag (wie oben je Dauerklasse) + 0,17 × ESS. Beispiel: 2:30 h mit 125 ESS = ' + (zus(2.5)) + ' + 21 = ' + (zus(2.5) + 21) + ' Punkte. Mehr ist nicht belegt.',
     '- Tagesvotum Recover/Rest, Readiness kritisch oder ACWR > 1,3: verschieben auf den nächsten passenden Tag oder kürzen – und das sagen.',
     modus === 'plan'
       ? '- Ergänze an diesen Tagen im Empfehlungs-Objekt: "lange_einheit": {"dauer_h": 2.5, "sport": "Rad", "es_effekt": 25, "hinweis": "kurze Begründung"}. An anderen Tagen das Feld weglassen.'

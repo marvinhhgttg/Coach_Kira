@@ -9,7 +9,7 @@ import { ES_MODEL } from './ctlModel';
 import type { P3Tag } from './paket3';
 import type { GarminTage } from './garmin';
 
-export type LangTag = { date: string; h: number; sport: string | null; name: string | null };
+export type LangTag = { date: string; h: number; sport: string | null; name: string | null; /** Anteil Z1+Z2 an der Zonenzeit (0–1) */ z12: number | null };
 export type LangKlasse = { lab: string; von: number; bis: number; n: number; extra: number | null };
 export type LangEffekt = { klassen: LangKlasse[]; bonus4: number; bonus4Roh: number | null; n4: number; basisTage: number };
 export type LangStatus = {
@@ -54,7 +54,10 @@ export function laengsteProTag(g: GarminTage): Map<string, LangTag> {
     let best: LangTag | null = null;
     for (const a of tag.akt || []) {
       const h = (a.dauer_s || a.bewegt_s || 0) / 3600;
-      if (h > 0 && (!best || h > best.h)) best = { date, h, sport: a.sport || a.typ || null, name: a.name || null };
+      const z = a.zonen_s || [];
+      const zs = z.reduce((x, y) => x + (y || 0), 0);
+      const z12 = z.length >= 2 && zs > 0 ? ((z[0] || 0) + (z[1] || 0)) / zs : null;
+      if (h > 0 && (!best || h > best.h)) best = { date, h, sport: a.sport || a.typ || null, name: a.name || null, z12 };
     }
     if (best) m.set(date, best);
   }
@@ -168,27 +171,60 @@ export function langEmpfehlung(s: LangStatus, e: LangEinstellung = LANG_STANDARD
   };
 }
 
-/** Typische Last langer Einheiten (ESS pro Stunde, Tage mit längster Einheit ab 2 h), gesamt und je Sport. */
-export function essProStunde(t: P3Tag[], lang: Map<string, LangTag>): { gesamt: number | null; sport: Record<string, number> } {
+/** ESS pro Stunde ruhiger langer Einheiten (ab 1,5 h, mindestens 85 % in Z1–Z2): Median und Spanne (25–75 %) je Sport. */
+export type EssRate = { med: number; p25: number; p75: number; n: number };
+export function essProStunde(t: P3Tag[], lang: Map<string, LangTag>): { gesamt: number | null; sport: Record<string, number>; spanne: Record<string, EssRate> } {
   const proSport: Record<string, number[]> = {};
   const alle: number[] = [];
   for (const d of t) {
     const l = lang.get(d.date);
-    if (!l || l.h < 2 || !d.load) continue;
+    if (!l || l.h < 1.5 || !d.load || d.load <= 0) continue;
+    if (l.z12 != null && l.z12 < 0.85) continue; // nur ruhige Einheiten
     const v = d.load / l.h;
+    if (v < 10 && sportDe(l.sport) === 'Rad') continue; // Aufzeichnung ohne Puls o. Ä.
     alle.push(v);
     (proSport[sportDe(l.sport)] ||= []).push(v);
   }
-  const med = (a: number[]) => { const b = [...a].sort((x, y) => x - y); return b.length ? b[Math.floor(b.length / 2)] : null; };
+  const q = (a: number[], p: number) => { const b = [...a].sort((x, y) => x - y); return b.length ? b[Math.min(b.length - 1, Math.floor(p * (b.length - 1) + 0.5))] : 0; };
   const sport: Record<string, number> = {};
-  for (const [k, v] of Object.entries(proSport)) if (v.length >= 3) sport[k] = Math.round(med(v) as number);
-  const g = med(alle);
-  return { gesamt: g == null ? null : Math.round(g), sport };
+  const spanne: Record<string, EssRate> = {};
+  for (const [k, v] of Object.entries(proSport)) if (v.length >= 3) {
+    spanne[k] = { med: Math.round(q(v, 0.5)), p25: Math.round(q(v, 0.25)), p75: Math.round(q(v, 0.75)), n: v.length };
+    sport[k] = spanne[k].med;
+  }
+  return { gesamt: alle.length ? Math.round(q(alle, 0.5)) : null, sport, spanne };
+}
+
+/** Wirkung der Last selbst auf den Score (Fortschreibungsmodell ES_MODEL, Höchstwert gegenüber einem Ruhetag) – etwa 0,17 Punkte je ESS. */
+export function lastWirkung(ess: number): number {
+  let e = 0, mx = 0;
+  for (let k = 0; k < 70; k++) {
+    e = ES_MODEL.b * e + (k === 0 ? ES_MODEL.c * ess : 0) + (k >= 1 && k <= ES_MODEL.win ? (ES_MODEL.d * ess) / ES_MODEL.win : 0);
+    if (e > mx) mx = e;
+  }
+  return mx;
+}
+/** Gesamter erwarteter Einfluss einer langen Einheit: Dauer-Zuschlag aus der Historie + Wirkung der Last. */
+export function esGesamt(ess: number, h: number, eff: LangEffekt): { gesamt: number; dauer: number; last: number } {
+  const dauer = effektFuer(h, eff);
+  const last = Math.round(lastWirkung(Math.max(0, ess)));
+  return { gesamt: dauer + last, dauer, last };
+}
+/** ESS-Spanne für eine Dauer und Sportart (aus essProStunde); null, wenn zu wenig Daten. */
+export function essSpanne(h: number, sport: string | null | undefined, ep: { spanne: Record<string, EssRate> }): { von: number; bis: number; richt: number } | null {
+  const r = ep.spanne[sportDe(sport)];
+  if (!r) return null;
+  return { von: Math.round(r.p25 * h), bis: Math.round(r.p75 * h), richt: Math.round(r.med * h) };
 }
 
 export type LangSlot = {
   date: string; wt: string; art: 'lang' | 'sehr_lang';
-  dauerH: number; vonH: number; bisH: number; esEffekt: number;
+  dauerH: number; vonH: number; bisH: number;
+  /** Dauer-Zuschlag aus der Historie (Punkte) */
+  esEffekt: number;
+  /** ESS-Spanne Rad für den Richtwert (falls genug Daten) und Gesamtwirkung beim Richtwert-ESS */
+  essRad?: { von: number; bis: number; richt: number } | null;
+  esGes?: number | null;
 };
 
 /** Zusatzwirkung (Score-Punkte) je Dauer, vorsichtig geschrumpft wie bonus4. */
@@ -204,7 +240,7 @@ export function effektFuer(h: number, eff: LangEffekt): number {
  * weitere gewählte Tage 2 h. Ein Haupttag wird sehr lang (4–5 h), wenn die nächste sehr lange fällig ist
  * und der Aufbau (längste ≥ 3 h) erreicht ist.
  */
-export function langPlan(e: LangEinstellung, s: LangStatus, eff: LangEffekt, tageVoraus = 14): LangSlot[] {
+export function langPlan(e: LangEinstellung, s: LangStatus, eff: LangEffekt, tageVoraus = 14, ep?: { spanne: Record<string, EssRate> }): LangSlot[] {
   const emp = langEmpfehlung(s, e);
   const out: LangSlot[] = [];
   if (!e.tage.length) return out;
@@ -229,7 +265,8 @@ export function langPlan(e: LangEinstellung, s: LangStatus, eff: LangEffekt, tag
     }
     const vonH = art === 'sehr_lang' ? 4 : Math.max(2, dauerH - 0.5);
     const bisH = art === 'sehr_lang' ? 5.5 : dauerH + 0.5;
-    out.push({ date: d, wt: WT_KURZ[wt], art, dauerH, vonH, bisH, esEffekt: effektFuer(dauerH, eff) });
+    const essRad = ep ? essSpanne(dauerH, 'Bike', ep) : null;
+    out.push({ date: d, wt: WT_KURZ[wt], art, dauerH, vonH, bisH, esEffekt: effektFuer(dauerH, eff), essRad, esGes: essRad ? esGesamt(essRad.richt, dauerH, eff).gesamt : null });
   }
   return out;
 }
@@ -237,11 +274,12 @@ export function langPlan(e: LangEinstellung, s: LangStatus, eff: LangEffekt, tag
 /** Datenpaket für das Plan-Briefing (Kira legt Dauer und Einfluss fest). */
 export type LangKontext = {
   einstellung: LangEinstellung; status: LangStatus; effekt: LangEffekt;
-  essProStunde: { gesamt: number | null; sport: Record<string, number> }; termine: LangSlot[];
+  essProStunde: { gesamt: number | null; sport: Record<string, number>; spanne: Record<string, EssRate> }; termine: LangSlot[];
 };
 export function langKontext(t: P3Tag[], g: GarminTage, e: LangEinstellung, heute: string): LangKontext {
   const lang = laengsteProTag(g);
   const effekt = langEffekt(t, lang);
   const status = langStatus(lang, heute);
-  return { einstellung: e, status, effekt, essProStunde: essProStunde(t, lang), termine: langPlan(e, status, effekt, 14) };
+  const ep = essProStunde(t, lang);
+  return { einstellung: e, status, effekt, essProStunde: ep, termine: langPlan(e, status, effekt, 14, ep) };
 }

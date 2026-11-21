@@ -14,7 +14,7 @@ import { WorkoutPanel } from './WorkoutPanel';
 import type { PlanDay } from '../lib/api';
 import { ladeLangKontext } from '../lib/briefingLocal';
 import { langeEinheitenBlock } from '../lib/kiraPrompts';
-import type { LangKontext } from '../lib/esLang';
+import { esGesamt, essSpanne, type LangKontext } from '../lib/esLang';
 
 const KEY = 'ck_kira_wochenplan_v1';
 
@@ -245,6 +245,16 @@ export function KiraWochenplanTile({
     () => new Map((langK?.termine || []).map((t) => [t.date, `Richtwert ${fmtH(t.dauerH)}${t.art === 'sehr_lang' ? ' (sehr lang)' : ''}`])),
     [langK],
   );
+  // Eigene Rechnung statt Kiras Schätzung: Endurance = Dauer-Zuschlag + Lastwirkung; ESS gegen die übliche Spanne prüfen
+  const langCheck = (t: WochenplanTag): { es: number | null; hinweis: string | null } | null => {
+    if (t.langH == null || !langK) return null;
+    const es = esGesamt(t.load, t.langH, langK.effekt).gesamt;
+    const sp = essSpanne(t.langH, t.sport, langK.essProStunde);
+    const teile: string[] = [];
+    if (sp && (t.load < sp.von * 0.85 || t.load > sp.bis * 1.15)) teile.push(`ESS für ${fmtH(t.langH)} ${t.sport} sonst ${sp.von}–${sp.bis}`);
+    if (t.esEffekt != null && Math.abs(t.esEffekt - es) > 10) teile.push(`Kira schätzte Endurance ${vzS(t.esEffekt)}, gerechnet ${vzS(es)}`);
+    return { es, hinweis: teile.length ? teile.join(' · ') : null };
+  };
   const openTag = gueltig?.tage.find((t) => t.date === openDate) || null;
   const openDay: PlanDay | null = openTag
     ? { date: openTag.date, day: openTag.day, recommended_load_ess: openTag.load, original_load_ess: openTag.vorher, recommended_zone: openTag.zone, training_1: `${openTag.sport}${openTag.training ? ' – ' + openTag.training : ''}`, training_2: openTag.alt, projected_effect: openTag.why }
@@ -329,10 +339,11 @@ export function KiraWochenplanTile({
                   {(t.langH != null || langTermin.has(t.date)) && (
                     <div className={`text-2xs rounded px-1.5 py-0.5 self-start border ${t.langH != null ? 'border-accent-strong/50 text-accent' : 'border-orange-400/60 text-orange-500'}`}>
                       {t.langH != null
-                        ? `Lange Einheit ${fmtH(t.langH)}${t.esEffekt != null ? ` · Endurance ${t.esEffekt >= 0 ? '+' : '−'}${Math.abs(Math.round(t.esEffekt))}` : ''}`
+                        ? `Lange Einheit ${fmtH(t.langH)}${langCheck(t)?.es != null ? ` · Endurance ${vzS(langCheck(t)!.es as number)}` : t.esEffekt != null ? ` · Endurance ${vzS(t.esEffekt)}` : ''}`
                         : `Langer Tag laut Vorgabe – ${langTermin.get(t.date)}, von Kira nicht eingeplant`}
                     </div>
                   )}
+                  {t.langH != null && langCheck(t)?.hinweis && <div className="text-2xs text-orange-500 leading-snug">{langCheck(t)!.hinweis}</div>}
                   {t.training && <div className="text-xs text-ink">{t.training}</div>}
                   {t.alt && <div className="text-2xs text-ink-dim">Alternative: {t.alt}</div>}
                   {t.why && <p className="text-2xs text-ink-muted leading-snug">{t.why}</p>}
@@ -356,6 +367,9 @@ export function KiraWochenplanTile({
   );
 }
 
+function vzS(x: number) {
+  return `${x >= 0 ? '+' : '−'}${Math.abs(Math.round(x))}`;
+}
 function fmtH(h: number) {
   const m = Math.round(h * 60);
   return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')} h`;

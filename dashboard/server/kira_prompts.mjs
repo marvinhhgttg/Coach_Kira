@@ -3822,10 +3822,20 @@ function langeEinheitenBlock(k, modus = "plan") {
   const WT = ["", "Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
   const e = k.einstellung, st = k.status, eff = k.effekt;
   const tage = (e.tage || []).map((x) => WT[x]).join(", ");
-  const kl = (eff.klassen || []).map((c) => `${c.lab}: ${c.extra == null ? "k. A." : (c.extra >= 0 ? "+" : "") + Math.round(c.extra)} (n=${c.n})`).join(" \xB7 ");
+  const kl = (eff.klassen || []).map((c) => {
+    if (c.extra == null) return `${c.lab}: k. A.`;
+    const roh = Math.round(c.extra), ger = c.extra > 0 ? Math.round(c.extra * c.n / (c.n + 3)) : 0;
+    return `${c.lab}: gemessen ${roh >= 0 ? "+" : ""}${roh} (n=${c.n}), Dauer-Zuschlag ${ger >= 0 ? "+" : ""}${ger}`;
+  }).join(" \xB7 ");
   const essH = k.essProStunde || {};
-  const essSport = Object.entries(essH.sport || {}).map(([s, v]) => `${s} ${v}`).join(", ");
-  const termine = (k.termine || []).map((t) => `- ${t.date} (${t.wt}): ${t.art === "sehr_lang" ? "SEHR LANG" : "lang"}, Rahmen ${hTxt(t.vonH)}\u2013${hTxt(t.bisH)}, Richtwert ${hTxt(t.dauerH)}, Zusatzwirkung laut Historie etwa ${t.esEffekt >= 0 ? "+" : ""}${t.esEffekt} Punkte`).join("\n");
+  const sp = essH.spanne || {};
+  const essSport = Object.entries(sp).map(([s, v]) => `${s} ${v.med} (${v.p25}\u2013${v.p75}, n=${v.n})`).join(", ") || Object.entries(essH.sport || {}).map(([s, v]) => `${s} ${v}`).join(", ");
+  const essFuer = (h) => Object.entries(sp).map(([s, v]) => `${s} ${Math.round(v.p25 * h)}\u2013${Math.round(v.p75 * h)} ESS`).join(", ");
+  const zus = (h) => {
+    const c = (eff.klassen || []).find((x) => h >= x.von && h < x.bis);
+    return c && c.extra != null && c.extra > 0 ? Math.round(c.extra * c.n / (c.n + 3)) : 0;
+  };
+  const termine = (k.termine || []).map((t) => `- ${t.date} (${t.wt}): ${t.art === "sehr_lang" ? "SEHR LANG" : "lang"}, Rahmen ${hTxt(t.vonH)}\u2013${hTxt(t.bisH)}, Richtwert ${hTxt(t.dauerH)}${essFuer(t.dauerH) ? " (" + essFuer(t.dauerH) + ")" : ""}, Dauer-Zuschlag ${zus(t.dauerH) >= 0 ? "+" : ""}${zus(t.dauerH)} Punkte`).join("\n");
   return [
     "",
     "",
@@ -3833,14 +3843,14 @@ function langeEinheitenBlock(k, modus = "plan") {
     "Garmin rechnet den Endurance Score aus VO2max und der Trainingshistorie (2\u20133 Monate plus die letzten 2 Wochen); die l\xE4ngsten Aktivit\xE4ten z\xE4hlen besonders.",
     tage ? `Marcs Vorgabe: lange Einheiten am ${tage} (${e.tage.length} pro Woche); sehr lange ab 4 h: ${e.sehrProMonat} pro Monat.` : `Marcs Vorgabe: keine festen Tage f\xFCr lange Einheiten; sehr lange ab 4 h: ${e.sehrProMonat} pro Monat.`,
     `Stand: l\xE4ngste Einheit der letzten 14 Tage ${st.laengste14 ? hTxt(st.laengste14.h) + " am " + st.laengste14.date : "keine"}; l\xE4ngste der letzten 4 Wochen ${hTxt(st.laengste28h || 0)}; ab 2 h: ${st.n2_28} in 28 / ${st.n2_84} in 84 Tagen; ab 4 h: ${st.n4_84} in 84 Tagen${st.letzte4 ? ", zuletzt " + st.letzte4.date : ""}.`,
-    `Marcs eigene Zusatzwirkung \xFCber die ESS-Last hinaus (Score-Punkte in den Tagen 0\u20133): ${kl}. Wenige F\xE4lle = nur Gr\xF6\xDFenordnung.`,
-    `Typische Last langer Einheiten: ${essH.gesamt != null ? essH.gesamt + " ESS pro Stunde" : "unbekannt"}${essSport ? " (" + essSport + ")" : ""}.`,
+    `Marcs eigene Zusatzwirkung \xFCber die ESS-Last hinaus (Score-Punkte in den Tagen 0\u20133): ${kl}. Der Dauer-Zuschlag ist bei wenigen F\xE4llen vorsichtig verkleinert.`,
+    `ESS pro Stunde bei ruhigen langen Einheiten (Z1\u2013Z2, Median und \xFCbliche Spanne): ${essSport || "unbekannt"}. Die Last w\xE4chst bei Marc kaum mit der Dauer, stark mit der Herzfrequenz.`,
     termine ? "Termine im Planfenster (Vorschlag aus Marcs Wochentagen):\n" + termine : "Keine Termine im Planfenster.",
     "",
     "Regeln f\xFCr lange Einheiten:",
     "- Plane an diesen Terminen die lange Einheit ein, ruhig in Z1\u2013Z2. Lege die Dauer selbst fest (im Rahmen; h\xF6chstens 30 min l\xE4nger als die l\xE4ngste der letzten 4 Wochen, au\xDFer bei ruhigen Wanderungen/Skitouren).",
-    "- Sch\xE4tze den Einfluss auf den Endurance Score in Punkten (Zusatzwirkung plus Wirkung der Last) und begr\xFCnde kurz.",
-    "- recommended_load_ess am langen Tag passend zur Dauer (Dauer \xD7 ESS pro Stunde der Sportart).",
+    "- ESS am langen Tag = Dauer \xD7 ESS pro Stunde der Sportart, innerhalb der Spanne (ruhig fahren hei\xDFt unteres Ende).",
+    "- Einfluss auf den Endurance Score NICHT sch\xE4tzen, sondern so rechnen: Dauer-Zuschlag (wie oben je Dauerklasse) + 0,17 \xD7 ESS. Beispiel: 2:30 h mit 125 ESS = " + zus(2.5) + " + 21 = " + (zus(2.5) + 21) + " Punkte. Mehr ist nicht belegt.",
     "- Tagesvotum Recover/Rest, Readiness kritisch oder ACWR > 1,3: verschieben auf den n\xE4chsten passenden Tag oder k\xFCrzen \u2013 und das sagen.",
     modus === "plan" ? '- Erg\xE4nze an diesen Tagen im Empfehlungs-Objekt: "lange_einheit": {"dauer_h": 2.5, "sport": "Rad", "es_effekt": 25, "hinweis": "kurze Begr\xFCndung"}. An anderen Tagen das Feld weglassen.' : '- Erg\xE4nze an diesen Tagen im Tages-Objekt "lang_h": Dauer in Stunden (z. B. 2.5) und "es_effekt": erwarteter Einfluss auf den Endurance Score in Punkten. An anderen Tagen beide Felder weglassen.',
     modus === "plan" ? "- Nenne die langen Einheiten im briefing mit Dauer und erwartetem Einfluss." : "- Nenne die langen Einheiten in der summary mit Dauer und erwartetem Einfluss."
@@ -4602,7 +4612,10 @@ function laengsteProTag(g) {
     let best = null;
     for (const a of tag.akt || []) {
       const h = (a.dauer_s || a.bewegt_s || 0) / 3600;
-      if (h > 0 && (!best || h > best.h)) best = { date, h, sport: a.sport || a.typ || null, name: a.name || null };
+      const z = a.zonen_s || [];
+      const zs = z.reduce((x, y) => x + (y || 0), 0);
+      const z12 = z.length >= 2 && zs > 0 ? ((z[0] || 0) + (z[1] || 0)) / zs : null;
+      if (h > 0 && (!best || h > best.h)) best = { date, h, sport: a.sport || a.typ || null, name: a.name || null, z12 };
     }
     if (best) m.set(date, best);
   }
@@ -4707,26 +4720,49 @@ function essProStunde(t, lang) {
   const alle = [];
   for (const d of t) {
     const l = lang.get(d.date);
-    if (!l || l.h < 2 || !d.load) continue;
+    if (!l || l.h < 1.5 || !d.load || d.load <= 0) continue;
+    if (l.z12 != null && l.z12 < 0.85) continue;
     const v = d.load / l.h;
+    if (v < 10 && sportDe(l.sport) === "Rad") continue;
     alle.push(v);
     (proSport[sportDe(l.sport)] ||= []).push(v);
   }
-  const med = (a) => {
+  const q = (a, p) => {
     const b = [...a].sort((x, y) => x - y);
-    return b.length ? b[Math.floor(b.length / 2)] : null;
+    return b.length ? b[Math.min(b.length - 1, Math.floor(p * (b.length - 1) + 0.5))] : 0;
   };
   const sport = {};
-  for (const [k, v] of Object.entries(proSport)) if (v.length >= 3) sport[k] = Math.round(med(v));
-  const g = med(alle);
-  return { gesamt: g == null ? null : Math.round(g), sport };
+  const spanne = {};
+  for (const [k, v] of Object.entries(proSport)) if (v.length >= 3) {
+    spanne[k] = { med: Math.round(q(v, 0.5)), p25: Math.round(q(v, 0.25)), p75: Math.round(q(v, 0.75)), n: v.length };
+    sport[k] = spanne[k].med;
+  }
+  return { gesamt: alle.length ? Math.round(q(alle, 0.5)) : null, sport, spanne };
+}
+function lastWirkung(ess) {
+  let e = 0, mx = 0;
+  for (let k = 0; k < 70; k++) {
+    e = ES_MODEL.b * e + (k === 0 ? ES_MODEL.c * ess : 0) + (k >= 1 && k <= ES_MODEL.win ? ES_MODEL.d * ess / ES_MODEL.win : 0);
+    if (e > mx) mx = e;
+  }
+  return mx;
+}
+function esGesamt(ess, h, eff) {
+  const dauer = effektFuer(h, eff);
+  const last = Math.round(lastWirkung(Math.max(0, ess)));
+  return { gesamt: dauer + last, dauer, last };
+}
+function essSpanne(h, sport, ep) {
+  const r = ep.spanne[sportDe(sport)];
+  if (!r) return null;
+  return { von: Math.round(r.p25 * h), bis: Math.round(r.p75 * h), richt: Math.round(r.med * h) };
 }
 function effektFuer(h, eff) {
   const k = eff.klassen.find((x) => h >= x.von && h < x.bis);
   if (!k || k.extra == null || k.extra <= 0) return 0;
   return Math.round(k.extra * k.n / (k.n + 3));
 }
-function langPlan(e, s, eff, tageVoraus = 14) {
+function langPlan(e, s, eff, tageVoraus = 14, ep) {
   const emp = langEmpfehlung(s, e);
   const out = [];
   if (!e.tage.length) return out;
@@ -4751,7 +4787,8 @@ function langPlan(e, s, eff, tageVoraus = 14) {
     }
     const vonH = art === "sehr_lang" ? 4 : Math.max(2, dauerH - 0.5);
     const bisH = art === "sehr_lang" ? 5.5 : dauerH + 0.5;
-    out.push({ date: d, wt: WT_KURZ[wt], art, dauerH, vonH, bisH, esEffekt: effektFuer(dauerH, eff) });
+    const essRad = ep ? essSpanne(dauerH, "Bike", ep) : null;
+    out.push({ date: d, wt: WT_KURZ[wt], art, dauerH, vonH, bisH, esEffekt: effektFuer(dauerH, eff), essRad, esGes: essRad ? esGesamt(essRad.richt, dauerH, eff).gesamt : null });
   }
   return out;
 }
@@ -4759,7 +4796,8 @@ function langKontext(t, g, e, heute) {
   const lang = laengsteProTag(g);
   const effekt = langEffekt(t, lang);
   const status = langStatus(lang, heute);
-  return { einstellung: e, status, effekt, essProStunde: essProStunde(t, lang), termine: langPlan(e, status, effekt, 14) };
+  const ep = essProStunde(t, lang);
+  return { einstellung: e, status, effekt, essProStunde: ep, termine: langPlan(e, status, effekt, 14, ep) };
 }
 
 // server/kira_prompts_cli.ts
