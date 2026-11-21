@@ -314,7 +314,8 @@ export const JB_CSS = `
 .box h3{font-size:11px;margin:0 0 4px;color:#333}.note{color:#666;font-size:10px;margin:3px 0 0}
 .leer{color:#999;font-size:10px;padding:8px 0}.seite{break-before:page}.grid.g3{grid-template-columns:repeat(3,1fr)}
 .pill{display:inline-block;border-radius:10px;padding:1px 7px;font-size:9.5px;font-weight:600}.up{background:#e3f4ea;color:#15803d}.down{background:#fde8e8;color:#b91c1c}.flat{background:#eef1f5;color:#555}
-.box td:not(:nth-child(2)){white-space:nowrap}.legende{font-size:9.5px;color:#555;margin:2px 0 4px}.legende i{display:inline-block;width:9px;height:9px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
+.box td:not(:nth-child(2)){white-space:nowrap}table.eng td,table.eng th{padding:2px 4px;font-size:9.5px;line-height:1.3}.legende{font-size:9.5px;color:#555;margin:2px 0 4px}.legende i{display:inline-block;width:9px;height:9px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
+@page{size:A4;margin:10mm 0}@media print{body{padding:0 12mm}}
 @media print{.hero{-webkit-print-color-adjust:exact;print-color-adjust:exact}.box,.hg div{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 `;
 
@@ -455,6 +456,6 @@ ${k('Längster Trainingstag', dauerTxt(d.tagZeitS), d.tagZeit ? kurz(d.tagZeit) 
 <h2>Größte Touren nach Höhenmetern</h2>
 <table><tr><th>Datum</th><th>Tour</th><th>km</th><th>hm</th><th>Dauer</th><th>Ø HF</th></tr>${d.hoechste.map((e) => zeile(e, de(e.a.hf_avg))).join('')}</table>
 <h2>Rekorde</h2>
-<table><tr><th>Bereich</th><th>Rekord</th><th>Wert</th><th>Datum</th><th>Einheit</th></tr>${d.rek.filter((r) => r.gruppe !== 'koerper').map((r) => `<tr><td>${esc(GLAB[r.gruppe] || r.gruppe)}</td><td>${esc(r.titel)}</td><td>${esc(r.text)}${r.neu ? ' <span class="neu">neu</span>' : ''}</td><td>${r.bis ? kurz(r.datum) + '–' + kurz(r.bis) : kurz(r.datum)}</td><td>${esc(r.detail || '')}</td></tr>`).join('')}</table>`;
+<table class="eng"><tr><th>Bereich</th><th>Rekord</th><th>Wert</th><th>Datum</th><th>Einheit</th></tr>${d.rek.filter((r) => r.gruppe !== 'koerper').map((r) => `<tr><td>${esc(GLAB[r.gruppe] || r.gruppe)}</td><td>${esc(r.titel)}</td><td>${esc(r.text)}${r.neu ? ' <span class="neu">neu</span>' : ''}</td><td>${r.bis ? kurz(r.datum) + '–' + kurz(r.bis) : kurz(r.datum)}</td><td>${esc(r.detail || '')}</td></tr>`).join('')}</table>`;
   return html;
 }
