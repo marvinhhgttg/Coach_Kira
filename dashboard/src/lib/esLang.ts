@@ -8,10 +8,11 @@
 import { ES_MODEL } from './ctlModel';
 import type { P3Tag } from './paket3';
 import type { GarminTage } from './garmin';
+import { GARMIN_HISTORIE } from './garminHistorie';
 
 export type LangTag = { date: string; h: number; sport: string | null; name: string | null; /** Anteil Z1+Z2 an der Zonenzeit (0–1) */ z12: number | null };
 export type LangKlasse = { lab: string; von: number; bis: number; n: number; extra: number | null };
-export type LangEffekt = { klassen: LangKlasse[]; bonus4: number; bonus4Roh: number | null; n4: number; basisTage: number };
+export type LangEffekt = { klassen: LangKlasse[]; bonus4: number; bonus4Roh: number | null; n4: number; basisTage: number; /** Herkunft der Zahlen, z. B. „Garmin seit 21.08.2025 + 3 neue Tage“ */ quelle?: string };
 export type LangStatus = {
   heute: string;
   laengste14: LangTag | null;
@@ -65,7 +66,7 @@ export function laengsteProTag(g: GarminTage): Map<string, LangTag> {
 }
 
 /** Zusatzwirkung langer Einheiten über ihre ESS-Last hinaus (Punkte Endurance Score, Tage 0–3). */
-export function langEffekt(t: P3Tag[], lang: Map<string, LangTag>): LangEffekt {
+export function langEffekt(t: P3Tag[], lang: Map<string, LangTag>, hist: typeof GARMIN_HISTORIE | null = GARMIN_HISTORIE): LangEffekt {
   const n = t.length;
   const res: (number | null)[] = new Array(n).fill(null);
   for (let i = 1; i < n; i++) {
@@ -81,24 +82,31 @@ export function langEffekt(t: P3Tag[], lang: Map<string, LangTag>): LangEffekt {
     for (let j = i; j <= i + 3 && j < n; j++) if (res[j] != null) { s += res[j] as number; k++; }
     return k >= 2 ? s : null;
   };
-  const alle: number[] = [];
   const proTag: { h: number; v: number }[] = [];
   for (let i = 0; i < n; i++) {
+    if (hist && t[i].date <= hist.stand) continue; // bis zum Stand zählt die Garmin-Historie (vollständiger als das Sheet)
     const v = kum(i);
     if (v == null) continue;
-    alle.push(v);
     proTag.push({ h: lang.get(t[i].date)?.h ?? 0, v });
   }
-  const basis = alle.length ? alle.reduce((a, b) => a + b, 0) / alle.length : 0;
-  const def: [string, number, number][] = [['unter 2 h', 0.01, 2], ['2–4 h', 2, 4], ['ab 4 h', 4, 99]];
+  const nLive = proTag.length;
+  const sumLive = proTag.reduce((a, x) => a + x.v, 0);
+  const basisTage = (hist ? hist.basisTage : 0) + nLive;
+  const basis = basisTage ? ((hist ? hist.basisSumme : 0) + sumLive) / basisTage : 0;
+  const def: [string, number, number][] = hist ? hist.klassen.map((k) => [k.lab, k.von, k.bis] as [string, number, number]) : [['unter 2 h', 0.01, 2], ['2–4 h', 2, 4], ['ab 4 h', 4, 99]];
   const klassen = def.map(([lab, von, bis]) => {
     const v = proTag.filter((x) => x.h >= von && x.h < bis).map((x) => x.v);
-    return { lab, von, bis, n: v.length, extra: v.length ? v.reduce((a, b) => a + b, 0) / v.length - basis : null };
+    const hk = hist ? hist.klassen.find((k) => k.von === von) : undefined;
+    const nn = v.length + (hk ? hk.n : 0);
+    const summe = v.reduce((a, b) => a + b, 0) + (hk ? hk.summe : 0);
+    return { lab, von, bis, n: nn, extra: nn ? summe / nn - basis : null };
   });
-  const k4 = klassen[2];
+  const k4 = klassen.find((k) => k.von === 4) || klassen[klassen.length - 1];
   // Wenige Fälle: zur Null hin schrumpfen (n/(n+3)), negative Werte nicht als Bonus werten
   const bonus4 = k4.extra != null && k4.extra > 0 ? (k4.extra * k4.n) / (k4.n + 3) : 0;
-  return { klassen, bonus4, bonus4Roh: k4.extra, n4: k4.n, basisTage: alle.length };
+  const de = (d: string) => d.split('-').reverse().join('.');
+  const quelle = hist ? `Garmin Connect, Score seit ${de(hist.esAb)}${nLive ? ` + ${nLive} neue Tage` : ''}` : 'Timeline';
+  return { klassen, bonus4, bonus4Roh: k4.extra, n4: k4.n, basisTage, quelle };
 }
 
 export function langStatus(lang: Map<string, LangTag>, heute: string): LangStatus {
@@ -173,10 +181,14 @@ export function langEmpfehlung(s: LangStatus, e: LangEinstellung = LANG_STANDARD
 
 /** ESS pro Stunde ruhiger langer Einheiten (ab 1,5 h, mindestens 85 % in Z1–Z2): Median und Spanne (25–75 %) je Sport. */
 export type EssRate = { med: number; p25: number; p75: number; n: number };
-export function essProStunde(t: P3Tag[], lang: Map<string, LangTag>): { gesamt: number | null; sport: Record<string, number>; spanne: Record<string, EssRate> } {
+export function essProStunde(t: P3Tag[], lang: Map<string, LangTag>, hist: typeof GARMIN_HISTORIE | null = GARMIN_HISTORIE): { gesamt: number | null; sport: Record<string, number>; spanne: Record<string, EssRate> } {
   const proSport: Record<string, number[]> = {};
   const alle: number[] = [];
+  // Historie aus Garmin Connect (seit 2020), danach live
+  const stand = hist ? hist.stand : '';
+  if (hist) for (const [sp, v] of Object.entries(hist.raten)) for (const [, r] of v) { alle.push(r); (proSport[sp] ||= []).push(r); }
   for (const d of t) {
+    if (stand && d.date <= stand) continue;
     const l = lang.get(d.date);
     if (!l || l.h < 1.5 || !d.load || d.load <= 0) continue;
     const skitour = sportDe(l.sport) === 'Skitour';

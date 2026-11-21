@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { wochenplanAbgleich, EVT_WOCHENPLAN } from '../lib/geraeteSync';
 import { ladeP3, esBacktest, esBreakEven, esZiel, type P3Tag } from '../lib/paket3';
 import { useGarminTage, fmtDauer } from '../lib/garmin';
 import { laengsteProTag, langEffekt, langStatus, langEmpfehlung, langPlan, sportDe, parseLangEinstellung, essProStunde, esGesamt, zielBedarf, WT_KURZ, type LangEinstellung, type ZielKurz } from '../lib/esLang';
@@ -42,9 +43,16 @@ export function EsHebelTile() {
   }, []);
   // Kiras Vorschlag aus dem letzten Plan-Briefing (Feld lange_einheit je Tag)
   const [kiVorschlag, setKiVorschlag] = useState<{ stand: string | null; quelle?: string; tage: Record<string, { dauer_h?: number; sport?: string; es_effekt?: number; hinweis?: string; ess?: number }> } | null>(null);
+  const [wpStand, setWpStand] = useState(0);
+  useEffect(() => {
+    const neu = () => setWpStand((n) => n + 1);
+    window.addEventListener(EVT_WOCHENPLAN, neu);
+    wochenplanAbgleich().catch(() => {});
+    return () => window.removeEventListener(EVT_WOCHENPLAN, neu);
+  }, []);
   useEffect(() => {
     let alive = true;
-    // zuerst Kiras Wochenplan (Plan › Diese Woche, liegt im Browser), sonst das Plan-Briefing vom Morgenlauf
+    // zuerst Kiras Wochenplan (Plan › Diese Woche, auf allen Geräten gleich), sonst das Plan-Briefing vom Morgenlauf
     try {
       const wp = JSON.parse(localStorage.getItem('ck_kira_wochenplan_v1') || 'null');
       const tage: Record<string, any> = {};
@@ -60,7 +68,7 @@ export function EsHebelTile() {
       })
       .catch(() => {});
     return () => { alive = false; };
-  }, []);
+  }, [wpStand]);
 
   // Ziel-Rechner state
   const [zielScore, setZielScore] = useState<number>(() => {
@@ -374,9 +382,9 @@ export function EsHebelTile() {
             <div className="mt-3">
               <p className="text-xs font-medium">Was lange Einheiten bei dir zusätzlich bringen</p>
               <p className="mt-1 text-2xs text-ink-muted">
-                Score-Punkte in den Tagen 0–3 danach, über das hinaus, was ihre ESS-Last schon erklärt ({eff.basisTage} Tage geprüft):
+                Score-Punkte in den Tagen 0–3 danach, über das hinaus, was ihre ESS-Last schon erklärt ({eff.basisTage} Tage geprüft{eff.quelle ? `, ${eff.quelle}` : ''}):
               </p>
-              <div className="mt-1 grid grid-cols-3 gap-2 text-xs">
+              <div className="mt-1 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
                 {eff.klassen.map((k) => (
                   <div key={k.lab} className="rounded border border-border px-2 py-1">
                     <span className="text-ink-muted">{k.lab}: </span>
@@ -385,9 +393,9 @@ export function EsHebelTile() {
                   </div>
                 ))}
               </div>
-              {eff.n4 < 8 && (
+              {eff.n4 < 12 && (
                 <p className="mt-1 text-2xs text-orange-300">
-                  Erst {eff.n4} sehr lange Einheiten mit Score-Verlauf – Größenordnung, keine feste Zahl. Gerechnet wird vorsichtig mit {vz(eff.bonus4)} je Einheit.
+                  Erst {eff.n4} sehr lange Einheiten mit Score-Verlauf, die Werte streuen stark – Größenordnung, keine feste Zahl. Gerechnet wird vorsichtig mit {vz(eff.bonus4)} je Einheit.
                 </p>
               )}
             </div>

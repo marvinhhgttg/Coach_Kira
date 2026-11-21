@@ -18,6 +18,7 @@ import { esGesamt, essSpanne, type LangKontext } from '../lib/esLang';
 import { ladeP4 } from '../lib/paket4';
 import { fetchGarminTage } from '../lib/garmin';
 import { tourformFuerZiele, tourformText } from '../lib/tourformZiele';
+import { wochenplanSenden, wochenplanAbgleich, EVT_WOCHENPLAN } from '../lib/geraeteSync';
 
 const KEY = 'ck_kira_wochenplan_v1';
 
@@ -87,6 +88,14 @@ export function KiraWochenplanTile({
   const [openDate, setOpenDate] = useState<string | null>(null);
   const [extraCtx, setExtraCtx] = useState('');
   const [langK, setLangK] = useState<LangKontext | null>(null);
+
+  // Wochenplan auf allen Geräten gleich: beim Öffnen abgleichen, Plan eines anderen Geräts übernehmen
+  useEffect(() => {
+    const neu = () => setPlan(loadWochenplan());
+    window.addEventListener(EVT_WOCHENPLAN, neu);
+    wochenplanAbgleich().catch(() => {});
+    return () => window.removeEventListener(EVT_WOCHENPLAN, neu);
+  }, []);
 
   // Nur Pläne zeigen, die zum aktuellen 14-Tage-Fenster passen
   const fenster = sim.map((r) => r.date);
@@ -216,6 +225,7 @@ export function KiraWochenplanTile({
       } catch {
         /* egal */
       }
+      wochenplanSenden(neu).catch(() => {}); // auf alle Geräte
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
     } finally {
@@ -373,8 +383,8 @@ export function KiraWochenplanTile({
           </div>
           {openDay && <WorkoutPanel key={openDay.date} day={openDay} onClose={() => setOpenDate(null)} />}
           <p className="mt-3 text-2xs text-ink-dim">
-            „In Simulation übernehmen“ setzt Last, Zone und Sport der freien Tage; heute und gesperrte Tage bleiben. Der Plan liegt nur im Browser, gespeichert wird
-            erst mit „In Timeline speichern“. Cloud nutzt pro Runde eine Chat-Anfrage.
+            „In Simulation übernehmen“ setzt Last, Zone und Sport der freien Tage; heute und gesperrte Tage bleiben. Der Plan gilt auf allen Geräten (Server), in die Timeline
+            kommt er erst mit „In Timeline speichern“. Cloud nutzt pro Runde eine Chat-Anfrage.
           </p>
         </>
       )}

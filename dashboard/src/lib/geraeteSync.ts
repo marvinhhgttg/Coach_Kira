@@ -51,7 +51,34 @@ function uebernehmen(werte: Record<string, string>) {
   }
 }
 
+// 21.11.2026: Kiras Wochenplan geräteübergreifend (Server › /api/wochenplan). Neuerer Plan gewinnt.
+export const WOCHENPLAN_KEY = 'ck_kira_wochenplan_v1';
+export const EVT_WOCHENPLAN = 'ck-wochenplan';
+const erstelltVon = (roh: string | null) => { try { const j = JSON.parse(roh || 'null'); return j && j.erstellt ? Date.parse(j.erstellt) || 0 : 0; } catch { return 0; } };
+export async function wochenplanAbgleich(): Promise<void> {
+  const r = await fetch(`${SERVER_BASE}/api/wochenplan?cb=${Date.now()}`, { cache: 'no-store', credentials: 'same-origin' });
+  if (!r.ok) return;
+  const j = await r.json();
+  const hier = lokal(WOCHENPLAN_KEY);
+  const tServer = j && j.plan && j.plan.erstellt ? Date.parse(j.plan.erstellt) || 0 : 0;
+  const tHier = erstelltVon(hier);
+  if (tServer > tHier) {
+    try { (origSet || localStorage.setItem.bind(localStorage))(WOCHENPLAN_KEY, JSON.stringify(j.plan)); } catch { /* blockiert */ }
+    window.dispatchEvent(new Event(EVT_WOCHENPLAN));
+  } else if (tHier > tServer && hier) {
+    await wochenplanSenden(JSON.parse(hier));
+  }
+}
+export async function wochenplanSenden(plan: unknown): Promise<void> {
+  try {
+    await fetch(`${SERVER_BASE}/api/wochenplan`, {
+      method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan }),
+    });
+  } catch { /* beim nächsten Abgleich erneut */ }
+}
+
 async function laden(): Promise<void> {
+  wochenplanAbgleich().catch(() => {});
   const r = await fetch(`${SERVER_BASE}/api/einstellungen?cb=${Date.now()}`, { cache: 'no-store', credentials: 'same-origin' });
   if (!r.ok) return;
   const j = await r.json();

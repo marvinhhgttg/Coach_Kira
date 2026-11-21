@@ -40,6 +40,7 @@ const REGELN = [
   ['*', /^\/api\/gs$/, 'cockpit'],
   ['GET', /^\/api\/zugang\/status$/, 'cockpit'],
   ['*', /^\/api\/einstellungen$/, 'cockpit'],
+  ['*', /^\/api\/wochenplan$/, 'cockpit'],
   // Etappe 6: der Formel-Abgleich kostet Rechenzeit → nur Sitzung oder Mac (chartData, votum, soll bleiben lesbar wie das Apps Script)
   ['GET', /^\/api\/rechenkern\/abgleich$/, 'gemischt'],
 ];
