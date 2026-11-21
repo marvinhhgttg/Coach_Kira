@@ -17,6 +17,39 @@ export const MAX_ROUNDS = 3;
 const ACWR_MAX = 1.3;
 const ACWR_MIN = 0.8;
 const CTL_MAX_LOSS = 0.05; // höchstens 5 % CTL-Verlust bis Tag 14 gegenüber heute
+
+/** Langer Tag aus Marcs Vorgabe (Endurance-Score-Hebel); Kira darf ihn um einen Tag verschieben. */
+export type LangTermin = { date: string; art: string };
+const HART = /^Z[3-5]$/i;
+/**
+ * Regeln für lange Einheiten (21.11.2026):
+ * – jeder lange Termin braucht eine lange Einheit am Termin oder einen Tag davor/danach,
+ * – Vortag und Folgetag einer langen Einheit locker (kein Z3–Z5), damit sie ruhig und frisch gelingt.
+ */
+export function langRegeln(days: LoopDay[], loads: number[], zones: string[], langH: (number | null)[], termine: LangTermin[]): string[] {
+  const v: string[] = [];
+  const tag = (i: number) => `${days[i].day ? days[i].day + ' ' : ''}${days[i].date}`;
+  const idx = new Map(days.map((d, i) => [d.date, i]));
+  for (const t of termine) {
+    if (t.art === 'ziel' || t.art === 'taper') continue;
+    const i = idx.get(t.date);
+    if (i == null || i === 0) continue;
+    const kandidaten = [i, i - 1, i + 1].filter((k) => k >= 1 && k < days.length);
+    if (!kandidaten.some((k) => langH[k] != null)) {
+      const frei = kandidaten.filter((k) => !days[k].locked).map(tag);
+      v.push(`${tag(i)}: lange Einheit laut Vorgabe fehlt – am Termin oder einen Tag davor/danach einplanen${frei.length ? ` (frei: ${frei.join(', ')})` : ''}`);
+    }
+  }
+  langH.forEach((h, i) => {
+    if (h == null || i === 0) return;
+    for (const k of [i - 1, i + 1]) {
+      if (k < 0 || k >= days.length || langH[k] != null) continue;
+      if (HART.test(zones[k] || '') && loads[k] > 0)
+        v.push(`${tag(k)}: ${zones[k]} direkt ${k < i ? 'vor' : 'nach'} der langen Einheit am ${tag(i)} – ${k < i ? 'Vortag' : 'Folgetag'} locker (Z1–Z2) oder frei, sonst die lange Einheit um einen Tag verschieben${days[k].locked ? '' : ' oder die harte Einheit verlegen'}`);
+    }
+  });
+  return v;
+}
 const MIN_REST = 2;
 
 const f = (v: number, d = 2) => v.toLocaleString('de-DE', { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -27,6 +60,7 @@ export function evaluate(
   zones: string[],
   simulate: (l: number[], z: string[]) => LoopSimRow[],
   check: (rows: LoopSimRow[]) => LoopCheck[],
+  lang?: { langH: (number | null)[]; termine: LangTermin[] },
 ) {
   const rows = simulate(loads, zones);
   const checks = check(rows);
@@ -43,6 +77,7 @@ export function evaluate(
     rows.map((r, i) => ({ label: `${days[i].day ? days[i].day + ' ' : ''}${days[i].date}`, load: loads[i], mono: i === 0 ? null : r.monotony, locked: days[i].locked || i === 0 })),
   ))
     v.push(m);
+  if (lang) v.push(...langRegeln(days, loads, zones, lang.langH, lang.termine));
   const restDays = loads.slice(1).filter((x) => x <= 0).length;
   if (restDays < MIN_REST) v.push(`Nur ${restDays} Ruhetag(e) mit 0 ESS in 13 Tagen (mindestens ${MIN_REST})`);
   const maxAcwr = Math.max(...rows.slice(1).map((r) => r.acwr));
@@ -69,6 +104,8 @@ export async function runPlanLoop(args: {
   llm?: Llm;
   /** Wochenplan-Modus: zusätzlich Sport, Training und Alternative je Tag. */
   sportsAllowed?: string[];
+  /** Lange Termine aus Marcs Vorgabe – werden mitgeprüft (Wochenplan). */
+  langTermine?: LangTermin[];
 }): Promise<{ rounds: LoopRound[]; best: LoopRound }> {
   const { days, simulate, check, context, onProgress } = args;
   const llm = args.llm || localLlm;
@@ -130,7 +167,7 @@ export async function runPlanLoop(args: {
     const langH = days.map((d, i) => { const n = zahl(byDate.get(d.date)?.lang_h); return n != null && n > 0 && n <= 12 && loads[i] > 0 ? Math.round(n * 4) / 4 : null; });
     const esEffekt = days.map((d, i) => (langH[i] != null ? zahl(byDate.get(d.date)?.es_effekt) : null));
     onProgress?.(`Runde ${r}/${MAX_ROUNDS}: Simulation prüft…`);
-    const ev = evaluate(days, loads, zones, simulate, check);
+    const ev = evaluate(days, loads, zones, simulate, check, wp && args.langTermine?.length ? { langH, termine: args.langTermine } : undefined);
     rounds.push({ loads, zones, why, summary: String(j.summary || ''), violations: ev.violations, maxAcwr: ev.maxAcwr, restDays: ev.restDays, finalCtl: ev.finalCtl, ...(wp ? { sports, training, alt, langH, esEffekt } : {}) });
     if (!ev.violations.length) break;
     msgs.push({ role: 'assistant', content: text });

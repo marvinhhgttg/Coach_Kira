@@ -194,6 +194,7 @@ export function KiraWochenplanTile({
         sportsAllowed,
         llm: localLlm,
         onProgress: setProgress,
+        langTermine: (lk?.termine || []).map((t) => ({ date: t.date, art: t.art })),
       });
       const b = r.best;
       const neu: Wochenplan = {
@@ -270,6 +271,20 @@ export function KiraWochenplanTile({
     () => new Map((langK?.termine || []).map((t) => [t.date, `Richtwert ${fmtH(t.dauerH)}${t.art === 'sehr_lang' ? ' (sehr lang)' : ''}`])),
     [langK],
   );
+  // Lange Einheit einen Tag neben dem Termin: als Verschiebung anzeigen
+  const wtDatum = (d: string) => `${['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][new Date(d + 'T12:00:00').getDay()]} ${d.slice(8, 10)}.${d.slice(5, 7)}.`;
+  const nachbar = (d: string, n: number) => { const x = new Date(d + 'T12:00:00'); x.setDate(x.getDate() + n); return x.toLocaleDateString('sv-SE'); };
+  const langAm = (d: string) => !!gueltig?.tage.find((x) => x.date === d && x.langH != null);
+  const verschobenAuf = (termin: string): string | null => {
+    if (langAm(termin)) return null;
+    for (const n of [-1, 1]) { const d = nachbar(termin, n); if (langAm(d) && !langTermin.has(d)) return wtDatum(d); }
+    return null;
+  };
+  const verschobenVon = (d: string): string | null => {
+    if (langTermin.has(d)) return null;
+    for (const n of [1, -1]) { const t = nachbar(d, n); if (langTermin.has(t) && !langAm(t)) return wtDatum(t); }
+    return null;
+  };
   // Eigene Rechnung statt Kiras Schätzung: Endurance = Dauer-Zuschlag + Lastwirkung; ESS gegen die übliche Spanne prüfen
   const langCheck = (t: WochenplanTag): { es: number | null; hinweis: string | null } | null => {
     if (t.langH == null || !langK) return null;
@@ -364,8 +379,10 @@ export function KiraWochenplanTile({
                   {(t.langH != null || langTermin.has(t.date)) && (
                     <div className={`text-2xs rounded px-1.5 py-0.5 self-start border ${t.langH != null ? 'border-accent-strong/50 text-accent' : 'border-orange-400/60 text-orange-500'}`}>
                       {t.langH != null
-                        ? `Lange Einheit ${fmtH(t.langH)}${langCheck(t)?.es != null ? ` · Endurance ${vzS(langCheck(t)!.es as number)}` : t.esEffekt != null ? ` · Endurance ${vzS(t.esEffekt)}` : ''}`
-                        : `Langer Tag laut Vorgabe – ${langTermin.get(t.date)}, von Kira nicht eingeplant`}
+                        ? `Lange Einheit ${fmtH(t.langH)}${verschobenVon(t.date) ? ` (statt ${verschobenVon(t.date)})` : ''}${langCheck(t)?.es != null ? ` · Endurance ${vzS(langCheck(t)!.es as number)}` : t.esEffekt != null ? ` · Endurance ${vzS(t.esEffekt)}` : ''}`
+                        : verschobenAuf(t.date)
+                          ? `Langer Tag laut Vorgabe – von Kira auf ${verschobenAuf(t.date)} verschoben`
+                          : `Langer Tag laut Vorgabe – ${langTermin.get(t.date)}, von Kira nicht eingeplant`}
                     </div>
                   )}
                   {t.langH != null && langCheck(t)?.hinweis && <div className="text-2xs text-orange-500 leading-snug">{langCheck(t)!.hinweis}</div>}

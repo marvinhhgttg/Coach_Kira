@@ -816,6 +816,8 @@ export function langeEinheitenBlock(k: any, modus: 'plan' | 'wochenplan' = 'plan
     '- ESS am langen Tag = Dauer × ESS pro Stunde der Sportart, innerhalb der Spanne (ruhig fahren heißt unteres Ende).',
     '- Einfluss auf den Endurance Score NICHT schätzen, sondern so rechnen: Dauer-Zuschlag (wie oben je Dauerklasse) + 0,17 × ESS. Beispiel: 2:30 h mit 125 ESS = ' + (zus(2.5)) + ' + 21 = ' + (zus(2.5) + 21) + ' Punkte. Mehr ist nicht belegt.',
     '- Tagesvotum Recover/Rest, Readiness kritisch oder ACWR > 1,3: verschieben auf den nächsten passenden Tag oder kürzen – und das sagen.',
+    '- Vortag und Folgetag einer langen Einheit locker (Z1–Z2) oder frei, kein Z3–Z5 direkt davor oder danach.',
+    '- Passt ein Termin nicht (harte Einheit am Vortag nötig, fester Tag daneben, ACWR), verschiebe die lange Einheit um genau einen Tag (Vortag oder Folgetag) statt die Regel zu brechen, und schreibe das dazu (z. B. „verschoben von So 29.11.“). Weiter als einen Tag nur bei Tagesvotum Recover/Rest.',
     modus === 'plan'
       ? '- Ergänze an diesen Tagen im Empfehlungs-Objekt: "lange_einheit": {"dauer_h": 2.5, "sport": "Rad", "es_effekt": 25, "hinweis": "kurze Begründung"}. An anderen Tagen das Feld weglassen.'
       : '- Ergänze an diesen Tagen im Tages-Objekt "lang_h": Dauer in Stunden (z. B. 2.5) und "es_effekt": erwarteter Einfluss auf den Endurance Score in Punkten. An anderen Tagen beide Felder weglassen.',

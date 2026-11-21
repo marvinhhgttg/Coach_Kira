@@ -3856,6 +3856,8 @@ function langeEinheitenBlock(k, modus = "plan") {
     "- ESS am langen Tag = Dauer \xD7 ESS pro Stunde der Sportart, innerhalb der Spanne (ruhig fahren hei\xDFt unteres Ende).",
     "- Einfluss auf den Endurance Score NICHT sch\xE4tzen, sondern so rechnen: Dauer-Zuschlag (wie oben je Dauerklasse) + 0,17 \xD7 ESS. Beispiel: 2:30 h mit 125 ESS = " + zus(2.5) + " + 21 = " + (zus(2.5) + 21) + " Punkte. Mehr ist nicht belegt.",
     "- Tagesvotum Recover/Rest, Readiness kritisch oder ACWR > 1,3: verschieben auf den n\xE4chsten passenden Tag oder k\xFCrzen \u2013 und das sagen.",
+    "- Vortag und Folgetag einer langen Einheit locker (Z1\u2013Z2) oder frei, kein Z3\u2013Z5 direkt davor oder danach.",
+    "- Passt ein Termin nicht (harte Einheit am Vortag n\xF6tig, fester Tag daneben, ACWR), verschiebe die lange Einheit um genau einen Tag (Vortag oder Folgetag) statt die Regel zu brechen, und schreibe das dazu (z. B. \u201Everschoben von So 29.11.\u201C). Weiter als einen Tag nur bei Tagesvotum Recover/Rest.",
     modus === "plan" ? '- Erg\xE4nze an diesen Tagen im Empfehlungs-Objekt: "lange_einheit": {"dauer_h": 2.5, "sport": "Rad", "es_effekt": 25, "hinweis": "kurze Begr\xFCndung"}. An anderen Tagen das Feld weglassen.' : '- Erg\xE4nze an diesen Tagen im Tages-Objekt "lang_h": Dauer in Stunden (z. B. 2.5) und "es_effekt": erwarteter Einfluss auf den Endurance Score in Punkten. An anderen Tagen beide Felder weglassen.',
     modus === "plan" ? "- Nenne die langen Einheiten im briefing mit Dauer und erwartetem Einfluss." : "- Nenne die langen Einheiten in der summary mit Dauer und erwartetem Einfluss."
   ].join("\n");
