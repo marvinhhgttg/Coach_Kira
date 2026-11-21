@@ -100,7 +100,13 @@ export function setupWidget(app, { getSetting, setSetting, originOk, texte }) {
   app.get('/api/widget', async (req, res) => {
     if (!geraetZu(req)) return res.status(401).json({ ok: false, error: 'App nicht gekoppelt.' });
     try {
-      res.json(await antwort(req.query.frisch === '1'));
+      const a = await antwort(req.query.frisch === '1');
+      if (req.query.uhr === '1') {
+        // Garmin-Uhr: wenig Speicher im Hintergrund – nur was die Uhr anzeigt
+        const { texte: _t, ...rest } = a;
+        return res.json({ ...rest, votum: a.votum ? { ...a.votum, gruende: (a.votum.gruende || []).slice(0, 2) } : null });
+      }
+      res.json(a);
     } catch (e) {
       res.status(502).json({ ok: false, error: String(e.message || e) });
     }
@@ -139,6 +145,47 @@ export function setupWidget(app, { getSetting, setSetting, originOk, texte }) {
     schreiben('widget_geraete', xs.slice(-10));
     res.json({ ok: true, token });
   });
+  // ---------- Kopplung der Garmin-Uhr (21.11.2026) ----------
+  // Die Uhr hat keine Tastatur: Sie fordert einen Code an und zeigt ihn; Marc bestätigt ihn im Cockpit (Sitzung).
+  //   POST /api/widget/uhr/anfrage {geraet} → {id, code}      (offen, höchstens 3 gleichzeitig, 10 min)
+  //   GET  /api/widget/uhr/status?id=…      → {wartet} | {token} (Token nur einmal)
+  //   POST /api/widget/uhr/bestaetigen {code}                   (nur Cockpit)
+  const anfragen = () => lesen('widget_uhr_anfragen', []).filter((a) => a.bis > Date.now());
+  app.post('/api/widget/uhr/anfrage', (req, res) => {
+    const xs = anfragen().filter((a) => !a.token);
+    if (xs.length >= 3) return res.status(429).json({ ok: false, error: 'Zu viele offene Anfragen – in 10 min erneut.' });
+    const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
+    const id = crypto.randomBytes(16).toString('hex');
+    const alle = anfragen();
+    alle.push({ id: sha(id), code, geraet: String((req.body || {}).geraet || 'Garmin-Uhr').slice(0, 60), bis: Date.now() + CODE_MS, token: null });
+    schreiben('widget_uhr_anfragen', alle);
+    res.json({ ok: true, id, code, gueltigBis: Date.now() + CODE_MS });
+  });
+  app.get('/api/widget/uhr/status', (req, res) => {
+    const id = sha(String(req.query.id || ''));
+    const alle = anfragen();
+    const a = alle.find((x) => x.id === id);
+    if (!a) return res.status(404).json({ ok: false, error: 'Anfrage abgelaufen.' });
+    if (!a.token) return res.json({ ok: true, wartet: true });
+    schreiben('widget_uhr_anfragen', alle.filter((x) => x !== a));
+    res.json({ ok: true, token: a.token });
+  });
+  app.post('/api/widget/uhr/bestaetigen', (req, res) => {
+    if (!originOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
+    const code = String((req.body || {}).code || '').replace(/\D/g, '');
+    const alle = anfragen();
+    const a = alle.find((x) => !x.token && x.code === code);
+    if (!a) return res.status(400).json({ ok: false, error: 'Kein offener Code von der Uhr – auf der Uhr neu koppeln.' });
+    const token = crypto.randomBytes(32).toString('hex');
+    const xs = geraete();
+    xs.push({ id: crypto.randomUUID(), hash: sha(token), name: a.geraet, at: Date.now(), zuletzt: null });
+    schreiben('widget_geraete', xs.slice(-10));
+    a.token = token;
+    a.code = null;
+    schreiben('widget_uhr_anfragen', alle);
+    res.json({ ok: true, name: a.geraet, geraete: xs.slice(-10).map(({ hash, ...g }) => g) });
+  });
+
   app.get('/api/widget/geraete', (req, res) => {
     if (!originOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
     res.json({ ok: true, geraete: geraete().map(({ hash, ...g }) => g) });

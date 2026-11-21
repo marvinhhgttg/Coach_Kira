@@ -41,12 +41,20 @@ export function AppKopplungTile() {
     const r = await j(await fetch(`${SERVER_BASE}/api/widget/widerrufen`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id }) }));
     if (r.ok) setGeraete(r.geraete || []);
   };
+  const [uhrCode, setUhrCode] = useState('');
+  const [uhrMsg, setUhrMsg] = useState<string | null>(null);
+  const uhrKoppeln = async () => {
+    setUhrMsg(null);
+    const r = await j(await fetch(`${SERVER_BASE}/api/widget/uhr/bestaetigen`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: uhrCode }) }));
+    if (r.ok) { setGeraete(r.geraete || []); setUhrCode(''); setUhrMsg(`${r.name} gekoppelt – die Uhr holt sich den Schlüssel in wenigen Sekunden.`); }
+    else setUhrMsg(r.error);
+  };
   const pruefen = async () => {
     setAbgleich({ laden: true });
     setAbgleich(await j(await fetch(`${SERVER_BASE}/api/widget/abgleich?cb=${Date.now()}`, { cache: 'no-store' })));
   };
   return (
-    <Panel title="iPhone-App & Widgets" right={<button type="button" className="btn btn-ghost text-xs px-2 py-1" onClick={erzeugen} data-testid="app-koppeln">Kopplungscode erzeugen</button>}>
+    <Panel title="iPhone-App, Widgets & Garmin-Uhr" right={<button type="button" className="btn btn-ghost text-xs px-2 py-1" onClick={erzeugen} data-testid="app-koppeln">Kopplungscode erzeugen</button>}>
       <div className="space-y-3 text-xs" data-testid="app-kopplung">
         <div className="text-ink-muted">Die Coach-Kira-App und ihre Widgets holen den Tagesstand mit einem eigenen Schlüssel. Zum Koppeln hier einen Code erzeugen und in der App unter „Mit Cockpit verbinden“ eingeben.</div>
         {code && (
@@ -56,6 +64,12 @@ export function AppKopplungTile() {
           </div>
         )}
         {err && <div className="text-orange-300">{err}</div>}
+        <div className="flex flex-wrap items-center gap-2" data-testid="uhr-kopplung">
+          <span className="text-ink-dim">Garmin-Uhr: Code von der Uhr</span>
+          <input className="input w-28 font-mono tracking-widest" inputMode="numeric" maxLength={7} value={uhrCode} onChange={(e) => setUhrCode(e.target.value)} placeholder="123456" />
+          <button type="button" className="btn btn-ghost text-xs px-2 py-1" onClick={uhrKoppeln} disabled={uhrCode.replace(/\D/g, '').length !== 6}>Uhr koppeln</button>
+          {uhrMsg && <span className={/gekoppelt/.test(uhrMsg) ? 'text-green-400' : 'text-orange-300'}>{uhrMsg}</span>}
+        </div>
         <div>
           <div className="text-ink-dim mb-1">Gekoppelte Geräte</div>
           {geraete.length === 0 ? (

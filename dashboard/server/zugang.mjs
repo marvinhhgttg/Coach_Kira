@@ -28,6 +28,7 @@ const REGELN = [
   ['GET', /^\/api\/garmin\/(anfrage|workout)$/, 'gemischt'],
   ['POST', /^\/api\/llm$/, 'gemischt'],
   ['POST', /^\/api\/widget\/(koppeln|widerrufen)$/, 'cockpit'],
+  ['POST', /^\/api\/widget\/uhr\/bestaetigen$/, 'cockpit'],
   ['GET', /^\/api\/widget\/(geraete|abgleich)$/, 'cockpit'],
   ['POST', /^\/api\/texte\/(starten|einstellung|pruefen)$/, 'cockpit'],
   ['POST', /^\/api\/texte\/(mac|claim|auftrag\/status)$/, 'mac'],
