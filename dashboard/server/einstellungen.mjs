@@ -11,6 +11,8 @@ export const PRUEFUNG = {
   ck_es_datum: (v) => /^\d{4}-\d{2}-\d{2}$/.test(v), // Ausdauer-Ziel: Datum
   ck_es_ziel: (v) => /^\d{3,5}$/.test(v) && Number(v) >= 1000 && Number(v) <= 20000, // Ausdauer-Ziel: Score
   ck_aufstehen: (v) => /^([01]\d|2[0-3]):[0-5]\d$/.test(v), // Schlafkonto: Aufstehzeit
+  ck_lang_tage: (v) => /^([1-7](,[1-7]){0,6})?$/.test(v), // Lange Einheiten: Wochentage 1=Mo … 7=So, leer = keine
+  ck_lang_sehr: (v) => /^[0-4]$/.test(v), // Sehr lange Einheiten (ab 4 h) pro Monat
 };
 
 export function setupEinstellungen(app, { getSetting, setSetting }) {

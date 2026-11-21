@@ -7,7 +7,7 @@
 import { SERVER_BASE } from './cloudLLM';
 import { setEngine, type Engine } from './engine';
 
-export const GERAETE_SCHLUESSEL = ['ck_votum_erfahrung_v2', 'ck_kira_engine_v2', 'ck_es_datum', 'ck_es_ziel', 'ck_aufstehen'] as const;
+export const GERAETE_SCHLUESSEL = ['ck_votum_erfahrung_v2', 'ck_kira_engine_v2', 'ck_es_datum', 'ck_es_ziel', 'ck_aufstehen', 'ck_lang_tage', 'ck_lang_sehr'] as const;
 const MENGE = new Set<string>(GERAETE_SCHLUESSEL);
 const EVT_ERFAHRUNG = 'ck-erfahrung-schalter';
 

@@ -758,7 +758,50 @@ ANTWORTE AUSSCHLIESSLICH IM FOLGENDEN JSON-FORMAT (ohne Markdown):
 export function briefingMessages(type: BriefingTyp, daten: any): { format: 'text' | 'json'; messages: KiMsg[] } {
   const res = briefingRoh(type, daten);
   if (res.messages.length && res.messages[0].role === 'system') res.messages[0].content = String(res.messages[0].content) + '\n\n' + MONOTONIE_REGEL + erfahrungBlock(daten && daten.erfahrung) + votumBlock(daten && daten.kernVotum);
+  if (type === 'plan') {
+    const u = res.messages.find((m) => m.role === 'user');
+    const lb = langeEinheitenBlock(daten && daten.langeEinheiten);
+    if (u && lb) u.content = String(u.content) + lb;
+  }
   return res;
+}
+
+/** 21.11.2026: lange Einheiten für den Endurance Score – Marcs Wochentage, Stand, eigene Wirkung, Termine. Kira legt Dauer und Einfluss fest. */
+const hTxt = (h: number) => {
+  const m = Math.round(h * 60);
+  return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')} h`;
+};
+export function langeEinheitenBlock(k: any): string {
+  if (!k || !k.einstellung || !k.status || !k.effekt) return '';
+  const WT = ['', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+  const e = k.einstellung, st = k.status, eff = k.effekt;
+  const tage = (e.tage || []).map((x: number) => WT[x]).join(', ');
+  const kl = (eff.klassen || []).map((c: any) => `${c.lab}: ${c.extra == null ? 'k. A.' : (c.extra >= 0 ? '+' : '') + Math.round(c.extra)} (n=${c.n})`).join(' · ');
+  const essH = k.essProStunde || {};
+  const essSport = Object.entries(essH.sport || {}).map(([s, v]) => `${s} ${v}`).join(', ');
+  const termine = (k.termine || []).map((t: any) =>
+    `- ${t.date} (${t.wt}): ${t.art === 'sehr_lang' ? 'SEHR LANG' : 'lang'}, Rahmen ${hTxt(t.vonH)}–${hTxt(t.bisH)}, Richtwert ${hTxt(t.dauerH)}, Zusatzwirkung laut Historie etwa ${t.esEffekt >= 0 ? '+' : ''}${t.esEffekt} Punkte`).join('\n');
+  return [
+    '',
+    '',
+    'LANGE EINHEITEN (Garmin Endurance Score):',
+    'Garmin rechnet den Endurance Score aus VO2max und der Trainingshistorie (2–3 Monate plus die letzten 2 Wochen); die längsten Aktivitäten zählen besonders.',
+    tage
+      ? `Marcs Vorgabe: lange Einheiten am ${tage} (${e.tage.length} pro Woche); sehr lange ab 4 h: ${e.sehrProMonat} pro Monat.`
+      : `Marcs Vorgabe: keine festen Tage für lange Einheiten; sehr lange ab 4 h: ${e.sehrProMonat} pro Monat.`,
+    `Stand: längste Einheit der letzten 14 Tage ${st.laengste14 ? hTxt(st.laengste14.h) + ' am ' + st.laengste14.date : 'keine'}; längste der letzten 4 Wochen ${hTxt(st.laengste28h || 0)}; ab 2 h: ${st.n2_28} in 28 / ${st.n2_84} in 84 Tagen; ab 4 h: ${st.n4_84} in 84 Tagen${st.letzte4 ? ', zuletzt ' + st.letzte4.date : ''}.`,
+    `Marcs eigene Zusatzwirkung über die ESS-Last hinaus (Score-Punkte in den Tagen 0–3): ${kl}. Wenige Fälle = nur Größenordnung.`,
+    `Typische Last langer Einheiten: ${essH.gesamt != null ? essH.gesamt + ' ESS pro Stunde' : 'unbekannt'}${essSport ? ' (' + essSport + ')' : ''}.`,
+    termine ? 'Termine im Planfenster (Vorschlag aus Marcs Wochentagen):\n' + termine : 'Keine Termine im Planfenster.',
+    '',
+    'Regeln für lange Einheiten:',
+    '- Plane an diesen Terminen die lange Einheit ein, ruhig in Z1–Z2. Lege die Dauer selbst fest (im Rahmen; höchstens 30 min länger als die längste der letzten 4 Wochen, außer bei ruhigen Wanderungen/Skitouren).',
+    '- Schätze den Einfluss auf den Endurance Score in Punkten (Zusatzwirkung plus Wirkung der Last) und begründe kurz.',
+    '- recommended_load_ess am langen Tag passend zur Dauer (Dauer × ESS pro Stunde der Sportart).',
+    '- Tagesvotum Recover/Rest, Readiness kritisch oder ACWR > 1,3: verschieben auf den nächsten passenden Tag oder kürzen – und das sagen.',
+    '- Ergänze an diesen Tagen im Empfehlungs-Objekt: "lange_einheit": {"dauer_h": 2.5, "sport": "Rad", "es_effekt": 25, "hinweis": "kurze Begründung"}. An anderen Tagen das Feld weglassen.',
+    '- Nenne die langen Einheiten im briefing mit Dauer und erwartetem Einfluss.',
+  ].join('\n');
 }
 
 function briefingRoh(type: BriefingTyp, daten: any): { format: 'text' | 'json'; messages: KiMsg[] } {

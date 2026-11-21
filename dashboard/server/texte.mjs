@@ -66,7 +66,11 @@ export function setupTexte(app, { getSetting, setSetting, cloudChat, originOk, s
   };
   const schreiben = (k, v) => setSetting(k, JSON.stringify(v));
   const zustand = () => lesen('texte_zustand', { items: {}, letzterTakt: 0, letzterFehler: null });
-  const einstellung = () => ({ cloudErsatz: true, votumQuelle: 'kern', ...lesen('texte_einstellung', {}) });
+  const einstellung = () => {
+    // 21.11.2026: Wochentage/Anzahl langer Einheiten (Geräte-Einstellungen) für das Plan-Briefing auf dem Mac
+    const w = (lesen('geraete_einstellungen', {}) || {}).werte || {};
+    return { cloudErsatz: true, votumQuelle: 'kern', ...lesen('texte_einstellung', {}), langeEinheiten: { tage: w.ck_lang_tage ?? null, sehr: w.ck_lang_sehr ?? null } };
+  };
   const mac = () => lesen('texte_mac', {});
 
   async function holen(params) {
@@ -543,6 +547,7 @@ export function setupTexte(app, { getSetting, setSetting, cloudChat, originOk, s
     const neu = { ...einstellung() };
     if (typeof b.cloudErsatz === 'boolean') neu.cloudErsatz = b.cloudErsatz;
     if (b.votumQuelle === 'kern' || b.votumQuelle === 'ampel') neu.votumQuelle = b.votumQuelle;
+    delete neu.langeEinheiten; // kommt aus den Geräte-Einstellungen
     schreiben('texte_einstellung', neu);
     res.json(statusAntwort());
   });

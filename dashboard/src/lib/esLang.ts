@@ -121,17 +121,37 @@ export function langStatus(lang: Map<string, LangTag>, heute: string): LangStatu
  * von höchstens 14 Tagen, damit Garmins 2-Wochen-Fenster nie leer ist. Dauer der Wocheneinheit in kleinen
  * Schritten steigern (+30 min gegenüber der längsten der letzten 4 Wochen, 2–4 h).
  */
-export function langEmpfehlung(s: LangStatus): LangEmpfehlung {
+export type LangEinstellung = { tage: number[]; sehrProMonat: number };
+export const LANG_STANDARD: LangEinstellung = { tage: [6], sehrProMonat: 2 };
+export const WT_KURZ = ['', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+/** Einstellung aus den Geräte-Einstellungen: ck_lang_tage "6" bzw. "3,6" (1 = Mo … 7 = So, leer = keine), ck_lang_sehr "0"–"4". */
+export function parseLangEinstellung(tage?: string | null, sehr?: string | null): LangEinstellung {
+  const t = tage == null ? LANG_STANDARD.tage : String(tage).split(',').map(Number).filter((x) => x >= 1 && x <= 7);
+  const n = sehr == null || sehr === '' ? LANG_STANDARD.sehrProMonat : Math.max(0, Math.min(4, Math.round(Number(sehr)) || 0));
+  return { tage: [...new Set(t)].sort((a, b) => a - b), sehrProMonat: n };
+}
+const wochentag = (iso: string) => ((new Date(iso + 'T00:00:00Z').getUTCDay() + 6) % 7) + 1; // 1 = Mo
+const montag = (iso: string) => addTage(iso, 1 - wochentag(iso));
+
+export function langEmpfehlung(s: LangStatus, e: LangEinstellung = LANG_STANDARD): LangEmpfehlung {
   const wocheDauerH = Math.min(4, Math.max(2, Math.round((s.laengste28h + 0.5) * 2) / 2));
-  const wocheFaellig = s.letzte2 ? addTage(s.letzte2.date, 7) : s.heute;
-  const sehrLangFaellig = s.letzte4 ? addTage(s.letzte4.date, 14) : s.heute;
+  const proWoche = e.tage.length;
+  const wocheFaellig = s.letzte2 ? addTage(s.letzte2.date, proWoche > 1 ? Math.max(3, Math.round(7 / proWoche)) : 7) : s.heute;
+  const abstandSehr = e.sehrProMonat > 0 ? Math.max(7, Math.round(30 / e.sehrProMonat)) : 9999;
+  const sehrLangFaellig = s.letzte4 ? addTage(s.letzte4.date, Math.min(abstandSehr, 365)) : s.heute;
+  const tageTxt = proWoche ? e.tage.map((x) => WT_KURZ[x]).join(', ') : 'keine Tage gewählt';
   const fenster14Leer = !s.laengste14 || s.laengste14.h < 2;
   const sehrLangAufbau = s.laengste28h < 3;
+  const sehrTxt = e.sehrProMonat === 0
+    ? 'Sehr lange Einheiten ab 4 h sind abgewählt – sie bringen bei dir am meisten zusätzlich.'
+    : sehrLangAufbau
+      ? `Sobald die längste Einheit bei etwa 3 h liegt: ${e.sehrProMonat}-mal im Monat eine sehr lange ab 4 h (etwa alle ${abstandSehr} Tage). Ruhige Wanderungen und Skitouren gehen auch früher.`
+      : `${e.sehrProMonat}-mal im Monat eine sehr lange Einheit ab 4 h (Tour, lange Ausfahrt), etwa alle ${abstandSehr} Tage.`;
   const punkte: string[] = [
-    `Jede Woche 1 lange Einheit von etwa ${String(wocheDauerH).replace('.', ',')} h, ruhig in Z1–Z2 (Rad, Wandern, Skitour).`,
-    sehrLangAufbau
-      ? 'Sobald die Wocheneinheit bei etwa 3 h liegt: 2-mal im Monat eine sehr lange ab 4 h, höchstens 14 Tage auseinander. Ruhige Wanderungen und Skitouren gehen auch früher.'
-      : '2-mal im Monat eine sehr lange Einheit ab 4 h (Tour, lange Ausfahrt), höchstens 14 Tage auseinander.',
+    proWoche
+      ? `${proWoche === 1 ? 'Jede Woche 1 lange Einheit' : `Jede Woche ${proWoche} lange Einheiten`} (${tageTxt}), die längste etwa ${String(wocheDauerH).replace('.', ',')} h, weitere ab 2 h – ruhig in Z1–Z2 (Rad, Wandern, Skitour).`
+      : 'Keine Wochentage für lange Einheiten gewählt – ohne lange Einheiten trägt nur die mittlere Last den Score.',
+    sehrTxt,
     'Dauer langsam steigern: pro Woche höchstens 30 min länger als die längste der letzten 4 Wochen.',
     'Nur an Tagen mit Tagesvotum Train oder Easy. Bei Recover oder niedriger Readiness lieber verschieben als kürzer und härter fahren.',
   ];
@@ -139,11 +159,89 @@ export function langEmpfehlung(s: LangStatus): LangEmpfehlung {
     wocheDauerH,
     wocheFaellig,
     wocheUeberfaellig: wocheFaellig < s.heute,
-    sehrLangProMonat: 2,
+    sehrLangProMonat: e.sehrProMonat,
     sehrLangFaellig,
-    sehrLangUeberfaellig: !sehrLangAufbau && sehrLangFaellig < s.heute,
+    sehrLangUeberfaellig: e.sehrProMonat > 0 && !sehrLangAufbau && sehrLangFaellig < s.heute,
     fenster14Leer,
     sehrLangAufbau,
     punkte,
   };
+}
+
+/** Typische Last langer Einheiten (ESS pro Stunde, Tage mit längster Einheit ab 2 h), gesamt und je Sport. */
+export function essProStunde(t: P3Tag[], lang: Map<string, LangTag>): { gesamt: number | null; sport: Record<string, number> } {
+  const proSport: Record<string, number[]> = {};
+  const alle: number[] = [];
+  for (const d of t) {
+    const l = lang.get(d.date);
+    if (!l || l.h < 2 || !d.load) continue;
+    const v = d.load / l.h;
+    alle.push(v);
+    (proSport[sportDe(l.sport)] ||= []).push(v);
+  }
+  const med = (a: number[]) => { const b = [...a].sort((x, y) => x - y); return b.length ? b[Math.floor(b.length / 2)] : null; };
+  const sport: Record<string, number> = {};
+  for (const [k, v] of Object.entries(proSport)) if (v.length >= 3) sport[k] = Math.round(med(v) as number);
+  const g = med(alle);
+  return { gesamt: g == null ? null : Math.round(g), sport };
+}
+
+export type LangSlot = {
+  date: string; wt: string; art: 'lang' | 'sehr_lang';
+  dauerH: number; vonH: number; bisH: number; esEffekt: number;
+};
+
+/** Zusatzwirkung (Score-Punkte) je Dauer, vorsichtig geschrumpft wie bonus4. */
+export function effektFuer(h: number, eff: LangEffekt): number {
+  const k = eff.klassen.find((x) => h >= x.von && h < x.bis);
+  if (!k || k.extra == null || k.extra <= 0) return 0;
+  return Math.round((k.extra * k.n) / (k.n + 3));
+}
+
+/**
+ * Termine im Planfenster (ab heute, tageVoraus Tage) an den gewählten Wochentagen.
+ * Je Woche ist der letzte gewählte Tag der Haupttag (Dauer wächst um 30 min pro Woche, ab der Empfehlung),
+ * weitere gewählte Tage 2 h. Ein Haupttag wird sehr lang (4–5 h), wenn die nächste sehr lange fällig ist
+ * und der Aufbau (längste ≥ 3 h) erreicht ist.
+ */
+export function langPlan(e: LangEinstellung, s: LangStatus, eff: LangEffekt, tageVoraus = 14): LangSlot[] {
+  const emp = langEmpfehlung(s, e);
+  const out: LangSlot[] = [];
+  if (!e.tage.length) return out;
+  const haupt = Math.max(...e.tage);
+  const abstand = e.sehrProMonat > 0 ? Math.max(7, Math.round(30 / e.sehrProMonat)) : 0;
+  let naechsteSehr = e.sehrProMonat > 0 && !emp.sehrLangAufbau ? emp.sehrLangFaellig : null;
+  const ersteWoche = montag(s.heute);
+  for (let i = 0; i < tageVoraus; i++) {
+    const d = addTage(s.heute, i);
+    const wt = wochentag(d);
+    if (!e.tage.includes(wt)) continue;
+    const woche = Math.round(diffTage(ersteWoche, montag(d)) / 7);
+    let art: LangSlot['art'] = 'lang';
+    let dauerH = 2;
+    if (wt === haupt) {
+      dauerH = Math.min(emp.sehrLangAufbau ? 3.5 : 4, emp.wocheDauerH + 0.5 * woche);
+      if (naechsteSehr && d >= naechsteSehr) {
+        art = 'sehr_lang';
+        dauerH = 4.5;
+        naechsteSehr = addTage(d, abstand);
+      }
+    }
+    const vonH = art === 'sehr_lang' ? 4 : Math.max(2, dauerH - 0.5);
+    const bisH = art === 'sehr_lang' ? 5.5 : dauerH + 0.5;
+    out.push({ date: d, wt: WT_KURZ[wt], art, dauerH, vonH, bisH, esEffekt: effektFuer(dauerH, eff) });
+  }
+  return out;
+}
+
+/** Datenpaket für das Plan-Briefing (Kira legt Dauer und Einfluss fest). */
+export type LangKontext = {
+  einstellung: LangEinstellung; status: LangStatus; effekt: LangEffekt;
+  essProStunde: { gesamt: number | null; sport: Record<string, number> }; termine: LangSlot[];
+};
+export function langKontext(t: P3Tag[], g: GarminTage, e: LangEinstellung, heute: string): LangKontext {
+  const lang = laengsteProTag(g);
+  const effekt = langEffekt(t, lang);
+  const status = langStatus(lang, heute);
+  return { einstellung: e, status, effekt, essProStunde: essProStunde(t, lang), termine: langPlan(e, status, effekt, 14) };
 }

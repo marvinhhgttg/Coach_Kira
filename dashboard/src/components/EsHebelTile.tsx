@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { ladeP3, esBacktest, esBreakEven, esZiel, type P3Tag } from '../lib/paket3';
 import { useGarminTage, fmtDauer } from '../lib/garmin';
-import { laengsteProTag, langEffekt, langStatus, langEmpfehlung, sportDe } from '../lib/esLang';
+import { laengsteProTag, langEffekt, langStatus, langEmpfehlung, langPlan, sportDe, parseLangEinstellung, WT_KURZ, type LangEinstellung } from '../lib/esLang';
+import { fetchPlanBriefing } from '../lib/api';
 import { heuteBerlin } from '../lib/kernVotumKi';
 
 function fmtDateShort(iso: string): string {
@@ -16,6 +17,33 @@ export function EsHebelTile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { tage: garmin } = useGarminTage();
+  // Lange Einheiten: Wochentage und sehr lange pro Monat (Geräte-Einstellungen, gelten auf allen Geräten)
+  const [langEin, setLangEin] = useState<LangEinstellung>(() => {
+    try { return parseLangEinstellung(localStorage.getItem('ck_lang_tage'), localStorage.getItem('ck_lang_sehr')); } catch { return parseLangEinstellung(null, null); }
+  });
+  const langSpeichern = (e: LangEinstellung) => {
+    setLangEin(e);
+    try {
+      localStorage.setItem('ck_lang_tage', e.tage.join(','));
+      localStorage.setItem('ck_lang_sehr', String(e.sehrProMonat));
+    } catch { /* egal */ }
+  };
+  const tagUmschalten = (wt: number) =>
+    langSpeichern({ ...langEin, tage: langEin.tage.includes(wt) ? langEin.tage.filter((x) => x !== wt) : [...langEin.tage, wt].sort((a, b) => a - b) });
+  // Kiras Vorschlag aus dem letzten Plan-Briefing (Feld lange_einheit je Tag)
+  const [kiVorschlag, setKiVorschlag] = useState<{ stand: string | null; tage: Record<string, { dauer_h?: number; sport?: string; es_effekt?: number; hinweis?: string }> } | null>(null);
+  useEffect(() => {
+    let alive = true;
+    fetchPlanBriefing()
+      .then((r: any) => {
+        if (!alive || !r || !r.ok) return;
+        const tage: Record<string, any> = {};
+        for (const x of r.recommendations || []) if (x && x.date && x.lange_einheit && typeof x.lange_einheit === 'object') tage[String(x.date).slice(0, 10)] = x.lange_einheit;
+        setKiVorschlag({ stand: r.briefingTimestamp || null, tage });
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
 
   // Ziel-Rechner state
   const [zielScore, setZielScore] = useState<number>(() => {
@@ -110,9 +138,10 @@ export function EsHebelTile() {
   const heute = heuteBerlin();
   const eff = lang ? langEffekt(tage, lang) : null;
   const st = lang ? langStatus(lang, heute) : null;
-  const emp = st ? langEmpfehlung(st) : null;
+  const emp = st ? langEmpfehlung(st, langEin) : null;
+  const termine = st && eff ? langPlan(langEin, st, eff, 14) : [];
   const extraProTag = eff && emp ? (eff.bonus4 * emp.sehrLangProMonat) / 30 : 0;
-  const zLang = eff && eff.bonus4 > 0 && z && z.tage > 0 ? esZiel(tage, zielScore, zielDatum, extraProTag) : null;
+  const zLang = eff && eff.bonus4 > 0 && emp && emp.sehrLangProMonat > 0 && z && z.tage > 0 ? esZiel(tage, zielScore, zielDatum, extraProTag) : null;
   const fmtH = (h: number) => fmtDauer(h * 3600);
   const vz = (x: number | null) => (x == null ? '—' : `${x >= 0 ? '+' : '−'}${Math.abs(Math.round(x))}`);
 
@@ -183,16 +212,98 @@ export function EsHebelTile() {
               <div className="rounded-lg border border-border p-3">
                 <p className="text-xs text-ink-muted">Ab 2 h</p>
                 <p className="mt-1 text-lg font-mono">{st.n2_28} / {st.n2_84}</p>
-                <p className="mt-1 text-2xs text-ink-muted">in 28 / 84 Tagen (Ziel etwa 4 / 12)</p>
+                <p className="mt-1 text-2xs text-ink-muted">in 28 / 84 Tagen (Ziel etwa {langEin.tage.length * 4} / {langEin.tage.length * 12})</p>
               </div>
               <div className="rounded-lg border border-border p-3">
                 <p className="text-xs text-ink-muted">Ab 4 h</p>
                 <p className="mt-1 text-lg font-mono">{st.n4_84}</p>
                 <p className="mt-1 text-2xs text-ink-muted">
-                  in 84 Tagen (Ziel etwa 6){st.letzte4 ? `, zuletzt ${fmtDateShort(st.letzte4.date)}` : ''}
+                  in 84 Tagen (Ziel etwa {langEin.sehrProMonat * 3}){st.letzte4 ? `, zuletzt ${fmtDateShort(st.letzte4.date)}` : ''}
                 </p>
               </div>
             </div>
+
+            <div className="mt-3">
+              <p className="text-xs font-medium">Deine Vorgabe</p>
+              <div className="mt-1 flex flex-wrap items-center gap-1">
+                <span className="text-2xs text-ink-muted mr-1">Tage für lange Einheiten:</span>
+                {[1, 2, 3, 4, 5, 6, 7].map((wt) => {
+                  const an = langEin.tage.includes(wt);
+                  return (
+                    <button
+                      key={wt}
+                      type="button"
+                      aria-pressed={an}
+                      onClick={() => tagUmschalten(wt)}
+                      className={`px-2 py-0.5 rounded border text-xs ${an ? 'bg-accent-strong/20 border-accent-strong/60 text-accent font-medium' : 'border-border text-ink-muted'}`}
+                    >
+                      {WT_KURZ[wt]}
+                    </button>
+                  );
+                })}
+                <span className="text-2xs text-ink-muted ml-1">= {langEin.tage.length} pro Woche</span>
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <label htmlFor="es-lang-sehr" className="text-2xs text-ink-muted">Sehr lange (ab 4 h) pro Monat:</label>
+                <select
+                  id="es-lang-sehr"
+                  value={langEin.sehrProMonat}
+                  onChange={(e) => langSpeichern({ ...langEin, sehrProMonat: Number(e.target.value) })}
+                  className="px-2 py-0.5 border border-border rounded text-xs"
+                >
+                  {[0, 1, 2, 3, 4].map((n) => <option key={n} value={n}>{n}</option>)}
+                </select>
+                <span className="text-2xs text-ink-muted">gilt auf allen Geräten und fließt ins nächste Plan-Briefing ein</span>
+              </div>
+            </div>
+
+            {termine.length > 0 && (
+              <div className="mt-3">
+                <p className="text-xs font-medium">Termine in den nächsten 14 Tagen</p>
+                <div className="mt-1 overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="text-2xs text-ink-muted text-left">
+                        <th className="py-1 pr-2 font-normal">Tag</th>
+                        <th className="py-1 pr-2 font-normal">Art</th>
+                        <th className="py-1 pr-2 font-normal">Richtwert</th>
+                        <th className="py-1 pr-2 font-normal">Zusatz ES</th>
+                        <th className="py-1 font-normal">Kira schlägt vor</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {termine.map((t) => {
+                        const k = kiVorschlag?.tage[t.date];
+                        return (
+                          <tr key={t.date} className="border-t border-border align-top">
+                            <td className="py-1 pr-2 whitespace-nowrap">{t.wt} {fmtDateShort(t.date).slice(0, -5)}</td>
+                            <td className="py-1 pr-2">{t.art === 'sehr_lang' ? 'sehr lang' : 'lang'}</td>
+                            <td className="py-1 pr-2 font-mono whitespace-nowrap">{fmtH(t.dauerH)}</td>
+                            <td className="py-1 pr-2 font-mono">{vz(t.esEffekt)}</td>
+                            <td className="py-1">
+                              {k ? (
+                                <span>
+                                  <span className="font-mono">{k.dauer_h != null ? fmtH(Number(k.dauer_h)) : '—'}</span>
+                                  {k.sport ? ` ${k.sport}` : ''}
+                                  {k.es_effekt != null ? <span className="font-mono">, {vz(Number(k.es_effekt))}</span> : null}
+                                  {k.hinweis ? <span className="text-2xs text-ink-muted"> – {k.hinweis}</span> : null}
+                                </span>
+                              ) : (
+                                <span className="text-2xs text-ink-muted">noch kein Vorschlag</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="mt-1 text-2xs text-ink-muted">
+                  Richtwert und Zusatzwirkung aus deiner Historie. Kiras Vorschlag kommt aus dem Plan-Briefing
+                  {kiVorschlag?.stand ? ` vom ${new Date(kiVorschlag.stand).toLocaleString('de-DE', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })}` : ''} – neue Vorgaben wirken ab dem nächsten Lauf.
+                </p>
+              </div>
+            )}
 
             <div className="mt-3">
               <p className="text-xs font-medium">Empfehlung</p>
@@ -283,7 +394,7 @@ export function EsHebelTile() {
             )}
             {zLang && zLang.machbar && zLang.ladeProTag !== null && z.ladeProTag !== null && (
               <p className="mt-1 text-xs">
-                Mit 2 sehr langen Einheiten (ab 4 h) pro Monat reichen etwa {Math.round(zLang.ladeProTag)} ESS pro Tag
+                Mit {emp?.sehrLangProMonat} sehr langen Einheit{emp?.sehrLangProMonat === 1 ? '' : 'en'} (ab 4 h) pro Monat reichen etwa {Math.round(zLang.ladeProTag)} ESS pro Tag
                 {z.ladeProTag - zLang.ladeProTag >= 1 ? ` (${Math.round(z.ladeProTag - zLang.ladeProTag)} weniger)` : ''}.
               </p>
             )}

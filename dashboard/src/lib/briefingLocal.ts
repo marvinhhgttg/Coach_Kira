@@ -13,7 +13,23 @@ import { fetchChartData } from './api';
 import { rangeFor } from './windows';
 import { SERVER_BASE } from './cloudLLM';
 import { RECOVERY_FETCH_METRICS } from '../screens/RecoveryPanel';
-import { kernVotumAusRohdaten, type KernVotumKi } from './kernVotumKi';
+import { kernVotumAusRohdaten, heuteBerlin, type KernVotumKi } from './kernVotumKi';
+import { ladeP3 } from './paket3';
+import { fetchGarminTage } from './garmin';
+import { langKontext, parseLangEinstellung, type LangKontext } from './esLang';
+
+/** 21.11.2026: lange Einheiten fürs Plan-Briefing (Einstellung aus den Geräte-Einstellungen). */
+async function ladeLangKontext(): Promise<LangKontext | null> {
+  try {
+    const [t, g] = await Promise.all([ladeP3(), fetchGarminTage()]);
+    if (!t.length || !g.size) return null;
+    let tage: string | null = null, sehr: string | null = null;
+    try { tage = localStorage.getItem('ck_lang_tage'); sehr = localStorage.getItem('ck_lang_sehr'); } catch { /* Standard */ }
+    return langKontext(t, g, parseLangEinstellung(tage, sehr), heuteBerlin());
+  } catch {
+    return null;
+  }
+}
 
 /** Umschaltung 20.11.2026: Tagesvotum für den Prompt (Schalter vom Cockpit-Server, Standard kern). */
 async function ladeKernVotumKi(): Promise<KernVotumKi> {
@@ -85,7 +101,8 @@ export async function runLocalBriefing(type: BriefingType, onProgress?: (text: s
   if (dj && dj.ok && dj.daten) {
     const erfText = erfahrungText(await ladeErfahrung());
     const kernVotum = await ladeKernVotumKi();
-    const b = briefingMessages(type, { ...dj.daten, ...(erfText ? { erfahrung: erfText } : {}), kernVotum });
+    const langeEinheiten = type === 'plan' ? await ladeLangKontext() : null;
+    const b = briefingMessages(type, { ...dj.daten, ...(erfText ? { erfahrung: erfText } : {}), kernVotum, ...(langeEinheiten ? { langeEinheiten } : {}) });
     prompt = { ok: true, format: b.format, messages: b.messages };
   } else {
     const pr = await (await fetch(`${BASE_URL}?mode=briefingPrompt&type=${type}&cb=${Date.now()}`, { redirect: 'follow' })).text();

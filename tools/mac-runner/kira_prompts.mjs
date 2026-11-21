@@ -3806,7 +3806,45 @@ ANTWORTE AUSSCHLIESSLICH IM FOLGENDEN JSON-FORMAT (ohne Markdown):
 function briefingMessages(type, daten) {
   const res = briefingRoh(type, daten);
   if (res.messages.length && res.messages[0].role === "system") res.messages[0].content = String(res.messages[0].content) + "\n\n" + MONOTONIE_REGEL + erfahrungBlock(daten && daten.erfahrung) + votumBlock(daten && daten.kernVotum);
+  if (type === "plan") {
+    const u = res.messages.find((m) => m.role === "user");
+    const lb = langeEinheitenBlock(daten && daten.langeEinheiten);
+    if (u && lb) u.content = String(u.content) + lb;
+  }
   return res;
+}
+var hTxt = (h) => {
+  const m = Math.round(h * 60);
+  return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, "0")} h`;
+};
+function langeEinheitenBlock(k) {
+  if (!k || !k.einstellung || !k.status || !k.effekt) return "";
+  const WT = ["", "Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+  const e = k.einstellung, st = k.status, eff = k.effekt;
+  const tage = (e.tage || []).map((x) => WT[x]).join(", ");
+  const kl = (eff.klassen || []).map((c) => `${c.lab}: ${c.extra == null ? "k. A." : (c.extra >= 0 ? "+" : "") + Math.round(c.extra)} (n=${c.n})`).join(" \xB7 ");
+  const essH = k.essProStunde || {};
+  const essSport = Object.entries(essH.sport || {}).map(([s, v]) => `${s} ${v}`).join(", ");
+  const termine = (k.termine || []).map((t) => `- ${t.date} (${t.wt}): ${t.art === "sehr_lang" ? "SEHR LANG" : "lang"}, Rahmen ${hTxt(t.vonH)}\u2013${hTxt(t.bisH)}, Richtwert ${hTxt(t.dauerH)}, Zusatzwirkung laut Historie etwa ${t.esEffekt >= 0 ? "+" : ""}${t.esEffekt} Punkte`).join("\n");
+  return [
+    "",
+    "",
+    "LANGE EINHEITEN (Garmin Endurance Score):",
+    "Garmin rechnet den Endurance Score aus VO2max und der Trainingshistorie (2\u20133 Monate plus die letzten 2 Wochen); die l\xE4ngsten Aktivit\xE4ten z\xE4hlen besonders.",
+    tage ? `Marcs Vorgabe: lange Einheiten am ${tage} (${e.tage.length} pro Woche); sehr lange ab 4 h: ${e.sehrProMonat} pro Monat.` : `Marcs Vorgabe: keine festen Tage f\xFCr lange Einheiten; sehr lange ab 4 h: ${e.sehrProMonat} pro Monat.`,
+    `Stand: l\xE4ngste Einheit der letzten 14 Tage ${st.laengste14 ? hTxt(st.laengste14.h) + " am " + st.laengste14.date : "keine"}; l\xE4ngste der letzten 4 Wochen ${hTxt(st.laengste28h || 0)}; ab 2 h: ${st.n2_28} in 28 / ${st.n2_84} in 84 Tagen; ab 4 h: ${st.n4_84} in 84 Tagen${st.letzte4 ? ", zuletzt " + st.letzte4.date : ""}.`,
+    `Marcs eigene Zusatzwirkung \xFCber die ESS-Last hinaus (Score-Punkte in den Tagen 0\u20133): ${kl}. Wenige F\xE4lle = nur Gr\xF6\xDFenordnung.`,
+    `Typische Last langer Einheiten: ${essH.gesamt != null ? essH.gesamt + " ESS pro Stunde" : "unbekannt"}${essSport ? " (" + essSport + ")" : ""}.`,
+    termine ? "Termine im Planfenster (Vorschlag aus Marcs Wochentagen):\n" + termine : "Keine Termine im Planfenster.",
+    "",
+    "Regeln f\xFCr lange Einheiten:",
+    "- Plane an diesen Terminen die lange Einheit ein, ruhig in Z1\u2013Z2. Lege die Dauer selbst fest (im Rahmen; h\xF6chstens 30 min l\xE4nger als die l\xE4ngste der letzten 4 Wochen, au\xDFer bei ruhigen Wanderungen/Skitouren).",
+    "- Sch\xE4tze den Einfluss auf den Endurance Score in Punkten (Zusatzwirkung plus Wirkung der Last) und begr\xFCnde kurz.",
+    "- recommended_load_ess am langen Tag passend zur Dauer (Dauer \xD7 ESS pro Stunde der Sportart).",
+    "- Tagesvotum Recover/Rest, Readiness kritisch oder ACWR > 1,3: verschieben auf den n\xE4chsten passenden Tag oder k\xFCrzen \u2013 und das sagen.",
+    '- Erg\xE4nze an diesen Tagen im Empfehlungs-Objekt: "lange_einheit": {"dauer_h": 2.5, "sport": "Rad", "es_effekt": 25, "hinweis": "kurze Begr\xFCndung"}. An anderen Tagen das Feld weglassen.',
+    "- Nenne die langen Einheiten im briefing mit Dauer und erwartetem Einfluss."
+  ].join("\n");
 }
 function briefingRoh(type, daten) {
   if (type === "status") {
@@ -3957,6 +3995,9 @@ var import_react4 = __toESM(require_react(), 1);
 // src/lib/garmin.ts
 var import_react2 = __toESM(require_react(), 1);
 var CACHE_MS = 10 * 60 * 1e3;
+
+// src/lib/ctlModel.ts
+var ES_MODEL = { a: 155.91432, b: 0.96845, c: 0.1537, d: 0.2993, win: 56 };
 
 // src/lib/useErfahrung.ts
 var import_react3 = __toESM(require_react(), 1);
@@ -4538,6 +4579,189 @@ function kernVotumAusRohdaten(raw, schalter2, heute = heuteBerlin()) {
   };
 }
 
+// src/lib/esLang.ts
+var SPORT_DE = {
+  Bike: "Rad",
+  Hike: "Wandern",
+  Ski: "Skitour",
+  Run: "Lauf",
+  Walk: "Gehen",
+  multi_sport: "Mehrsport",
+  Swim: "Schwimmen"
+};
+var sportDe = (s) => s ? SPORT_DE[s] || s : "\u2014";
+var addTage = (iso, n) => {
+  const d = /* @__PURE__ */ new Date(iso + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+};
+var diffTage = (a, b) => Math.round((Date.parse(b + "T00:00:00Z") - Date.parse(a + "T00:00:00Z")) / 864e5);
+function laengsteProTag(g) {
+  const m = /* @__PURE__ */ new Map();
+  for (const [date, tag] of g) {
+    let best = null;
+    for (const a of tag.akt || []) {
+      const h = (a.dauer_s || a.bewegt_s || 0) / 3600;
+      if (h > 0 && (!best || h > best.h)) best = { date, h, sport: a.sport || a.typ || null, name: a.name || null };
+    }
+    if (best) m.set(date, best);
+  }
+  return m;
+}
+function langEffekt(t, lang) {
+  const n = t.length;
+  const res = new Array(n).fill(null);
+  for (let i = 1; i < n; i++) {
+    const e0 = t[i - 1].es, e1 = t[i].es;
+    if (e0 == null || e1 == null) continue;
+    let s = 0, k = 0;
+    for (let m = Math.max(0, i - 56); m < i; m++) {
+      s += t[m].load ?? 0;
+      k++;
+    }
+    const m56 = k ? s / k : 0;
+    res[i] = e1 - (ES_MODEL.a + ES_MODEL.b * e0 + ES_MODEL.c * (t[i].load ?? 0) + ES_MODEL.d * m56);
+  }
+  const kum = (i) => {
+    let s = 0, k = 0;
+    for (let j = i; j <= i + 3 && j < n; j++) if (res[j] != null) {
+      s += res[j];
+      k++;
+    }
+    return k >= 2 ? s : null;
+  };
+  const alle = [];
+  const proTag = [];
+  for (let i = 0; i < n; i++) {
+    const v = kum(i);
+    if (v == null) continue;
+    alle.push(v);
+    proTag.push({ h: lang.get(t[i].date)?.h ?? 0, v });
+  }
+  const basis = alle.length ? alle.reduce((a, b) => a + b, 0) / alle.length : 0;
+  const def = [["unter 2 h", 0.01, 2], ["2\u20134 h", 2, 4], ["ab 4 h", 4, 99]];
+  const klassen = def.map(([lab, von, bis]) => {
+    const v = proTag.filter((x) => x.h >= von && x.h < bis).map((x) => x.v);
+    return { lab, von, bis, n: v.length, extra: v.length ? v.reduce((a, b) => a + b, 0) / v.length - basis : null };
+  });
+  const k4 = klassen[2];
+  const bonus4 = k4.extra != null && k4.extra > 0 ? k4.extra * k4.n / (k4.n + 3) : 0;
+  return { klassen, bonus4, bonus4Roh: k4.extra, n4: k4.n, basisTage: alle.length };
+}
+function langStatus(lang, heute) {
+  const tage = [...lang.values()].filter((x) => x.date <= heute).sort((a, b) => a.date < b.date ? -1 : 1);
+  const im = (n) => tage.filter((x) => diffTage(x.date, heute) < n);
+  const l14 = im(14).reduce((b, x) => !b || x.h > b.h ? x : b, null);
+  const l28 = im(28).reduce((b, x) => Math.max(b, x.h), 0);
+  const letzte = (h) => [...tage].reverse().find((x) => x.h >= h) || null;
+  return {
+    heute,
+    laengste14: l14,
+    laengste28h: l28,
+    n2_28: im(28).filter((x) => x.h >= 2).length,
+    n2_84: im(84).filter((x) => x.h >= 2).length,
+    n4_84: im(84).filter((x) => x.h >= 4).length,
+    letzte2: letzte(2),
+    letzte4: letzte(4)
+  };
+}
+var LANG_STANDARD = { tage: [6], sehrProMonat: 2 };
+var WT_KURZ = ["", "Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+function parseLangEinstellung(tage, sehr) {
+  const t = tage == null ? LANG_STANDARD.tage : String(tage).split(",").map(Number).filter((x) => x >= 1 && x <= 7);
+  const n = sehr == null || sehr === "" ? LANG_STANDARD.sehrProMonat : Math.max(0, Math.min(4, Math.round(Number(sehr)) || 0));
+  return { tage: [...new Set(t)].sort((a, b) => a - b), sehrProMonat: n };
+}
+var wochentag = (iso) => ((/* @__PURE__ */ new Date(iso + "T00:00:00Z")).getUTCDay() + 6) % 7 + 1;
+var montag = (iso) => addTage(iso, 1 - wochentag(iso));
+function langEmpfehlung(s, e = LANG_STANDARD) {
+  const wocheDauerH = Math.min(4, Math.max(2, Math.round((s.laengste28h + 0.5) * 2) / 2));
+  const proWoche = e.tage.length;
+  const wocheFaellig = s.letzte2 ? addTage(s.letzte2.date, proWoche > 1 ? Math.max(3, Math.round(7 / proWoche)) : 7) : s.heute;
+  const abstandSehr = e.sehrProMonat > 0 ? Math.max(7, Math.round(30 / e.sehrProMonat)) : 9999;
+  const sehrLangFaellig = s.letzte4 ? addTage(s.letzte4.date, Math.min(abstandSehr, 365)) : s.heute;
+  const tageTxt = proWoche ? e.tage.map((x) => WT_KURZ[x]).join(", ") : "keine Tage gew\xE4hlt";
+  const fenster14Leer = !s.laengste14 || s.laengste14.h < 2;
+  const sehrLangAufbau = s.laengste28h < 3;
+  const sehrTxt = e.sehrProMonat === 0 ? "Sehr lange Einheiten ab 4 h sind abgew\xE4hlt \u2013 sie bringen bei dir am meisten zus\xE4tzlich." : sehrLangAufbau ? `Sobald die l\xE4ngste Einheit bei etwa 3 h liegt: ${e.sehrProMonat}-mal im Monat eine sehr lange ab 4 h (etwa alle ${abstandSehr} Tage). Ruhige Wanderungen und Skitouren gehen auch fr\xFCher.` : `${e.sehrProMonat}-mal im Monat eine sehr lange Einheit ab 4 h (Tour, lange Ausfahrt), etwa alle ${abstandSehr} Tage.`;
+  const punkte = [
+    proWoche ? `${proWoche === 1 ? "Jede Woche 1 lange Einheit" : `Jede Woche ${proWoche} lange Einheiten`} (${tageTxt}), die l\xE4ngste etwa ${String(wocheDauerH).replace(".", ",")} h, weitere ab 2 h \u2013 ruhig in Z1\u2013Z2 (Rad, Wandern, Skitour).` : "Keine Wochentage f\xFCr lange Einheiten gew\xE4hlt \u2013 ohne lange Einheiten tr\xE4gt nur die mittlere Last den Score.",
+    sehrTxt,
+    "Dauer langsam steigern: pro Woche h\xF6chstens 30 min l\xE4nger als die l\xE4ngste der letzten 4 Wochen.",
+    "Nur an Tagen mit Tagesvotum Train oder Easy. Bei Recover oder niedriger Readiness lieber verschieben als k\xFCrzer und h\xE4rter fahren."
+  ];
+  return {
+    wocheDauerH,
+    wocheFaellig,
+    wocheUeberfaellig: wocheFaellig < s.heute,
+    sehrLangProMonat: e.sehrProMonat,
+    sehrLangFaellig,
+    sehrLangUeberfaellig: e.sehrProMonat > 0 && !sehrLangAufbau && sehrLangFaellig < s.heute,
+    fenster14Leer,
+    sehrLangAufbau,
+    punkte
+  };
+}
+function essProStunde(t, lang) {
+  const proSport = {};
+  const alle = [];
+  for (const d of t) {
+    const l = lang.get(d.date);
+    if (!l || l.h < 2 || !d.load) continue;
+    const v = d.load / l.h;
+    alle.push(v);
+    (proSport[sportDe(l.sport)] ||= []).push(v);
+  }
+  const med = (a) => {
+    const b = [...a].sort((x, y) => x - y);
+    return b.length ? b[Math.floor(b.length / 2)] : null;
+  };
+  const sport = {};
+  for (const [k, v] of Object.entries(proSport)) if (v.length >= 3) sport[k] = Math.round(med(v));
+  const g = med(alle);
+  return { gesamt: g == null ? null : Math.round(g), sport };
+}
+function effektFuer(h, eff) {
+  const k = eff.klassen.find((x) => h >= x.von && h < x.bis);
+  if (!k || k.extra == null || k.extra <= 0) return 0;
+  return Math.round(k.extra * k.n / (k.n + 3));
+}
+function langPlan(e, s, eff, tageVoraus = 14) {
+  const emp = langEmpfehlung(s, e);
+  const out = [];
+  if (!e.tage.length) return out;
+  const haupt = Math.max(...e.tage);
+  const abstand = e.sehrProMonat > 0 ? Math.max(7, Math.round(30 / e.sehrProMonat)) : 0;
+  let naechsteSehr = e.sehrProMonat > 0 && !emp.sehrLangAufbau ? emp.sehrLangFaellig : null;
+  const ersteWoche = montag(s.heute);
+  for (let i = 0; i < tageVoraus; i++) {
+    const d = addTage(s.heute, i);
+    const wt = wochentag(d);
+    if (!e.tage.includes(wt)) continue;
+    const woche = Math.round(diffTage(ersteWoche, montag(d)) / 7);
+    let art = "lang";
+    let dauerH = 2;
+    if (wt === haupt) {
+      dauerH = Math.min(emp.sehrLangAufbau ? 3.5 : 4, emp.wocheDauerH + 0.5 * woche);
+      if (naechsteSehr && d >= naechsteSehr) {
+        art = "sehr_lang";
+        dauerH = 4.5;
+        naechsteSehr = addTage(d, abstand);
+      }
+    }
+    const vonH = art === "sehr_lang" ? 4 : Math.max(2, dauerH - 0.5);
+    const bisH = art === "sehr_lang" ? 5.5 : dauerH + 0.5;
+    out.push({ date: d, wt: WT_KURZ[wt], art, dauerH, vonH, bisH, esEffekt: effektFuer(dauerH, eff) });
+  }
+  return out;
+}
+function langKontext(t, g, e, heute) {
+  const lang = laengsteProTag(g);
+  const effekt = langEffekt(t, lang);
+  const status = langStatus(lang, heute);
+  return { einstellung: e, status, effekt, essProStunde: essProStunde(t, lang), termine: langPlan(e, status, effekt, 14) };
+}
+
 // server/kira_prompts_cli.ts
 var COCKPIT_STATUS = "https://coachkira.pplx.app/port/5000/api/texte/status";
 var APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbxCEN11KRlFaLL7uVJyeBLCrRJVmfBWagSmqvyJ8Ci7nwxi8HbolzTy23Z-G2mivC2h/exec";
@@ -4578,6 +4802,51 @@ async function erfahrung(d) {
     return { text: "", gruppen: [], kernVotum: kernVotumAusRohdaten([], q) };
   }
 }
+async function langeEinheiten() {
+  const mitZeit = async (url, ms) => {
+    const ctl = new AbortController();
+    const to = setTimeout(() => ctl.abort(), ms);
+    try {
+      return await (await fetch(url, { redirect: "follow", signal: ctl.signal })).json();
+    } finally {
+      clearTimeout(to);
+    }
+  };
+  try {
+    let ein = {};
+    try {
+      ein = (await mitZeit(COCKPIT_STATUS + "?cb=" + Date.now(), 8e3) || {}).einstellung || {};
+    } catch {
+      ein = {};
+    }
+    const le = ein.langeEinheiten || {};
+    const e = parseLangEinstellung(le.tage ?? null, le.sehr ?? null);
+    const z = process.env.CK_ZEITREIHE_URL === "aus" ? null : process.env.CK_ZEITREIHE_URL || "https://coachkira.pplx.app/port/5000/api/rechenkern/chartData";
+    const q = "?range=9999d&metrics=load_fb_day,garminEnduranceScore";
+    let j = null;
+    if (z) {
+      try {
+        j = await mitZeit(z + q, 6e4);
+      } catch {
+        j = null;
+      }
+    }
+    if (!j || !j.ok || !Array.isArray(j.data)) j = await mitZeit(APPS_SCRIPT + "?mode=chartData" + q.replace("?", "&"), 9e4);
+    const num = (x) => {
+      const n = parseFloat(String(x ?? "").replace(",", "."));
+      return Number.isFinite(n) ? n : null;
+    };
+    const heute = heuteBerlin();
+    const t = (j.data || []).filter((r) => String(r.date || "").slice(0, 10) <= heute).map((r) => ({ date: String(r.date).slice(0, 10), load: num(r.load_fb_day), es: num(r.garminEnduranceScore) }));
+    const g = await mitZeit(APPS_SCRIPT + "?mode=extras&typ=garmin_tag&n=1000", 9e4);
+    const m = /* @__PURE__ */ new Map();
+    for (const it of g && g.items || []) if (it && it.data && typeof it.data === "object") m.set(it.datum, it.data);
+    if (!t.length || !m.size) return null;
+    return langKontext(t, m, e, heute);
+  } catch {
+    return null;
+  }
+}
 async function lesen() {
   const teile = [];
   for await (const t of process.stdin) teile.push(t);
@@ -4591,11 +4860,14 @@ async function lesen() {
   const erf = mitDaten ? await erfahrung(d) : { text: "", gruppen: [], kernVotum: null };
   const kv = d.kernVotum ?? erf.kernVotum;
   if (art === "supervisor") out = supervisorPrompt({ ...d, erfahrung: d.erfahrung ?? erf.text, kernVotum: kv });
-  else if (art === "briefing") out = briefingMessages(d.type, { ...d.daten || {}, erfahrung: (d.daten || {}).erfahrung ?? erf.text, kernVotum: kv });
+  else if (art === "briefing") {
+    const lk = d.type === "plan" ? (d.daten || {}).langeEinheiten ?? await langeEinheiten() : void 0;
+    out = briefingMessages(d.type, { ...d.daten || {}, erfahrung: (d.daten || {}).erfahrung ?? erf.text, kernVotum: kv, langeEinheiten: lk });
+  } else if (art === "lange") out = await langeEinheiten();
   else if (art === "telegram") out = { messages: telegramMessages(String(d.frage || ""), { ...d, erfahrung: d.erfahrung ?? erf.text, kernVotum: kv }) };
   else if (art === "erfahrung") out = { text: erf.text, gruppen: erf.gruppen };
   else if (art === "votum") out = kv;
-  else throw new Error("Unbekannte Art: " + art + " (supervisor | briefing | telegram | erfahrung | votum)");
+  else throw new Error("Unbekannte Art: " + art + " (supervisor | briefing | telegram | erfahrung | votum | lange)");
   process.stdout.write(JSON.stringify(out));
 })().catch((e) => {
   process.stderr.write(String(e && e.message || e));
