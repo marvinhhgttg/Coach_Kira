@@ -595,7 +595,7 @@ class KiraView extends WatchUi.View {
         var w = dc.getWidth();
         var y = zeile(dc, (h * 0.11).toNumber(), Graphics.FONT_XTINY, "LETZTE EINHEIT", 0x9A9A9A);
         var dt = a.get("d") != null ? a.get("d").toString() : "";
-        y = zeile(dc, y, Graphics.FONT_XTINY, KiraHilfen.wochentag(dt) + " · " + KiraHilfen.zahl(a.get("min"), 0) + " min" + (a.get("km") != null ? " · " + KiraHilfen.zahl(a.get("km"), 1) + " km" : ""), 0xBBBBBB);
+        y = zeile(dc, y, Graphics.FONT_XTINY, KiraHilfen.wochentag(dt).substring(0, 2) + " · " + KiraHilfen.zahl(a.get("min"), 0) + " min" + (a.get("km") != null ? " · " + KiraHilfen.zahl(a.get("km"), 1) + " km" : ""), 0xBBBBBB);
         y = zeile(dc, y, Graphics.FONT_XTINY, a.get("name") != null ? a.get("name").toString() : "", Graphics.COLOR_WHITE);
         y = zeile(dc, y + 2, Graphics.FONT_MEDIUM, KiraHilfen.zahl(a.get("ess"), 0) + " ESS", Graphics.COLOR_WHITE);
         var lage = a.get("lage");
@@ -645,7 +645,7 @@ class KiraView extends WatchUi.View {
         if (pz > 100) { pz = 100; }
         var cx = w / 2;
         var cy = (h * 0.43).toNumber();
-        var r = (h * 0.17).toNumber();
+        var r = (h * 0.19).toNumber();
         dc.setPenWidth(14);
         dc.setColor(0x333333, Graphics.COLOR_TRANSPARENT);
         dc.drawCircle(cx, cy, r);
@@ -656,10 +656,10 @@ class KiraView extends WatchUi.View {
         }
         dc.setPenWidth(1);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, cy, Graphics.FONT_MEDIUM, p != null ? pz.toString() + "%" : "-", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(cx, cy, Graphics.FONT_SMALL, p != null ? pz.toString() + "%" : "-", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         var y = cy + r + 14;
         y = zeile(dc, y, Graphics.FONT_SMALL, z.get("name").toString(), Graphics.COLOR_WHITE);
-        y = zeile(dc, y, Graphics.FONT_XTINY, "in " + KiraHilfen.zahl(z.get("tage"), 0) + " Tagen · Tourform", 0x9AD0FF);
+        y = zeile(dc, y, Graphics.FONT_XTINY, "in " + KiraHilfen.zahl(z.get("tage"), 0) + " Tagen", 0x9AD0FF);
         // nächste lange Einheit aus der Woche
         var xs = d.get("naechste");
         if (xs instanceof Array) {
