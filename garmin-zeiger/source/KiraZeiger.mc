@@ -43,11 +43,11 @@ class KiraZeiger extends WatchUi.WatchFace {
 
     function initialize() {
         WatchFace.initialize();
-        fKopf = schrift(["RobotoCondensedBold", "RobotoCondensedRegular"], 24, Graphics.FONT_XTINY);
-        fLabel = schrift(["RobotoCondensedBold", "RobotoCondensedRegular"], 21, Graphics.FONT_XTINY);
-        fWert = schrift(["RobotoCondensedRegular", "RobotoRegular"], 28, Graphics.FONT_TINY);
-        fRing = schrift(["RobotoCondensedBold", "RobotoMedium"], 28, Graphics.FONT_TINY);
-        fKlein = schrift(["RobotoCondensedRegular", "RobotoRegular"], 18, Graphics.FONT_XTINY);
+        fKopf = schrift(["RobotoCondensedBold", "RobotoCondensedRegular"], 28, Graphics.FONT_XTINY);
+        fLabel = schrift(["RobotoCondensedBold", "RobotoCondensedRegular"], 25, Graphics.FONT_XTINY);
+        fWert = schrift(["RobotoCondensedRegular", "RobotoRegular"], 33, Graphics.FONT_TINY);
+        fRing = schrift(["RobotoCondensedBold", "RobotoMedium"], 32, Graphics.FONT_TINY);
+        fKlein = schrift(["RobotoCondensedRegular", "RobotoRegular"], 22, Graphics.FONT_XTINY);
         try { Complications.registerComplicationChangeCallback(method(:geaendert)); } catch (e) { }
         kiraSuchen();
     }
@@ -244,10 +244,10 @@ class KiraZeiger extends WatchUi.WatchFace {
         var pl = heute ? zahl(t, 9) : null;
         var sp = heute ? feld(t, 10) : "";
         block(dc, (w * 0.22).toNumber(), (h * 0.69).toNumber(), "WIND", wind);
-        block(dc, (w * 0.78).toNumber(), (h * 0.69).toNumber(), "PLAN" + (sp.length() > 0 ? " " + sp.toUpper() : ""), pl == null ? "-" : (pl == 0 ? "Ruhe" : pl.toString()));
+        block(dc, (w * 0.78).toNumber(), (h * 0.69).toNumber(), "PLAN", pl == null ? "-" : (pl == 0 ? "Ruhe" : (sp.length() > 0 ? sp + " " : "") + pl.toString()));
 
         var rx = (w * 0.15).toNumber();
-        var rr = (w * 0.066).toNumber();
+        var rr = (w * 0.074).toNumber();
         var rd = heute ? zahl(t, 8) : null;
         ring(dc, rx, cy, rr, rd == null ? 0.0 : rd / 100.0, rd == null ? GRAU : bereitFarbe(rd));
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
@@ -275,7 +275,10 @@ class KiraZeiger extends WatchUi.WatchFace {
         var y0 = (h * 0.24).toNumber();
         var y1 = (h * 0.40).toNumber();
         var n = heute ? istL.size() : 0;
-        if (n > 0) {
+        if (n < 2) {
+            dc.setColor(GRAU, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, (y0 + y1) / 2, fKlein, "LAST 7 T · APP ÖFFNEN", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        } else {
             var mx = 1;
             for (var i = 0; i < n; i++) {
                 var v = istL[i].length() > 0 ? istL[i].toNumber() : 0;
@@ -315,8 +318,8 @@ class KiraZeiger extends WatchUi.WatchFace {
         var fk = zerlegen(feld(t, 15), ";");
         var cL = zerlegen(fk.size() > 0 ? fk[0] : null, ",");
         var aL = zerlegen(fk.size() > 1 ? fk[1] : null, ",");
-        var b0 = (h * 0.56).toNumber();
-        var b1 = (h * 0.68).toNumber();
+        var b0 = (h * 0.545).toNumber();
+        var b1 = (h * 0.645).toNumber();
         var m = cL.size() < aL.size() ? cL.size() : aL.size();
         var cVal = null;
         var aVal = null;
