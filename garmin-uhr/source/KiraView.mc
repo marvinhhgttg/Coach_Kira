@@ -47,7 +47,7 @@ class KiraNetz {
         try {
             if (rc == 200 && data instanceof Dictionary) {
                 var u = data.get("uhr");
-                if (u instanceof Dictionary) { Storage.setValue("u", u); data.remove("uhr"); }
+                if (u instanceof Dictionary) { Storage.setValue("u", u); Storage.setValue("uDatum", data.get("datum")); data.remove("uhr"); }
                 Storage.setValue("d", data);
                 Storage.setValue("at", Time.now().value());
                 kiraKomplikation(data);

@@ -126,10 +126,54 @@ function kiraKomplikation(d as Dictionary) as Void {
             if (fo.get("es28") != null) { es28 = fo.get("es28").toNumber().toString(); }
         }
         t = (lab.equals("KIRA") ? "" : lab) + "|" + st + "|" + lo2 + "|" + hi2 + "|" + ist + "|" + (d.get("datum") != null ? d.get("datum").toString() : "") + "|" + zn + "|" + zt + "|" + rd
-            + "|" + pl + "|" + sp + "|" + zo + "|" + es + "|" + es28;
+            + "|" + pl + "|" + sp + "|" + zo + "|" + es + "|" + es28
+            + "|" + sieben(d, l);
         Complications.updateComplication(1, { :value => t });
     } catch (e) {
     }
+}
+
+// 7 Tage Last (rollierend, heute zuletzt) mit Soll-Rahmen je Tag fürs Zeigerzifferblatt:
+// "ist,ist,…;lo,lo,…;hi,hi,…" – Rahmen aus der letzten Vollabfrage der App (nur wenn von heute)
+(:background :glance)
+function sieben(d as Dictionary, l) as String {
+    var ist = [] as Array;
+    var lo = [] as Array;
+    var hi = [] as Array;
+    try {
+        var u = Storage.getValue("u");
+        var ud = Storage.getValue("uDatum");
+        var l14 = u instanceof Dictionary ? u.get("l14") : null;
+        if (l14 instanceof Dictionary && ud != null && d.get("datum") != null && ud.toString().equals(d.get("datum").toString())) {
+            var a = l14.get("ist");
+            var b = l14.get("lo");
+            var c = l14.get("hi");
+            if (a instanceof Array && b instanceof Array && c instanceof Array) {
+                var n = a.size();
+                for (var i = (n > 7 ? n - 7 : 0); i < n; i++) { ist.add(a[i]); lo.add(b[i]); hi.add(c[i]); }
+            }
+        }
+        if (ist.size() == 0 && l instanceof Dictionary && l.get("woche") instanceof Array) {
+            var w = l.get("woche") as Array;
+            for (var i = 0; i < w.size(); i++) {
+                var x = w[i];
+                ist.add(x instanceof Dictionary && x.get("ist") != null ? x.get("ist") : 0);
+            }
+        }
+        // heutigen Wert immer frisch
+        if (ist.size() > 0 && l instanceof Dictionary && l.get("istHeute") != null) { ist[ist.size() - 1] = l.get("istHeute"); }
+    } catch (e) { }
+    return liste(ist) + ";" + liste(lo) + ";" + liste(hi);
+}
+
+(:background :glance)
+function liste(xs as Array) as String {
+    var s = "";
+    for (var i = 0; i < xs.size(); i++) {
+        var v = xs[i];
+        s += (i > 0 ? "," : "") + (v == null ? "" : v.toNumber().toString());
+    }
+    return s;
 }
 
 // Hintergrund: höchstens alle 15 min, kleine Antwort

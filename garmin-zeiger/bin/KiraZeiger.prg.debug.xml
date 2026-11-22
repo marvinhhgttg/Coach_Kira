@@ -1,0 +1,618 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<debugInfo>
+    <manifest filename="/home/user/workspace/ck-repo/garmin-zeiger/manifest.xml"/>
+    <pcToLineNum>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/bin/gen/006-B4631-00/source/Rez.mcgen" id="1" lineNum="7" parent="globals/Rez" pc="268435460" symbol="&lt;init&gt;"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="2" lineNum="17" parent="globals/KiraZeigerApp" pc="268435480" symbol="&lt;init&gt;"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="3" lineNum="34" parent="globals/KiraZeiger" pc="268435492" symbol="&lt;init&gt;"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="3" lineNum="39" parent="globals/KiraZeiger" pc="268435503" symbol="&lt;init&gt;"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="4" lineNum="22" parent="globals/KiraZeigerApp" pc="268435513" symbol="getInitialView"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="4" lineNum="23" parent="globals/KiraZeigerApp" pc="268435515" symbol="getInitialView"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="5" lineNum="18" parent="globals/KiraZeigerApp" pc="268435541" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="5" lineNum="19" parent="globals/KiraZeigerApp" pc="268435543" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="6" lineNum="155" parent="globals/KiraZeiger" pc="268435556" symbol="richtung"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="6" lineNum="156" parent="globals/KiraZeiger" pc="268435559" symbol="richtung"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="6" lineNum="156" parent="globals/KiraZeiger" pc="268435565" symbol="richtung"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="6" lineNum="157" parent="globals/KiraZeiger" pc="268435574" symbol="richtung"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="6" lineNum="158" parent="globals/KiraZeiger" pc="268435581" symbol="richtung"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="7" lineNum="135" parent="globals/KiraZeiger" pc="268435597" symbol="ring"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="7" lineNum="136" parent="globals/KiraZeiger" pc="268435600" symbol="ring"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="7" lineNum="137" parent="globals/KiraZeiger" pc="268435612" symbol="ring"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="7" lineNum="138" parent="globals/KiraZeiger" pc="268435628" symbol="ring"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="7" lineNum="139" parent="globals/KiraZeiger" pc="268435644" symbol="ring"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="7" lineNum="140" parent="globals/KiraZeiger" pc="268435655" symbol="ring"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="7" lineNum="141" parent="globals/KiraZeiger" pc="268435678" symbol="ring"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="7" lineNum="142" parent="globals/KiraZeiger" pc="268435692" symbol="ring"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="7" lineNum="142" parent="globals/KiraZeiger" pc="268435703" symbol="ring"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="7" lineNum="143" parent="globals/KiraZeiger" pc="268435722" symbol="ring"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="7" lineNum="145" parent="globals/KiraZeiger" pc="268435760" symbol="ring"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="8" lineNum="161" parent="globals/KiraZeiger" pc="268435773" symbol="bereitFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="8" lineNum="162" parent="globals/KiraZeiger" pc="268435775" symbol="bereitFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="8" lineNum="162" parent="globals/KiraZeiger" pc="268435783" symbol="bereitFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="8" lineNum="163" parent="globals/KiraZeiger" pc="268435791" symbol="bereitFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="8" lineNum="163" parent="globals/KiraZeiger" pc="268435799" symbol="bereitFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="8" lineNum="164" parent="globals/KiraZeiger" pc="268435807" symbol="bereitFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="8" lineNum="164" parent="globals/KiraZeiger" pc="268435815" symbol="bereitFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="8" lineNum="165" parent="globals/KiraZeiger" pc="268435824" symbol="bereitFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="9" lineNum="125" parent="globals/KiraZeiger" pc="268435830" symbol="zahl"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="9" lineNum="126" parent="globals/KiraZeiger" pc="268435833" symbol="zahl"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="9" lineNum="127" parent="globals/KiraZeiger" pc="268435847" symbol="zahl"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="10" lineNum="59" parent="globals/KiraZeiger" pc="268435871" symbol="schrift"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="10" lineNum="61" parent="globals/KiraZeiger" pc="268435874" symbol="schrift"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="10" lineNum="62" parent="globals/KiraZeiger" pc="268435889" symbol="schrift"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="10" lineNum="63" parent="globals/KiraZeiger" pc="268435924" symbol="schrift"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="10" lineNum="63" parent="globals/KiraZeiger" pc="268435930" symbol="schrift"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="10" lineNum="65" parent="globals/KiraZeiger" pc="268435948" symbol="schrift"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="10" lineNum="66" parent="globals/KiraZeiger" pc="268435964" symbol="schrift"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="11" lineNum="121" parent="globals/KiraZeiger" pc="268435967" symbol="feld"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="11" lineNum="122" parent="globals/KiraZeiger" pc="268435969" symbol="feld"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="12" lineNum="203" parent="globals/KiraZeiger" pc="268435996" symbol="zeiger"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="12" lineNum="204" parent="globals/KiraZeiger" pc="268435999" symbol="zeiger"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="12" lineNum="205" parent="globals/KiraZeiger" pc="268436015" symbol="zeiger"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="12" lineNum="206" parent="globals/KiraZeiger" pc="268436031" symbol="zeiger"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="12" lineNum="207" parent="globals/KiraZeiger" pc="268436045" symbol="zeiger"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="12" lineNum="208" parent="globals/KiraZeiger" pc="268436057" symbol="zeiger"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="12" lineNum="209" parent="globals/KiraZeiger" pc="268436123" symbol="zeiger"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="13" lineNum="69" parent="globals/KiraZeiger" pc="268436136" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="13" lineNum="71" parent="globals/KiraZeiger" pc="268436139" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="13" lineNum="72" parent="globals/KiraZeiger" pc="268436151" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="13" lineNum="73" parent="globals/KiraZeiger" pc="268436160" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="13" lineNum="74" parent="globals/KiraZeiger" pc="268436166" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="13" lineNum="75" parent="globals/KiraZeiger" pc="268436175" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="13" lineNum="76" parent="globals/KiraZeiger" pc="268436184" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="13" lineNum="77" parent="globals/KiraZeiger" pc="268436223" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="13" lineNum="77" parent="globals/KiraZeiger" pc="268436276" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="13" lineNum="78" parent="globals/KiraZeiger" pc="268436282" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="13" lineNum="79" parent="globals/KiraZeiger" pc="268436287" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="13" lineNum="80" parent="globals/KiraZeiger" pc="268436301" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="13" lineNum="80" parent="globals/KiraZeiger" pc="268436310" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="13" lineNum="81" parent="globals/KiraZeiger" pc="268436331" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="13" lineNum="81" parent="globals/KiraZeiger" pc="268436337" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="13" lineNum="82" parent="globals/KiraZeiger" pc="268436355" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="13" lineNum="84" parent="globals/KiraZeiger" pc="268436362" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="13" lineNum="86" parent="globals/KiraZeiger" pc="268436380" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="14" lineNum="148" parent="globals/KiraZeiger" pc="268436397" symbol="block"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="14" lineNum="149" parent="globals/KiraZeiger" pc="268436399" symbol="block"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="14" lineNum="150" parent="globals/KiraZeiger" pc="268436416" symbol="block"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="14" lineNum="151" parent="globals/KiraZeiger" pc="268436439" symbol="block"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="14" lineNum="152" parent="globals/KiraZeiger" pc="268436456" symbol="block"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="15" lineNum="89" parent="globals/KiraZeiger" pc="268436498" symbol="geaendert"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="15" lineNum="91" parent="globals/KiraZeiger" pc="268436501" symbol="geaendert"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="15" lineNum="92" parent="globals/KiraZeiger" pc="268436527" symbol="geaendert"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="15" lineNum="93" parent="globals/KiraZeiger" pc="268436548" symbol="geaendert"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="15" lineNum="93" parent="globals/KiraZeiger" pc="268436554" symbol="geaendert"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="15" lineNum="95" parent="globals/KiraZeiger" pc="268436581" symbol="geaendert"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="16" lineNum="98" parent="globals/KiraZeiger" pc="268436598" symbol="onExitSleep"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="16" lineNum="99" parent="globals/KiraZeiger" pc="268436600" symbol="onExitSleep"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="16" lineNum="100" parent="globals/KiraZeiger" pc="268436608" symbol="onExitSleep"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="17" lineNum="178" parent="globals/KiraZeiger" pc="268436620" symbol="bbLaden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="17" lineNum="179" parent="globals/KiraZeiger" pc="268436623" symbol="bbLaden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="17" lineNum="180" parent="globals/KiraZeiger" pc="268436641" symbol="bbLaden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="17" lineNum="180" parent="globals/KiraZeiger" pc="268436656" symbol="bbLaden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="17" lineNum="181" parent="globals/KiraZeiger" pc="268436660" symbol="bbLaden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="17" lineNum="182" parent="globals/KiraZeiger" pc="268436669" symbol="bbLaden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="17" lineNum="183" parent="globals/KiraZeiger" pc="268436673" symbol="bbLaden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="17" lineNum="183" parent="globals/KiraZeiger" pc="268436684" symbol="bbLaden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="17" lineNum="184" parent="globals/KiraZeiger" pc="268436706" symbol="bbLaden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="17" lineNum="186" parent="globals/KiraZeiger" pc="268436714" symbol="bbLaden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="17" lineNum="187" parent="globals/KiraZeiger" pc="268436744" symbol="bbLaden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="17" lineNum="188" parent="globals/KiraZeiger" pc="268436802" symbol="bbLaden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="17" lineNum="189" parent="globals/KiraZeiger" pc="268436811" symbol="bbLaden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="17" lineNum="190" parent="globals/KiraZeiger" pc="268436817" symbol="bbLaden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="17" lineNum="191" parent="globals/KiraZeiger" pc="268436839" symbol="bbLaden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="17" lineNum="192" parent="globals/KiraZeiger" pc="268436857" symbol="bbLaden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="17" lineNum="193" parent="globals/KiraZeiger" pc="268436868" symbol="bbLaden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="17" lineNum="193" parent="globals/KiraZeiger" pc="268436893" symbol="bbLaden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="17" lineNum="194" parent="globals/KiraZeiger" pc="268436914" symbol="bbLaden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="17" lineNum="194" parent="globals/KiraZeiger" pc="268436923" symbol="bbLaden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="17" lineNum="196" parent="globals/KiraZeiger" pc="268436949" symbol="bbLaden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="17" lineNum="199" parent="globals/KiraZeiger" pc="268436970" symbol="bbLaden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="17" lineNum="200" parent="globals/KiraZeiger" pc="268436986" symbol="bbLaden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="18" lineNum="168" parent="globals/KiraZeiger" pc="268436996" symbol="lastFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="18" lineNum="169" parent="globals/KiraZeiger" pc="268436998" symbol="lastFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="18" lineNum="169" parent="globals/KiraZeiger" pc="268437005" symbol="lastFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="18" lineNum="170" parent="globals/KiraZeiger" pc="268437013" symbol="lastFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="18" lineNum="170" parent="globals/KiraZeiger" pc="268437026" symbol="lastFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="18" lineNum="171" parent="globals/KiraZeiger" pc="268437035" symbol="lastFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="18" lineNum="171" parent="globals/KiraZeiger" pc="268437049" symbol="lastFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="18" lineNum="172" parent="globals/KiraZeiger" pc="268437058" symbol="lastFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="18" lineNum="172" parent="globals/KiraZeiger" pc="268437066" symbol="lastFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="18" lineNum="173" parent="globals/KiraZeiger" pc="268437075" symbol="lastFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="18" lineNum="173" parent="globals/KiraZeiger" pc="268437089" symbol="lastFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="18" lineNum="174" parent="globals/KiraZeiger" pc="268437097" symbol="lastFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="19" lineNum="130" parent="globals/KiraZeiger" pc="268437102" symbol="heuteIso"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="19" lineNum="131" parent="globals/KiraZeiger" pc="268437105" symbol="heuteIso"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="19" lineNum="132" parent="globals/KiraZeiger" pc="268437130" symbol="heuteIso"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="20" lineNum="103" parent="globals/KiraZeiger" pc="268437202" symbol="onEnterSleep"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="20" lineNum="104" parent="globals/KiraZeiger" pc="268437204" symbol="onEnterSleep"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="20" lineNum="105" parent="globals/KiraZeiger" pc="268437212" symbol="onEnterSleep"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="21" lineNum="48" parent="globals/KiraZeiger" pc="268437224" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="21" lineNum="49" parent="globals/KiraZeiger" pc="268437227" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="21" lineNum="50" parent="globals/KiraZeiger" pc="268437239" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="21" lineNum="51" parent="globals/KiraZeiger" pc="268437262" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="21" lineNum="52" parent="globals/KiraZeiger" pc="268437285" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="21" lineNum="53" parent="globals/KiraZeiger" pc="268437309" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="21" lineNum="54" parent="globals/KiraZeiger" pc="268437333" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="21" lineNum="55" parent="globals/KiraZeiger" pc="268437356" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="21" lineNum="55" parent="globals/KiraZeiger" pc="268437388" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="21" lineNum="56" parent="globals/KiraZeiger" pc="268437404" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="212" parent="globals/KiraZeiger" pc="268437412" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="213" parent="globals/KiraZeiger" pc="268437415" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="214" parent="globals/KiraZeiger" pc="268437424" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="215" parent="globals/KiraZeiger" pc="268437433" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="216" parent="globals/KiraZeiger" pc="268437440" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="217" parent="globals/KiraZeiger" pc="268437447" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="218" parent="globals/KiraZeiger" pc="268437459" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="219" parent="globals/KiraZeiger" pc="268437467" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="220" parent="globals/KiraZeiger" pc="268437479" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="221" parent="globals/KiraZeiger" pc="268437515" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="224" parent="globals/KiraZeiger" pc="268437548" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="225" parent="globals/KiraZeiger" pc="268437559" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="226" parent="globals/KiraZeiger" pc="268437572" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="227" parent="globals/KiraZeiger" pc="268437579" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="228" parent="globals/KiraZeiger" pc="268437604" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="229" parent="globals/KiraZeiger" pc="268437636" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="230" parent="globals/KiraZeiger" pc="268437663" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="232" parent="globals/KiraZeiger" pc="268437787" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="234" parent="globals/KiraZeiger" pc="268437799" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="235" parent="globals/KiraZeiger" pc="268437807" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="236" parent="globals/KiraZeiger" pc="268437846" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="237" parent="globals/KiraZeiger" pc="268437885" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="240" parent="globals/KiraZeiger" pc="268437889" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="240" parent="globals/KiraZeiger" pc="268437913" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="240" parent="globals/KiraZeiger" pc="268437926" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="241" parent="globals/KiraZeiger" pc="268437936" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="242" parent="globals/KiraZeiger" pc="268437956" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="243" parent="globals/KiraZeiger" pc="268437984" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="246" parent="globals/KiraZeiger" pc="268437997" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="247" parent="globals/KiraZeiger" pc="268438009" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="248" parent="globals/KiraZeiger" pc="268438050" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="249" parent="globals/KiraZeiger" pc="268438067" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="250" parent="globals/KiraZeiger" pc="268438159" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="251" parent="globals/KiraZeiger" pc="268438207" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="252" parent="globals/KiraZeiger" pc="268438221" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="255" parent="globals/KiraZeiger" pc="268438335" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="256" parent="globals/KiraZeiger" pc="268438342" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="258" parent="globals/KiraZeiger" pc="268438349" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="259" parent="globals/KiraZeiger" pc="268438361" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="260" parent="globals/KiraZeiger" pc="268438367" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="260" parent="globals/KiraZeiger" pc="268438378" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="261" parent="globals/KiraZeiger" pc="268438408" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="261" parent="globals/KiraZeiger" pc="268438419" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="263" parent="globals/KiraZeiger" pc="268438480" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="264" parent="globals/KiraZeiger" pc="268438496" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="265" parent="globals/KiraZeiger" pc="268438510" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="266" parent="globals/KiraZeiger" pc="268438556" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="267" parent="globals/KiraZeiger" pc="268438622" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="268" parent="globals/KiraZeiger" pc="268438645" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="269" parent="globals/KiraZeiger" pc="268438672" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="270" parent="globals/KiraZeiger" pc="268438718" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="272" parent="globals/KiraZeiger" pc="268438833" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="273" parent="globals/KiraZeiger" pc="268438849" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="274" parent="globals/KiraZeiger" pc="268438865" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="275" parent="globals/KiraZeiger" pc="268438888" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="276" parent="globals/KiraZeiger" pc="268438947" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="277" parent="globals/KiraZeiger" pc="268438964" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="278" parent="globals/KiraZeiger" pc="268439007" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="279" parent="globals/KiraZeiger" pc="268439024" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="281" parent="globals/KiraZeiger" pc="268439056" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="282" parent="globals/KiraZeiger" pc="268439063" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="283" parent="globals/KiraZeiger" pc="268439086" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="284" parent="globals/KiraZeiger" pc="268439109" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="285" parent="globals/KiraZeiger" pc="268439132" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="286" parent="globals/KiraZeiger" pc="268439211" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="287" parent="globals/KiraZeiger" pc="268439228" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="288" parent="globals/KiraZeiger" pc="268439271" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="289" parent="globals/KiraZeiger" pc="268439288" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="292" parent="globals/KiraZeiger" pc="268439366" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="293" parent="globals/KiraZeiger" pc="268439393" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="294" parent="globals/KiraZeiger" pc="268439428" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="295" parent="globals/KiraZeiger" pc="268439465" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="296" parent="globals/KiraZeiger" pc="268439502" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="297" parent="globals/KiraZeiger" pc="268439518" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="298" parent="globals/KiraZeiger" pc="268439534" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="299" parent="globals/KiraZeiger" pc="268439550" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="300" parent="globals/KiraZeiger" pc="268439566" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="301" parent="globals/KiraZeiger" pc="268439584" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="302" parent="globals/KiraZeiger" pc="268439591" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="303" parent="globals/KiraZeiger" pc="268439595" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="304" parent="globals/KiraZeiger" pc="268439606" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="305" parent="globals/KiraZeiger" pc="268439639" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="306" parent="globals/KiraZeiger" pc="268439685" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="306" parent="globals/KiraZeiger" pc="268439693" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="307" parent="globals/KiraZeiger" pc="268439700" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="307" parent="globals/KiraZeiger" pc="268439708" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="309" parent="globals/KiraZeiger" pc="268439725" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="310" parent="globals/KiraZeiger" pc="268439735" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="311" parent="globals/KiraZeiger" pc="268439746" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="312" parent="globals/KiraZeiger" pc="268439756" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="313" parent="globals/KiraZeiger" pc="268439789" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="314" parent="globals/KiraZeiger" pc="268439835" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="315" parent="globals/KiraZeiger" pc="268439881" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="315" parent="globals/KiraZeiger" pc="268439892" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="315" parent="globals/KiraZeiger" pc="268439896" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="316" parent="globals/KiraZeiger" pc="268439903" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="317" parent="globals/KiraZeiger" pc="268439916" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="318" parent="globals/KiraZeiger" pc="268439932" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="319" parent="globals/KiraZeiger" pc="268439958" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="320" parent="globals/KiraZeiger" pc="268439974" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="322" parent="globals/KiraZeiger" pc="268440020" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="323" parent="globals/KiraZeiger" pc="268440045" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="323" parent="globals/KiraZeiger" pc="268440053" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="324" parent="globals/KiraZeiger" pc="268440060" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="325" parent="globals/KiraZeiger" pc="268440086" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="328" parent="globals/KiraZeiger" pc="268440126" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="329" parent="globals/KiraZeiger" pc="268440151" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="330" parent="globals/KiraZeiger" pc="268440158" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="331" parent="globals/KiraZeiger" pc="268440169" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="332" parent="globals/KiraZeiger" pc="268440195" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="333" parent="globals/KiraZeiger" pc="268440231" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="338" parent="globals/KiraZeiger" pc="268440285" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="339" parent="globals/KiraZeiger" pc="268440292" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="340" parent="globals/KiraZeiger" pc="268440308" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="341" parent="globals/KiraZeiger" pc="268440324" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="342" parent="globals/KiraZeiger" pc="268440328" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="343" parent="globals/KiraZeiger" pc="268440332" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="344" parent="globals/KiraZeiger" pc="268440343" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="344" parent="globals/KiraZeiger" pc="268440356" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="346" parent="globals/KiraZeiger" pc="268440423" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="347" parent="globals/KiraZeiger" pc="268440436" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="348" parent="globals/KiraZeiger" pc="268440440" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="349" parent="globals/KiraZeiger" pc="268440452" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="350" parent="globals/KiraZeiger" pc="268440489" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="351" parent="globals/KiraZeiger" pc="268440517" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="352" parent="globals/KiraZeiger" pc="268440533" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="353" parent="globals/KiraZeiger" pc="268440545" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="354" parent="globals/KiraZeiger" pc="268440561" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="355" parent="globals/KiraZeiger" pc="268440573" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="356" parent="globals/KiraZeiger" pc="268440590" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="358" parent="globals/KiraZeiger" pc="268440646" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="360" parent="globals/KiraZeiger" pc="268440661" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="361" parent="globals/KiraZeiger" pc="268440678" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="364" parent="globals/KiraZeiger" pc="268440736" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="365" parent="globals/KiraZeiger" pc="268440761" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="366" parent="globals/KiraZeiger" pc="268440768" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="367" parent="globals/KiraZeiger" pc="268440775" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="368" parent="globals/KiraZeiger" pc="268440792" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="371" parent="globals/KiraZeiger" pc="268440869" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="372" parent="globals/KiraZeiger" pc="268440909" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="373" parent="globals/KiraZeiger" pc="268440949" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="374" parent="globals/KiraZeiger" pc="268441008" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="375" parent="globals/KiraZeiger" pc="268441025" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="376" parent="globals/KiraZeiger" pc="268441041" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="22" lineNum="377" parent="globals/KiraZeiger" pc="268441054" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="23" lineNum="108" parent="globals/KiraZeiger" pc="268441071" symbol="zerlegen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="23" lineNum="109" parent="globals/KiraZeiger" pc="268441074" symbol="zerlegen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="23" lineNum="110" parent="globals/KiraZeiger" pc="268441078" symbol="zerlegen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="23" lineNum="110" parent="globals/KiraZeiger" pc="268441084" symbol="zerlegen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="23" lineNum="111" parent="globals/KiraZeiger" pc="268441090" symbol="zerlegen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="23" lineNum="112" parent="globals/KiraZeiger" pc="268441103" symbol="zerlegen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="23" lineNum="113" parent="globals/KiraZeiger" pc="268441109" symbol="zerlegen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="23" lineNum="114" parent="globals/KiraZeiger" pc="268441131" symbol="zerlegen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="23" lineNum="115" parent="globals/KiraZeiger" pc="268441154" symbol="zerlegen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="23" lineNum="117" parent="globals/KiraZeiger" pc="268441170" symbol="zerlegen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="23" lineNum="118" parent="globals/KiraZeiger" pc="268441182" symbol="zerlegen"/>
+    </pcToLineNum>
+    <symbolTable>
+        <entry id="8388639" module="true" symbol="Graphics"/>
+        <entry id="8388632" method="true" symbol="&lt;init&gt;"/>
+        <entry id="27" method="true" symbol="richtung"/>
+        <entry field="true" id="23" symbol="kira"/>
+        <entry id="28" method="true" symbol="ring"/>
+        <entry field="true" id="24" symbol="kiraId"/>
+        <entry id="8392220" method="true" symbol="getVectorFont"/>
+        <entry id="8388924" module="true" symbol="Gregorian"/>
+        <entry id="8391839" method="true" symbol="getBodyBatteryHistory"/>
+        <entry field="true" id="8388611" module="true" symbol="Toybox"/>
+        <entry field="true" id="29" symbol="schlaf"/>
+        <entry field="true" id="8388782" method="true" symbol="size"/>
+        <entry id="22" method="true" symbol="heuteIso"/>
+        <entry field="true" id="35" symbol="AppName"/>
+        <entry id="4" module="true" symbol="globals/Rez/Strings"/>
+        <entry id="32" method="true" symbol="zeiger"/>
+        <entry field="true" id="18" symbol="fWert"/>
+        <entry id="8388648" module="true" symbol="WatchUi"/>
+        <entry id="33" method="true" symbol="zerlegen"/>
+        <entry id="13" method="true" symbol="block"/>
+        <entry field="true" id="16" symbol="fLabel"/>
+        <entry id="2" module="true" symbol="globals/Rez"/>
+        <entry field="true" id="9" symbol="bbJetzt"/>
+        <entry id="7" symbol="VOTE_FARBE"/>
+        <entry id="8389124" method="true" symbol="onUpdate"/>
+        <entry id="5" object="true" symbol="KiraZeiger"/>
+        <entry id="8391489" module="true" symbol="Weather"/>
+        <entry id="8388771" module="true" object="true" symbol="Drawables"/>
+        <entry id="8389376" method="true" symbol="onEnterSleep"/>
+        <entry id="12" method="true" symbol="bereitFarbe"/>
+        <entry id="30" method="true" symbol="schrift"/>
+        <entry field="true" id="8" symbol="bb"/>
+        <entry field="true" id="8391854" symbol="batteryInDays"/>
+        <entry id="3" module="true" symbol="globals/Rez/Drawables"/>
+        <entry id="8389809" symbol="order"/>
+        <entry field="true" id="11" symbol="bbStand"/>
+        <entry id="8389377" method="true" symbol="onExitSleep"/>
+        <entry id="8388644" module="true" symbol="System"/>
+        <entry id="31" method="true" symbol="zahl"/>
+        <entry id="8388645" module="true" symbol="Time"/>
+        <entry id="8388769" module="true" object="true" symbol="Rez"/>
+        <entry id="8392219" symbol="face"/>
+        <entry id="8388640" module="true" symbol="Lang"/>
+        <entry id="10" method="true" symbol="bbLaden"/>
+        <entry field="true" id="34" symbol="LauncherIcon"/>
+        <entry id="8388610" symbol="statics"/>
+        <entry id="8389350" module="true" symbol="globals"/>
+        <entry id="8391962" module="true" symbol="Complications"/>
+        <entry id="8388770" module="true" object="true" symbol="Strings"/>
+        <entry id="8388702" method="true" symbol="initialize"/>
+        <entry id="6" object="true" symbol="KiraZeigerApp"/>
+        <entry id="8389808" symbol="period"/>
+        <entry id="8388641" module="true" symbol="Math"/>
+        <entry id="20" method="true" symbol="geaendert"/>
+        <entry id="25" method="true" symbol="kiraSuchen"/>
+        <entry id="8389280" method="true" symbol="getInitialView"/>
+        <entry field="true" id="14" symbol="fKlein"/>
+        <entry id="8389781" module="true" symbol="SensorHistory"/>
+        <entry field="true" id="21" symbol="gesucht"/>
+        <entry id="26" method="true" symbol="lastFarbe"/>
+        <entry field="true" id="15" symbol="fKopf"/>
+        <entry field="true" id="17" symbol="fRing"/>
+        <entry id="8388635" module="true" symbol="Application"/>
+        <entry id="19" method="true" symbol="feld"/>
+    </symbolTable>
+    <localVars>
+        <entry arg="true" endPc="268435596" name="grad" stackId="1" startPc="268435556"/>
+        <entry endPc="268435596" name="r" stackId="2" startPc="268435559"/>
+        <entry arg="true" endPc="268435772" name="dc" stackId="1" startPc="268435597"/>
+        <entry arg="true" endPc="268435772" name="x" stackId="2" startPc="268435597"/>
+        <entry arg="true" endPc="268435772" name="y" stackId="3" startPc="268435597"/>
+        <entry arg="true" endPc="268435772" name="r" stackId="4" startPc="268435597"/>
+        <entry arg="true" endPc="268435772" name="anteil" stackId="5" startPc="268435597"/>
+        <entry arg="true" endPc="268435772" name="farbe" stackId="6" startPc="268435597"/>
+        <entry endPc="268435756" name="a" stackId="7" startPc="268435655"/>
+        <entry arg="true" endPc="268435829" name="v" stackId="1" startPc="268435773"/>
+        <entry arg="true" endPc="268435870" name="t" stackId="1" startPc="268435830"/>
+        <entry arg="true" endPc="268435870" name="i" stackId="2" startPc="268435830"/>
+        <entry endPc="268435870" name="s" stackId="3" startPc="268435833"/>
+        <entry arg="true" endPc="268435966" name="namen" stackId="1" startPc="268435871"/>
+        <entry arg="true" endPc="268435966" name="px" stackId="2" startPc="268435871"/>
+        <entry arg="true" endPc="268435966" name="ersatz" stackId="3" startPc="268435871"/>
+        <entry endPc="268435938" name="f" stackId="4" startPc="268435889"/>
+        <entry endPc="268435958" name="e" stackId="5" startPc="268435948"/>
+        <entry arg="true" endPc="268435995" name="t" stackId="1" startPc="268435967"/>
+        <entry arg="true" endPc="268435995" name="i" stackId="2" startPc="268435967"/>
+        <entry arg="true" endPc="268436135" name="dc" stackId="1" startPc="268435996"/>
+        <entry arg="true" endPc="268436135" name="cx" stackId="2" startPc="268435996"/>
+        <entry arg="true" endPc="268436135" name="cy" stackId="3" startPc="268435996"/>
+        <entry arg="true" endPc="268436135" name="winkel" stackId="4" startPc="268435996"/>
+        <entry arg="true" endPc="268436135" name="laenge" stackId="5" startPc="268435996"/>
+        <entry arg="true" endPc="268436135" name="rueck" stackId="6" startPc="268435996"/>
+        <entry arg="true" endPc="268436135" name="breite" stackId="7" startPc="268435996"/>
+        <entry arg="true" endPc="268436135" name="farbe" stackId="8" startPc="268435996"/>
+        <entry endPc="268436134" name="s" stackId="9" startPc="268435999"/>
+        <entry endPc="268436134" name="c" stackId="10" startPc="268435999"/>
+        <entry endPc="268436373" name="it" stackId="1" startPc="268436139"/>
+        <entry endPc="268436373" name="c" stackId="2" startPc="268436139"/>
+        <entry endPc="268436370" name="ll" stackId="3" startPc="268436166"/>
+        <entry endPc="268436370" name="vv" stackId="4" startPc="268436166"/>
+        <entry endPc="268436370" name="passt" stackId="5" startPc="268436166"/>
+        <entry endPc="268436390" name="e" stackId="6" startPc="268436380"/>
+        <entry arg="true" endPc="268436497" name="dc" stackId="1" startPc="268436397"/>
+        <entry arg="true" endPc="268436497" name="x" stackId="2" startPc="268436397"/>
+        <entry arg="true" endPc="268436497" name="y" stackId="3" startPc="268436397"/>
+        <entry arg="true" endPc="268436497" name="label" stackId="4" startPc="268436397"/>
+        <entry arg="true" endPc="268436497" name="wert" stackId="5" startPc="268436397"/>
+        <entry arg="true" endPc="268436597" name="id" stackId="1" startPc="268436498"/>
+        <entry endPc="268436571" name="v" stackId="2" startPc="268436527"/>
+        <entry endPc="268436591" name="e" stackId="3" startPc="268436581"/>
+        <entry endPc="268436994" name="jetzt" stackId="1" startPc="268436623"/>
+        <entry endPc="268436994" name="r" stackId="2" startPc="268436623"/>
+        <entry endPc="268436705" name="i" stackId="3" startPc="268436684"/>
+        <entry endPc="268436960" name="it" stackId="4" startPc="268436744"/>
+        <entry endPc="268436960" name="s" stackId="5" startPc="268436744"/>
+        <entry endPc="268436945" name="alter" stackId="6" startPc="268436839"/>
+        <entry endPc="268436945" name="k" stackId="7" startPc="268436839"/>
+        <entry endPc="268436980" name="e" stackId="8" startPc="268436970"/>
+        <entry arg="true" endPc="268437101" name="ist" stackId="1" startPc="268436996"/>
+        <entry arg="true" endPc="268437101" name="lo" stackId="2" startPc="268436996"/>
+        <entry arg="true" endPc="268437101" name="hi" stackId="3" startPc="268436996"/>
+        <entry endPc="268437201" name="g" stackId="1" startPc="268437105"/>
+        <entry endPc="268437398" name="e" stackId="1" startPc="268437388"/>
+        <entry arg="true" endPc="268441070" name="dc" stackId="1" startPc="268437412"/>
+        <entry endPc="268441069" name="w" stackId="2" startPc="268437415"/>
+        <entry endPc="268441069" name="h" stackId="3" startPc="268437415"/>
+        <entry endPc="268441069" name="cx" stackId="4" startPc="268437415"/>
+        <entry endPc="268441069" name="cy" stackId="5" startPc="268437415"/>
+        <entry endPc="268441069" name="uhr" stackId="6" startPc="268437415"/>
+        <entry endPc="268441069" name="wStd" stackId="7" startPc="268437415"/>
+        <entry endPc="268441069" name="wMin" stackId="8" startPc="268437415"/>
+        <entry endPc="268437786" name="i" stackId="9" startPc="268437559"/>
+        <entry endPc="268437776" name="a" stackId="10" startPc="268437559"/>
+        <entry endPc="268437776" name="r1" stackId="11" startPc="268437559"/>
+        <entry endPc="268437776" name="r2" stackId="12" startPc="268437559"/>
+        <entry endPc="268441069" name="t" stackId="13" startPc="268437415"/>
+        <entry endPc="268441069" name="heute" stackId="14" startPc="268437415"/>
+        <entry endPc="268441069" name="vote" stackId="15" startPc="268437415"/>
+        <entry endPc="268441069" name="st" stackId="16" startPc="268437415"/>
+        <entry endPc="268441069" name="tage" stackId="17" startPc="268437415"/>
+        <entry endPc="268441069" name="vf" stackId="18" startPc="268437415"/>
+        <entry endPc="268441069" name="temp" stackId="19" startPc="268437415"/>
+        <entry endPc="268441069" name="wind" stackId="20" startPc="268437415"/>
+        <entry endPc="268438473" name="wc" stackId="21" startPc="268438349"/>
+        <entry endPc="268438490" name="e" stackId="22" startPc="268438480"/>
+        <entry endPc="268441069" name="es" stackId="23" startPc="268437415"/>
+        <entry endPc="268441069" name="pl" stackId="24" startPc="268437415"/>
+        <entry endPc="268441069" name="sp" stackId="25" startPc="268437415"/>
+        <entry endPc="268441069" name="rx" stackId="26" startPc="268437415"/>
+        <entry endPc="268441069" name="rr" stackId="27" startPc="268437415"/>
+        <entry endPc="268441069" name="rd" stackId="28" startPc="268437415"/>
+        <entry endPc="268441069" name="lx" stackId="29" startPc="268437415"/>
+        <entry endPc="268441069" name="lo" stackId="30" startPc="268437415"/>
+        <entry endPc="268441069" name="hi" stackId="31" startPc="268437415"/>
+        <entry endPc="268441069" name="ist" stackId="32" startPc="268437415"/>
+        <entry endPc="268441069" name="sieben" stackId="33" startPc="268437415"/>
+        <entry endPc="268441069" name="istL" stackId="34" startPc="268437415"/>
+        <entry endPc="268441069" name="loL" stackId="35" startPc="268437415"/>
+        <entry endPc="268441069" name="hiL" stackId="36" startPc="268437415"/>
+        <entry endPc="268441069" name="x0" stackId="37" startPc="268437415"/>
+        <entry endPc="268441069" name="x1" stackId="38" startPc="268437415"/>
+        <entry endPc="268441069" name="y0" stackId="39" startPc="268437415"/>
+        <entry endPc="268441069" name="y1" stackId="40" startPc="268437415"/>
+        <entry endPc="268441069" name="n" stackId="41" startPc="268437415"/>
+        <entry endPc="268440281" name="mx" stackId="42" startPc="268439591"/>
+        <entry endPc="268439724" name="i" stackId="43" startPc="268439606"/>
+        <entry endPc="268439714" name="v" stackId="44" startPc="268439606"/>
+        <entry endPc="268439714" name="v2" stackId="45" startPc="268439606"/>
+        <entry endPc="268440281" name="bw" stackId="46" startPc="268439591"/>
+        <entry endPc="268440125" name="i" stackId="47" startPc="268439746"/>
+        <entry endPc="268440115" name="x" stackId="48" startPc="268439746"/>
+        <entry endPc="268440115" name="v" stackId="49" startPc="268439746"/>
+        <entry endPc="268440115" name="l1" stackId="50" startPc="268439746"/>
+        <entry endPc="268440115" name="h1" stackId="51" startPc="268439746"/>
+        <entry endPc="268440016" name="ya" stackId="52" startPc="268439916"/>
+        <entry endPc="268440016" name="yb" stackId="53" startPc="268439916"/>
+        <entry endPc="268440115" name="bh" stackId="54" startPc="268439746"/>
+        <entry endPc="268440281" name="g" stackId="55" startPc="268439591"/>
+        <entry endPc="268440281" name="kz" stackId="56" startPc="268439591"/>
+        <entry endPc="268440281" name="i" stackId="57" startPc="268440169"/>
+        <entry endPc="268440271" name="tag" stackId="58" startPc="268440169"/>
+        <entry endPc="268441069" name="b0" stackId="59" startPc="268437415"/>
+        <entry endPc="268441069" name="b1" stackId="60" startPc="268437415"/>
+        <entry endPc="268441069" name="punkte" stackId="61" startPc="268437415"/>
+        <entry endPc="268441069" name="lx0" stackId="62" startPc="268437415"/>
+        <entry endPc="268440422" name="i" stackId="63" startPc="268440343"/>
+        <entry endPc="268440657" name="flaeche" stackId="64" startPc="268440436"/>
+        <entry endPc="268440645" name="i" stackId="65" startPc="268440590"/>
+        <entry endPc="268441069" name="gd" stackId="66" startPc="268437415"/>
+        <entry endPc="268441069" name="wt" stackId="67" startPc="268437415"/>
+        <entry endPc="268441069" name="mo" stackId="68" startPc="268437415"/>
+        <entry arg="true" endPc="268441184" name="s" stackId="1" startPc="268441071"/>
+        <entry arg="true" endPc="268441184" name="sep" stackId="2" startPc="268441071"/>
+        <entry endPc="268441184" name="r" stackId="3" startPc="268441074"/>
+        <entry endPc="268441184" name="i" stackId="4" startPc="268441074"/>
+    </localVars>
+    <deviceInfo deviceVersion="69f9c27a08d175c50b86464a70c24d15718945cb" partNumber="006-B4631-00"/>
+    <annotations>
+        <annotationEntry annotation="initialized" class="Drawables" module="globals/Rez" symbol="LauncherIcon"/>
+        <annotationEntry annotation="initialized" class="Strings" module="globals/Rez" symbol="AppName"/>
+    </annotations>
+    <dataEntryOffsetMappings>
+        <dataEntry label="globals" offset="49" parentId="" symbolId="globals" type="module"/>
+        <dataEntry label="globals/Rez" offset="229" parentId="globals" symbolId="Rez" type="module"/>
+        <dataEntry label="globals/KiraZeigerApp" offset="273" parentId="globals" symbolId="KiraZeigerApp" type="class"/>
+        <dataEntry label="globals/KiraZeiger" offset="326" parentId="globals" symbolId="KiraZeiger" type="class"/>
+        <dataEntry label="globals/Rez/Drawables" offset="631" parentId="Rez" symbolId="Drawables" type="module"/>
+        <dataEntry label="globals/Rez/Strings" offset="666" parentId="Rez" symbolId="Strings" type="module"/>
+    </dataEntryOffsetMappings>
+    <functions>
+        <functionEntry accessMode="public" endPc="268435479" name="&lt;init&gt;" parent="Rez" startPc="268435460">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435491" name="&lt;init&gt;" parent="KiraZeigerApp" startPc="268435480">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435512" name="&lt;init&gt;" parent="KiraZeiger" startPc="268435492">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" name="&lt;init&gt;" parent="Drawables">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" name="&lt;init&gt;" parent="Strings">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435540" name="getInitialView" parent="KiraZeigerApp" startPc="268435513">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435555" name="initialize" parent="KiraZeigerApp" startPc="268435541">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435596" name="richtung" parent="KiraZeiger" startPc="268435556">
+            <param id="grad"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435772" name="ring" parent="KiraZeiger" startPc="268435597">
+            <param id="dc"/>
+            <param id="x"/>
+            <param id="y"/>
+            <param id="r"/>
+            <param id="anteil"/>
+            <param id="farbe"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435829" name="bereitFarbe" parent="KiraZeiger" startPc="268435773">
+            <param id="v"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435870" name="zahl" parent="KiraZeiger" startPc="268435830">
+            <param id="t"/>
+            <param id="i"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435966" name="schrift" parent="KiraZeiger" startPc="268435871">
+            <param id="namen"/>
+            <param id="px"/>
+            <param id="ersatz"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435995" name="feld" parent="KiraZeiger" startPc="268435967">
+            <param id="t"/>
+            <param id="i"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436135" name="zeiger" parent="KiraZeiger" startPc="268435996">
+            <param id="dc"/>
+            <param id="cx"/>
+            <param id="cy"/>
+            <param id="winkel"/>
+            <param id="laenge"/>
+            <param id="rueck"/>
+            <param id="breite"/>
+            <param id="farbe"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436396" name="kiraSuchen" parent="KiraZeiger" startPc="268436136">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436497" name="block" parent="KiraZeiger" startPc="268436397">
+            <param id="dc"/>
+            <param id="x"/>
+            <param id="y"/>
+            <param id="label"/>
+            <param id="wert"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436597" name="geaendert" parent="KiraZeiger" startPc="268436498">
+            <param id="id"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436619" name="onExitSleep" parent="KiraZeiger" startPc="268436598">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436995" name="bbLaden" parent="KiraZeiger" startPc="268436620">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268437101" name="lastFarbe" parent="KiraZeiger" startPc="268436996">
+            <param id="ist"/>
+            <param id="lo"/>
+            <param id="hi"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268437201" name="heuteIso" parent="KiraZeiger" startPc="268437102">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268437223" name="onEnterSleep" parent="KiraZeiger" startPc="268437202">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268437411" name="initialize" parent="KiraZeiger" startPc="268437224">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268441070" name="onUpdate" parent="KiraZeiger" startPc="268437412">
+            <param id="dc"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268441184" name="zerlegen" parent="KiraZeiger" startPc="268441071">
+            <param id="s"/>
+            <param id="sep"/>
+            <documentation/>
+        </functionEntry>
+    </functions>
+</debugInfo>
