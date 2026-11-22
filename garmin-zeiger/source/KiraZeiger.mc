@@ -1,13 +1,12 @@
 // Coach Kira Zeigerzifferblatt (22.11.2026)
 // Dieselben Werte wie das digitale Zifferblatt (Akku, Votum, Temperatur, Ausdauerwert,
 // Trainingsbereitschaft, Summenlast/Soll, Wind, Plan, Datum), in der Mitte zwei Diagramme:
-// Last der letzten 7 Tage mit Soll-Band (aus Coach Kira) und Body Battery der letzten 24 h (live).
+// Last der letzten 7 Tage mit Soll-Band (aus Coach Kira) und Form der letzten 6 Wochen (Fitness gegen Ermüdung).
 import Toybox.Application;
 import Toybox.Complications;
 import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.Math;
-import Toybox.SensorHistory;
 import Toybox.System;
 import Toybox.Time;
 import Toybox.Time.Gregorian;
@@ -36,9 +35,6 @@ class KiraZeiger extends WatchUi.WatchFace {
     var kira as String? = null;
     var schlaf as Boolean = false;
     var gesucht as Number = -1;
-    var bb as Array<Number> = [] as Array<Number>;   // 48 Halbstundenwerte, -1 = keine Daten
-    var bbJetzt as Number? = null;
-    var bbStand as Number = -100;
     var fKopf as Graphics.FontType = Graphics.FONT_XTINY;
     var fLabel as Graphics.FontType = Graphics.FONT_XTINY;
     var fWert as Graphics.FontType = Graphics.FONT_TINY;
@@ -118,6 +114,13 @@ class KiraZeiger extends WatchUi.WatchFace {
         return r;
     }
 
+    // leere oder negative Werte (-1 = keine Daten) gelten als fehlend
+    function wertOk(s as String) as Number? {
+        if (s.length() == 0) { return null; }
+        var v = s.toNumber();
+        return (v == null || v < 0) ? null : v;
+    }
+
     function feld(t as Array<String>, i as Number) as String {
         return t.size() > i ? t[i] : "";
     }
@@ -172,32 +175,6 @@ class KiraZeiger extends WatchUi.WatchFace {
         if (ist > hi) { return 0xE67E22; }
         if (lo != null && ist >= lo) { return 0x2ECC71; }
         return 0x3FB8F0;
-    }
-
-    // Body Battery der letzten 24 h in 48 Halbstundenwerte (höchstens alle 10 min neu)
-    function bbLaden() as Void {
-        var jetzt = Time.now().value();
-        if (jetzt - bbStand < 600) { return; }
-        bbStand = jetzt;
-        var r = [] as Array<Number>;
-        for (var i = 0; i < 48; i++) { r.add(-1); }
-        bbJetzt = null;
-        try {
-            if ((Toybox has :SensorHistory) && (SensorHistory has :getBodyBatteryHistory)) {
-                var it = SensorHistory.getBodyBatteryHistory({ :period => new Time.Duration(24 * 3600), :order => SensorHistory.ORDER_NEWEST_FIRST });
-                var s = it.next();
-                while (s != null) {
-                    if (s.data != null && s.when != null) {
-                        var alter = jetzt - s.when.value();
-                        var k = 47 - (alter / 1800);
-                        if (k >= 0 && k < 48 && r[k] < 0) { r[k] = s.data.toNumber(); }
-                        if (bbJetzt == null) { bbJetzt = s.data.toNumber(); }
-                    }
-                    s = it.next();
-                }
-            }
-        } catch (e) { }
-        bb = r;
     }
 
     function zeiger(dc as Graphics.Dc, cx as Number, cy as Number, winkel as Float, laenge as Number, rueck as Number, breite as Number, farbe as Number) as Void {
@@ -334,31 +311,52 @@ class KiraZeiger extends WatchUi.WatchFace {
             }
         }
 
-        // Diagramm 2: Body Battery 24 h
-        bbLaden();
+        // Diagramm 2: Form 6 Wochen – Fitness (CTL, grün) gegen Ermüdung (ATL, orange)
+        var fk = zerlegen(feld(t, 15), ";");
+        var cL = zerlegen(fk.size() > 0 ? fk[0] : null, ",");
+        var aL = zerlegen(fk.size() > 1 ? fk[1] : null, ",");
         var b0 = (h * 0.56).toNumber();
         var b1 = (h * 0.68).toNumber();
-        var punkte = [] as Array<[Numeric, Numeric]>;
-        var lx0 = x0;
-        for (var i = 0; i < 48; i++) {
-            if (bb[i] >= 0) { punkte.add([x0 + (x1 - x0) * i / 47, b1 - (b1 - b0) * bb[i] / 100]); }
-        }
-        if (punkte.size() >= 2) {
-            var flaeche = [] as Array<[Numeric, Numeric]>;
-            flaeche.addAll(punkte);
-            flaeche.add([punkte[punkte.size() - 1][0], b1]);
-            flaeche.add([punkte[0][0], b1]);
-            dc.setColor(0x123048, Graphics.COLOR_TRANSPARENT);
-            dc.fillPolygon(flaeche);
-            dc.setColor(0x3FB8F0, Graphics.COLOR_TRANSPARENT);
-            dc.setPenWidth(2);
-            for (var i = 1; i < punkte.size(); i++) {
-                dc.drawLine(punkte[i - 1][0], punkte[i - 1][1], punkte[i][0], punkte[i][1]);
+        var m = cL.size() < aL.size() ? cL.size() : aL.size();
+        var cVal = null;
+        var aVal = null;
+        if (m >= 2) {
+            var mn = 99999;
+            var mx2 = 0;
+            for (var i = 0; i < m; i++) {
+                var v1 = wertOk(cL[i]);
+                var v2 = wertOk(aL[i]);
+                if (v1 != null) { if (v1 < mn) { mn = v1; } if (v1 > mx2) { mx2 = v1; } }
+                if (v2 != null) { if (v2 < mn) { mn = v2; } if (v2 > mx2) { mx2 = v2; } }
+            }
+            if (mx2 <= mn) { mx2 = mn + 1; }
+            for (var k = 0; k < 2; k++) {
+                var xs = k == 0 ? aL : cL;
+                var pax = -1;
+                var pay = 0;
+                dc.setColor(k == 0 ? 0xE67E22 : 0x2ECC71, Graphics.COLOR_TRANSPARENT);
+                dc.setPenWidth(k == 0 ? 2 : 3);
+                for (var i = 0; i < m; i++) {
+                    var vv = wertOk(xs[i]);
+                    if (vv == null) { continue; }
+                    var px = x0 + (x1 - x0) * i / (m - 1);
+                    var py = b1 - (b1 - b0) * (vv - mn) / (mx2 - mn);
+                    if (pax >= 0) { dc.drawLine(pax, pay, px, py); }
+                    pax = px;
+                    pay = py;
+                }
             }
             dc.setPenWidth(1);
+            for (var i = m - 1; i >= 0 && (cVal == null || aVal == null); i--) {
+                if (cVal == null) { cVal = wertOk(cL[i]); }
+                if (aVal == null) { aVal = wertOk(aL[i]); }
+            }
         }
-        dc.setColor(GRAU, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, b1 + 1, fKlein, "BB " + (bbJetzt == null ? "-" : bbJetzt.toString()), Graphics.TEXT_JUSTIFY_CENTER);
+        var yt = b1 + 2;
+        dc.setColor(0x2ECC71, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(cx - 4, yt, fKlein, "FIT " + (cVal == null ? "-" : cVal.toString()), Graphics.TEXT_JUSTIFY_RIGHT);
+        dc.setColor(0xE67E22, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(cx + 4, yt, fKlein, "ERM " + (aVal == null ? "-" : aVal.toString()), Graphics.TEXT_JUSTIFY_LEFT);
 
         // Datum
         var gd = Gregorian.info(Time.now(), Time.FORMAT_SHORT);

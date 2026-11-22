@@ -127,7 +127,7 @@ function kiraKomplikation(d as Dictionary) as Void {
         }
         t = (lab.equals("KIRA") ? "" : lab) + "|" + st + "|" + lo2 + "|" + hi2 + "|" + ist + "|" + (d.get("datum") != null ? d.get("datum").toString() : "") + "|" + zn + "|" + zt + "|" + rd
             + "|" + pl + "|" + sp + "|" + zo + "|" + es + "|" + es28
-            + "|" + sieben(d, l);
+            + "|" + sieben(d, l) + "|" + formKurve(d);
         Complications.updateComplication(1, { :value => t });
     } catch (e) {
     }
@@ -164,6 +164,31 @@ function sieben(d as Dictionary, l) as String {
         if (ist.size() > 0 && l instanceof Dictionary && l.get("istHeute") != null) { ist[ist.size() - 1] = l.get("istHeute"); }
     } catch (e) { }
     return liste(ist) + ";" + liste(lo) + ";" + liste(hi);
+}
+
+// Form 6 Wochen fürs Zeigerzifferblatt: "ctl,…;atl,…" (jeder 2. Tag, heute zuletzt) –
+// Kurve aus der letzten Vollabfrage der App, letzter Punkt immer aus dem aktuellen Stand
+(:background :glance)
+function formKurve(d as Dictionary) as String {
+    var c = [] as Array;
+    var a = [] as Array;
+    try {
+        var u = Storage.getValue("u");
+        var f = u instanceof Dictionary ? u.get("form") : null;
+        if (f instanceof Dictionary && f.get("ctl") instanceof Array && f.get("atl") instanceof Array) {
+            var xc = f.get("ctl") as Array;
+            var xa = f.get("atl") as Array;
+            var n = xc.size() < xa.size() ? xc.size() : xa.size();
+            var start = (n - 1) % 2;
+            for (var i = start; i < n; i += 2) { c.add(xc[i]); a.add(xa[i]); }
+        }
+        var fo = d.get("form");
+        if (fo instanceof Dictionary && fo.get("ctl") != null && fo.get("atl") != null) {
+            if (c.size() == 0) { c.add(fo.get("ctl")); a.add(fo.get("atl")); }
+            else { c[c.size() - 1] = fo.get("ctl"); a[a.size() - 1] = fo.get("atl"); }
+        }
+    } catch (e) { }
+    return liste(c) + ";" + liste(a);
 }
 
 (:background :glance)
