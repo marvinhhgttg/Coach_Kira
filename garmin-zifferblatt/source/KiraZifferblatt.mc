@@ -36,11 +36,32 @@ class KiraZifferblatt extends WatchUi.WatchFace {
     var kira as String? = null;
     var schlaf as Boolean = false;
     var gesucht as Number = -1;
+    // Kleinere Schriften als die Systemgrößen: skalierbare Garmin-Schriften (Roboto Condensed)
+    var fKopf as Graphics.FontType = Graphics.FONT_XTINY;
+    var fLabel as Graphics.FontType = Graphics.FONT_XTINY;
+    var fWert as Graphics.FontType = Graphics.FONT_TINY;
+    var fRing as Graphics.FontType = Graphics.FONT_SMALL;
+    var fDatum as Graphics.FontType = Graphics.FONT_TINY;
 
     function initialize() {
         WatchFace.initialize();
+        fKopf = schrift(["RobotoCondensedBold", "RobotoCondensedRegular"], 25, Graphics.FONT_XTINY);
+        fLabel = schrift(["RobotoCondensedBold", "RobotoCondensedRegular"], 23, Graphics.FONT_XTINY);
+        fWert = schrift(["RobotoCondensedRegular", "RobotoRegular"], 31, Graphics.FONT_TINY);
+        fRing = schrift(["RobotoCondensedBold", "RobotoMedium"], 33, Graphics.FONT_SMALL);
+        fDatum = schrift(["RobotoCondensedRegular", "RobotoRegular"], 28, Graphics.FONT_TINY);
         try { Complications.registerComplicationChangeCallback(method(:geaendert)); } catch (e) { }
         kiraSuchen();
+    }
+
+    function schrift(namen as Array<String>, px as Number, ersatz as Graphics.FontType) as Graphics.FontType {
+        try {
+            if (Graphics has :getVectorFont) {
+                var f = Graphics.getVectorFont({ :face => namen, :size => px });
+                if (f != null) { return f; }
+            }
+        } catch (e) { }
+        return ersatz;
     }
 
     function kiraSuchen() as Void {
@@ -130,9 +151,9 @@ class KiraZifferblatt extends WatchUi.WatchFace {
     // Kleiner Block: Bezeichnung (orange, klein) über Wert (weiß)
     function block(dc as Graphics.Dc, x as Number, y as Number, label as String, wert as String, wertFarbe as Number) as Void {
         dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(x, y, Graphics.FONT_XTINY, label, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(x, y, fLabel, label, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(wertFarbe, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(x, y + dc.getFontHeight(Graphics.FONT_XTINY) - 8, Graphics.FONT_TINY, wert, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(x, y + dc.getFontHeight(fLabel) - 2, fWert, wert, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     function richtung(grad as Number?) as String {
@@ -191,12 +212,12 @@ class KiraZifferblatt extends WatchUi.WatchFace {
         dc.setPenWidth(1);
         var tage = (st has :batteryInDays) && st.batteryInDays != null ? st.batteryInDays.toNumber() : null;
         dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, (h * 0.075).toNumber(), Graphics.FONT_XTINY, akku.toNumber().toString() + "%" + (tage != null ? " · " + tage.toString() + "T" : ""), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, (h * 0.085).toNumber(), fKopf, akku.toNumber().toString() + "%" + (tage != null ? " · " + tage.toString() + "T" : ""), Graphics.TEXT_JUSTIFY_CENTER);
 
         // Kira-Votum statt Markenname
         var vf = heute && VOTE_FARBE.hasKey(vote) ? VOTE_FARBE.get(vote) as Number : GRAU;
         dc.setColor(vf, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, (h * 0.145).toNumber(), Graphics.FONT_XTINY, kira == null ? (kiraId == null ? "KIRA · APP ÖFFNEN" : "KIRA · WARTET") : "KIRA · " + (vote.length() > 0 ? vote : "-") + (heute ? "" : " (ALT)"), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, (h * 0.145).toNumber(), fKopf, kira == null ? (kiraId == null ? "KIRA · APP ÖFFNEN" : "KIRA · WARTET") : "KIRA · " + (vote.length() > 0 ? vote : "-") + (heute ? "" : " (ALT)"), Graphics.TEXT_JUSTIFY_CENTER);
 
         // Uhrzeit: Stunden weiß, Minuten orange (wie fēnix)
         dc.setColor(0xE8E8E8, Graphics.COLOR_TRANSPARENT);
@@ -211,9 +232,9 @@ class KiraZifferblatt extends WatchUi.WatchFace {
         var rd = heute ? zahl(t, 8) : null;
         ring(dc, rx, ry, rr, rd == null ? 0.0 : rd / 100.0, rd == null ? GRAU : bereitFarbe(rd));
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(rx, ry, Graphics.FONT_SMALL, rd == null ? "-" : rd.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(rx, ry, fRing, rd == null ? "-" : rd.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(rx, ry + rr + 6, Graphics.FONT_XTINY, "BEREIT", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(rx, ry + rr + 8, fLabel, "BEREIT", Graphics.TEXT_JUSTIFY_CENTER);
 
         // Rechts: heutige Summenlast gegen Soll
         var lx = w - rx;
@@ -226,9 +247,9 @@ class KiraZifferblatt extends WatchUi.WatchFace {
         }
         ring(dc, lx, ry, rr, (hi != null && hi > 0 && ist != null) ? ist.toFloat() / hi : 0.0, lf);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(lx, ry, Graphics.FONT_SMALL, ist == null ? "-" : ist.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(lx, ry, fRing, ist == null ? "-" : ist.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(lx, ry + rr + 6, Graphics.FONT_XTINY, (hi == null ? "-" : (lo != null ? lo.toString() + "-" : "") + hi.toString()), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(lx, ry + rr + 8, fLabel, (hi == null ? "-" : (lo != null ? lo.toString() + "-" : "") + hi.toString()), Graphics.TEXT_JUSTIFY_CENTER);
 
         // Oben links: Wetter · oben rechts: Ausdauerwert
         var temp = "-";
@@ -257,6 +278,6 @@ class KiraZifferblatt extends WatchUi.WatchFace {
         var wt = ["", "SO", "MO", "DI", "MI", "DO", "FR", "SA"];
         var mo = ["", "JAN", "FEB", "MÄR", "APR", "MAI", "JUN", "JUL", "AUG", "SEP", "OKT", "NOV", "DEZ"];
         dc.setColor(0xD0D0D0, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, (h * 0.865).toNumber(), Graphics.FONT_TINY, wt[g.day_of_week as Number] + " " + g.day.toString() + ". " + mo[g.month as Number], Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, (h * 0.86).toNumber(), fDatum, wt[g.day_of_week as Number] + " " + g.day.toString() + ". " + mo[g.month as Number], Graphics.TEXT_JUSTIFY_CENTER);
     }
 }
