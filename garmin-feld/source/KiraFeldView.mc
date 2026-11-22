@@ -1,6 +1,8 @@
 import Toybox.Activity;
+import Toybox.Application;
 import Toybox.Application.Storage;
 import Toybox.Attention;
+import Toybox.Communications;
 import Toybox.FitContributor;
 import Toybox.Graphics;
 import Toybox.Lang;
@@ -23,6 +25,8 @@ class KiraFeldView extends WatchUi.DataField {
     var hinweis as String = "";
     var fitLive as FitContributor.Field? = null;
     var fitSumme as FitContributor.Field? = null;
+    var unterwegs as Boolean = false;
+    var naechsterAbruf as Number = 0;
 
     function initialize() {
         DataField.initialize();
@@ -84,10 +88,95 @@ class KiraFeldView extends WatchUi.DataField {
         return g.year.format("%04d") + "-" + (g.month as Number).format("%02d") + "-" + g.day.format("%02d");
     }
 
-    function uhrzeit(v) as String {
-        if (!(v instanceof Number)) { return "..."; }
-        var g = Toybox.Time.Gregorian.info(new Toybox.Time.Moment(v), Toybox.Time.FORMAT_SHORT);
-        return "ab " + g.hour.format("%02d") + ":" + g.min.format("%02d");
+    function fehlerText(rc as Number) as String {
+        if (rc == -104) { return "Connect-App öffnen"; }
+        if (rc < 0) { return "Netz " + rc.toString(); }
+        return "Server " + rc.toString();
+    }
+
+    // ---- Netz (direkt aus dem Datenfeld) ----
+    function abrufFaellig() as Void {
+        if (unterwegs || System.getTimer() < naechsterAbruf) { return; }
+        if (!System.getDeviceSettings().phoneConnected) {
+            Storage.setValue("rc", -104);
+            naechsterAbruf = System.getTimer() + 20000;
+            return;
+        }
+        unterwegs = true;
+        try {
+            var tok = Storage.getValue("tok");
+            var aid = Storage.getValue("aid");
+            if (tok instanceof String) {
+                Communications.makeWebRequest(KIRA_BASIS + "/api/widget/feld", null,
+                    { :method => Communications.HTTP_REQUEST_METHOD_GET,
+                      :headers => { "Authorization" => "Bearer " + tok },
+                      :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON },
+                    method(:feldFertig));
+            } else if (aid instanceof String) {
+                Communications.makeWebRequest(KIRA_BASIS + "/api/widget/uhr/status", { "id" => aid },
+                    { :method => Communications.HTTP_REQUEST_METHOD_GET, :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON },
+                    method(:statusFertig));
+            } else {
+                Communications.makeWebRequest(KIRA_BASIS + "/api/widget/uhr/anfrage", { "geraet" => "fenix Datenfeld" },
+                    { :method => Communications.HTTP_REQUEST_METHOD_POST,
+                      :headers => { "Content-Type" => Communications.REQUEST_CONTENT_TYPE_JSON },
+                      :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON },
+                    method(:anfrageFertig));
+            }
+        } catch (e) {
+            unterwegs = false;
+            Storage.setValue("rc", -1);
+            naechsterAbruf = System.getTimer() + 30000;
+        }
+    }
+
+    function fertig(rc as Number?, warte as Number) as Void {
+        unterwegs = false;
+        Storage.setValue("rc", rc);
+        naechsterAbruf = System.getTimer() + warte;
+        WatchUi.requestUpdate();
+    }
+
+    function anfrageFertig(rc as Number, data as Dictionary or String or Null) as Void {
+        if (rc == 200 && data instanceof Dictionary && data.get("id") != null) {
+            Storage.setValue("aid", data.get("id").toString());
+            Storage.setValue("code", data.get("code").toString());
+            fertig(null, 10000);
+        } else {
+            fertig(rc, 30000);
+        }
+    }
+
+    function statusFertig(rc as Number, data as Dictionary or String or Null) as Void {
+        if (rc == 200 && data instanceof Dictionary && data.get("token") != null) {
+            Storage.setValue("tok", data.get("token").toString());
+            Storage.deleteValue("aid");
+            Storage.deleteValue("code");
+            fertig(null, 0);                       // sofort Rahmen holen
+        } else if (rc == 200) {
+            fertig(null, 10000);                   // wartet auf Bestätigung im Cockpit
+        } else if (rc == 404) {
+            Storage.deleteValue("aid");            // abgelaufen → neuer Code
+            Storage.deleteValue("code");
+            fertig(null, 0);
+        } else {
+            fertig(rc, 30000);
+        }
+    }
+
+    function feldFertig(rc as Number, data as Dictionary or String or Null) as Void {
+        if (rc == 200 && data instanceof Dictionary) {
+            data.remove("n");
+            data.remove("ok");
+            Storage.setValue("f", data as Dictionary<String, Application.PropertyValueType>);
+            fertig(null, 15 * 60 * 1000);          // Rahmen alle 15 min auffrischen
+        } else if (rc == 401) {
+            Storage.deleteValue("tok");            // widerrufen → neu koppeln
+            Storage.deleteValue("f");
+            fertig(null, 0);
+        } else {
+            fertig(rc, 30000);
+        }
     }
 
     function onTimerReset() as Void {
@@ -103,6 +192,7 @@ class KiraFeldView extends WatchUi.DataField {
     }
 
     function compute(info as Activity.Info) as Void {
+        abrufFaellig();
         var jetzt = System.getTimer();
         var dt = zuletzt == null ? 0 : jetzt - zuletzt;
         zuletzt = jetzt;
@@ -181,11 +271,11 @@ class KiraFeldView extends WatchUi.DataField {
             var c = Storage.getValue("code");
             var rc = Storage.getValue("rc");
             if (c != null) { unten = "Code " + c.toString(); }
-            else if (rc instanceof Number) { unten = rc < 0 ? "Kein Netz " + rc.toString() : "Server " + rc.toString(); }
-            else { unten = "koppelt " + uhrzeit(Storage.getValue("nx")); }
+            else if (rc instanceof Number) { unten = fehlerText(rc); }
+            else { unten = "koppelt ..."; }
         } else if (ra == null) {
             var rc = Storage.getValue("rc");
-            unten = rc != null ? "Server " + rc.toString() : "Rahmen lädt";
+            unten = rc instanceof Number ? fehlerText(rc) : "Rahmen lädt";
         } else {
             unten = "/ " + ra[0].toString() + "-" + ra[1].toString();
         }
