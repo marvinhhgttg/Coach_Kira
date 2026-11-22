@@ -34,7 +34,7 @@ var require_react_production_min = __commonJS({
     var q = Symbol.for("react.strict_mode");
     var r = Symbol.for("react.profiler");
     var t = Symbol.for("react.provider");
-    var u = Symbol.for("react.context");
+    var u2 = Symbol.for("react.context");
     var v = Symbol.for("react.forward_ref");
     var w = Symbol.for("react.suspense");
     var x = Symbol.for("react.memo");
@@ -216,7 +216,7 @@ var require_react_production_min = __commonJS({
       return { $$typeof: l, type: a.type, key: c, ref: k, props: d, _owner: h2 };
     };
     exports.createContext = function(a) {
-      a = { $$typeof: u, _currentValue: a, _currentValue2: a, _threadCount: 0, Provider: null, Consumer: null, _defaultValue: null, _globalName: null };
+      a = { $$typeof: u2, _currentValue: a, _currentValue2: a, _threadCount: 0, Provider: null, Consumer: null, _defaultValue: null, _globalName: null };
       a.Provider = { $$typeof: t, _context: a };
       return a.Consumer = a;
     };
@@ -4974,10 +4974,12 @@ var num = (v) => {
   return Number.isFinite(n) ? n : null;
 };
 var STATUS_TEXT = { QUALITY: "Qualit\xE4t m\xF6glich", TRAIN: "normal trainieren", EASY: "locker trainieren", REST: "Erholung priorisieren" };
+var tageMerk = [];
 async function heuteTeil() {
   const heute2 = iso();
   const res = await fetchChartData(rangeFor(14, 28, 90), RECOVERY_FETCH_METRICS);
   const days = buildDays(res.data || []).filter((d) => d.date <= heute2);
+  tageMerk = days;
   const t = days.length && days[days.length - 1].date === heute2 ? days[days.length - 1] : null;
   let plan = null;
   let naechste = [];
@@ -4985,7 +4987,7 @@ async function heuteTeil() {
     const sim = await fetchPlanSimulationWithTimeout(45e3);
     plan = sim?.ok ? (sim.days || []).find((x) => String(x.date).slice(0, 10) === heute2) || null : null;
     if (sim?.ok)
-      naechste = (sim.days || []).filter((x) => String(x.date).slice(0, 10) > heute2).slice(0, 4).map((x) => ({ d: String(x.date).slice(0, 10), ess: num(x.sim_load ?? x.load), sport: String(x.sport || ""), zone: String(x.zone || "") }));
+      naechste = (sim.days || []).filter((x) => String(x.date).slice(0, 10) > heute2).slice(0, 7).map((x) => ({ d: String(x.date).slice(0, 10), ess: num(x.sim_load ?? x.load), sport: String(x.sport || ""), zone: String(x.zone || "") }));
   } catch {
   }
   const ti = t ? days.length - 1 : -1;
@@ -5023,7 +5025,8 @@ async function heuteTeil() {
       acwrBand: t?.acwr == null ? null : t.acwr > 1.5 ? "hoch" : t.acwr > 1.3 ? "erhoeht" : t.acwr < 0.8 ? "niedrig" : "korridor",
       woche
     },
-    naechste
+    naechste,
+    _rahmen: rahmen
   };
 }
 async function formTeil() {
@@ -5086,8 +5089,133 @@ async function zielTeil() {
   }
   return { name: z2.name, datum: z2.datum, tage, prio: z2.prio ?? null, tourform: prozent, weitere: ziele.length - 1 };
 }
+var GRUPPE = (typ) => /cycling|biking|virtual_ride/.test(typ) ? "rad" : /running/.test(typ) ? "lauf" : /hiking|mountaineering|walking/.test(typ) ? "berg" : /ski/.test(typ) ? "ski" : "sonst";
+function zonenRaten(xs) {
+  if (xs.length < 12) return null;
+  const prior = [20, 45, 80, 130, 190], lam = 0.5;
+  const r = prior.slice();
+  for (let it = 0; it < 300; it++) {
+    for (let z2 = 0; z2 < 5; z2++) {
+      let num0 = lam * prior[z2], den = lam;
+      for (const x of xs) {
+        const rest = x.last - x.h.reduce((a, h2, k) => k === z2 ? a : a + h2 * r[k], 0);
+        num0 += x.h[z2] * rest;
+        den += x.h[z2] * x.h[z2];
+      }
+      r[z2] = Math.max(0, num0 / den);
+    }
+  }
+  for (let z2 = 1; z2 < 5; z2++) if (r[z2] < r[z2 - 1]) r[z2] = r[z2 - 1];
+  return r.map((v) => Math.round(v));
+}
+async function feldTeil(rahmen, t) {
+  const g = await fetchGarminTage();
+  const pro = { rad: [], lauf: [], berg: [], ski: [], sonst: [], alle: [] };
+  for (const [, tag] of g) for (const a of tag.akt || []) {
+    const zs = a.zonen_s;
+    if (!zs || zs.length < 5 || !a.last || (a.dauer_s || 0) < 900) continue;
+    const x = { h: zs.slice(0, 5).map((v) => (v || 0) / 3600), last: a.last };
+    pro[GRUPPE(String(a.typ || ""))].push(x);
+    pro.alle.push(x);
+  }
+  const alle = zonenRaten(pro.alle) || [20, 45, 80, 130, 190];
+  const raten = {};
+  for (const k of ["rad", "lauf", "berg", "ski", "sonst"]) raten[k] = zonenRaten(pro[k]) || alle;
+  return {
+    datum: iso(),
+    vote: t?.vote ?? null,
+    label: t?.vote ? VOTE_LABEL[t.vote] : "\u2013",
+    min: rahmen ? rahmen.min : null,
+    max: rahmen ? rahmen.max : null,
+    raten,
+    n: Object.fromEntries(Object.entries(pro).map(([k, v]) => [k, v.length]))
+  };
+}
+var LV = { gruen: "g", gelb: "y", orange: "o", rot: "r", blau: "b" };
+async function uhrTeil(rahmen) {
+  const heute2 = iso();
+  const days = tageMerk;
+  const t = days.length && days[days.length - 1].date === heute2 ? days[days.length - 1] : null;
+  const b = await baenderLaden();
+  const l14 = { von: null, ist: [], lo: [], hi: [] };
+  const ab = Math.max(1, days.length - 14);
+  for (let i = ab; i < days.length; i++) {
+    const d = days[i];
+    const e = lastEmpfehlung(d, days[i - 1], b);
+    if (!l14.von) l14.von = d.date;
+    l14.ist.push(Math.round(d.activityDone ? d.actual?.load ?? d.load ?? 0 : 0));
+    l14.lo.push(e ? e.min : -1);
+    l14.hi.push(e ? e.max : -1);
+  }
+  const m = days.slice(-7);
+  const m7 = {
+    rd: m.map((d) => d.readiness ?? -1),
+    hrv: m.map((d) => d.hrv ?? -1),
+    rhr: m.map((d) => d.rhr ?? -1),
+    sl: m.map((d) => d.sleepScore ?? -1),
+    rdS: m.map((d) => LV[d.levels.readiness] || "x").join(""),
+    hrvS: m.map((d) => LV[d.levels.hrv] || "x").join(""),
+    rhrS: m.map((d) => LV[d.levels.rhr] || "x").join(""),
+    slS: m.map((d) => LV[d.levels.sleep] || "x").join("")
+  };
+  let form = null;
+  try {
+    const r = await fetchChartData("100d", ["fbCTL_obs", "fbATL_obs", "garminEnduranceScore"]);
+    const rows = (r?.data || []).filter((x) => String(x.date).slice(0, 10) <= heute2);
+    const reihe = (k, n) => rows.slice(-n).map((x) => {
+      const v = num(x[k]);
+      return v == null || v <= 0 ? -1 : Math.round(v);
+    });
+    const es = reihe("garminEnduranceScore", 90).filter((_, i, a) => (a.length - 1 - i) % 3 === 0);
+    form = { ctl: reihe("fbCTL_obs", 42), atl: reihe("fbATL_obs", 42), es };
+  } catch {
+  }
+  let letzte = null;
+  try {
+    const g = await fetchGarminTage();
+    const ds = [...g.keys()].filter((d) => d <= heute2).sort();
+    for (let i = ds.length - 1; i >= 0 && !letzte; i--) {
+      const akt = (g.get(ds[i])?.akt || []).slice().sort((x, y) => String(y.start || "").localeCompare(String(x.start || "")));
+      const a = akt[0];
+      if (!a) continue;
+      const di = days.findIndex((d) => d.date === ds[i]);
+      const e = di > 0 ? lastEmpfehlung(days[di], days[di - 1], b) : null;
+      const tagLast = (g.get(ds[i])?.akt || []).reduce((s2, x) => s2 + (x.last || 0), 0);
+      letzte = {
+        d: ds[i],
+        name: String(a.name || "").slice(0, 40),
+        sport: String(a.typ || ""),
+        min: Math.round((a.dauer_s || 0) / 60),
+        ess: Math.round(a.last || 0),
+        tagEss: Math.round(tagLast),
+        te: a.te_ae ?? null,
+        tean: a.te_an ?? null,
+        label: a.te_label ?? null,
+        z: (a.zonen_s || []).slice(0, 5).map((v) => Math.round((v || 0) / 60)),
+        km: a.km ?? null,
+        hm: a.hm ?? null,
+        lo: e ? e.min : null,
+        hi: e ? e.max : null,
+        lage: e ? tagLast > e.max ? "darueber" : tagLast < e.min ? "darunter" : "im Rahmen" : null
+      };
+    }
+  } catch {
+  }
+  let feld = null;
+  try {
+    feld = await feldTeil(rahmen, t);
+  } catch {
+  }
+  return { l14, m7, form, letzte, feld };
+}
 var [h, z, f] = await Promise.all([heuteTeil(), zielTeil().catch(() => null), formTeil().catch(() => null)]);
-process.stdout.write(JSON.stringify({ ok: true, stand: (/* @__PURE__ */ new Date()).toISOString(), ...h, ziel: z, form: f }));
+var u = null;
+try {
+  u = await uhrTeil(h._rahmen ?? null);
+} catch {
+}
+var { _rahmen: _r, ...hRest } = h;
+process.stdout.write(JSON.stringify({ ok: true, stand: (/* @__PURE__ */ new Date()).toISOString(), ...hRest, ziel: z, form: f, uhr: u }));
 /*! Bundled license information:
 
 react/cjs/react.production.min.js:

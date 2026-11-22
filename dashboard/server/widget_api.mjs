@@ -20,7 +20,7 @@ const CODE_MS = 10 * 60 * 1000;
 const sha = (s) => crypto.createHash('sha256').update(String(s)).digest('hex');
 const heute = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
 
-export function setupWidget(app, { getSetting, setSetting, originOk, texte }) {
+export function setupWidget(app, { getSetting, setSetting, originOk, texte, appsScript }) {
   const lesen = (k, def) => {
     try {
       const v = getSetting(k);
@@ -103,15 +103,47 @@ export function setupWidget(app, { getSetting, setSetting, originOk, texte }) {
       const a = await antwort(req.query.frisch === '1');
       if (req.query.uhr === '1') {
         // Garmin-Uhr: wenig Speicher im Hintergrund – nur was die Uhr anzeigt
-        const { texte: _t, ...rest } = a;
+        const { texte: _t, uhr: u, ...rest } = a;
         // lange Einheiten aus Kiras Wochenplan (Server) an die nächsten Tage hängen
         let wp = null;
         try { wp = JSON.parse(getSetting('wochenplan') || 'null'); } catch { wp = null; }
         const lang = new Map(((wp && wp.plan && wp.plan.tage) || []).filter((t) => t && t.langH != null).map((t) => [t.date, t.langH]));
         const naechste = (a.naechste || []).map((x) => (lang.has(x.d) ? { ...x, langH: lang.get(x.d) } : x));
-        return res.json({ ...rest, naechste, votum: a.votum ? { ...a.votum, gruende: (a.votum.gruende || []).slice(0, 2) } : null });
+        // 22.11.2026: Diagramme nur im Vordergrund (?mehr=1) – der Hintergrunddienst bleibt unter 8 KB
+        const mehr = req.query.mehr === '1' && u ? { uhr: { l14: u.l14, m7: u.m7, form: u.form, letzte: u.letzte } } : {};
+        return res.json({ ...rest, naechste: req.query.mehr === '1' ? naechste : naechste.slice(0, 4), votum: a.votum ? { ...a.votum, gruende: (a.votum.gruende || []).slice(0, 2) } : null, ...mehr });
       }
-      res.json(a);
+      const { uhr: _u, ...ohneUhr } = a;
+      res.json(ohneUhr);
+    } catch (e) {
+      res.status(502).json({ ok: false, error: String(e.message || e) });
+    }
+  });
+  // 22.11.2026: Datenfeld „Kira ESS“ – Rahmen des Tages und ESS je Stunde in Zone 1–5 je Sportgruppe
+  app.get('/api/widget/feld', async (req, res) => {
+    if (!geraetZu(req)) return res.status(401).json({ ok: false, error: 'nicht gekoppelt' });
+    try {
+      const a = await antwort(false);
+      const f = a.uhr?.feld;
+      if (!f) return res.status(503).json({ ok: false, error: 'noch keine Daten' });
+      res.json({ ok: true, ...f });
+    } catch (e) {
+      res.status(502).json({ ok: false, error: String(e.message || e) });
+    }
+  });
+  // 22.11.2026: Befinden 1–5 von der Uhr (gleicher Weg wie im Cockpit: Apps Script saveWellbeing)
+  app.post('/api/widget/befinden', async (req, res) => {
+    if (!geraetZu(req)) return res.status(401).json({ ok: false, error: 'nicht gekoppelt' });
+    const v = Number(req.body?.value);
+    const datum = /^\d{4}-\d{2}-\d{2}$/.test(String(req.body?.date || '')) ? String(req.body.date) : heute();
+    if (!Number.isInteger(v) || v < 1 || v > 5) return res.status(400).json({ ok: false, error: 'Wert 1–5' });
+    if (datum > heute() || datum < new Date(Date.now() - 2 * 86400000).toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' })) return res.status(400).json({ ok: false, error: 'nur heute oder gestern' });
+    if (!appsScript) return res.status(503).json({ ok: false, error: 'nicht verfügbar' });
+    try {
+      const r = await appsScript({ action: 'saveWellbeing', date: datum, value: String(v) });
+      if (!r || !r.ok) return res.status(502).json({ ok: false, error: r?.error || 'Speichern fehlgeschlagen' });
+      cache = null; // Votum neu rechnen
+      res.json({ ok: true, date: datum, value: v });
     } catch (e) {
       res.status(502).json({ ok: false, error: String(e.message || e) });
     }

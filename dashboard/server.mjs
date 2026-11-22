@@ -433,7 +433,7 @@ const INSTANZ = process.env.CK_INSTANZ || 'live';
 const texte = setupTexte(app, { getSetting, setSetting, cloudChat: cloudChatServer, originOk: llmOriginOk, scriptUrl: APPS_SCRIPT_URL, passiv: INSTANZ !== 'live' });
 app.get('/api/instanz', (_req, res) => res.json({ instanz: INSTANZ }));
 setupRechenkern(app, { getSetting, setSetting, aktiv: INSTANZ !== 'live' });
-setupWidget(app, { getSetting, setSetting, originOk: browserOk, texte });
+setupWidget(app, { getSetting, setSetting, originOk: browserOk, texte, appsScript: callAppsScript });
 setupEinstellungen(app, { getSetting, setSetting });
 setupWochenplan(app, { getSetting, setSetting });
 setupLokalRelay(app, {

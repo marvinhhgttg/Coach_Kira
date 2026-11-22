@@ -1,0 +1,4 @@
+<fitContributions>
+    <fitField id="0" displayInChart="true" sortOrder="0" precision="0" chartTitle="@Strings.FitTitel" dataLabel="@Strings.FitLabel" unitLabel="@Strings.FitEinheit" fillColor="#2ECC71"/>
+    <fitField id="1" displayInActivitySummary="true" sortOrder="1" precision="0" dataLabel="@Strings.FitLabel" unitLabel="@Strings.FitEinheit"/>
+</fitContributions>

@@ -7,6 +7,9 @@
         <iq:permissions>
             <iq:uses-permission id="Communications"/>
             <iq:uses-permission id="Background"/>
+            <iq:uses-permission id="SensorHistory"/>
+            <iq:uses-permission id="Notifications"/>
+            <iq:uses-permission id="ComplicationPublisher"/>
         </iq:permissions>
         <iq:languages>
             <iq:language>deu</iq:language>
