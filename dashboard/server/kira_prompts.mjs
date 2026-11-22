@@ -4012,6 +4012,13 @@ var import_react4 = __toESM(require_react(), 1);
 var import_react2 = __toESM(require_react(), 1);
 var CACHE_MS = 10 * 60 * 1e3;
 
+// src/kern/formeln.ts
+var CTL_MODEL = { a: -3.95042, b: 0.97283824, c: 0.2336734, g: 0.7, k: 7.1, win: 28 };
+function ctlStep(ctl, last, mittel28) {
+  const m = CTL_MODEL;
+  return m.g * (m.a + m.b * ctl + m.c * last) + (1 - m.g) * m.k * mittel28;
+}
+
 // src/lib/ctlModel.ts
 var ES_MODEL = { a: 155.91432, b: 0.96845, c: 0.1537, d: 0.2993, win: 56 };
 
@@ -4173,6 +4180,42 @@ var VARS = [
   { key: "essDay", label: "Last", short: "Last", unit: "ESS" }
 ];
 var VAR = Object.fromEntries(VARS.map((v) => [v.key, v]));
+
+// src/kern/soll.ts
+var BAND_MIN_N = 8;
+var BAND_FENSTER = 0.4;
+function halteLast(yesterday) {
+  const ctl0 = yesterday?.ctlPost ?? null;
+  if (ctl0 == null || ctl0 <= 0) return null;
+  const m0 = ctl0 / 7.04;
+  for (let L = 0; L <= 500; L += 1) if (ctlStep(ctl0, L, (27 * m0 + L) / 28) >= ctl0) return L;
+  return null;
+}
+function persoenlicheBaender(days) {
+  const pts = [];
+  for (let i = 1; i + 1 < days.length; i++) {
+    const d = days[i], n = days[i + 1];
+    if (!d.vote || d.readiness == null || n.readiness == null || !d.activityDone) continue;
+    const ist = d.actual?.load ?? d.load ?? 0;
+    const h = halteLast(days[i - 1]);
+    if (!h || ist <= 0) continue;
+    pts.push({ v: d.vote, q: ist / h, d1: n.readiness - d.readiness });
+  }
+  const out = {};
+  for (const v of ["EASY", "TRAIN"]) {
+    const xs = pts.filter((p) => p.v === v);
+    let best = null;
+    for (let edge = 0.8; edge <= 2.4 + 1e-9; edge += 0.2) {
+      const g = xs.filter((p) => p.q > edge - BAND_FENSTER && p.q <= edge);
+      if (g.length < BAND_MIN_N) continue;
+      const d1 = g.reduce((a, p) => a + p.d1, 0) / g.length;
+      if (d1 < 0) break;
+      best = { faktor: Math.round(edge * 10) / 10, n: g.length, d1: Math.round(d1 * 10) / 10 };
+    }
+    if (best) out[v] = best;
+  }
+  return out;
+}
 
 // src/components/GarminSportProfilTile.tsx
 var import_react7 = __toESM(require_react(), 1);
@@ -4553,7 +4596,8 @@ function erfahrungAusTagen(days) {
   return { stand: days.length ? days[days.length - 1].date : "", faelle, gruppen, nTage: z.length, nHaerter: faelle.length };
 }
 function erfahrungAusRohdaten(raw) {
-  return erfahrungAusTagen(buildDays(raw));
+  const days = buildDays(raw);
+  return { ...erfahrungAusTagen(days), baender: persoenlicheBaender(days) };
 }
 var fz = (v, d = 1) => v == null ? "\u2013" : `${v > 0 ? "+" : v < 0 ? "\u2212" : "\xB1"}${Math.abs(v).toLocaleString("de-DE", { maximumFractionDigits: d, minimumFractionDigits: d })}`;
 var pct = (v) => `${Math.round(v * 100)} %`;

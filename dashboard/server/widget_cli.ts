@@ -5,7 +5,7 @@
  * Aufruf: node server/widget.mjs  → JSON auf stdout
  */
 import { buildDays, RECOVERY_FETCH_METRICS, VOTE_LABEL, VOTE_LEVEL, type RecoveryDay } from '../src/kern/votum';
-import { lastEmpfehlung } from '../src/kern/soll';
+import { lastEmpfehlung, persoenlicheBaender, type Baender } from '../src/kern/soll';
 import { fetchChartData, fetchPlanSimulationWithTimeout } from '../src/lib/api';
 import { rangeFor } from '../src/lib/windows';
 import { fetchExtras } from '../src/lib/extras';
@@ -14,6 +14,17 @@ import { zielArt, type Ziel } from '../src/lib/planning';
 import { fetchGarminTage } from '../src/lib/garmin';
 import { lerneModelle } from '../src/lib/essRechner';
 import { eigeneBergtouren, eigeneSkitouren, setzeGarminTage, tourLastPersoenlich } from '../src/lib/tourEss';
+
+// 22.11.2026: persönliche Soll-Obergrenzen aus der ganzen Historie (wie Cockpit)
+let baenderJetzt: Baender | null = null;
+async function baenderLaden(): Promise<Baender | null> {
+  if (baenderJetzt) return baenderJetzt;
+  try {
+    const all: any = await fetchChartData('9999d' as any, RECOVERY_FETCH_METRICS as any);
+    baenderJetzt = persoenlicheBaender(buildDays(all?.data || []));
+  } catch { baenderJetzt = null; }
+  return baenderJetzt;
+}
 
 const iso = (d = new Date()) => d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
 const num = (v: unknown) => {
@@ -42,7 +53,7 @@ async function heuteTeil() {
   } catch {}
   // 22.11.2026: Soll = Soll-Rahmen des Kerns (wie „Empfehlung heute“ im Cockpit), Plan getrennt
   const ti = t ? days.length - 1 : -1;
-  const rahmen = t && ti > 0 ? lastEmpfehlung(t, days[ti - 1]) : null;
+  const rahmen = t && ti > 0 ? lastEmpfehlung(t, days[ti - 1], await baenderLaden()) : null;
   const planLoad = plan ? num(plan.load) : t?.essDay ?? null;
   const woche = days.slice(-7).map((d) => ({ d: d.date, ist: d.activityDone ? d.actual?.load ?? d.load ?? 0 : 0 }));
   return {

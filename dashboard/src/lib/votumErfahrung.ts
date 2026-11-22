@@ -32,6 +32,7 @@ export const GRUND_LABEL: Record<VoteGrund, string> = {
 export const SCHUTZ: VoteGrund[] = ['hrv', 'rhr_ready', 'befinden', 'rot'];
 export const MIN_N = 8;
 const MIN_N_ALLE = 12;
+import { persoenlicheBaender, type Baender } from '../kern/soll';
 
 export type Klasse = 'vertraeglich' | 'kostet' | 'unklar';
 export type Fall = {
@@ -62,7 +63,7 @@ export type Gruppe = {
   refTief: number;
   klasse: Klasse;
 };
-export type Erfahrung = { stand: string; faelle: Fall[]; gruppen: Gruppe[]; nTage: number; nHaerter: number };
+export type Erfahrung = { stand: string; faelle: Fall[]; gruppen: Gruppe[]; nTage: number; nHaerter: number; baender?: Baender };
 
 type Zeile = { i: number; datum: string; V: Vote; A: Vote; bind: VoteGrund; ready: number; s: (number | null)[]; tief: boolean };
 
@@ -192,7 +193,9 @@ export function erfahrungAusTagen(days: RecoveryDay[]): Erfahrung {
 }
 
 export function erfahrungAusRohdaten(raw: any[]): Erfahrung {
-  return erfahrungAusTagen(buildDays(raw));
+  const days = buildDays(raw);
+  // 22.11.2026: persönliche Soll-Obergrenzen aus derselben Historie
+  return { ...erfahrungAusTagen(days), baender: persoenlicheBaender(days) };
 }
 
 /** Passende Gruppe für einen Sprung: erst Grund+Sprung, sonst alle Gründe außer Schutzsignalen. */

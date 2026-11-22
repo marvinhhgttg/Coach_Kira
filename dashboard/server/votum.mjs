@@ -3170,6 +3170,78 @@ var import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
 // src/lib/useErfahrung.ts
 var import_react4 = __toESM(require_react(), 1);
 
+// src/kern/soll.ts
+var BAND = { REST: [0, 0.25], EASY: [0.3, 0.8], TRAIN: [0.7, 1.25], QUALITY: [1, 1.7] };
+var BAND_MIN_N = 8;
+var BAND_FENSTER = 0.4;
+function halteLast(yesterday) {
+  const ctl0 = yesterday?.ctlPost ?? null;
+  if (ctl0 == null || ctl0 <= 0) return null;
+  const m0 = ctl0 / 7.04;
+  for (let L = 0; L <= 500; L += 1) if (ctlStep(ctl0, L, (27 * m0 + L) / 28) >= ctl0) return L;
+  return null;
+}
+function persoenlicheBaender(days2) {
+  const pts = [];
+  for (let i = 1; i + 1 < days2.length; i++) {
+    const d = days2[i], n = days2[i + 1];
+    if (!d.vote || d.readiness == null || n.readiness == null || !d.activityDone) continue;
+    const ist = d.actual?.load ?? d.load ?? 0;
+    const h = halteLast(days2[i - 1]);
+    if (!h || ist <= 0) continue;
+    pts.push({ v: d.vote, q: ist / h, d1: n.readiness - d.readiness });
+  }
+  const out = {};
+  for (const v of ["EASY", "TRAIN"]) {
+    const xs = pts.filter((p) => p.v === v);
+    let best = null;
+    for (let edge = 0.8; edge <= 2.4 + 1e-9; edge += 0.2) {
+      const g = xs.filter((p) => p.q > edge - BAND_FENSTER && p.q <= edge);
+      if (g.length < BAND_MIN_N) continue;
+      const d1 = g.reduce((a, p) => a + p.d1, 0) / g.length;
+      if (d1 < 0) break;
+      best = { faktor: Math.round(edge * 10) / 10, n: g.length, d1: Math.round(d1 * 10) / 10 };
+    }
+    if (best) out[v] = best;
+  }
+  return out;
+}
+function lastEmpfehlung(today, yesterday, baender) {
+  const vote = today.vote;
+  const atl0 = yesterday?.atlPost ?? null;
+  const ctl0 = yesterday?.ctlPost ?? null;
+  if (!vote || atl0 == null || ctl0 == null || ctl0 <= 0) return null;
+  const m0 = ctl0 / 7.04;
+  const ctlNach = (L) => ctlStep(ctl0, L, (27 * m0 + L) / 28);
+  const acwrNach = (L) => atlStep(atl0, L) / ctlNach(L);
+  let halte = 0;
+  for (let L = 0; L <= 500; L += 1) if (ctlNach(L) >= ctl0) {
+    halte = L;
+    break;
+  }
+  let acwrGrenze = null;
+  for (let L = 0; L <= 600; L += 1) if (acwrNach(L) > 1.3) {
+    acwrGrenze = L - 1;
+    break;
+  }
+  const r5 = (x) => Math.max(0, Math.round(x / 5) * 5);
+  let [lo, hi] = BAND[vote].map((f) => r5(f * halte));
+  const pb = baender?.[vote];
+  const persoenlich = pb && pb.faktor > BAND[vote][1] ? { faktor: pb.faktor, standard: hi, n: pb.n, d1: pb.d1 } : null;
+  if (persoenlich) hi = r5(pb.faktor * halte);
+  let gedeckelt = false;
+  if (acwrGrenze != null && hi > acwrGrenze) {
+    hi = r5(Math.max(0, acwrGrenze));
+    gedeckelt = true;
+    if (lo > hi) lo = r5(hi * 0.6);
+  }
+  return { min: lo, max: hi, halte: r5(halte), acwrGrenze: acwrGrenze != null ? r5(acwrGrenze) : null, gedeckelt, persoenlich };
+}
+function lageImRahmen(load, e) {
+  if (load == null || !e) return null;
+  return load > e.max ? "dar\xFCber" : load < e.min ? "darunter" : "im Rahmen";
+}
+
 // src/lib/cloudLLM.ts
 var SENTINEL = "__PORT_5000__";
 var SERVER_BASE = SENTINEL.startsWith("__PORT") ? "" : "/" + SENTINEL.replace(/^\/+/, "");
@@ -3198,41 +3270,6 @@ var VARS = [
   { key: "essDay", label: "Last", short: "Last", unit: "ESS" }
 ];
 var VAR = Object.fromEntries(VARS.map((v) => [v.key, v]));
-
-// src/kern/soll.ts
-var BAND = { REST: [0, 0.25], EASY: [0.3, 0.8], TRAIN: [0.7, 1.25], QUALITY: [1, 1.7] };
-function lastEmpfehlung(today, yesterday) {
-  const vote = today.vote;
-  const atl0 = yesterday?.atlPost ?? null;
-  const ctl0 = yesterday?.ctlPost ?? null;
-  if (!vote || atl0 == null || ctl0 == null || ctl0 <= 0) return null;
-  const m0 = ctl0 / 7.04;
-  const ctlNach = (L) => ctlStep(ctl0, L, (27 * m0 + L) / 28);
-  const acwrNach = (L) => atlStep(atl0, L) / ctlNach(L);
-  let halte = 0;
-  for (let L = 0; L <= 500; L += 1) if (ctlNach(L) >= ctl0) {
-    halte = L;
-    break;
-  }
-  let acwrGrenze = null;
-  for (let L = 0; L <= 600; L += 1) if (acwrNach(L) > 1.3) {
-    acwrGrenze = L - 1;
-    break;
-  }
-  const r5 = (x) => Math.max(0, Math.round(x / 5) * 5);
-  let [lo, hi] = BAND[vote].map((f) => r5(f * halte));
-  let gedeckelt = false;
-  if (acwrGrenze != null && hi > acwrGrenze) {
-    hi = r5(Math.max(0, acwrGrenze));
-    gedeckelt = true;
-    if (lo > hi) lo = r5(hi * 0.6);
-  }
-  return { min: lo, max: hi, halte: r5(halte), acwrGrenze: acwrGrenze != null ? r5(acwrGrenze) : null, gedeckelt };
-}
-function lageImRahmen(load, e) {
-  if (load == null || !e) return null;
-  return load > e.max ? "dar\xFCber" : load < e.min ? "darunter" : "im Rahmen";
-}
 
 // src/components/GarminSportProfilTile.tsx
 var import_react6 = __toESM(require_react(), 1);
@@ -3710,6 +3747,17 @@ function vergleiche(cockpit, supervisor) {
 }
 
 // server/votum_cli.ts
+var baenderJetzt = null;
+async function baenderLaden() {
+  if (baenderJetzt) return baenderJetzt;
+  try {
+    const all = await fetchChartData("9999d", RECOVERY_FETCH_METRICS);
+    baenderJetzt = persoenlicheBaender(buildDays(all?.data || []));
+  } catch {
+    baenderJetzt = null;
+  }
+  return baenderJetzt;
+}
 var V2_URL = process.env.CK_V2_SCRIPT_URL || "https://script.google.com/macros/s/AKfycbwfLqLJ56WtQj6CdfufJW3VMclCGyF1XL6EUOBR--Jm3UOlqALIB0Y32wJ6xIZhFw93/exec";
 var iso = (d = /* @__PURE__ */ new Date()) => d.toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" });
 var heute2 = iso();
@@ -3720,7 +3768,7 @@ var [res, st] = await Promise.all([
 var days = buildDays(res?.data || []).filter((d) => d.date <= heute2);
 var t = days.find((d) => d.date === heute2) || null;
 var ti = t ? days.indexOf(t) : -1;
-var rahmen = t && ti > 0 ? lastEmpfehlung(t, days[ti - 1]) : null;
+var rahmen = t && ti > 0 ? lastEmpfehlung(t, days[ti - 1], await baenderLaden()) : null;
 var planSim = null;
 try {
   const sim = await fetchPlanSimulationWithTimeout(45e3);
@@ -3731,7 +3779,7 @@ var planLoad = planSim ? Number(planSim.load) : t?.essDay ?? null;
 var istLoad = t?.activityDone ? t.actual?.load ?? t.load ?? null : null;
 var rueck = days.slice(-31).map((d, i, a) => {
   if (i === 0 || d.date >= heute2) return null;
-  const e = lastEmpfehlung(d, a[i - 1]);
+  const e = lastEmpfehlung(d, a[i - 1], baenderJetzt);
   const ist = d.activityDone ? d.actual?.load ?? d.load ?? 0 : 0;
   return e ? { d: d.date, v: d.vote, min: e.min, max: e.max, ist, lage: lageImRahmen(ist, e) } : null;
 }).filter(Boolean);

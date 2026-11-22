@@ -142,7 +142,7 @@ function EmpfehlungZeile({ e, vote, plan, ist = false }: { e: Empfehlung; vote: 
         {dauer && <span className="tnum text-ink-muted">{dauer}</span>}
       </div>
       <div className="mt-0.5 text-2xs text-ink-dim tnum">
-        Votum {VOTE_LABEL[vote]} · Fitness halten ≈ {e.halte} ESS{e.acwrGrenze != null ? ` · ACWR 1,3 bei ≈ ${e.acwrGrenze} ESS` : ''}{e.gedeckelt ? ' (Obergrenze dadurch gesenkt)' : ''}
+        Votum {VOTE_LABEL[vote]} · Fitness halten ≈ {e.halte} ESS{e.acwrGrenze != null ? ` · ACWR 1,3 bei ≈ ${e.acwrGrenze} ESS` : ''}{e.gedeckelt ? ' (Obergrenze dadurch gesenkt)' : ''}{e.persoenlich ? ` · Obergrenze persönlich ${e.persoenlich.faktor.toLocaleString('de-DE')}× statt ${e.persoenlich.standard} (${e.persoenlich.n} vergleichbare Tage, Readiness am Folgemorgen Ø ${e.persoenlich.d1 >= 0 ? '+' : ''}${e.persoenlich.d1.toLocaleString('de-DE')})` : ''}
         {lage && <> · {ist ? 'Absolviert' : 'Plan'} {fmtNum(plan!.load)} ESS <span className={lage === 'im Rahmen' ? 'text-green-300' : 'text-orange-300'}>{lage}</span></>}
       </div>
     </div>
@@ -150,7 +150,8 @@ function EmpfehlungZeile({ e, vote, plan, ist = false }: { e: Empfehlung; vote: 
 }
 
 function PlanCheck({ plan, today, yesterday }: { plan: PlannedSession | null | 'loading'; today: RecoveryDay; yesterday?: RecoveryDay | null }) {
-  const emp = today.vote ? lastEmpfehlung(today, yesterday ?? null) : null;
+  const baender = useErfahrung()?.baender ?? null;
+  const emp = today.vote ? lastEmpfehlung(today, yesterday ?? null, baender) : null;
   const done = isDoneToday(today, plan);
   const act = actualSession(today);
 
@@ -586,6 +587,7 @@ function TodayCard({
   wellbeing: WellbeingProps;
   plan: PlannedSession | null | 'loading';
 }) {
+  const baender = useErfahrung()?.baender ?? null;
   if (!today || !today.hasMorningData) {
     return (
       <div className="panel-raised p-3 sm:p-4 h-full min-w-0 space-y-3">
@@ -726,7 +728,7 @@ function TodayCard({
         {vote && (
           <div>
             <div className="label mb-1">Empfehlung</div>
-            <p className="text-sm">{doneAdvice ?? <EmpfehlungText vote={vote} e={today.vote ? lastEmpfehlung(today, yesterday ?? null) : null} plan={plan && plan !== 'loading' ? plan : null} />}</p>
+            <p className="text-sm">{doneAdvice ?? <EmpfehlungText vote={vote} e={today.vote ? lastEmpfehlung(today, yesterday ?? null, baender) : null} plan={plan && plan !== 'loading' ? plan : null} />}</p>
           </div>
         )}
         <p className="text-2xs text-ink-dim">

@@ -5,8 +5,19 @@
  */
 import { buildDays, RECOVERY_FETCH_METRICS, STUFE_COCKPIT, stufeSupervisor, vergleiche, type RecoveryDay } from '../src/kern/votum';
 import { fetchChartData, fetchPlanSimulationWithTimeout } from '../src/lib/api';
-import { lastEmpfehlung, lageImRahmen } from '../src/kern/soll';
+import { lastEmpfehlung, lageImRahmen, persoenlicheBaender, type Baender } from '../src/kern/soll';
 import { rangeFor } from '../src/lib/windows';
+
+// 22.11.2026: persönliche Soll-Obergrenzen aus der ganzen Historie (wie Cockpit)
+let baenderJetzt: Baender | null = null;
+async function baenderLaden(): Promise<Baender | null> {
+  if (baenderJetzt) return baenderJetzt;
+  try {
+    const all: any = await fetchChartData('9999d' as any, RECOVERY_FETCH_METRICS as any);
+    baenderJetzt = persoenlicheBaender(buildDays(all?.data || []));
+  } catch { baenderJetzt = null; }
+  return baenderJetzt;
+}
 
 const V2_URL = process.env.CK_V2_SCRIPT_URL ||
   'https://script.google.com/macros/s/AKfycbwfLqLJ56WtQj6CdfufJW3VMclCGyF1XL6EUOBR--Jm3UOlqALIB0Y32wJ6xIZhFw93/exec';
@@ -21,7 +32,7 @@ const days: RecoveryDay[] = buildDays(res?.data || []).filter((d) => d.date <= h
 const t = days.find((d) => d.date === heute) || null;
 // Etappe 2b: Soll-Rahmen aus dem Kern gegen den Plan im Sheet (coachE_ESS_day bzw. Plan-Simulation Tag 1)
 const ti = t ? days.indexOf(t) : -1;
-const rahmen = t && ti > 0 ? lastEmpfehlung(t, days[ti - 1]) : null;
+const rahmen = t && ti > 0 ? lastEmpfehlung(t, days[ti - 1], await baenderLaden()) : null;
 let planSim: any = null;
 try {
   const sim: any = await fetchPlanSimulationWithTimeout(45000);
@@ -31,7 +42,7 @@ const planLoad = planSim ? Number(planSim.load) : t?.essDay ?? null;
 const istLoad = t?.activityDone ? t.actual?.load ?? t.load ?? null : null;
 const rueck = days.slice(-31).map((d, i, a) => {
   if (i === 0 || d.date >= heute) return null;
-  const e = lastEmpfehlung(d, a[i - 1]);
+  const e = lastEmpfehlung(d, a[i - 1], baenderJetzt);
   const ist = d.activityDone ? d.actual?.load ?? d.load ?? 0 : 0;
   return e ? { d: d.date, v: d.vote, min: e.min, max: e.max, ist, lage: lageImRahmen(ist, e) } : null;
 }).filter(Boolean) as any[];
