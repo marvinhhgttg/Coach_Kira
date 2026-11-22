@@ -581,11 +581,13 @@ function TodayCard({
   yesterday,
   wellbeing,
   plan,
+  trJetzt = null,
 }: {
   today: RecoveryDay | null;
   yesterday: RecoveryDay | null;
   wellbeing: WellbeingProps;
   plan: PlannedSession | null | 'loading';
+  trJetzt?: number | null;
 }) {
   const baender = useErfahrung()?.baender ?? null;
   if (!today || !today.hasMorningData) {
@@ -616,7 +618,7 @@ function TodayCard({
     {
       label: 'Readiness',
       value: today.readiness != null ? `${fmtNum(today.readiness)} / 100` : '—',
-      hint: readinessDiff != null ? `${fmtDelta(readinessDiff)} ggü. gestern` : '',
+      hint: [readinessDiff != null ? `${fmtDelta(readinessDiff)} ggü. gestern` : '', trJetzt != null && trJetzt !== today.readiness ? `jetzt ${fmtNum(trJetzt)}` : ''].filter(Boolean).join(' · '),
       level: today.levels.readiness,
     },
     {
@@ -945,12 +947,16 @@ function Punkt({ farbe, haken = false }: { farbe: string; haken?: boolean }) {
     </span>
   );
 }
-function WichtigsteDaten({ today, todayIso }: { today: RecoveryDay | null; todayIso: string }) {
+function WichtigsteDaten({ today, todayIso, trJetzt = null }: { today: RecoveryDay | null; todayIso: string; trJetzt?: number | null }) {
   const { tage } = useGarminTage();
   const g = tage?.get(todayIso);
   const bb = g?.bb_aufwachen ?? g?.tag?.bb_max ?? null;
-  const r = today?.readiness ?? null;
-  const rLvl = today?.levels.readiness ?? 'leer';
+  // 22.11.2026: immer der neueste Wert (nach Aktivität); Votum bleibt beim Morgenwert
+  const rMorgen = today?.readiness ?? null;
+  const r = trJetzt ?? rMorgen;
+  const rLvl = trJetzt != null ? levelReadiness(trJetzt) : today?.levels.readiness ?? 'leer';
+  const rStufe = r == null ? '' : r >= 75 ? 'Hoch' : r >= 50 ? 'Mäßig' : r >= 25 ? 'Niedrig' : 'Schlecht';
+  const rUnter = r == null ? 'noch keine Morgenwerte' : trJetzt != null && rMorgen != null && trJetzt !== rMorgen ? `${rStufe} · aktuell · morgens ${Math.round(rMorgen)}` : rStufe;
   const vote = today?.vote ?? null;
   const hrv = today?.hrv ?? null;
   const lo = today?.hrvLow ?? null, hi = today?.hrvHigh ?? null;
@@ -959,7 +965,7 @@ function WichtigsteDaten({ today, todayIso }: { today: RecoveryDay | null; today
   const bbFarbe = bb == null ? AMPEL_HEX.grau : bb >= 75 ? '#1976d2' : bb >= 50 ? '#4aa3df' : bb >= 26 ? '#ef7d00' : '#d64545';
   return (
     <StoryGrid spalten={4}>
-      <KpiKachel testid="kpi-readiness" titel="Trainingsbereitschaft" ring={r} wert={r != null ? Math.round(r) : '—'} farbe={AMPEL_HEX[rLvl]} unter={r == null ? 'noch keine Morgenwerte' : r >= 75 ? 'Hoch' : r >= 50 ? 'Mäßig' : r >= 25 ? 'Niedrig' : 'Schlecht'} />
+      <KpiKachel testid="kpi-readiness" titel="Trainingsbereitschaft" ring={r} wert={r != null ? Math.round(r) : '—'} farbe={AMPEL_HEX[rLvl]} unter={rUnter} />
       <KpiKachel testid="kpi-votum" titel="Tagesvotum" symbol={<Punkt farbe={vote ? AMPEL_HEX[VOTE_LEVEL[vote]] : AMPEL_HEX.grau} haken={vote === 'TRAIN' || vote === 'QUALITY'} />} wert={vote ? VOTE_LABEL[vote] : '—'} unter={vote ? VOTE_STATUS_TEXT[vote].replace(/^[A-ZÜ]+ — /, '') : 'noch offen'} />
       <KpiKachel testid="kpi-hrv" titel="HRV-Status" symbol={<Punkt farbe={hrvFarbe} />} wert={hrvTxt} unter={hrv != null ? `${Math.round(hrv)} ms${lo != null && hi != null ? ` · Band ${Math.round(lo)}–${Math.round(hi)}` : ''}` : undefined} />
       <KpiKachel testid="kpi-bb" titel="Body Battery" ring={bb} wert={bb != null ? Math.round(bb) : '—'} farbe={bbFarbe} unter={g?.bb_aufwachen != null ? 'beim Aufwachen' : bb != null ? 'Tageshoch' : 'keine Garmin-Daten'} />
@@ -1044,7 +1050,8 @@ export function RecoveryPanel({
     setErr(null);
     if (withPlan) loadPlan();
     try {
-      const res = await fetchChartData(range, RECOVERY_FETCH_METRICS);
+      // fb_TR_obs: laufend synchronisierte Trainingsbereitschaft (nach Aktivität) für die Anzeige
+      const res = await fetchChartData(range, [...RECOVERY_FETCH_METRICS, 'fb_TR_obs']);
       if (my !== reqSeq.current) return; // veraltete Antwort verwerfen
       setRaw(res.data as any[]);
       setLoadedRange(range);
@@ -1061,6 +1068,7 @@ export function RecoveryPanel({
   }, []);
 
   const todayIso = localIsoDate();
+  const trJetzt = (() => { const z = (raw || []).find((x: any) => String(x.date).slice(0, 10) === todayIso); const v = z ? Number(String(z.fb_TR_obs ?? '').replace(',', '.')) : NaN; return Number.isFinite(v) && v > 0 ? v : null; })();
   const yDate = new Date();
   yDate.setDate(yDate.getDate() - 1);
   const yesterdayIso = localIsoDate(yDate);
@@ -1115,11 +1123,12 @@ export function RecoveryPanel({
     return (
       <>
         <StorySection id="wichtig" titel="Wichtigste Daten" unter="Wie stehst du heute da?" rechts={aktualisieren}>
-          <WichtigsteDaten today={today} todayIso={todayIso} />
+          <WichtigsteDaten today={today} todayIso={todayIso} trJetzt={trJetzt} />
         </StorySection>
         <StorySection id="fokus" titel="Im Fokus" unter="Was sagt Kira für heute, und wie war die Nacht?">
           <StoryGrid>
             <TodayCard
+              trJetzt={trJetzt}
               today={today}
               yesterday={yesterday}
               plan={planToday}
@@ -1187,6 +1196,7 @@ export function RecoveryPanel({
         <div className="space-y-4">
           {isToday && <div className="grid gap-4 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(300px,1fr)_minmax(0,2fr)]">
             <TodayCard
+              trJetzt={trJetzt}
               today={today}
               yesterday={yesterday}
               plan={planToday}
