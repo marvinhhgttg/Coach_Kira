@@ -92,6 +92,27 @@ function kiraKomplikation(d as Dictionary) as Void {
             else if (l.get("sollHeute") != null) { wert = l.get("sollHeute").toNumber().toString(); }
         }
         Complications.updateComplication(0, { :value => wert, :shortLabel => lab, :units => "ESS" });
+        // 22.11.2026: Komplikation 1 (privat) für das Coach-Kira-Zifferblatt:
+        // vote|stufe|lo|hi|ist|datum|ziel|zielTage|readiness
+        var t = "";
+        var st = v instanceof Dictionary && v.get("stufe") != null ? v.get("stufe").toString() : "";
+        var lo2 = "", hi2 = "", ist = "";
+        if (l instanceof Dictionary) {
+            if (l.get("sollMin") != null) { lo2 = l.get("sollMin").toNumber().toString(); }
+            if (l.get("sollMax") != null) { hi2 = l.get("sollMax").toNumber().toString(); }
+            else if (l.get("sollHeute") != null) { hi2 = l.get("sollHeute").toNumber().toString(); }
+            if (l.get("istHeute") != null) { ist = l.get("istHeute").toNumber().toString(); }
+        }
+        var z = d.get("ziel");
+        var zn = "", zt = "";
+        if (z instanceof Dictionary) {
+            if (z.get("name") != null) { zn = z.get("name").toString(); }
+            if (z.get("tage") != null) { zt = z.get("tage").toNumber().toString(); }
+        }
+        var m = d.get("morgen");
+        var rd = m instanceof Dictionary && m.get("readiness") != null ? m.get("readiness").toNumber().toString() : "";
+        t = (lab.equals("KIRA") ? "" : lab) + "|" + st + "|" + lo2 + "|" + hi2 + "|" + ist + "|" + (d.get("datum") != null ? d.get("datum").toString() : "") + "|" + zn + "|" + zt + "|" + rd;
+        Complications.updateComplication(1, { :value => t, :shortLabel => "KIRA" });
     } catch (e) {
     }
 }
@@ -110,8 +131,8 @@ class KiraHintergrund extends System.ServiceDelegate {
             return;
         }
         Communications.makeWebRequest(
-            KIRA_BASIS + "/api/widget",
-            { "uhr" => "1" },
+            KIRA_BASIS + "/api/widget?uhr=1",
+            null,
             {
                 :method => Communications.HTTP_REQUEST_METHOD_GET,
                 :headers => { "Authorization" => "Bearer " + tok },

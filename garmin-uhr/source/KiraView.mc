@@ -34,7 +34,7 @@ class KiraNetz {
         if (tok == null) { return; }
         status = "laedt";
         WatchUi.requestUpdate();
-        Communications.makeWebRequest(KIRA_BASIS + "/api/widget", { "uhr" => "1", "mehr" => "1" },
+        Communications.makeWebRequest(KIRA_BASIS + "/api/widget?uhr=1&mehr=1", null,
             {
                 :method => Communications.HTTP_REQUEST_METHOD_GET,
                 :headers => { "Authorization" => "Bearer " + tok },
