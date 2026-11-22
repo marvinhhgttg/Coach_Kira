@@ -23,11 +23,25 @@ class KiraFeldApp extends Application.AppBase {
     }
 
     function getInitialView() as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] {
-        try {
-            Background.registerForTemporalEvent(new Time.Duration(5 * 60));
-        } catch (e) { }
+        // Sofort abrufen statt erst nach 5 min: einmaliger Termin (Moment), frühestens 5 min nach dem letzten Lauf
+        var naechst = Time.now();
+        var zuletzt = Background.getLastTemporalEventTime();
+        if (zuletzt != null) {
+            var frueh = zuletzt.add(new Time.Duration(5 * 60 + 2));
+            if (frueh.greaterThan(naechst)) { naechst = frueh; }
+        }
+        planen(naechst);
         ansicht = new KiraFeldView();
         return [ansicht];
+    }
+
+    function planen(m as Time.Moment) as Void {
+        try {
+            Background.registerForTemporalEvent(m);
+            Storage.setValue("nx", m.value());
+        } catch (e) {
+            try { Background.registerForTemporalEvent(new Time.Duration(5 * 60)); } catch (e2) { }
+        }
     }
 
     function getServiceDelegate() as [System.ServiceDelegate] {
@@ -35,6 +49,9 @@ class KiraFeldApp extends Application.AppBase {
     }
 
     function onBackgroundData(data as Application.PersistableType) as Void {
+        Storage.setValue("vz", Time.now().value());
+        // nächsten Abruf in 5 min (Kopplung läuft, bis ein Schlüssel da ist; danach Rahmen aktuell halten)
+        planen(Time.now().add(new Time.Duration(5 * 60 + 2)));
         if (!(data instanceof Dictionary)) { return; }
         if (data.get("token") != null) {
             Storage.setValue("tok", data.get("token"));

@@ -84,6 +84,12 @@ class KiraFeldView extends WatchUi.DataField {
         return g.year.format("%04d") + "-" + (g.month as Number).format("%02d") + "-" + g.day.format("%02d");
     }
 
+    function uhrzeit(v) as String {
+        if (!(v instanceof Number)) { return "..."; }
+        var g = Toybox.Time.Gregorian.info(new Toybox.Time.Moment(v), Toybox.Time.FORMAT_SHORT);
+        return "ab " + g.hour.format("%02d") + ":" + g.min.format("%02d");
+    }
+
     function onTimerReset() as Void {
         sek = [0.0, 0.0, 0.0, 0.0, 0.0];
         ess = 0.0;
@@ -173,7 +179,10 @@ class KiraFeldView extends WatchUi.DataField {
         var unten = "";
         if (Storage.getValue("tok") == null) {
             var c = Storage.getValue("code");
-            unten = c != null ? "Code " + c.toString() : "koppelt ...";
+            var rc = Storage.getValue("rc");
+            if (c != null) { unten = "Code " + c.toString(); }
+            else if (rc instanceof Number) { unten = rc < 0 ? "Kein Netz " + rc.toString() : "Server " + rc.toString(); }
+            else { unten = "koppelt " + uhrzeit(Storage.getValue("nx")); }
         } else if (ra == null) {
             var rc = Storage.getValue("rc");
             unten = rc != null ? "Server " + rc.toString() : "Rahmen lädt";

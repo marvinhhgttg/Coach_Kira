@@ -38,454 +38,630 @@ _home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_21_26_23_4_stop:
     }
     [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 25; @symbol_functiondef = [getInitialView,25,13,27]; @symbol_return<0> = [WatchUi,25,34,41]; @symbol_return<1> = [Views,25,42,47]; @symbol_return<2> = [WatchUi,25,53,60]; @symbol_return<3> = [Views,25,61,66]; @symbol_return<4> = [WatchUi,25,68,75]; @symbol_return<5> = [InputDelegates,25,76,90]; ]
     function getInitialView() as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] {
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_25_92_31_4_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 26 8 ]
-        try @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_8_28_22_beginTry @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_8_28_22_endTry @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_8_28_22_catch @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_8_28_22_finally;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_8_28_22_beginTry:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_12_28_8_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 27 12 ]
-        symbol [ Background %tmp.1 27 12 22 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_25_92_36_4_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 27 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_25_92_36_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_25_92_36_4_stop" ]
+        %naechst.1 = local;
+        symbol [ naechst %naechst.1 27 12 19 ];
+        symbol [ Time %tmp.1 27 22 26 ];
+        %tmp.1 = getm $.Toybox.Time;
+        symbol [ now %tmp.2 27 27 30 ];
+        %tmp.2 = getv function %tmp.1 :now;
+        %tmp.3 = invoke %tmp.1 %tmp.2();
+        lputv %naechst.1 %tmp.3;
+        symbol [ naechst %naechst.1 27 12 19 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 28 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_25_92_36_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_25_92_36_4_stop" ]
+        %zuletzt.2 = local;
+        symbol [ zuletzt %zuletzt.2 28 12 19 ];
+        symbol [ Background %tmp.4 28 22 32 ];
+        %tmp.4 = getm $.Toybox.Background;
+        symbol [ getLastTemporalEventTime %tmp.5 28 33 57 ];
+        %tmp.5 = getv function %tmp.4 :getLastTemporalEventTime;
+        %tmp.6 = invoke %tmp.4 %tmp.5();
+        lputv %zuletzt.2 %tmp.6;
+        symbol [ zuletzt %zuletzt.2 28 12 19 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 29 8 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_29_8_32_8_if_stmt:
+        %tmp.7 = lgetv %zuletzt.2;
+        symbol [ zuletzt %tmp.7 29 12 19 ];
+        %tmp.8 = null;
+        %tmp.9 = ne %tmp.7 %tmp.8;
+        bf %tmp.9 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_29_8_32_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_29_8_32_8_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_29_29_32_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 30 12 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_29_29_32_8_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_29_29_32_8_stop" ]
+        %frueh.3 = local;
+        symbol [ frueh %frueh.3 30 16 21 ];
+        %tmp.10 = lgetv %zuletzt.2;
+        symbol [ zuletzt %tmp.10 30 24 31 ];
+        %tmp.11 = as %tmp.10 { (!Null) };
+        symbol [ add %tmp.12 30 32 35 ];
+        %tmp.12 = getv function %tmp.11 :add;
+        symbol [ Time %tmp.15 30 40 44 ];
+        %tmp.15 = getm $.Toybox.Time;
+        symbol [ Duration %tmp.16 30 45 53 ];
+        %tmp.16 = getv function ? %tmp.15 :Duration;
+        %tmp.17 = 5;
+        %tmp.18 = 60;
+        %tmp.19 = mul %tmp.17 %tmp.18;
+        %tmp.20 = 2;
+        %tmp.21 = add %tmp.19 %tmp.20;
+        %tmp.13 = newc %tmp.16 (%tmp.21);
+        %tmp.22 = invoke %tmp.11 %tmp.12(%tmp.13);
+        lputv %frueh.3 %tmp.22;
+        symbol [ frueh %frueh.3 30 16 21 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 31 12 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_31_12_31_63_if_stmt:
+        %tmp.23 = lgetv %frueh.3;
+        symbol [ frueh %tmp.23 31 16 21 ];
+        symbol [ greaterThan %tmp.24 31 22 33 ];
+        %tmp.24 = getv function %tmp.23 :greaterThan;
+        %tmp.25 = lgetv %naechst.1;
+        symbol [ naechst %tmp.25 31 34 41 ];
+        %tmp.26 = invoke %tmp.23 %tmp.24(%tmp.25);
+        bf %tmp.26 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_31_12_31_63_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_31_12_31_63_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_31_44_31_63_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 31 46 ]
+        %tmp.27 = lgetv %frueh.3;
+        symbol [ frueh %tmp.27 31 56 61 ];
+        lputv %naechst.1 %tmp.27;
+        symbol [ naechst %naechst.1 31 46 53 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_31_44_31_63_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_31_12_31_63_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_31_12_31_63_if_end:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_29_29_32_8_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_29_8_32_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_29_8_32_8_if_end:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 33 8 ]
+        %tmp.28 = self;
+        symbol [ planen %tmp.29 33 8 14 ];
+        %tmp.29 = getv function %tmp.28 :planen;
+        %tmp.30 = lgetv %naechst.1;
+        symbol [ naechst %tmp.30 33 15 22 ];
+        invoke %tmp.28 %tmp.29(%tmp.30);
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 34 8 ]
+        symbol [ KiraFeldView %tmp.34 34 22 34 ];
+        %tmp.34 = getv ? :KiraFeldView;
+        %tmp.31 = newc %tmp.34 ();
+        symbol [ ansicht ? 34 8 15 ];
+        putv self :ansicht %tmp.31;
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 35 8 ]
+        %tmp.35 = newa 1;
+        symbol [ ansicht %tmp.37 35 16 23 ];
+        %tmp.37 = getv ? :ansicht;
+        %tmp.38 = dup %tmp.35;
+        %tmp.39 = aputv %tmp.38 0 %tmp.37;
+        ret %tmp.39;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_25_92_36_4_stop:
+    }
+    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 38; @symbol_functiondef = [planen,38,13,19]; @symbol_param<0> = [m,38,20,21]; @symbol_param<0>_type<0> = [Time,38,25,29]; @symbol_param<0>_type<1> = [Moment,38,30,36]; ]
+    function planen(m as Time.Moment) as Void {
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_38_46_45_4_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 39 8 ]
+        try @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_8_44_8_beginTry @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_8_44_8_endTry @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_8_44_8_catch @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_8_44_8_finally;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_8_44_8_beginTry:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_12_42_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 40 12 ]
+        symbol [ Background %tmp.1 40 12 22 ];
         %tmp.1 = getm $.Toybox.Background;
-        symbol [ registerForTemporalEvent %tmp.2 27 23 47 ];
+        symbol [ registerForTemporalEvent %tmp.2 40 23 47 ];
         %tmp.2 = getv function %tmp.1 :registerForTemporalEvent;
-        symbol [ Time %tmp.5 27 52 56 ];
-        %tmp.5 = getm $.Toybox.Time;
-        symbol [ Duration %tmp.6 27 57 65 ];
-        %tmp.6 = getv function ? %tmp.5 :Duration;
-        %tmp.7 = 5;
-        %tmp.8 = 60;
-        %tmp.9 = mul %tmp.7 %tmp.8;
-        %tmp.3 = newc %tmp.6 (%tmp.9);
+        %tmp.3 = lgetv %m;
+        symbol [ m %tmp.3 40 48 49 ];
         invoke %tmp.1 %tmp.2(%tmp.3);
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_12_28_8_stop:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_8_28_22_endTry:
-        jsr @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_8_28_22_finally;
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_8_28_22_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_8_28_22_catch:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 41 12 ]
+        symbol [ Storage %tmp.4 41 12 19 ];
+        %tmp.4 = getm $.Toybox.Application.Storage;
+        symbol [ setValue %tmp.5 41 20 28 ];
+        %tmp.5 = getv function %tmp.4 :setValue;
+        %tmp.6 = "nx";
+        %tmp.7 = lgetv %m;
+        symbol [ m %tmp.7 41 35 36 ];
+        symbol [ value %tmp.8 41 37 42 ];
+        %tmp.8 = getv function %tmp.7 :value;
+        %tmp.9 = invoke %tmp.7 %tmp.8();
+        invoke %tmp.4 %tmp.5(%tmp.6, %tmp.9);
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_12_42_8_stop:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_8_44_8_endTry:
+        jsr @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_8_44_8_finally;
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_8_44_8_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_8_44_8_catch:
         %tmp.10 = exception;
         push %tmp.10;
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 28 10 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_8_28_22_catch" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_28_10_28_22_end" ]
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 42 10 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_8_44_8_catch" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_42_10_44_8_end" ]
         %e.1 = local;
-        symbol [ e %e.1 28 17 18 ];
+        symbol [ e %e.1 42 17 18 ];
         %tmp.11 = dup %tmp.10;
         lputv %e.1 %tmp.11;
-        symbol [ e %e.1 28 17 18 ];
-        jsr @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_8_28_22_finally;
+        symbol [ e %e.1 42 17 18 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_42_20_44_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 43 12 ]
+        try @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_43_12_43_97_beginTry @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_43_12_43_97_endTry @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_43_12_43_97_catch @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_43_12_43_97_finally;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_43_12_43_97_beginTry:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_43_16_43_82_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 43 18 ]
+        symbol [ Background %tmp.12 43 18 28 ];
+        %tmp.12 = getm $.Toybox.Background;
+        symbol [ registerForTemporalEvent %tmp.13 43 29 53 ];
+        %tmp.13 = getv function %tmp.12 :registerForTemporalEvent;
+        symbol [ Time %tmp.16 43 58 62 ];
+        %tmp.16 = getm $.Toybox.Time;
+        symbol [ Duration %tmp.17 43 63 71 ];
+        %tmp.17 = getv function ? %tmp.16 :Duration;
+        %tmp.18 = 5;
+        %tmp.19 = 60;
+        %tmp.20 = mul %tmp.18 %tmp.19;
+        %tmp.14 = newc %tmp.17 (%tmp.20);
+        invoke %tmp.12 %tmp.13(%tmp.14);
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_43_16_43_82_stop:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_43_12_43_97_endTry:
+        jsr @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_43_12_43_97_finally;
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_43_12_43_97_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_43_12_43_97_catch:
+        %tmp.21 = exception;
+        push %tmp.21;
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 43 84 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_43_12_43_97_catch" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_43_84_43_97_end" ]
+        %e2.2 = local;
+        symbol [ e2 %e2.2 43 91 93 ];
+        %tmp.22 = dup %tmp.21;
+        lputv %e2.2 %tmp.22;
+        symbol [ e2 %e2.2 43 91 93 ];
+        jsr @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_43_12_43_97_finally;
         pop;
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_8_28_22_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_28_10_28_22_end:
-        try @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_8_28_22_catch @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_28_10_28_22_end @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_28_10_28_22_end @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_8_28_22_finally;
-        jsr @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_8_28_22_finally;
-        throw %tmp.10;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_8_28_22_finally:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_43_12_43_97_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_43_84_43_97_end:
+        try @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_43_12_43_97_catch @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_43_84_43_97_end @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_43_84_43_97_end @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_43_12_43_97_finally;
+        jsr @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_43_12_43_97_finally;
+        throw %tmp.21;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_43_12_43_97_finally:
         jsrret;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_8_28_22_end:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 29 8 ]
-        symbol [ KiraFeldView %tmp.15 29 22 34 ];
-        %tmp.15 = getv ? :KiraFeldView;
-        %tmp.12 = newc %tmp.15 ();
-        symbol [ ansicht ? 29 8 15 ];
-        putv self :ansicht %tmp.12;
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 30 8 ]
-        %tmp.16 = newa 1;
-        symbol [ ansicht %tmp.18 30 16 23 ];
-        %tmp.18 = getv ? :ansicht;
-        %tmp.19 = dup %tmp.16;
-        %tmp.20 = aputv %tmp.19 0 %tmp.18;
-        ret %tmp.20;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_25_92_31_4_stop:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_43_12_43_97_end:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_42_20_44_8_stop:
+        jsr @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_8_44_8_finally;
+        pop;
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_8_44_8_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_42_10_44_8_end:
+        try @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_8_44_8_catch @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_42_10_44_8_end @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_42_10_44_8_end @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_8_44_8_finally;
+        jsr @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_8_44_8_finally;
+        throw %tmp.10;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_8_44_8_finally:
+        jsrret;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_8_44_8_end:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_38_46_45_4_stop:
     }
-    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 33; @symbol_functiondef = [getServiceDelegate,33,13,31]; @symbol_return<0> = [System,33,38,44]; @symbol_return<1> = [ServiceDelegate,33,45,60]; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 47; @symbol_functiondef = [getServiceDelegate,47,13,31]; @symbol_return<0> = [System,47,38,44]; @symbol_return<1> = [ServiceDelegate,47,45,60]; ]
     function getServiceDelegate() as [System.ServiceDelegate] {
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_33_62_35_4_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 34 8 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_47_62_49_4_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 48 8 ]
         %tmp.1 = newa 1;
-        symbol [ KiraFeldDienst %tmp.5 34 20 34 ];
+        symbol [ KiraFeldDienst %tmp.5 48 20 34 ];
         %tmp.5 = getv ? :KiraFeldDienst;
         %tmp.2 = newc %tmp.5 ();
         %tmp.6 = dup %tmp.1;
         %tmp.7 = aputv %tmp.6 0 %tmp.2;
         ret %tmp.7;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_33_62_35_4_stop:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_47_62_49_4_stop:
     }
-    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 37; @symbol_functiondef = [onBackgroundData,37,13,29]; @symbol_param<0> = [data,37,30,34]; @symbol_param<0>_type<0> = [Application,37,38,49]; @symbol_param<0>_type<1> = [PersistableType,37,50,65]; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 51; @symbol_functiondef = [onBackgroundData,51,13,29]; @symbol_param<0> = [data,51,30,34]; @symbol_param<0>_type<0> = [Application,51,38,49]; @symbol_param<0>_type<1> = [PersistableType,51,50,65]; ]
     function onBackgroundData(data as Application.PersistableType) as Void {
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_37_75_61_4_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 38 8 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_38_8_38_53_if_stmt:
-        %tmp.1 = lgetv %data;
-        symbol [ data %tmp.1 38 14 18 ];
-        symbol [ Dictionary %tmp.3 38 30 40 ];
-        %tmp.3 = getv ? :Dictionary;
-        %tmp.4 = isa %tmp.1 %tmp.3;
-        %tmp.5 = not %tmp.4;
-        bf %tmp.5 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_38_8_38_53_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_38_8_38_53_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_38_43_38_53_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 38 45 ]
-        ret ?;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_38_43_38_53_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_38_8_38_53_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_38_8_38_53_if_end:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 39 8 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_8_43_8_if_stmt:
-        %tmp.6 = lgetv %data;
-        symbol [ data %tmp.6 39 12 16 ];
-        symbol [ get %tmp.7 39 17 20 ];
-        %tmp.7 = getv function %tmp.6 :get;
-        %tmp.8 = "token";
-        %tmp.9 = invoke %tmp.6 %tmp.7(%tmp.8);
-        %tmp.10 = null;
-        %tmp.11 = ne %tmp.9 %tmp.10;
-        bf %tmp.11 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_8_43_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_8_43_8_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_39_43_8_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 40 12 ]
-        symbol [ Storage %tmp.12 40 12 19 ];
-        %tmp.12 = getm $.Toybox.Application.Storage;
-        symbol [ setValue %tmp.13 40 20 28 ];
-        %tmp.13 = getv function %tmp.12 :setValue;
-        %tmp.14 = "tok";
-        %tmp.15 = lgetv %data;
-        symbol [ data %tmp.15 40 36 40 ];
-        symbol [ get %tmp.16 40 41 44 ];
-        %tmp.16 = getv function %tmp.15 :get;
-        %tmp.17 = "token";
-        %tmp.18 = invoke %tmp.15 %tmp.16(%tmp.17);
-        invoke %tmp.12 %tmp.13(%tmp.14, %tmp.18);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 41 12 ]
-        symbol [ Storage %tmp.19 41 12 19 ];
-        %tmp.19 = getm $.Toybox.Application.Storage;
-        symbol [ deleteValue %tmp.20 41 20 31 ];
-        %tmp.20 = getv function %tmp.19 :deleteValue;
-        %tmp.21 = "aid";
-        invoke %tmp.19 %tmp.20(%tmp.21);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 42 12 ]
-        symbol [ Storage %tmp.22 42 12 19 ];
-        %tmp.22 = getm $.Toybox.Application.Storage;
-        symbol [ deleteValue %tmp.23 42 20 31 ];
-        %tmp.23 = getv function %tmp.22 :deleteValue;
-        %tmp.24 = "code";
-        invoke %tmp.22 %tmp.23(%tmp.24);
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_39_43_8_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_8_43_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_39_8_43_8_if_end:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 44 8 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_44_8_47_8_if_stmt:
-        %tmp.25 = lgetv %data;
-        symbol [ data %tmp.25 44 12 16 ];
-        symbol [ get %tmp.26 44 17 20 ];
-        %tmp.26 = getv function %tmp.25 :get;
-        %tmp.27 = "id";
-        %tmp.28 = invoke %tmp.25 %tmp.26(%tmp.27);
-        %tmp.29 = null;
-        %tmp.30 = ne %tmp.28 %tmp.29;
-        bf %tmp.30 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_44_8_47_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_44_8_47_8_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_44_36_47_8_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 45 12 ]
-        symbol [ Storage %tmp.31 45 12 19 ];
-        %tmp.31 = getm $.Toybox.Application.Storage;
-        symbol [ setValue %tmp.32 45 20 28 ];
-        %tmp.32 = getv function %tmp.31 :setValue;
-        %tmp.33 = "aid";
-        %tmp.34 = lgetv %data;
-        symbol [ data %tmp.34 45 36 40 ];
-        symbol [ get %tmp.35 45 41 44 ];
-        %tmp.35 = getv function %tmp.34 :get;
-        %tmp.36 = "id";
-        %tmp.37 = invoke %tmp.34 %tmp.35(%tmp.36);
-        invoke %tmp.31 %tmp.32(%tmp.33, %tmp.37);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 46 12 ]
-        symbol [ Storage %tmp.38 46 12 19 ];
-        %tmp.38 = getm $.Toybox.Application.Storage;
-        symbol [ setValue %tmp.39 46 20 28 ];
-        %tmp.39 = getv function %tmp.38 :setValue;
-        %tmp.40 = "code";
-        %tmp.41 = lgetv %data;
-        symbol [ data %tmp.41 46 37 41 ];
-        symbol [ get %tmp.42 46 42 45 ];
-        %tmp.42 = getv function %tmp.41 :get;
-        %tmp.43 = "code";
-        %tmp.44 = invoke %tmp.41 %tmp.42(%tmp.43);
-        invoke %tmp.38 %tmp.39(%tmp.40, %tmp.44);
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_44_36_47_8_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_44_8_47_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_44_8_47_8_if_end:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 48 8 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_48_8_51_8_if_stmt:
-        %tmp.45 = lgetv %data;
-        symbol [ data %tmp.45 48 12 16 ];
-        symbol [ get %tmp.46 48 17 20 ];
-        %tmp.46 = getv function %tmp.45 :get;
-        %tmp.47 = "neu";
-        %tmp.48 = invoke %tmp.45 %tmp.46(%tmp.47);
-        %tmp.49 = null;
-        %tmp.50 = ne %tmp.48 %tmp.49;
-        bf %tmp.50 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_48_8_51_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_48_8_51_8_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_48_37_51_8_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 49 12 ]
-        symbol [ Storage %tmp.51 49 12 19 ];
-        %tmp.51 = getm $.Toybox.Application.Storage;
-        symbol [ deleteValue %tmp.52 49 20 31 ];
-        %tmp.52 = getv function %tmp.51 :deleteValue;
-        %tmp.53 = "aid";
-        invoke %tmp.51 %tmp.52(%tmp.53);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 50 12 ]
-        symbol [ Storage %tmp.54 50 12 19 ];
-        %tmp.54 = getm $.Toybox.Application.Storage;
-        symbol [ deleteValue %tmp.55 50 20 31 ];
-        %tmp.55 = getv function %tmp.54 :deleteValue;
-        %tmp.56 = "code";
-        invoke %tmp.54 %tmp.55(%tmp.56);
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_48_37_51_8_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_48_8_51_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_48_8_51_8_if_end:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_51_75_78_4_start:
 [ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 52 8 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_52_8_55_8_if_stmt:
-        %tmp.57 = lgetv %data;
-        symbol [ data %tmp.57 52 12 16 ];
-        symbol [ get %tmp.58 52 17 20 ];
-        %tmp.58 = getv function %tmp.57 :get;
-        %tmp.59 = "weg";
-        %tmp.60 = invoke %tmp.57 %tmp.58(%tmp.59);
-        %tmp.61 = null;
-        %tmp.62 = ne %tmp.60 %tmp.61;
-        bf %tmp.62 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_52_8_55_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_52_8_55_8_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_52_37_55_8_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 53 12 ]
-        symbol [ Storage %tmp.63 53 12 19 ];
-        %tmp.63 = getm $.Toybox.Application.Storage;
-        symbol [ deleteValue %tmp.64 53 20 31 ];
-        %tmp.64 = getv function %tmp.63 :deleteValue;
-        %tmp.65 = "tok";
-        invoke %tmp.63 %tmp.64(%tmp.65);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 54 12 ]
-        symbol [ Storage %tmp.66 54 12 19 ];
-        %tmp.66 = getm $.Toybox.Application.Storage;
-        symbol [ deleteValue %tmp.67 54 20 31 ];
-        %tmp.67 = getv function %tmp.66 :deleteValue;
-        %tmp.68 = "f";
-        invoke %tmp.66 %tmp.67(%tmp.68);
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_52_37_55_8_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_52_8_55_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_52_8_55_8_if_end:
+        symbol [ Storage %tmp.1 52 8 15 ];
+        %tmp.1 = getm $.Toybox.Application.Storage;
+        symbol [ setValue %tmp.2 52 16 24 ];
+        %tmp.2 = getv function %tmp.1 :setValue;
+        %tmp.3 = "vz";
+        symbol [ Time %tmp.4 52 31 35 ];
+        %tmp.4 = getm $.Toybox.Time;
+        symbol [ now %tmp.5 52 36 39 ];
+        %tmp.5 = getv function %tmp.4 :now;
+        %tmp.6 = invoke %tmp.4 %tmp.5();
+        symbol [ value %tmp.7 52 42 47 ];
+        %tmp.7 = getv function %tmp.6 :value;
+        %tmp.8 = invoke %tmp.6 %tmp.7();
+        invoke %tmp.1 %tmp.2(%tmp.3, %tmp.8);
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 54 8 ]
+        %tmp.9 = self;
+        symbol [ planen %tmp.10 54 8 14 ];
+        %tmp.10 = getv function %tmp.9 :planen;
+        symbol [ Time %tmp.11 54 15 19 ];
+        %tmp.11 = getm $.Toybox.Time;
+        symbol [ now %tmp.12 54 20 23 ];
+        %tmp.12 = getv function %tmp.11 :now;
+        %tmp.13 = invoke %tmp.11 %tmp.12();
+        symbol [ add %tmp.14 54 26 29 ];
+        %tmp.14 = getv function %tmp.13 :add;
+        symbol [ Time %tmp.17 54 34 38 ];
+        %tmp.17 = getm $.Toybox.Time;
+        symbol [ Duration %tmp.18 54 39 47 ];
+        %tmp.18 = getv function ? %tmp.17 :Duration;
+        %tmp.19 = 5;
+        %tmp.20 = 60;
+        %tmp.21 = mul %tmp.19 %tmp.20;
+        %tmp.22 = 2;
+        %tmp.23 = add %tmp.21 %tmp.22;
+        %tmp.15 = newc %tmp.18 (%tmp.23);
+        %tmp.24 = invoke %tmp.13 %tmp.14(%tmp.15);
+        invoke %tmp.9 %tmp.10(%tmp.24);
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 55 8 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_55_8_55_53_if_stmt:
+        %tmp.25 = lgetv %data;
+        symbol [ data %tmp.25 55 14 18 ];
+        symbol [ Dictionary %tmp.27 55 30 40 ];
+        %tmp.27 = getv ? :Dictionary;
+        %tmp.28 = isa %tmp.25 %tmp.27;
+        %tmp.29 = not %tmp.28;
+        bf %tmp.29 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_55_8_55_53_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_55_8_55_53_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_55_43_55_53_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 55 45 ]
+        ret ?;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_55_43_55_53_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_55_8_55_53_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_55_8_55_53_if_end:
 [ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 56 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_37_75_61_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_37_75_61_4_stop" ]
-        %f.1 = local;
-        symbol [ f %f.1 56 12 13 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_56_8_60_8_if_stmt:
+        %tmp.30 = lgetv %data;
+        symbol [ data %tmp.30 56 12 16 ];
+        symbol [ get %tmp.31 56 17 20 ];
+        %tmp.31 = getv function %tmp.30 :get;
+        %tmp.32 = "token";
+        %tmp.33 = invoke %tmp.30 %tmp.31(%tmp.32);
+        %tmp.34 = null;
+        %tmp.35 = ne %tmp.33 %tmp.34;
+        bf %tmp.35 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_56_8_60_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_56_8_60_8_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_56_39_60_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 57 12 ]
+        symbol [ Storage %tmp.36 57 12 19 ];
+        %tmp.36 = getm $.Toybox.Application.Storage;
+        symbol [ setValue %tmp.37 57 20 28 ];
+        %tmp.37 = getv function %tmp.36 :setValue;
+        %tmp.38 = "tok";
+        %tmp.39 = lgetv %data;
+        symbol [ data %tmp.39 57 36 40 ];
+        symbol [ get %tmp.40 57 41 44 ];
+        %tmp.40 = getv function %tmp.39 :get;
+        %tmp.41 = "token";
+        %tmp.42 = invoke %tmp.39 %tmp.40(%tmp.41);
+        invoke %tmp.36 %tmp.37(%tmp.38, %tmp.42);
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 58 12 ]
+        symbol [ Storage %tmp.43 58 12 19 ];
+        %tmp.43 = getm $.Toybox.Application.Storage;
+        symbol [ deleteValue %tmp.44 58 20 31 ];
+        %tmp.44 = getv function %tmp.43 :deleteValue;
+        %tmp.45 = "aid";
+        invoke %tmp.43 %tmp.44(%tmp.45);
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 59 12 ]
+        symbol [ Storage %tmp.46 59 12 19 ];
+        %tmp.46 = getm $.Toybox.Application.Storage;
+        symbol [ deleteValue %tmp.47 59 20 31 ];
+        %tmp.47 = getv function %tmp.46 :deleteValue;
+        %tmp.48 = "code";
+        invoke %tmp.46 %tmp.47(%tmp.48);
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_56_39_60_8_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_56_8_60_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_56_8_60_8_if_end:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 61 8 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_61_8_64_8_if_stmt:
+        %tmp.49 = lgetv %data;
+        symbol [ data %tmp.49 61 12 16 ];
+        symbol [ get %tmp.50 61 17 20 ];
+        %tmp.50 = getv function %tmp.49 :get;
+        %tmp.51 = "id";
+        %tmp.52 = invoke %tmp.49 %tmp.50(%tmp.51);
+        %tmp.53 = null;
+        %tmp.54 = ne %tmp.52 %tmp.53;
+        bf %tmp.54 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_61_8_64_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_61_8_64_8_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_61_36_64_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 62 12 ]
+        symbol [ Storage %tmp.55 62 12 19 ];
+        %tmp.55 = getm $.Toybox.Application.Storage;
+        symbol [ setValue %tmp.56 62 20 28 ];
+        %tmp.56 = getv function %tmp.55 :setValue;
+        %tmp.57 = "aid";
+        %tmp.58 = lgetv %data;
+        symbol [ data %tmp.58 62 36 40 ];
+        symbol [ get %tmp.59 62 41 44 ];
+        %tmp.59 = getv function %tmp.58 :get;
+        %tmp.60 = "id";
+        %tmp.61 = invoke %tmp.58 %tmp.59(%tmp.60);
+        invoke %tmp.55 %tmp.56(%tmp.57, %tmp.61);
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 63 12 ]
+        symbol [ Storage %tmp.62 63 12 19 ];
+        %tmp.62 = getm $.Toybox.Application.Storage;
+        symbol [ setValue %tmp.63 63 20 28 ];
+        %tmp.63 = getv function %tmp.62 :setValue;
+        %tmp.64 = "code";
+        %tmp.65 = lgetv %data;
+        symbol [ data %tmp.65 63 37 41 ];
+        symbol [ get %tmp.66 63 42 45 ];
+        %tmp.66 = getv function %tmp.65 :get;
+        %tmp.67 = "code";
+        %tmp.68 = invoke %tmp.65 %tmp.66(%tmp.67);
+        invoke %tmp.62 %tmp.63(%tmp.64, %tmp.68);
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_61_36_64_8_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_61_8_64_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_61_8_64_8_if_end:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 65 8 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_65_8_68_8_if_stmt:
         %tmp.69 = lgetv %data;
-        symbol [ data %tmp.69 56 16 20 ];
-        symbol [ get %tmp.70 56 21 24 ];
+        symbol [ data %tmp.69 65 12 16 ];
+        symbol [ get %tmp.70 65 17 20 ];
         %tmp.70 = getv function %tmp.69 :get;
-        %tmp.71 = "feld";
+        %tmp.71 = "neu";
         %tmp.72 = invoke %tmp.69 %tmp.70(%tmp.71);
-        lputv %f.1 %tmp.72;
-        symbol [ f %f.1 56 12 13 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 57 8 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_57_8_57_65_if_stmt:
-        %tmp.73 = lgetv %f.1;
-        symbol [ f %tmp.73 57 12 13 ];
-        symbol [ Dictionary %tmp.75 57 25 35 ];
-        %tmp.75 = getv ? :Dictionary;
-        %tmp.76 = isa %tmp.73 %tmp.75;
-        bf %tmp.76 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_57_8_57_65_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_57_8_57_65_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_57_37_57_65_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 57 39 ]
-        symbol [ Storage %tmp.77 57 39 46 ];
-        %tmp.77 = getm $.Toybox.Application.Storage;
-        symbol [ setValue %tmp.78 57 47 55 ];
-        %tmp.78 = getv function %tmp.77 :setValue;
-        %tmp.79 = "f";
-        %tmp.80 = lgetv %f.1;
-        symbol [ f %tmp.80 57 61 62 ];
-        %tmp.81 = as %tmp.80 { (Dictionary) };
-        invoke %tmp.77 %tmp.78(%tmp.79, %tmp.81);
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_57_37_57_65_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_57_8_57_65_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_57_8_57_65_if_end:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 58 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_37_75_61_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_37_75_61_4_stop" ]
+        %tmp.73 = null;
+        %tmp.74 = ne %tmp.72 %tmp.73;
+        bf %tmp.74 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_65_8_68_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_65_8_68_8_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_65_37_68_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 66 12 ]
+        symbol [ Storage %tmp.75 66 12 19 ];
+        %tmp.75 = getm $.Toybox.Application.Storage;
+        symbol [ deleteValue %tmp.76 66 20 31 ];
+        %tmp.76 = getv function %tmp.75 :deleteValue;
+        %tmp.77 = "aid";
+        invoke %tmp.75 %tmp.76(%tmp.77);
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 67 12 ]
+        symbol [ Storage %tmp.78 67 12 19 ];
+        %tmp.78 = getm $.Toybox.Application.Storage;
+        symbol [ deleteValue %tmp.79 67 20 31 ];
+        %tmp.79 = getv function %tmp.78 :deleteValue;
+        %tmp.80 = "code";
+        invoke %tmp.78 %tmp.79(%tmp.80);
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_65_37_68_8_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_65_8_68_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_65_8_68_8_if_end:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 69 8 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_69_8_72_8_if_stmt:
+        %tmp.81 = lgetv %data;
+        symbol [ data %tmp.81 69 12 16 ];
+        symbol [ get %tmp.82 69 17 20 ];
+        %tmp.82 = getv function %tmp.81 :get;
+        %tmp.83 = "weg";
+        %tmp.84 = invoke %tmp.81 %tmp.82(%tmp.83);
+        %tmp.85 = null;
+        %tmp.86 = ne %tmp.84 %tmp.85;
+        bf %tmp.86 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_69_8_72_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_69_8_72_8_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_69_37_72_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 70 12 ]
+        symbol [ Storage %tmp.87 70 12 19 ];
+        %tmp.87 = getm $.Toybox.Application.Storage;
+        symbol [ deleteValue %tmp.88 70 20 31 ];
+        %tmp.88 = getv function %tmp.87 :deleteValue;
+        %tmp.89 = "tok";
+        invoke %tmp.87 %tmp.88(%tmp.89);
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 71 12 ]
+        symbol [ Storage %tmp.90 71 12 19 ];
+        %tmp.90 = getm $.Toybox.Application.Storage;
+        symbol [ deleteValue %tmp.91 71 20 31 ];
+        %tmp.91 = getv function %tmp.90 :deleteValue;
+        %tmp.92 = "f";
+        invoke %tmp.90 %tmp.91(%tmp.92);
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_69_37_72_8_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_69_8_72_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_69_8_72_8_if_end:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 73 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_51_75_78_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_51_75_78_4_stop" ]
+        %f.1 = local;
+        symbol [ f %f.1 73 12 13 ];
+        %tmp.93 = lgetv %data;
+        symbol [ data %tmp.93 73 16 20 ];
+        symbol [ get %tmp.94 73 21 24 ];
+        %tmp.94 = getv function %tmp.93 :get;
+        %tmp.95 = "feld";
+        %tmp.96 = invoke %tmp.93 %tmp.94(%tmp.95);
+        lputv %f.1 %tmp.96;
+        symbol [ f %f.1 73 12 13 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 74 8 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_74_8_74_65_if_stmt:
+        %tmp.97 = lgetv %f.1;
+        symbol [ f %tmp.97 74 12 13 ];
+        symbol [ Dictionary %tmp.99 74 25 35 ];
+        %tmp.99 = getv ? :Dictionary;
+        %tmp.100 = isa %tmp.97 %tmp.99;
+        bf %tmp.100 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_74_8_74_65_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_74_8_74_65_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_74_37_74_65_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 74 39 ]
+        symbol [ Storage %tmp.101 74 39 46 ];
+        %tmp.101 = getm $.Toybox.Application.Storage;
+        symbol [ setValue %tmp.102 74 47 55 ];
+        %tmp.102 = getv function %tmp.101 :setValue;
+        %tmp.103 = "f";
+        %tmp.104 = lgetv %f.1;
+        symbol [ f %tmp.104 74 61 62 ];
+        %tmp.105 = as %tmp.104 { (Dictionary) };
+        invoke %tmp.101 %tmp.102(%tmp.103, %tmp.105);
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_74_37_74_65_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_74_8_74_65_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_74_8_74_65_if_end:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 75 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_51_75_78_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_51_75_78_4_stop" ]
         %rc.2 = local;
-        symbol [ rc %rc.2 58 12 14 ];
-        %tmp.82 = lgetv %data;
-        symbol [ data %tmp.82 58 17 21 ];
-        symbol [ get %tmp.83 58 22 25 ];
-        %tmp.83 = getv function %tmp.82 :get;
-        %tmp.84 = "rc";
-        %tmp.85 = invoke %tmp.82 %tmp.83(%tmp.84);
-        lputv %rc.2 %tmp.85;
-        symbol [ rc %rc.2 58 12 14 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 59 8 ]
-        symbol [ Storage %tmp.86 59 8 15 ];
-        %tmp.86 = getm $.Toybox.Application.Storage;
-        symbol [ setValue %tmp.87 59 16 24 ];
-        %tmp.87 = getv function %tmp.86 :setValue;
-        %tmp.88 = "rc";
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_59_31_59_59_begin:
-        %tmp.89 = lgetv %rc.2;
-        symbol [ rc %tmp.89 59 31 33 ];
-        symbol [ Number %tmp.91 59 45 51 ];
-        %tmp.91 = getv ? :Number;
-        %tmp.92 = isa %tmp.89 %tmp.91;
-        bf %tmp.92 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_59_31_59_59_else_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_59_31_59_59_true:
-        %tmp.93 = lgetv %rc.2;
-        symbol [ rc %tmp.93 59 54 56 ];
-        %tmp.94 = as %tmp.93 { (Number) };
-        push %tmp.94;
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_59_31_59_59_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_59_31_59_59_else_false:
-        %tmp.95 = null;
-        push %tmp.95;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_59_31_59_59_end:
-        %tmp.96 = phi [%tmp.92 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_59_31_59_59_begin] [%tmp.94 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_59_31_59_59_true] [%tmp.95 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_59_31_59_59_else_false] [%tmp.96 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_59_31_59_59_end];
-        invoke %tmp.86 %tmp.87(%tmp.88, %tmp.96);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 60 8 ]
-        symbol [ WatchUi %tmp.97 60 8 15 ];
-        %tmp.97 = getm $.Toybox.WatchUi;
-        symbol [ requestUpdate %tmp.98 60 16 29 ];
-        %tmp.98 = getv function %tmp.97 :requestUpdate;
-        invoke %tmp.97 %tmp.98();
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_37_75_61_4_stop:
+        symbol [ rc %rc.2 75 12 14 ];
+        %tmp.106 = lgetv %data;
+        symbol [ data %tmp.106 75 17 21 ];
+        symbol [ get %tmp.107 75 22 25 ];
+        %tmp.107 = getv function %tmp.106 :get;
+        %tmp.108 = "rc";
+        %tmp.109 = invoke %tmp.106 %tmp.107(%tmp.108);
+        lputv %rc.2 %tmp.109;
+        symbol [ rc %rc.2 75 12 14 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 76 8 ]
+        symbol [ Storage %tmp.110 76 8 15 ];
+        %tmp.110 = getm $.Toybox.Application.Storage;
+        symbol [ setValue %tmp.111 76 16 24 ];
+        %tmp.111 = getv function %tmp.110 :setValue;
+        %tmp.112 = "rc";
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_76_31_76_59_begin:
+        %tmp.113 = lgetv %rc.2;
+        symbol [ rc %tmp.113 76 31 33 ];
+        symbol [ Number %tmp.115 76 45 51 ];
+        %tmp.115 = getv ? :Number;
+        %tmp.116 = isa %tmp.113 %tmp.115;
+        bf %tmp.116 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_76_31_76_59_else_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_76_31_76_59_true:
+        %tmp.117 = lgetv %rc.2;
+        symbol [ rc %tmp.117 76 54 56 ];
+        %tmp.118 = as %tmp.117 { (Number) };
+        push %tmp.118;
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_76_31_76_59_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_76_31_76_59_else_false:
+        %tmp.119 = null;
+        push %tmp.119;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_76_31_76_59_end:
+        %tmp.120 = phi [%tmp.116 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_76_31_76_59_begin] [%tmp.118 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_76_31_76_59_true] [%tmp.119 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_76_31_76_59_else_false] [%tmp.120 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_76_31_76_59_end];
+        invoke %tmp.110 %tmp.111(%tmp.112, %tmp.120);
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 77 8 ]
+        symbol [ WatchUi %tmp.121 77 8 15 ];
+        %tmp.121 = getm $.Toybox.WatchUi;
+        symbol [ requestUpdate %tmp.122 77 16 29 ];
+        %tmp.122 = getv function %tmp.121 :requestUpdate;
+        invoke %tmp.121 %tmp.122();
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_51_75_78_4_stop:
     }
 }
-[ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 65; background = true; @symbol_classdef = [KiraFeldDienst,65,6,20]; @symbol_extends<0> = [System,65,29,35]; @symbol_extends<1> = [ServiceDelegate,65,36,51]; ]
+[ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 82; background = true; @symbol_classdef = [KiraFeldDienst,82,6,20]; @symbol_extends<0> = [System,82,29,35]; @symbol_extends<1> = [ServiceDelegate,82,36,51]; ]
 class KiraFeldDienst extends System.ServiceDelegate {
-    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 65; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 82; ]
     <init> {
     }
-    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 65; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 82; ]
     static
     <init> {
     }
-    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 66; @position = 8; @symbol_vardef = [tokNeu,66,8,14]; @symbol_type<0> = [String,66,18,24]; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 83; @position = 8; @symbol_vardef = [tokNeu,83,8,14]; @symbol_type<0> = [String,83,18,24]; ]
     var tokNeu as String or Null = null;
-    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 68; @symbol_functiondef = [initialize,68,13,23]; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 85; @symbol_functiondef = [initialize,85,13,23]; ]
     function initialize() as Void {
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_68_26_70_4_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 69 8 ]
-        symbol [ ServiceDelegate %tmp.2 69 8 23 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_85_26_87_4_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 86 8 ]
+        symbol [ ServiceDelegate %tmp.2 86 8 23 ];
         %tmp.2 = getv ? :ServiceDelegate;
-        symbol [ initialize %tmp.3 69 24 34 ];
+        symbol [ initialize %tmp.3 86 24 34 ];
         %tmp.3 = getv function %tmp.2 :initialize;
         invoke %tmp.2 %tmp.3();
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_68_26_70_4_stop:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_85_26_87_4_stop:
     }
-    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 72; @symbol_functiondef = [onTemporalEvent,72,13,28]; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 89; @symbol_functiondef = [onTemporalEvent,89,13,28]; ]
     function onTemporalEvent() as Void {
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_72_39_90_4_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 73 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_72_39_90_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_72_39_90_4_stop" ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_89_39_107_4_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 90 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_89_39_107_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_89_39_107_4_stop" ]
         %tok.1 = local;
-        symbol [ tok %tok.1 73 12 15 ];
-        symbol [ Storage %tmp.1 73 18 25 ];
+        symbol [ tok %tok.1 90 12 15 ];
+        symbol [ Storage %tmp.1 90 18 25 ];
         %tmp.1 = getm $.Toybox.Application.Storage;
-        symbol [ getValue %tmp.2 73 26 34 ];
+        symbol [ getValue %tmp.2 90 26 34 ];
         %tmp.2 = getv function %tmp.1 :getValue;
         %tmp.3 = "tok";
         %tmp.4 = invoke %tmp.1 %tmp.2(%tmp.3);
         lputv %tok.1 %tmp.4;
-        symbol [ tok %tok.1 73 12 15 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 74 8 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_74_8_77_8_if_stmt:
+        symbol [ tok %tok.1 90 12 15 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 91 8 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_91_8_94_8_if_stmt:
         %tmp.5 = lgetv %tok.1;
-        symbol [ tok %tmp.5 74 12 15 ];
-        symbol [ String %tmp.7 74 27 33 ];
+        symbol [ tok %tmp.5 91 12 15 ];
+        symbol [ String %tmp.7 91 27 33 ];
         %tmp.7 = getv ? :String;
         %tmp.8 = isa %tmp.5 %tmp.7;
-        bf %tmp.8 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_74_8_77_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_74_8_77_8_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_74_35_77_8_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 75 12 ]
+        bf %tmp.8 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_91_8_94_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_91_8_94_8_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_91_35_94_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 92 12 ]
         %tmp.9 = self;
-        symbol [ feldHolen %tmp.10 75 12 21 ];
+        symbol [ feldHolen %tmp.10 92 12 21 ];
         %tmp.10 = getv function %tmp.9 :feldHolen;
         %tmp.11 = lgetv %tok.1;
-        symbol [ tok %tmp.11 75 22 25 ];
+        symbol [ tok %tmp.11 92 22 25 ];
         %tmp.12 = as %tmp.11 { (String) };
         invoke %tmp.9 %tmp.10(%tmp.12);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 76 12 ]
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 93 12 ]
         ret ?;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_74_35_77_8_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_74_8_77_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_74_8_77_8_if_end:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 78 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_72_39_90_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_72_39_90_4_stop" ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_91_35_94_8_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_91_8_94_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_91_8_94_8_if_end:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 95 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_89_39_107_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_89_39_107_4_stop" ]
         %aid.2 = local;
-        symbol [ aid %aid.2 78 12 15 ];
-        symbol [ Storage %tmp.13 78 18 25 ];
+        symbol [ aid %aid.2 95 12 15 ];
+        symbol [ Storage %tmp.13 95 18 25 ];
         %tmp.13 = getm $.Toybox.Application.Storage;
-        symbol [ getValue %tmp.14 78 26 34 ];
+        symbol [ getValue %tmp.14 95 26 34 ];
         %tmp.14 = getv function %tmp.13 :getValue;
         %tmp.15 = "aid";
         %tmp.16 = invoke %tmp.13 %tmp.14(%tmp.15);
         lputv %aid.2 %tmp.16;
-        symbol [ aid %aid.2 78 12 15 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 79 8 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_79_8_89_8_if_stmt:
+        symbol [ aid %aid.2 95 12 15 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 96 8 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_96_8_106_8_if_stmt:
         %tmp.17 = lgetv %aid.2;
-        symbol [ aid %tmp.17 79 12 15 ];
-        symbol [ String %tmp.19 79 27 33 ];
+        symbol [ aid %tmp.17 96 12 15 ];
+        symbol [ String %tmp.19 96 27 33 ];
         %tmp.19 = getv ? :String;
         %tmp.20 = isa %tmp.17 %tmp.19;
-        bf %tmp.20 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_79_8_89_8_if_else_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_79_8_89_8_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_79_35_83_8_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 80 12 ]
-        symbol [ Communications %tmp.22 80 12 26 ];
+        bf %tmp.20 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_96_8_106_8_if_else_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_96_8_106_8_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_96_35_100_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 97 12 ]
+        symbol [ Communications %tmp.22 97 12 26 ];
         %tmp.22 = getv ? :Communications;
-        symbol [ makeWebRequest %tmp.23 80 27 41 ];
+        symbol [ makeWebRequest %tmp.23 97 27 41 ];
         %tmp.23 = getv function %tmp.22 :makeWebRequest;
-        symbol [ KIRA_BASIS %tmp.25 80 42 52 ];
+        symbol [ KIRA_BASIS %tmp.25 97 42 52 ];
         %tmp.25 = getv ? :KIRA_BASIS;
         %tmp.26 = "/api/widget/uhr/status";
         %tmp.27 = add %tmp.25 %tmp.26;
         %tmp.28 = newd 1;
         %tmp.29 = "id";
         %tmp.30 = lgetv %aid.2;
-        symbol [ aid %tmp.30 80 91 94 ];
+        symbol [ aid %tmp.30 97 91 94 ];
         %tmp.31 = as %tmp.30 { (String) };
         %tmp.32 = dup %tmp.28;
         %tmp.33 = aputv %tmp.32 %tmp.29 %tmp.31;
         %tmp.34 = newd 2;
         %tmp.36 = const :method;
-        symbol [ method %tmp.36 81 19 25 const ];
-        symbol [ Communications %tmp.38 81 29 43 ];
+        symbol [ method %tmp.36 98 19 25 const ];
+        symbol [ Communications %tmp.38 98 29 43 ];
         %tmp.38 = getv ? :Communications;
-        symbol [ HTTP_REQUEST_METHOD_GET %tmp.39 81 44 67 ];
+        symbol [ HTTP_REQUEST_METHOD_GET %tmp.39 98 44 67 ];
         %tmp.39 = getv %tmp.38 :HTTP_REQUEST_METHOD_GET;
         %tmp.40 = dup %tmp.34;
         %tmp.41 = aputv %tmp.40 %tmp.36 %tmp.39;
         %tmp.43 = const :responseType;
-        symbol [ responseType %tmp.43 81 70 82 const ];
-        symbol [ Communications %tmp.45 81 86 100 ];
+        symbol [ responseType %tmp.43 98 70 82 const ];
+        symbol [ Communications %tmp.45 98 86 100 ];
         %tmp.45 = getv ? :Communications;
-        symbol [ HTTP_RESPONSE_CONTENT_TYPE_JSON %tmp.46 81 101 132 ];
+        symbol [ HTTP_RESPONSE_CONTENT_TYPE_JSON %tmp.46 98 101 132 ];
         %tmp.46 = getv %tmp.45 :HTTP_RESPONSE_CONTENT_TYPE_JSON;
         %tmp.47 = dup %tmp.41;
         %tmp.48 = aputv %tmp.47 %tmp.43 %tmp.46;
         %tmp.49 = self;
-        symbol [ method %tmp.50 82 16 22 ];
+        symbol [ method %tmp.50 99 16 22 ];
         %tmp.50 = getv function %tmp.49 :method;
         %tmp.52 = const :statusFertig;
-        symbol [ statusFertig %tmp.52 82 24 36 const ];
+        symbol [ statusFertig %tmp.52 99 24 36 const ];
         %tmp.53 = invoke %tmp.49 %tmp.50(%tmp.52);
         invoke %tmp.22 %tmp.23(%tmp.27, %tmp.33, %tmp.48, %tmp.53);
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_79_35_83_8_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_79_8_89_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_79_8_89_8_if_else_false:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_83_15_89_8_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 84 12 ]
-        symbol [ Communications %tmp.55 84 12 26 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_96_35_100_8_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_96_8_106_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_96_8_106_8_if_else_false:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_100_15_106_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 101 12 ]
+        symbol [ Communications %tmp.55 101 12 26 ];
         %tmp.55 = getv ? :Communications;
-        symbol [ makeWebRequest %tmp.56 84 27 41 ];
+        symbol [ makeWebRequest %tmp.56 101 27 41 ];
         %tmp.56 = getv function %tmp.55 :makeWebRequest;
-        symbol [ KIRA_BASIS %tmp.58 84 42 52 ];
+        symbol [ KIRA_BASIS %tmp.58 101 42 52 ];
         %tmp.58 = getv ? :KIRA_BASIS;
         %tmp.59 = "/api/widget/uhr/anfrage";
         %tmp.60 = add %tmp.58 %tmp.59;
@@ -496,260 +672,260 @@ _home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_83_15_89_8_start:
         %tmp.65 = aputv %tmp.64 %tmp.62 %tmp.63;
         %tmp.66 = newd 3;
         %tmp.68 = const :method;
-        symbol [ method %tmp.68 85 19 25 const ];
-        symbol [ Communications %tmp.70 85 29 43 ];
+        symbol [ method %tmp.68 102 19 25 const ];
+        symbol [ Communications %tmp.70 102 29 43 ];
         %tmp.70 = getv ? :Communications;
-        symbol [ HTTP_REQUEST_METHOD_POST %tmp.71 85 44 68 ];
+        symbol [ HTTP_REQUEST_METHOD_POST %tmp.71 102 44 68 ];
         %tmp.71 = getv %tmp.70 :HTTP_REQUEST_METHOD_POST;
         %tmp.72 = dup %tmp.66;
         %tmp.73 = aputv %tmp.72 %tmp.68 %tmp.71;
         %tmp.75 = const :headers;
-        symbol [ headers %tmp.75 86 19 26 const ];
+        symbol [ headers %tmp.75 103 19 26 const ];
         %tmp.76 = newd 1;
         %tmp.77 = "Content-Type";
-        symbol [ Communications %tmp.79 86 50 64 ];
+        symbol [ Communications %tmp.79 103 50 64 ];
         %tmp.79 = getv ? :Communications;
-        symbol [ REQUEST_CONTENT_TYPE_JSON %tmp.80 86 65 90 ];
+        symbol [ REQUEST_CONTENT_TYPE_JSON %tmp.80 103 65 90 ];
         %tmp.80 = getv %tmp.79 :REQUEST_CONTENT_TYPE_JSON;
         %tmp.81 = dup %tmp.76;
         %tmp.82 = aputv %tmp.81 %tmp.77 %tmp.80;
         %tmp.83 = dup %tmp.73;
         %tmp.84 = aputv %tmp.83 %tmp.75 %tmp.82;
         %tmp.86 = const :responseType;
-        symbol [ responseType %tmp.86 87 19 31 const ];
-        symbol [ Communications %tmp.88 87 35 49 ];
+        symbol [ responseType %tmp.86 104 19 31 const ];
+        symbol [ Communications %tmp.88 104 35 49 ];
         %tmp.88 = getv ? :Communications;
-        symbol [ HTTP_RESPONSE_CONTENT_TYPE_JSON %tmp.89 87 50 81 ];
+        symbol [ HTTP_RESPONSE_CONTENT_TYPE_JSON %tmp.89 104 50 81 ];
         %tmp.89 = getv %tmp.88 :HTTP_RESPONSE_CONTENT_TYPE_JSON;
         %tmp.90 = dup %tmp.84;
         %tmp.91 = aputv %tmp.90 %tmp.86 %tmp.89;
         %tmp.92 = self;
-        symbol [ method %tmp.93 88 16 22 ];
+        symbol [ method %tmp.93 105 16 22 ];
         %tmp.93 = getv function %tmp.92 :method;
         %tmp.95 = const :anfrageFertig;
-        symbol [ anfrageFertig %tmp.95 88 24 37 const ];
+        symbol [ anfrageFertig %tmp.95 105 24 37 const ];
         %tmp.96 = invoke %tmp.92 %tmp.93(%tmp.95);
         invoke %tmp.55 %tmp.56(%tmp.60, %tmp.65, %tmp.91, %tmp.96);
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_83_15_89_8_stop:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_79_8_89_8_if_end:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_72_39_90_4_stop:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_100_15_106_8_stop:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_96_8_106_8_if_end:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_89_39_107_4_stop:
     }
-    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 92; @symbol_functiondef = [feldHolen,92,13,22]; @symbol_param<0> = [tok,92,23,26]; @symbol_param<0>_type<0> = [String,92,30,36]; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 109; @symbol_functiondef = [feldHolen,109,13,22]; @symbol_param<0> = [tok,109,23,26]; @symbol_param<0>_type<0> = [String,109,30,36]; ]
     function feldHolen(tok as String) as Void {
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_92_46_98_4_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 93 8 ]
-        symbol [ Communications %tmp.2 93 8 22 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_46_115_4_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 110 8 ]
+        symbol [ Communications %tmp.2 110 8 22 ];
         %tmp.2 = getv ? :Communications;
-        symbol [ makeWebRequest %tmp.3 93 23 37 ];
+        symbol [ makeWebRequest %tmp.3 110 23 37 ];
         %tmp.3 = getv function %tmp.2 :makeWebRequest;
-        symbol [ KIRA_BASIS %tmp.5 93 38 48 ];
+        symbol [ KIRA_BASIS %tmp.5 110 38 48 ];
         %tmp.5 = getv ? :KIRA_BASIS;
         %tmp.6 = "/api/widget/feld";
         %tmp.7 = add %tmp.5 %tmp.6;
         %tmp.8 = null;
         %tmp.9 = newd 3;
         %tmp.11 = const :method;
-        symbol [ method %tmp.11 94 15 21 const ];
-        symbol [ Communications %tmp.13 94 25 39 ];
+        symbol [ method %tmp.11 111 15 21 const ];
+        symbol [ Communications %tmp.13 111 25 39 ];
         %tmp.13 = getv ? :Communications;
-        symbol [ HTTP_REQUEST_METHOD_GET %tmp.14 94 40 63 ];
+        symbol [ HTTP_REQUEST_METHOD_GET %tmp.14 111 40 63 ];
         %tmp.14 = getv %tmp.13 :HTTP_REQUEST_METHOD_GET;
         %tmp.15 = dup %tmp.9;
         %tmp.16 = aputv %tmp.15 %tmp.11 %tmp.14;
         %tmp.18 = const :headers;
-        symbol [ headers %tmp.18 95 15 22 const ];
+        symbol [ headers %tmp.18 112 15 22 const ];
         %tmp.19 = newd 1;
         %tmp.20 = "Authorization";
         %tmp.21 = "Bearer ";
         %tmp.22 = lgetv %tok;
-        symbol [ tok %tmp.22 95 59 62 ];
+        symbol [ tok %tmp.22 112 59 62 ];
         %tmp.23 = add %tmp.21 %tmp.22;
         %tmp.24 = dup %tmp.19;
         %tmp.25 = aputv %tmp.24 %tmp.20 %tmp.23;
         %tmp.26 = dup %tmp.16;
         %tmp.27 = aputv %tmp.26 %tmp.18 %tmp.25;
         %tmp.29 = const :responseType;
-        symbol [ responseType %tmp.29 96 15 27 const ];
-        symbol [ Communications %tmp.31 96 31 45 ];
+        symbol [ responseType %tmp.29 113 15 27 const ];
+        symbol [ Communications %tmp.31 113 31 45 ];
         %tmp.31 = getv ? :Communications;
-        symbol [ HTTP_RESPONSE_CONTENT_TYPE_JSON %tmp.32 96 46 77 ];
+        symbol [ HTTP_RESPONSE_CONTENT_TYPE_JSON %tmp.32 113 46 77 ];
         %tmp.32 = getv %tmp.31 :HTTP_RESPONSE_CONTENT_TYPE_JSON;
         %tmp.33 = dup %tmp.27;
         %tmp.34 = aputv %tmp.33 %tmp.29 %tmp.32;
         %tmp.35 = self;
-        symbol [ method %tmp.36 97 12 18 ];
+        symbol [ method %tmp.36 114 12 18 ];
         %tmp.36 = getv function %tmp.35 :method;
         %tmp.38 = const :feldFertig;
-        symbol [ feldFertig %tmp.38 97 20 30 const ];
+        symbol [ feldFertig %tmp.38 114 20 30 const ];
         %tmp.39 = invoke %tmp.35 %tmp.36(%tmp.38);
         invoke %tmp.2 %tmp.3(%tmp.7, %tmp.8, %tmp.34, %tmp.39);
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_92_46_98_4_stop:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_46_115_4_stop:
     }
-    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 100; @symbol_functiondef = [anfrageFertig,100,13,26]; @symbol_param<0> = [rc,100,27,29]; @symbol_param<0>_type<0> = [Number,100,33,39]; @symbol_param<1> = [data,100,41,45]; @symbol_param<1>_type<0> = [Dictionary,100,49,59]; @symbol_param<1>_type<1> = [String,100,63,69]; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 117; @symbol_functiondef = [anfrageFertig,117,13,26]; @symbol_param<0> = [rc,117,27,29]; @symbol_param<0>_type<0> = [Number,117,33,39]; @symbol_param<1> = [data,117,41,45]; @symbol_param<1>_type<0> = [Dictionary,117,49,59]; @symbol_param<1>_type<1> = [String,117,63,69]; ]
     function anfrageFertig(rc as Number, data as Dictionary or String or Null) as Void {
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_100_87_106_4_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 101 8 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_101_8_105_8_if_stmt:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_101_12_101_73_begin:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_101_12_101_41_begin:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_117_87_123_4_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 118 8 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_118_8_122_8_if_stmt:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_118_12_118_73_begin:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_118_12_118_41_begin:
         %tmp.1 = lgetv %rc;
-        symbol [ rc %tmp.1 101 12 14 ];
+        symbol [ rc %tmp.1 118 12 14 ];
         %tmp.2 = 200;
         %tmp.3 = eq %tmp.1 %tmp.2;
-        bf %tmp.3 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_101_8_105_8_if_else_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_101_25_101_41_true:
+        bf %tmp.3 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_118_8_122_8_if_else_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_118_25_118_41_true:
         %tmp.4 = lgetv %data;
-        symbol [ data %tmp.4 101 25 29 ];
-        symbol [ Dictionary %tmp.6 101 41 51 ];
+        symbol [ data %tmp.4 118 25 29 ];
+        symbol [ Dictionary %tmp.6 118 41 51 ];
         %tmp.6 = getv ? :Dictionary;
         %tmp.7 = isa %tmp.4 %tmp.6;
         push %tmp.7;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_101_25_101_41_end:
-        %tmp.8 = phi [%tmp.3 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_101_12_101_41_begin] [%tmp.7 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_101_25_101_41_true] [%tmp.8 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_101_25_101_41_end];
-        bf %tmp.8 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_101_8_105_8_if_else_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_101_55_101_73_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_118_25_118_41_end:
+        %tmp.8 = phi [%tmp.3 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_118_12_118_41_begin] [%tmp.7 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_118_25_118_41_true] [%tmp.8 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_118_25_118_41_end];
+        bf %tmp.8 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_118_8_122_8_if_else_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_118_55_118_73_true:
         %tmp.9 = lgetv %data;
-        symbol [ data %tmp.9 101 55 59 ];
+        symbol [ data %tmp.9 118 55 59 ];
         %tmp.10 = as %tmp.9 { (Dictionary) };
-        symbol [ get %tmp.11 101 60 63 ];
+        symbol [ get %tmp.11 118 60 63 ];
         %tmp.11 = getv function %tmp.10 :get;
         %tmp.12 = "id";
         %tmp.13 = invoke %tmp.10 %tmp.11(%tmp.12);
         %tmp.14 = null;
         %tmp.15 = ne %tmp.13 %tmp.14;
         push %tmp.15;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_101_55_101_73_end:
-        %tmp.16 = phi [%tmp.8 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_101_12_101_73_begin] [%tmp.15 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_101_55_101_73_true] [%tmp.16 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_101_55_101_73_end];
-        bf %tmp.16 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_101_8_105_8_if_else_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_101_8_105_8_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_101_79_103_8_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 102 12 ]
-        symbol [ Background %tmp.17 102 12 22 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_118_55_118_73_end:
+        %tmp.16 = phi [%tmp.8 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_118_12_118_73_begin] [%tmp.15 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_118_55_118_73_true] [%tmp.16 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_118_55_118_73_end];
+        bf %tmp.16 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_118_8_122_8_if_else_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_118_8_122_8_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_118_79_120_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 119 12 ]
+        symbol [ Background %tmp.17 119 12 22 ];
         %tmp.17 = getm $.Toybox.Background;
-        symbol [ exit %tmp.18 102 23 27 ];
+        symbol [ exit %tmp.18 119 23 27 ];
         %tmp.18 = getv function %tmp.17 :exit;
         %tmp.19 = newd 2;
         %tmp.20 = "id";
         %tmp.21 = lgetv %data;
-        symbol [ data %tmp.21 102 38 42 ];
+        symbol [ data %tmp.21 119 38 42 ];
         %tmp.22 = as %tmp.21 { (Dictionary) };
-        symbol [ get %tmp.23 102 43 46 ];
+        symbol [ get %tmp.23 119 43 46 ];
         %tmp.23 = getv function %tmp.22 :get;
         %tmp.24 = "id";
         %tmp.25 = invoke %tmp.22 %tmp.23(%tmp.24);
-        symbol [ toString %tmp.26 102 53 61 ];
+        symbol [ toString %tmp.26 119 53 61 ];
         %tmp.26 = getv function %tmp.25 :toString;
         %tmp.27 = invoke %tmp.25 %tmp.26();
         %tmp.28 = dup %tmp.19;
         %tmp.29 = aputv %tmp.28 %tmp.20 %tmp.27;
         %tmp.30 = "code";
         %tmp.31 = lgetv %data;
-        symbol [ data %tmp.31 102 75 79 ];
+        symbol [ data %tmp.31 119 75 79 ];
         %tmp.32 = as %tmp.31 { (Dictionary) };
-        symbol [ get %tmp.33 102 80 83 ];
+        symbol [ get %tmp.33 119 80 83 ];
         %tmp.33 = getv function %tmp.32 :get;
         %tmp.34 = "code";
         %tmp.35 = invoke %tmp.32 %tmp.33(%tmp.34);
-        symbol [ toString %tmp.36 102 92 100 ];
+        symbol [ toString %tmp.36 119 92 100 ];
         %tmp.36 = getv function %tmp.35 :toString;
         %tmp.37 = invoke %tmp.35 %tmp.36();
         %tmp.38 = dup %tmp.29;
         %tmp.39 = aputv %tmp.38 %tmp.30 %tmp.37;
         invoke %tmp.17 %tmp.18(%tmp.39);
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_101_79_103_8_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_101_8_105_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_101_8_105_8_if_else_false:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_103_15_105_8_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 104 12 ]
-        symbol [ Background %tmp.40 104 12 22 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_118_79_120_8_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_118_8_122_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_118_8_122_8_if_else_false:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_120_15_122_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 121 12 ]
+        symbol [ Background %tmp.40 121 12 22 ];
         %tmp.40 = getm $.Toybox.Background;
-        symbol [ exit %tmp.41 104 23 27 ];
+        symbol [ exit %tmp.41 121 23 27 ];
         %tmp.41 = getv function %tmp.40 :exit;
         %tmp.42 = newd 1;
         %tmp.43 = "rc";
         %tmp.44 = lgetv %rc;
-        symbol [ rc %tmp.44 104 38 40 ];
+        symbol [ rc %tmp.44 121 38 40 ];
         %tmp.45 = dup %tmp.42;
         %tmp.46 = aputv %tmp.45 %tmp.43 %tmp.44;
         invoke %tmp.40 %tmp.41(%tmp.46);
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_103_15_105_8_stop:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_101_8_105_8_if_end:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_100_87_106_4_stop:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_120_15_122_8_stop:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_118_8_122_8_if_end:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_117_87_123_4_stop:
     }
-    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 108; @symbol_functiondef = [statusFertig,108,13,25]; @symbol_param<0> = [rc,108,26,28]; @symbol_param<0>_type<0> = [Number,108,32,38]; @symbol_param<1> = [data,108,40,44]; @symbol_param<1>_type<0> = [Dictionary,108,48,58]; @symbol_param<1>_type<1> = [String,108,62,68]; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 125; @symbol_functiondef = [statusFertig,125,13,25]; @symbol_param<0> = [rc,125,26,28]; @symbol_param<0>_type<0> = [Number,125,32,38]; @symbol_param<1> = [data,125,40,44]; @symbol_param<1>_type<0> = [Dictionary,125,48,58]; @symbol_param<1>_type<1> = [String,125,62,68]; ]
     function statusFertig(rc as Number, data as Dictionary or String or Null) as Void {
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_108_86_119_4_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 109 8 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_8_118_8_if_stmt:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_12_109_76_begin:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_12_109_41_begin:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_125_86_136_4_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 126 8 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_126_8_135_8_if_stmt:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_126_12_126_76_begin:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_126_12_126_41_begin:
         %tmp.1 = lgetv %rc;
-        symbol [ rc %tmp.1 109 12 14 ];
+        symbol [ rc %tmp.1 126 12 14 ];
         %tmp.2 = 200;
         %tmp.3 = eq %tmp.1 %tmp.2;
-        bf %tmp.3 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_8_118_8_if_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_25_109_41_true:
+        bf %tmp.3 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_126_8_135_8_if_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_126_25_126_41_true:
         %tmp.4 = lgetv %data;
-        symbol [ data %tmp.4 109 25 29 ];
-        symbol [ Dictionary %tmp.6 109 41 51 ];
+        symbol [ data %tmp.4 126 25 29 ];
+        symbol [ Dictionary %tmp.6 126 41 51 ];
         %tmp.6 = getv ? :Dictionary;
         %tmp.7 = isa %tmp.4 %tmp.6;
         push %tmp.7;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_25_109_41_end:
-        %tmp.8 = phi [%tmp.3 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_12_109_41_begin] [%tmp.7 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_25_109_41_true] [%tmp.8 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_25_109_41_end];
-        bf %tmp.8 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_8_118_8_if_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_55_109_76_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_126_25_126_41_end:
+        %tmp.8 = phi [%tmp.3 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_126_12_126_41_begin] [%tmp.7 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_126_25_126_41_true] [%tmp.8 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_126_25_126_41_end];
+        bf %tmp.8 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_126_8_135_8_if_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_126_55_126_76_true:
         %tmp.9 = lgetv %data;
-        symbol [ data %tmp.9 109 55 59 ];
+        symbol [ data %tmp.9 126 55 59 ];
         %tmp.10 = as %tmp.9 { (Dictionary) };
-        symbol [ get %tmp.11 109 60 63 ];
+        symbol [ get %tmp.11 126 60 63 ];
         %tmp.11 = getv function %tmp.10 :get;
         %tmp.12 = "token";
         %tmp.13 = invoke %tmp.10 %tmp.11(%tmp.12);
         %tmp.14 = null;
         %tmp.15 = ne %tmp.13 %tmp.14;
         push %tmp.15;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_55_109_76_end:
-        %tmp.16 = phi [%tmp.8 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_12_109_76_begin] [%tmp.15 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_55_109_76_true] [%tmp.16 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_55_109_76_end];
-        bf %tmp.16 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_8_118_8_if_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_8_118_8_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_82_112_8_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 110 12 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_126_55_126_76_end:
+        %tmp.16 = phi [%tmp.8 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_126_12_126_76_begin] [%tmp.15 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_126_55_126_76_true] [%tmp.16 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_126_55_126_76_end];
+        bf %tmp.16 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_126_8_135_8_if_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_126_8_135_8_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_126_82_129_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 127 12 ]
         %tmp.17 = lgetv %data;
-        symbol [ data %tmp.17 110 21 25 ];
+        symbol [ data %tmp.17 127 21 25 ];
         %tmp.18 = as %tmp.17 { (Dictionary) };
-        symbol [ get %tmp.19 110 26 29 ];
+        symbol [ get %tmp.19 127 26 29 ];
         %tmp.19 = getv function %tmp.18 :get;
         %tmp.20 = "token";
         %tmp.21 = invoke %tmp.18 %tmp.19(%tmp.20);
-        symbol [ toString %tmp.22 110 39 47 ];
+        symbol [ toString %tmp.22 127 39 47 ];
         %tmp.22 = getv function %tmp.21 :toString;
         %tmp.23 = invoke %tmp.21 %tmp.22();
-        symbol [ tokNeu ? 110 12 18 ];
+        symbol [ tokNeu ? 127 12 18 ];
         putv self :tokNeu %tmp.23;
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 111 12 ]
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 128 12 ]
         %tmp.24 = self;
-        symbol [ feldHolen %tmp.25 111 12 21 ];
+        symbol [ feldHolen %tmp.25 128 12 21 ];
         %tmp.25 = getv function %tmp.24 :feldHolen;
-        symbol [ tokNeu %tmp.27 111 22 28 ];
+        symbol [ tokNeu %tmp.27 128 22 28 ];
         %tmp.27 = getv ? :tokNeu;
         invoke %tmp.24 %tmp.25(%tmp.27);
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_82_112_8_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_8_118_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_8_118_8_if_false:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 112 15 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_112_15_118_8_if_stmt:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_126_82_129_8_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_126_8_135_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_126_8_135_8_if_false:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 129 15 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_129_15_135_8_if_stmt:
         %tmp.28 = lgetv %rc;
-        symbol [ rc %tmp.28 112 19 21 ];
+        symbol [ rc %tmp.28 129 19 21 ];
         %tmp.29 = 200;
         %tmp.30 = eq %tmp.28 %tmp.29;
-        bf %tmp.30 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_112_15_118_8_if_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_112_15_118_8_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_112_30_114_8_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 113 12 ]
-        symbol [ Background %tmp.31 113 12 22 ];
+        bf %tmp.30 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_129_15_135_8_if_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_129_15_135_8_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_129_30_131_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 130 12 ]
+        symbol [ Background %tmp.31 130 12 22 ];
         %tmp.31 = getm $.Toybox.Background;
-        symbol [ exit %tmp.32 113 23 27 ];
+        symbol [ exit %tmp.32 130 23 27 ];
         %tmp.32 = getv function %tmp.31 :exit;
         %tmp.33 = newd 1;
         %tmp.34 = "rc";
@@ -757,22 +933,22 @@ _home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_112_30_114_8_star
         %tmp.36 = dup %tmp.33;
         %tmp.37 = aputv %tmp.36 %tmp.34 %tmp.35;
         invoke %tmp.31 %tmp.32(%tmp.37);
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_112_30_114_8_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_112_15_118_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_112_15_118_8_if_false:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 114 15 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_114_15_118_8_if_stmt:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_129_30_131_8_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_129_15_135_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_129_15_135_8_if_false:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 131 15 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_131_15_135_8_if_stmt:
         %tmp.38 = lgetv %rc;
-        symbol [ rc %tmp.38 114 19 21 ];
+        symbol [ rc %tmp.38 131 19 21 ];
         %tmp.39 = 404;
         %tmp.40 = eq %tmp.38 %tmp.39;
-        bf %tmp.40 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_114_15_118_8_if_else_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_114_15_118_8_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_114_30_116_8_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 115 12 ]
-        symbol [ Background %tmp.41 115 12 22 ];
+        bf %tmp.40 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_131_15_135_8_if_else_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_131_15_135_8_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_131_30_133_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 132 12 ]
+        symbol [ Background %tmp.41 132 12 22 ];
         %tmp.41 = getm $.Toybox.Background;
-        symbol [ exit %tmp.42 115 23 27 ];
+        symbol [ exit %tmp.42 132 23 27 ];
         %tmp.42 = getv function %tmp.41 :exit;
         %tmp.43 = newd 1;
         %tmp.44 = "neu";
@@ -780,170 +956,170 @@ _home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_114_30_116_8_star
         %tmp.46 = dup %tmp.43;
         %tmp.47 = aputv %tmp.46 %tmp.44 %tmp.45;
         invoke %tmp.41 %tmp.42(%tmp.47);
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_114_30_116_8_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_114_15_118_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_114_15_118_8_if_else_false:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_116_15_118_8_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 117 12 ]
-        symbol [ Background %tmp.48 117 12 22 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_131_30_133_8_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_131_15_135_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_131_15_135_8_if_else_false:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_133_15_135_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 134 12 ]
+        symbol [ Background %tmp.48 134 12 22 ];
         %tmp.48 = getm $.Toybox.Background;
-        symbol [ exit %tmp.49 117 23 27 ];
+        symbol [ exit %tmp.49 134 23 27 ];
         %tmp.49 = getv function %tmp.48 :exit;
         %tmp.50 = newd 1;
         %tmp.51 = "rc";
         %tmp.52 = lgetv %rc;
-        symbol [ rc %tmp.52 117 38 40 ];
+        symbol [ rc %tmp.52 134 38 40 ];
         %tmp.53 = dup %tmp.50;
         %tmp.54 = aputv %tmp.53 %tmp.51 %tmp.52;
         invoke %tmp.48 %tmp.49(%tmp.54);
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_116_15_118_8_stop:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_114_15_118_8_if_end:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_112_15_118_8_if_end:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_109_8_118_8_if_end:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_108_86_119_4_stop:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_133_15_135_8_stop:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_131_15_135_8_if_end:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_129_15_135_8_if_end:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_126_8_135_8_if_end:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_125_86_136_4_stop:
     }
-    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 121; @symbol_functiondef = [feldFertig,121,13,23]; @symbol_param<0> = [rc,121,24,26]; @symbol_param<0>_type<0> = [Number,121,30,36]; @symbol_param<1> = [data,121,38,42]; @symbol_param<1>_type<0> = [Dictionary,121,46,56]; @symbol_param<1>_type<1> = [String,121,60,66]; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 138; @symbol_functiondef = [feldFertig,138,13,23]; @symbol_param<0> = [rc,138,24,26]; @symbol_param<0>_type<0> = [Number,138,30,36]; @symbol_param<1> = [data,138,38,42]; @symbol_param<1>_type<0> = [Dictionary,138,46,56]; @symbol_param<1>_type<1> = [String,138,60,66]; ]
     function feldFertig(rc as Number, data as Dictionary or String or Null) as Void {
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_121_84_134_4_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 122 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_121_84_134_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_121_84_134_4_stop" ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_138_84_151_4_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 139 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_138_84_151_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_138_84_151_4_stop" ]
         %r.1 = local;
-        symbol [ r %r.1 122 12 13 ];
+        symbol [ r %r.1 139 12 13 ];
         %tmp.1 = newd Dictionary<String, Application.PropertyValueType> 0;
-        symbol [ Dictionary %tmp.1 122 22 32 ];
-        symbol [ String %tmp.1 122 33 39 ];
-        symbol [ Application %tmp.1 122 41 52 ];
-        symbol [ PropertyValueType %tmp.1 122 53 70 ];
+        symbol [ Dictionary %tmp.1 139 22 32 ];
+        symbol [ String %tmp.1 139 33 39 ];
+        symbol [ Application %tmp.1 139 41 52 ];
+        symbol [ PropertyValueType %tmp.1 139 53 70 ];
         lputv %r.1 %tmp.1;
-        symbol [ r %r.1 122 12 13 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 123 8 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_123_8_123_54_if_stmt:
-        symbol [ tokNeu %tmp.3 123 12 18 ];
+        symbol [ r %r.1 139 12 13 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 140 8 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_140_8_140_54_if_stmt:
+        symbol [ tokNeu %tmp.3 140 12 18 ];
         %tmp.3 = getv ? :tokNeu;
         %tmp.4 = null;
         %tmp.5 = ne %tmp.3 %tmp.4;
-        bf %tmp.5 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_123_8_123_54_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_123_8_123_54_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_123_28_123_54_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 123 30 ]
+        bf %tmp.5 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_140_8_140_54_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_140_8_140_54_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_140_28_140_54_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 140 30 ]
         %tmp.6 = lgetv %r.1;
-        symbol [ r %tmp.6 123 30 31 ];
-        symbol [ put %tmp.7 123 32 35 ];
+        symbol [ r %tmp.6 140 30 31 ];
+        symbol [ put %tmp.7 140 32 35 ];
         %tmp.7 = getv function %tmp.6 :put;
         %tmp.8 = "token";
-        symbol [ tokNeu %tmp.10 123 45 51 ];
+        symbol [ tokNeu %tmp.10 140 45 51 ];
         %tmp.10 = getv ? :tokNeu;
         %tmp.11 = as %tmp.10 { (!Null) };
         invoke %tmp.6 %tmp.7(%tmp.8, %tmp.11);
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_123_28_123_54_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_123_8_123_54_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_123_8_123_54_if_end:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 124 8 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_124_8_132_8_if_stmt:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_124_12_124_41_begin:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_140_28_140_54_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_140_8_140_54_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_140_8_140_54_if_end:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 141 8 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_141_8_149_8_if_stmt:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_141_12_141_41_begin:
         %tmp.12 = lgetv %rc;
-        symbol [ rc %tmp.12 124 12 14 ];
+        symbol [ rc %tmp.12 141 12 14 ];
         %tmp.13 = 200;
         %tmp.14 = eq %tmp.12 %tmp.13;
-        bf %tmp.14 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_124_8_132_8_if_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_124_25_124_41_true:
+        bf %tmp.14 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_141_8_149_8_if_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_141_25_141_41_true:
         %tmp.15 = lgetv %data;
-        symbol [ data %tmp.15 124 25 29 ];
-        symbol [ Dictionary %tmp.17 124 41 51 ];
+        symbol [ data %tmp.15 141 25 29 ];
+        symbol [ Dictionary %tmp.17 141 41 51 ];
         %tmp.17 = getv ? :Dictionary;
         %tmp.18 = isa %tmp.15 %tmp.17;
         push %tmp.18;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_124_25_124_41_end:
-        %tmp.19 = phi [%tmp.14 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_124_12_124_41_begin] [%tmp.18 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_124_25_124_41_true] [%tmp.19 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_124_25_124_41_end];
-        bf %tmp.19 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_124_8_132_8_if_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_124_8_132_8_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_124_53_128_8_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 125 12 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_141_25_141_41_end:
+        %tmp.19 = phi [%tmp.14 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_141_12_141_41_begin] [%tmp.18 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_141_25_141_41_true] [%tmp.19 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_141_25_141_41_end];
+        bf %tmp.19 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_141_8_149_8_if_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_141_8_149_8_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_141_53_145_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 142 12 ]
         %tmp.20 = lgetv %data;
-        symbol [ data %tmp.20 125 12 16 ];
+        symbol [ data %tmp.20 142 12 16 ];
         %tmp.21 = as %tmp.20 { (Dictionary) };
-        symbol [ remove %tmp.22 125 17 23 ];
+        symbol [ remove %tmp.22 142 17 23 ];
         %tmp.22 = getv function %tmp.21 :remove;
         %tmp.23 = "n";
         invoke %tmp.21 %tmp.22(%tmp.23);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 126 12 ]
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 143 12 ]
         %tmp.24 = lgetv %data;
-        symbol [ data %tmp.24 126 12 16 ];
+        symbol [ data %tmp.24 143 12 16 ];
         %tmp.25 = as %tmp.24 { (Dictionary) };
-        symbol [ remove %tmp.26 126 17 23 ];
+        symbol [ remove %tmp.26 143 17 23 ];
         %tmp.26 = getv function %tmp.25 :remove;
         %tmp.27 = "ok";
         invoke %tmp.25 %tmp.26(%tmp.27);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 127 12 ]
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 144 12 ]
         %tmp.28 = lgetv %r.1;
-        symbol [ r %tmp.28 127 12 13 ];
-        symbol [ put %tmp.29 127 14 17 ];
+        symbol [ r %tmp.28 144 12 13 ];
+        symbol [ put %tmp.29 144 14 17 ];
         %tmp.29 = getv function %tmp.28 :put;
         %tmp.30 = "feld";
         %tmp.31 = lgetv %data;
-        symbol [ data %tmp.31 127 26 30 ];
+        symbol [ data %tmp.31 144 26 30 ];
         %tmp.32 = as %tmp.31 { (Dictionary) };
         %tmp.33 = as %tmp.32 Dictionary<String, Application.PropertyValueType>;
-        symbol [ Dictionary %tmp.33 127 34 44 ];
-        symbol [ String %tmp.33 127 45 51 ];
-        symbol [ Application %tmp.33 127 53 64 ];
-        symbol [ PropertyValueType %tmp.33 127 65 82 ];
+        symbol [ Dictionary %tmp.33 144 34 44 ];
+        symbol [ String %tmp.33 144 45 51 ];
+        symbol [ Application %tmp.33 144 53 64 ];
+        symbol [ PropertyValueType %tmp.33 144 65 82 ];
         invoke %tmp.28 %tmp.29(%tmp.30, %tmp.33);
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_124_53_128_8_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_124_8_132_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_124_8_132_8_if_false:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 128 15 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_128_15_132_8_if_stmt:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_128_19_128_42_begin:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_141_53_145_8_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_141_8_149_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_141_8_149_8_if_false:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 145 15 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_145_15_149_8_if_stmt:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_145_19_145_42_begin:
         %tmp.34 = lgetv %rc;
-        symbol [ rc %tmp.34 128 19 21 ];
+        symbol [ rc %tmp.34 145 19 21 ];
         %tmp.35 = 401;
         %tmp.36 = eq %tmp.34 %tmp.35;
-        bf %tmp.36 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_128_15_132_8_if_else_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_128_32_128_42_true:
-        symbol [ tokNeu %tmp.38 128 32 38 ];
+        bf %tmp.36 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_145_15_149_8_if_else_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_145_32_145_42_true:
+        symbol [ tokNeu %tmp.38 145 32 38 ];
         %tmp.38 = getv ? :tokNeu;
         %tmp.39 = null;
         %tmp.40 = eq %tmp.38 %tmp.39;
         push %tmp.40;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_128_32_128_42_end:
-        %tmp.41 = phi [%tmp.36 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_128_19_128_42_begin] [%tmp.40 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_128_32_128_42_true] [%tmp.41 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_128_32_128_42_end];
-        bf %tmp.41 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_128_15_132_8_if_else_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_128_15_132_8_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_128_48_130_8_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 129 12 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_145_32_145_42_end:
+        %tmp.41 = phi [%tmp.36 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_145_19_145_42_begin] [%tmp.40 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_145_32_145_42_true] [%tmp.41 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_145_32_145_42_end];
+        bf %tmp.41 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_145_15_149_8_if_else_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_145_15_149_8_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_145_48_147_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 146 12 ]
         %tmp.42 = lgetv %r.1;
-        symbol [ r %tmp.42 129 12 13 ];
-        symbol [ put %tmp.43 129 14 17 ];
+        symbol [ r %tmp.42 146 12 13 ];
+        symbol [ put %tmp.43 146 14 17 ];
         %tmp.43 = getv function %tmp.42 :put;
         %tmp.44 = "weg";
         %tmp.45 = true;
         invoke %tmp.42 %tmp.43(%tmp.44, %tmp.45);
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_128_48_130_8_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_128_15_132_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_128_15_132_8_if_else_false:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_130_15_132_8_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 131 12 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_145_48_147_8_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_145_15_149_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_145_15_149_8_if_else_false:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_147_15_149_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 148 12 ]
         %tmp.46 = lgetv %r.1;
-        symbol [ r %tmp.46 131 12 13 ];
-        symbol [ put %tmp.47 131 14 17 ];
+        symbol [ r %tmp.46 148 12 13 ];
+        symbol [ put %tmp.47 148 14 17 ];
         %tmp.47 = getv function %tmp.46 :put;
         %tmp.48 = "rc";
         %tmp.49 = lgetv %rc;
-        symbol [ rc %tmp.49 131 24 26 ];
+        symbol [ rc %tmp.49 148 24 26 ];
         invoke %tmp.46 %tmp.47(%tmp.48, %tmp.49);
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_130_15_132_8_stop:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_128_15_132_8_if_end:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_124_8_132_8_if_end:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 133 8 ]
-        symbol [ Background %tmp.50 133 8 18 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_147_15_149_8_stop:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_145_15_149_8_if_end:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_141_8_149_8_if_end:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 150 8 ]
+        symbol [ Background %tmp.50 150 8 18 ];
         %tmp.50 = getm $.Toybox.Background;
-        symbol [ exit %tmp.51 133 19 23 ];
+        symbol [ exit %tmp.51 150 19 23 ];
         %tmp.51 = getv function %tmp.50 :exit;
         %tmp.52 = lgetv %r.1;
-        symbol [ r %tmp.52 133 24 25 ];
+        symbol [ r %tmp.52 150 24 25 ];
         invoke %tmp.50 %tmp.51(%tmp.52);
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_121_84_134_4_stop:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_138_84_151_4_stop:
     }
 }
 [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 6; ]
