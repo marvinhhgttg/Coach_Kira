@@ -111,7 +111,20 @@ function kiraKomplikation(d as Dictionary) as Void {
         }
         var m = d.get("morgen");
         var rd = m instanceof Dictionary && m.get("readiness") != null ? m.get("readiness").toNumber().toString() : "";
-        t = (lab.equals("KIRA") ? "" : lab) + "|" + st + "|" + lo2 + "|" + hi2 + "|" + ist + "|" + (d.get("datum") != null ? d.get("datum").toString() : "") + "|" + zn + "|" + zt + "|" + rd;
+        // ab 22.11. abends zusätzlich: |plan|sport|zone|ausdauerwert|ausdauer28
+        var pl = "", sp = "", zo = "", es = "", es28 = "";
+        if (l instanceof Dictionary) {
+            if (l.get("planHeute") != null) { pl = l.get("planHeute").toNumber().toString(); }
+            if (l.get("sportHeute") != null) { sp = l.get("sportHeute").toString(); }
+            if (l.get("zoneHeute") != null) { zo = l.get("zoneHeute").toString(); }
+        }
+        var fo = d.get("form");
+        if (fo instanceof Dictionary) {
+            if (fo.get("es") != null) { es = fo.get("es").toNumber().toString(); }
+            if (fo.get("es28") != null) { es28 = fo.get("es28").toNumber().toString(); }
+        }
+        t = (lab.equals("KIRA") ? "" : lab) + "|" + st + "|" + lo2 + "|" + hi2 + "|" + ist + "|" + (d.get("datum") != null ? d.get("datum").toString() : "") + "|" + zn + "|" + zt + "|" + rd
+            + "|" + pl + "|" + sp + "|" + zo + "|" + es + "|" + es28;
         Complications.updateComplication(1, { :value => t, :shortLabel => "KIRA" });
     } catch (e) {
     }

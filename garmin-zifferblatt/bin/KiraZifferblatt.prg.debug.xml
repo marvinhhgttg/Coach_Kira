@@ -3,256 +3,306 @@
     <manifest filename="/home/user/workspace/ck-repo/garmin-zifferblatt/manifest.xml"/>
     <pcToLineNum>
         <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen" id="1" lineNum="7" parent="globals/Rez" pc="268435460" symbol="&lt;init&gt;"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="2" lineNum="16" parent="globals/KiraZifferblattApp" pc="268435480" symbol="&lt;init&gt;"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="3" lineNum="33" parent="globals/KiraZifferblatt" pc="268435492" symbol="&lt;init&gt;"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="4" lineNum="21" parent="globals/KiraZifferblattApp" pc="268435504" symbol="getInitialView"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="4" lineNum="22" parent="globals/KiraZifferblattApp" pc="268435506" symbol="getInitialView"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="5" lineNum="17" parent="globals/KiraZifferblattApp" pc="268435532" symbol="initialize"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="5" lineNum="18" parent="globals/KiraZifferblattApp" pc="268435534" symbol="initialize"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="6" lineNum="92" parent="globals/KiraZifferblatt" pc="268435547" symbol="onExitSleep"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="6" lineNum="93" parent="globals/KiraZifferblatt" pc="268435549" symbol="onExitSleep"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="6" lineNum="94" parent="globals/KiraZifferblatt" pc="268435557" symbol="onExitSleep"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="6" lineNum="94" parent="globals/KiraZifferblatt" pc="268435566" symbol="onExitSleep"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="6" lineNum="95" parent="globals/KiraZifferblatt" pc="268435576" symbol="onExitSleep"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="7" lineNum="104" parent="globals/KiraZifferblatt" pc="268435588" symbol="teile"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="7" lineNum="105" parent="globals/KiraZifferblatt" pc="268435591" symbol="teile"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="7" lineNum="106" parent="globals/KiraZifferblatt" pc="268435595" symbol="teile"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="7" lineNum="107" parent="globals/KiraZifferblatt" pc="268435602" symbol="teile"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="7" lineNum="107" parent="globals/KiraZifferblatt" pc="268435608" symbol="teile"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="7" lineNum="108" parent="globals/KiraZifferblatt" pc="268435614" symbol="teile"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="7" lineNum="109" parent="globals/KiraZifferblatt" pc="268435630" symbol="teile"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="7" lineNum="110" parent="globals/KiraZifferblatt" pc="268435636" symbol="teile"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="7" lineNum="111" parent="globals/KiraZifferblatt" pc="268435658" symbol="teile"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="7" lineNum="112" parent="globals/KiraZifferblatt" pc="268435681" symbol="teile"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="7" lineNum="114" parent="globals/KiraZifferblatt" pc="268435700" symbol="teile"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="7" lineNum="115" parent="globals/KiraZifferblatt" pc="268435712" symbol="teile"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="8" lineNum="76" parent="globals/KiraZifferblatt" pc="268435715" symbol="wertKira"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="8" lineNum="77" parent="globals/KiraZifferblatt" pc="268435718" symbol="wertKira"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="8" lineNum="78" parent="globals/KiraZifferblatt" pc="268435726" symbol="wertKira"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="8" lineNum="78" parent="globals/KiraZifferblatt" pc="268435732" symbol="wertKira"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="9" lineNum="118" parent="globals/KiraZifferblatt" pc="268435751" symbol="zahl"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="9" lineNum="119" parent="globals/KiraZifferblatt" pc="268435753" symbol="zahl"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="9" lineNum="119" parent="globals/KiraZifferblatt" pc="268435782" symbol="zahl"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="9" lineNum="120" parent="globals/KiraZifferblatt" pc="268435787" symbol="zahl"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="10" lineNum="123" parent="globals/KiraZifferblatt" pc="268435799" symbol="heuteIso"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="10" lineNum="124" parent="globals/KiraZifferblatt" pc="268435802" symbol="heuteIso"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="10" lineNum="125" parent="globals/KiraZifferblatt" pc="268435827" symbol="heuteIso"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="11" lineNum="98" parent="globals/KiraZifferblatt" pc="268435899" symbol="onEnterSleep"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="11" lineNum="99" parent="globals/KiraZifferblatt" pc="268435901" symbol="onEnterSleep"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="11" lineNum="100" parent="globals/KiraZifferblatt" pc="268435909" symbol="onEnterSleep"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="12" lineNum="59" parent="globals/KiraZifferblatt" pc="268435921" symbol="kiraSuchen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="12" lineNum="61" parent="globals/KiraZifferblatt" pc="268435924" symbol="kiraSuchen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="12" lineNum="62" parent="globals/KiraZifferblatt" pc="268435936" symbol="kiraSuchen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="12" lineNum="63" parent="globals/KiraZifferblatt" pc="268435945" symbol="kiraSuchen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="12" lineNum="64" parent="globals/KiraZifferblatt" pc="268435951" symbol="kiraSuchen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="12" lineNum="65" parent="globals/KiraZifferblatt" pc="268435960" symbol="kiraSuchen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="12" lineNum="66" parent="globals/KiraZifferblatt" pc="268435990" symbol="kiraSuchen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="12" lineNum="67" parent="globals/KiraZifferblatt" pc="268436004" symbol="kiraSuchen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="12" lineNum="67" parent="globals/KiraZifferblatt" pc="268436013" symbol="kiraSuchen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="12" lineNum="68" parent="globals/KiraZifferblatt" pc="268436034" symbol="kiraSuchen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="12" lineNum="69" parent="globals/KiraZifferblatt" pc="268436045" symbol="kiraSuchen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="12" lineNum="71" parent="globals/KiraZifferblatt" pc="268436052" symbol="kiraSuchen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="12" lineNum="73" parent="globals/KiraZifferblatt" pc="268436070" symbol="kiraSuchen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="13" lineNum="44" parent="globals/KiraZifferblatt" pc="268436087" symbol="initialize"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="13" lineNum="45" parent="globals/KiraZifferblatt" pc="268436090" symbol="initialize"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="13" lineNum="47" parent="globals/KiraZifferblatt" pc="268436102" symbol="initialize"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="13" lineNum="48" parent="globals/KiraZifferblatt" pc="268436133" symbol="initialize"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="13" lineNum="49" parent="globals/KiraZifferblatt" pc="268436164" symbol="initialize"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="13" lineNum="50" parent="globals/KiraZifferblatt" pc="268436195" symbol="initialize"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="13" lineNum="51" parent="globals/KiraZifferblatt" pc="268436221" symbol="initialize"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="13" lineNum="52" parent="globals/KiraZifferblatt" pc="268436239" symbol="initialize"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="13" lineNum="53" parent="globals/KiraZifferblatt" pc="268436257" symbol="initialize"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="13" lineNum="54" parent="globals/KiraZifferblatt" pc="268436281" symbol="initialize"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="13" lineNum="55" parent="globals/KiraZifferblatt" pc="268436297" symbol="initialize"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="14" lineNum="81" parent="globals/KiraZifferblatt" pc="268436305" symbol="geaendert"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="14" lineNum="83" parent="globals/KiraZifferblatt" pc="268436308" symbol="geaendert"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="14" lineNum="84" parent="globals/KiraZifferblatt" pc="268436324" symbol="geaendert"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="14" lineNum="85" parent="globals/KiraZifferblatt" pc="268436332" symbol="geaendert"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="14" lineNum="85" parent="globals/KiraZifferblatt" pc="268436358" symbol="geaendert"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="14" lineNum="86" parent="globals/KiraZifferblatt" pc="268436372" symbol="geaendert"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="14" lineNum="86" parent="globals/KiraZifferblatt" pc="268436398" symbol="geaendert"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="14" lineNum="87" parent="globals/KiraZifferblatt" pc="268436429" symbol="geaendert"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="14" lineNum="87" parent="globals/KiraZifferblatt" pc="268436455" symbol="geaendert"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="14" lineNum="88" parent="globals/KiraZifferblatt" pc="268436486" symbol="geaendert"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="14" lineNum="88" parent="globals/KiraZifferblatt" pc="268436512" symbol="geaendert"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="14" lineNum="89" parent="globals/KiraZifferblatt" pc="268436549" symbol="geaendert"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="128" parent="globals/KiraZifferblatt" pc="268436566" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="129" parent="globals/KiraZifferblatt" pc="268436569" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="130" parent="globals/KiraZifferblatt" pc="268436578" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="131" parent="globals/KiraZifferblatt" pc="268436587" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="132" parent="globals/KiraZifferblatt" pc="268436594" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="133" parent="globals/KiraZifferblatt" pc="268436601" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="134" parent="globals/KiraZifferblatt" pc="268436613" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="135" parent="globals/KiraZifferblatt" pc="268436621" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="136" parent="globals/KiraZifferblatt" pc="268436633" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="137" parent="globals/KiraZifferblatt" pc="268436680" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="138" parent="globals/KiraZifferblatt" pc="268436688" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="139" parent="globals/KiraZifferblatt" pc="268436714" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="140" parent="globals/KiraZifferblatt" pc="268436751" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="142" parent="globals/KiraZifferblatt" pc="268436798" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="144" parent="globals/KiraZifferblatt" pc="268436806" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="145" parent="globals/KiraZifferblatt" pc="268436823" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="146" parent="globals/KiraZifferblatt" pc="268436840" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="147" parent="globals/KiraZifferblatt" pc="268436857" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="148" parent="globals/KiraZifferblatt" pc="268436883" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="149" parent="globals/KiraZifferblatt" pc="268436897" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="150" parent="globals/KiraZifferblatt" pc="268436922" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="154" parent="globals/KiraZifferblatt" pc="268436926" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="155" parent="globals/KiraZifferblatt" pc="268436940" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="156" parent="globals/KiraZifferblatt" pc="268436954" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="157" parent="globals/KiraZifferblatt" pc="268436968" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="158" parent="globals/KiraZifferblatt" pc="268436975" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="159" parent="globals/KiraZifferblatt" pc="268436980" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="160" parent="globals/KiraZifferblatt" pc="268436985" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="161" parent="globals/KiraZifferblatt" pc="268436997" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="162" parent="globals/KiraZifferblatt" pc="268437013" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="163" parent="globals/KiraZifferblatt" pc="268437038" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="164" parent="globals/KiraZifferblatt" pc="268437056" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="165" parent="globals/KiraZifferblatt" pc="268437066" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="166" parent="globals/KiraZifferblatt" pc="268437095" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="167" parent="globals/KiraZifferblatt" pc="268437114" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="168" parent="globals/KiraZifferblatt" pc="268437130" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="169" parent="globals/KiraZifferblatt" pc="268437152" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="170" parent="globals/KiraZifferblatt" pc="268437165" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="171" parent="globals/KiraZifferblatt" pc="268437182" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="172" parent="globals/KiraZifferblatt" pc="268437247" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="173" parent="globals/KiraZifferblatt" pc="268437261" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="174" parent="globals/KiraZifferblatt" pc="268437280" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="174" parent="globals/KiraZifferblatt" pc="268437288" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="177" parent="globals/KiraZifferblatt" pc="268437319" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="180" parent="globals/KiraZifferblatt" pc="268437331" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="181" parent="globals/KiraZifferblatt" pc="268437347" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="182" parent="globals/KiraZifferblatt" pc="268437407" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="183" parent="globals/KiraZifferblatt" pc="268437421" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="185" parent="globals/KiraZifferblatt" pc="268437441" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="186" parent="globals/KiraZifferblatt" pc="268437469" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="187" parent="globals/KiraZifferblatt" pc="268437483" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="188" parent="globals/KiraZifferblatt" pc="268437501" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="189" parent="globals/KiraZifferblatt" pc="268437518" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="193" parent="globals/KiraZifferblatt" pc="268437573" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="194" parent="globals/KiraZifferblatt" pc="268437590" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="195" parent="globals/KiraZifferblatt" pc="268437622" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="196" parent="globals/KiraZifferblatt" pc="268437647" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="197" parent="globals/KiraZifferblatt" pc="268437654" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="198" parent="globals/KiraZifferblatt" pc="268437723" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="199" parent="globals/KiraZifferblatt" pc="268437740" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="202" parent="globals/KiraZifferblatt" pc="268437772" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="203" parent="globals/KiraZifferblatt" pc="268437788" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="204" parent="globals/KiraZifferblatt" pc="268437799" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="205" parent="globals/KiraZifferblatt" pc="268437867" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="206" parent="globals/KiraZifferblatt" pc="268437884" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="210" parent="globals/KiraZifferblatt" pc="268437906" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="211" parent="globals/KiraZifferblatt" pc="268437922" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="216" parent="globals/KiraZifferblatt" pc="268438087" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="217" parent="globals/KiraZifferblatt" pc="268438098" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="218" parent="globals/KiraZifferblatt" pc="268438123" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="219" parent="globals/KiraZifferblatt" pc="268438139" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="220" parent="globals/KiraZifferblatt" pc="268438163" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="221" parent="globals/KiraZifferblatt" pc="268438180" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="2" lineNum="17" parent="globals/KiraZifferblattApp" pc="268435480" symbol="&lt;init&gt;"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="3" lineNum="34" parent="globals/KiraZifferblatt" pc="268435492" symbol="&lt;init&gt;"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="4" lineNum="22" parent="globals/KiraZifferblattApp" pc="268435504" symbol="getInitialView"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="4" lineNum="23" parent="globals/KiraZifferblattApp" pc="268435506" symbol="getInitialView"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="5" lineNum="18" parent="globals/KiraZifferblattApp" pc="268435532" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="5" lineNum="19" parent="globals/KiraZifferblattApp" pc="268435534" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="6" lineNum="71" parent="globals/KiraZifferblatt" pc="268435547" symbol="onExitSleep"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="6" lineNum="72" parent="globals/KiraZifferblatt" pc="268435549" symbol="onExitSleep"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="6" lineNum="73" parent="globals/KiraZifferblatt" pc="268435557" symbol="onExitSleep"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="6" lineNum="73" parent="globals/KiraZifferblatt" pc="268435566" symbol="onExitSleep"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="6" lineNum="74" parent="globals/KiraZifferblatt" pc="268435576" symbol="onExitSleep"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="7" lineNum="134" parent="globals/KiraZifferblatt" pc="268435588" symbol="richtung"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="7" lineNum="135" parent="globals/KiraZifferblatt" pc="268435591" symbol="richtung"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="7" lineNum="135" parent="globals/KiraZifferblatt" pc="268435597" symbol="richtung"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="7" lineNum="136" parent="globals/KiraZifferblatt" pc="268435606" symbol="richtung"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="7" lineNum="137" parent="globals/KiraZifferblatt" pc="268435613" symbol="richtung"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="8" lineNum="83" parent="globals/KiraZifferblatt" pc="268435629" symbol="teile"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="8" lineNum="84" parent="globals/KiraZifferblatt" pc="268435632" symbol="teile"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="8" lineNum="85" parent="globals/KiraZifferblatt" pc="268435636" symbol="teile"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="8" lineNum="86" parent="globals/KiraZifferblatt" pc="268435643" symbol="teile"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="8" lineNum="86" parent="globals/KiraZifferblatt" pc="268435649" symbol="teile"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="8" lineNum="87" parent="globals/KiraZifferblatt" pc="268435655" symbol="teile"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="8" lineNum="88" parent="globals/KiraZifferblatt" pc="268435671" symbol="teile"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="8" lineNum="89" parent="globals/KiraZifferblatt" pc="268435677" symbol="teile"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="8" lineNum="90" parent="globals/KiraZifferblatt" pc="268435699" symbol="teile"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="8" lineNum="91" parent="globals/KiraZifferblatt" pc="268435722" symbol="teile"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="8" lineNum="93" parent="globals/KiraZifferblatt" pc="268435741" symbol="teile"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="8" lineNum="94" parent="globals/KiraZifferblatt" pc="268435753" symbol="teile"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="9" lineNum="112" parent="globals/KiraZifferblatt" pc="268435756" symbol="ring"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="9" lineNum="113" parent="globals/KiraZifferblatt" pc="268435759" symbol="ring"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="9" lineNum="114" parent="globals/KiraZifferblatt" pc="268435771" symbol="ring"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="9" lineNum="115" parent="globals/KiraZifferblatt" pc="268435787" symbol="ring"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="9" lineNum="116" parent="globals/KiraZifferblatt" pc="268435803" symbol="ring"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="9" lineNum="117" parent="globals/KiraZifferblatt" pc="268435814" symbol="ring"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="9" lineNum="118" parent="globals/KiraZifferblatt" pc="268435837" symbol="ring"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="9" lineNum="119" parent="globals/KiraZifferblatt" pc="268435851" symbol="ring"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="9" lineNum="120" parent="globals/KiraZifferblatt" pc="268435868" symbol="ring"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="9" lineNum="120" parent="globals/KiraZifferblatt" pc="268435879" symbol="ring"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="9" lineNum="121" parent="globals/KiraZifferblatt" pc="268435898" symbol="ring"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="9" lineNum="123" parent="globals/KiraZifferblatt" pc="268435923" symbol="ring"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="10" lineNum="140" parent="globals/KiraZifferblatt" pc="268435936" symbol="bereitFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="10" lineNum="141" parent="globals/KiraZifferblatt" pc="268435938" symbol="bereitFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="10" lineNum="141" parent="globals/KiraZifferblatt" pc="268435946" symbol="bereitFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="10" lineNum="142" parent="globals/KiraZifferblatt" pc="268435954" symbol="bereitFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="10" lineNum="142" parent="globals/KiraZifferblatt" pc="268435962" symbol="bereitFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="10" lineNum="143" parent="globals/KiraZifferblatt" pc="268435970" symbol="bereitFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="10" lineNum="143" parent="globals/KiraZifferblatt" pc="268435978" symbol="bereitFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="10" lineNum="144" parent="globals/KiraZifferblatt" pc="268435987" symbol="bereitFarbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="11" lineNum="101" parent="globals/KiraZifferblatt" pc="268435993" symbol="zahl"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="11" lineNum="102" parent="globals/KiraZifferblatt" pc="268435996" symbol="zahl"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="11" lineNum="103" parent="globals/KiraZifferblatt" pc="268436010" symbol="zahl"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="12" lineNum="106" parent="globals/KiraZifferblatt" pc="268436034" symbol="heuteIso"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="12" lineNum="107" parent="globals/KiraZifferblatt" pc="268436037" symbol="heuteIso"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="12" lineNum="108" parent="globals/KiraZifferblatt" pc="268436062" symbol="heuteIso"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="13" lineNum="77" parent="globals/KiraZifferblatt" pc="268436134" symbol="onEnterSleep"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="13" lineNum="78" parent="globals/KiraZifferblatt" pc="268436136" symbol="onEnterSleep"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="13" lineNum="79" parent="globals/KiraZifferblatt" pc="268436144" symbol="onEnterSleep"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="14" lineNum="97" parent="globals/KiraZifferblatt" pc="268436156" symbol="feld"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="14" lineNum="98" parent="globals/KiraZifferblatt" pc="268436158" symbol="feld"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="45" parent="globals/KiraZifferblatt" pc="268436185" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="47" parent="globals/KiraZifferblatt" pc="268436188" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="48" parent="globals/KiraZifferblatt" pc="268436200" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="49" parent="globals/KiraZifferblatt" pc="268436209" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="50" parent="globals/KiraZifferblatt" pc="268436215" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="51" parent="globals/KiraZifferblatt" pc="268436224" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="52" parent="globals/KiraZifferblatt" pc="268436254" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="53" parent="globals/KiraZifferblatt" pc="268436268" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="53" parent="globals/KiraZifferblatt" pc="268436277" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="54" parent="globals/KiraZifferblatt" pc="268436298" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="54" parent="globals/KiraZifferblatt" pc="268436309" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="55" parent="globals/KiraZifferblatt" pc="268436332" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="57" parent="globals/KiraZifferblatt" pc="268436339" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="15" lineNum="59" parent="globals/KiraZifferblatt" pc="268436357" symbol="kiraSuchen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="16" lineNum="127" parent="globals/KiraZifferblatt" pc="268436374" symbol="block"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="16" lineNum="128" parent="globals/KiraZifferblatt" pc="268436376" symbol="block"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="16" lineNum="129" parent="globals/KiraZifferblatt" pc="268436393" symbol="block"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="16" lineNum="130" parent="globals/KiraZifferblatt" pc="268436412" symbol="block"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="16" lineNum="131" parent="globals/KiraZifferblatt" pc="268436426" symbol="block"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="17" lineNum="39" parent="globals/KiraZifferblatt" pc="268436461" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="17" lineNum="40" parent="globals/KiraZifferblatt" pc="268436464" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="17" lineNum="41" parent="globals/KiraZifferblatt" pc="268436476" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="17" lineNum="41" parent="globals/KiraZifferblatt" pc="268436508" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="17" lineNum="42" parent="globals/KiraZifferblatt" pc="268436524" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="18" lineNum="62" parent="globals/KiraZifferblatt" pc="268436532" symbol="geaendert"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="18" lineNum="64" parent="globals/KiraZifferblatt" pc="268436535" symbol="geaendert"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="18" lineNum="65" parent="globals/KiraZifferblatt" pc="268436561" symbol="geaendert"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="18" lineNum="66" parent="globals/KiraZifferblatt" pc="268436582" symbol="geaendert"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="18" lineNum="66" parent="globals/KiraZifferblatt" pc="268436588" symbol="geaendert"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="18" lineNum="68" parent="globals/KiraZifferblatt" pc="268436615" symbol="geaendert"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="147" parent="globals/KiraZifferblatt" pc="268436632" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="148" parent="globals/KiraZifferblatt" pc="268436635" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="149" parent="globals/KiraZifferblatt" pc="268436644" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="150" parent="globals/KiraZifferblatt" pc="268436653" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="151" parent="globals/KiraZifferblatt" pc="268436660" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="152" parent="globals/KiraZifferblatt" pc="268436667" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="153" parent="globals/KiraZifferblatt" pc="268436679" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="154" parent="globals/KiraZifferblatt" pc="268436687" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="155" parent="globals/KiraZifferblatt" pc="268436699" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="156" parent="globals/KiraZifferblatt" pc="268436720" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="157" parent="globals/KiraZifferblatt" pc="268436741" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="158" parent="globals/KiraZifferblatt" pc="268436749" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="159" parent="globals/KiraZifferblatt" pc="268436777" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="161" parent="globals/KiraZifferblatt" pc="268436790" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="163" parent="globals/KiraZifferblatt" pc="268436798" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="164" parent="globals/KiraZifferblatt" pc="268436815" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="165" parent="globals/KiraZifferblatt" pc="268436832" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="166" parent="globals/KiraZifferblatt" pc="268436849" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="167" parent="globals/KiraZifferblatt" pc="268436878" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="168" parent="globals/KiraZifferblatt" pc="268436895" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="169" parent="globals/KiraZifferblatt" pc="268436924" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="173" parent="globals/KiraZifferblatt" pc="268436928" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="174" parent="globals/KiraZifferblatt" pc="268436940" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="175" parent="globals/KiraZifferblatt" pc="268436948" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="176" parent="globals/KiraZifferblatt" pc="268436952" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="177" parent="globals/KiraZifferblatt" pc="268436963" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="178" parent="globals/KiraZifferblatt" pc="268436995" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="179" parent="globals/KiraZifferblatt" pc="268437002" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="180" parent="globals/KiraZifferblatt" pc="268437009" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="181" parent="globals/KiraZifferblatt" pc="268437050" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="182" parent="globals/KiraZifferblatt" pc="268437062" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="185" parent="globals/KiraZifferblatt" pc="268437186" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="186" parent="globals/KiraZifferblatt" pc="268437198" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="187" parent="globals/KiraZifferblatt" pc="268437239" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="188" parent="globals/KiraZifferblatt" pc="268437256" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="191" parent="globals/KiraZifferblatt" pc="268437339" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="192" parent="globals/KiraZifferblatt" pc="268437387" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="193" parent="globals/KiraZifferblatt" pc="268437401" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="196" parent="globals/KiraZifferblatt" pc="268437494" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="197" parent="globals/KiraZifferblatt" pc="268437511" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="198" parent="globals/KiraZifferblatt" pc="268437543" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="199" parent="globals/KiraZifferblatt" pc="268437560" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="202" parent="globals/KiraZifferblatt" pc="268437592" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="203" parent="globals/KiraZifferblatt" pc="268437608" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="204" parent="globals/KiraZifferblatt" pc="268437624" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="205" parent="globals/KiraZifferblatt" pc="268437640" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="206" parent="globals/KiraZifferblatt" pc="268437663" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="207" parent="globals/KiraZifferblatt" pc="268437722" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="208" parent="globals/KiraZifferblatt" pc="268437739" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="209" parent="globals/KiraZifferblatt" pc="268437779" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="210" parent="globals/KiraZifferblatt" pc="268437796" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="213" parent="globals/KiraZifferblatt" pc="268437824" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="214" parent="globals/KiraZifferblatt" pc="268437831" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="215" parent="globals/KiraZifferblatt" pc="268437854" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="216" parent="globals/KiraZifferblatt" pc="268437877" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="217" parent="globals/KiraZifferblatt" pc="268437900" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="218" parent="globals/KiraZifferblatt" pc="268437907" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="219" parent="globals/KiraZifferblatt" pc="268437919" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="221" parent="globals/KiraZifferblatt" pc="268437987" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="222" parent="globals/KiraZifferblatt" pc="268438040" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="223" parent="globals/KiraZifferblatt" pc="268438057" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="224" parent="globals/KiraZifferblatt" pc="268438097" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="225" parent="globals/KiraZifferblatt" pc="268438114" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="228" parent="globals/KiraZifferblatt" pc="268438188" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="229" parent="globals/KiraZifferblatt" pc="268438195" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="231" parent="globals/KiraZifferblatt" pc="268438202" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="232" parent="globals/KiraZifferblatt" pc="268438214" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="233" parent="globals/KiraZifferblatt" pc="268438220" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="233" parent="globals/KiraZifferblatt" pc="268438231" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="234" parent="globals/KiraZifferblatt" pc="268438261" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="234" parent="globals/KiraZifferblatt" pc="268438272" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="236" parent="globals/KiraZifferblatt" pc="268438333" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="237" parent="globals/KiraZifferblatt" pc="268438349" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="238" parent="globals/KiraZifferblatt" pc="268438365" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="239" parent="globals/KiraZifferblatt" pc="268438404" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="240" parent="globals/KiraZifferblatt" pc="268438418" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="243" parent="globals/KiraZifferblatt" pc="268438477" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="244" parent="globals/KiraZifferblatt" pc="268438493" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="245" parent="globals/KiraZifferblatt" pc="268438532" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="246" parent="globals/KiraZifferblatt" pc="268438555" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="247" parent="globals/KiraZifferblatt" pc="268438569" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="250" parent="globals/KiraZifferblatt" pc="268438682" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="251" parent="globals/KiraZifferblatt" pc="268438707" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="252" parent="globals/KiraZifferblatt" pc="268438714" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="253" parent="globals/KiraZifferblatt" pc="268438721" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraZifferblatt.mc" id="19" lineNum="254" parent="globals/KiraZifferblatt" pc="268438738" symbol="onUpdate"/>
     </pcToLineNum>
     <symbolTable>
-        <entry id="5" symbol="FARBE"/>
         <entry id="8388639" module="true" symbol="Graphics"/>
         <entry id="8388632" method="true" symbol="&lt;init&gt;"/>
-        <entry field="true" id="16" symbol="kira"/>
-        <entry id="21" method="true" symbol="teile"/>
-        <entry field="true" id="17" symbol="kiraId"/>
+        <entry id="16" method="true" symbol="richtung"/>
+        <entry field="true" id="13" symbol="kira"/>
+        <entry id="19" method="true" symbol="teile"/>
+        <entry id="17" method="true" symbol="ring"/>
+        <entry field="true" id="14" symbol="kiraId"/>
         <entry id="8388924" module="true" symbol="Gregorian"/>
         <entry field="true" id="8388611" module="true" symbol="Toybox"/>
-        <entry id="6" object="true" symbol="KiraZifferblatt"/>
-        <entry field="true" id="19" symbol="schlaf"/>
-        <entry id="11" method="true" symbol="heuteIso"/>
-        <entry field="true" id="25" symbol="AppName"/>
+        <entry id="5" object="true" symbol="KiraZifferblatt"/>
+        <entry field="true" id="18" symbol="schlaf"/>
+        <entry id="12" method="true" symbol="heuteIso"/>
+        <entry field="true" id="22" symbol="AppName"/>
         <entry id="4" module="true" symbol="globals/Rez/Strings"/>
         <entry id="8388648" module="true" symbol="WatchUi"/>
+        <entry id="9" method="true" symbol="block"/>
         <entry id="2" module="true" symbol="globals/Rez"/>
-        <entry id="8" symbol="VOTE_FARBE"/>
+        <entry id="7" symbol="VOTE_FARBE"/>
         <entry id="8389124" method="true" symbol="onUpdate"/>
+        <entry id="8391489" module="true" symbol="Weather"/>
         <entry id="8388771" module="true" object="true" symbol="Drawables"/>
         <entry id="8389376" method="true" symbol="onEnterSleep"/>
-        <entry field="true" id="12" symbol="hr"/>
-        <entry field="true" id="9" symbol="bb"/>
+        <entry id="8" method="true" symbol="bereitFarbe"/>
+        <entry field="true" id="8391854" symbol="batteryInDays"/>
         <entry id="3" module="true" symbol="globals/Rez/Drawables"/>
         <entry id="8389377" method="true" symbol="onExitSleep"/>
         <entry id="8388644" module="true" symbol="System"/>
-        <entry id="7" object="true" symbol="KiraZifferblattApp"/>
-        <entry id="23" method="true" symbol="zahl"/>
-        <entry field="true" id="20" symbol="schritte"/>
+        <entry id="6" object="true" symbol="KiraZifferblattApp"/>
+        <entry id="20" method="true" symbol="zahl"/>
         <entry id="8388645" module="true" symbol="Time"/>
         <entry id="8388769" module="true" object="true" symbol="Rez"/>
         <entry id="8388640" module="true" symbol="Lang"/>
-        <entry field="true" id="24" symbol="LauncherIcon"/>
+        <entry field="true" id="21" symbol="LauncherIcon"/>
         <entry id="8388610" symbol="statics"/>
-        <entry field="true" id="15" symbol="idSt"/>
         <entry id="8389350" module="true" symbol="globals"/>
         <entry id="8391962" module="true" symbol="Complications"/>
         <entry id="8388770" module="true" object="true" symbol="Strings"/>
         <entry id="8388702" method="true" symbol="initialize"/>
-        <entry field="true" id="14" symbol="idHR"/>
-        <entry id="22" method="true" symbol="wertKira"/>
         <entry id="8388641" module="true" symbol="Math"/>
-        <entry field="true" id="13" symbol="idBB"/>
-        <entry id="10" method="true" symbol="geaendert"/>
-        <entry id="18" method="true" symbol="kiraSuchen"/>
+        <entry id="11" method="true" symbol="geaendert"/>
+        <entry id="15" method="true" symbol="kiraSuchen"/>
         <entry id="8389280" method="true" symbol="getInitialView"/>
         <entry id="8388635" module="true" symbol="Application"/>
+        <entry id="10" method="true" symbol="feld"/>
     </symbolTable>
     <localVars>
-        <entry endPc="268435714" name="r" stackId="1" startPc="268435591"/>
-        <entry endPc="268435714" name="s" stackId="2" startPc="268435591"/>
-        <entry endPc="268435714" name="i" stackId="3" startPc="268435591"/>
-        <entry arg="true" endPc="268435750" name="c" stackId="1" startPc="268435715"/>
-        <entry endPc="268435749" name="v" stackId="2" startPc="268435718"/>
-        <entry arg="true" endPc="268435798" name="t" stackId="1" startPc="268435751"/>
-        <entry arg="true" endPc="268435798" name="i" stackId="2" startPc="268435751"/>
-        <entry endPc="268435898" name="g" stackId="1" startPc="268435802"/>
-        <entry endPc="268436063" name="it" stackId="1" startPc="268435924"/>
-        <entry endPc="268436063" name="c" stackId="2" startPc="268435924"/>
-        <entry endPc="268436060" name="ll" stackId="3" startPc="268435951"/>
-        <entry endPc="268436080" name="e" stackId="4" startPc="268436070"/>
-        <entry endPc="268436291" name="e" stackId="1" startPc="268436281"/>
-        <entry arg="true" endPc="268436565" name="id" stackId="1" startPc="268436305"/>
-        <entry endPc="268436542" name="c" stackId="2" startPc="268436308"/>
-        <entry endPc="268436542" name="v" stackId="3" startPc="268436308"/>
-        <entry endPc="268436559" name="e" stackId="4" startPc="268436549"/>
-        <entry arg="true" endPc="268438230" name="dc" stackId="1" startPc="268436566"/>
-        <entry endPc="268438229" name="w" stackId="2" startPc="268436569"/>
-        <entry endPc="268438229" name="h" stackId="3" startPc="268436569"/>
-        <entry endPc="268438229" name="cx" stackId="4" startPc="268436569"/>
-        <entry endPc="268438229" name="cy" stackId="5" startPc="268436569"/>
-        <entry endPc="268438229" name="uhr" stackId="6" startPc="268436569"/>
-        <entry endPc="268438229" name="zeit" stackId="7" startPc="268436569"/>
-        <entry endPc="268438229" name="t" stackId="8" startPc="268436569"/>
-        <entry endPc="268438229" name="vote" stackId="9" startPc="268436569"/>
-        <entry endPc="268438229" name="heute" stackId="10" startPc="268436569"/>
-        <entry endPc="268438229" name="vf" stackId="11" startPc="268436569"/>
-        <entry endPc="268436922" name="dx" stackId="12" startPc="268436806"/>
-        <entry endPc="268436922" name="dy" stackId="13" startPc="268436806"/>
-        <entry endPc="268438229" name="lo" stackId="14" startPc="268436569"/>
-        <entry endPc="268438229" name="hi" stackId="15" startPc="268436569"/>
-        <entry endPc="268438229" name="ist" stackId="16" startPc="268436569"/>
-        <entry endPc="268438229" name="r" stackId="17" startPc="268436569"/>
-        <entry endPc="268438229" name="start" stackId="18" startPc="268436569"/>
-        <entry endPc="268438229" name="bogen" stackId="19" startPc="268436569"/>
-        <entry endPc="268437315" name="max" stackId="20" startPc="268437056"/>
-        <entry endPc="268437315" name="a0" stackId="21" startPc="268437056"/>
-        <entry endPc="268437315" name="a1" stackId="22" startPc="268437056"/>
-        <entry endPc="268437312" name="p" stackId="23" startPc="268437165"/>
-        <entry endPc="268437312" name="c" stackId="24" startPc="268437165"/>
-        <entry endPc="268437312" name="a2" stackId="25" startPc="268437165"/>
-        <entry endPc="268438229" name="yV" stackId="26" startPc="268436569"/>
-        <entry endPc="268438229" name="vt" stackId="27" startPc="268436569"/>
-        <entry endPc="268438229" name="zn" stackId="28" startPc="268436569"/>
-        <entry endPc="268438229" name="zt" stackId="29" startPc="268436569"/>
-        <entry endPc="268438229" name="g" stackId="30" startPc="268436569"/>
-        <entry endPc="268438229" name="wt" stackId="31" startPc="268436569"/>
-        <entry endPc="268438229" name="datum" stackId="32" startPc="268436569"/>
-        <entry endPc="268438229" name="yR" stackId="33" startPc="268436569"/>
-        <entry endPc="268437902" name="rt" stackId="34" startPc="268437799"/>
-        <entry endPc="268438229" name="yW" stackId="35" startPc="268436569"/>
-        <entry endPc="268438229" name="werte" stackId="36" startPc="268436569"/>
-        <entry endPc="268438229" name="i" stackId="37" startPc="268438098"/>
-        <entry endPc="268438219" name="x" stackId="38" startPc="268438098"/>
+        <entry arg="true" endPc="268435628" name="grad" stackId="1" startPc="268435588"/>
+        <entry endPc="268435628" name="r" stackId="2" startPc="268435591"/>
+        <entry endPc="268435755" name="r" stackId="1" startPc="268435632"/>
+        <entry endPc="268435755" name="s" stackId="2" startPc="268435632"/>
+        <entry endPc="268435755" name="i" stackId="3" startPc="268435632"/>
+        <entry arg="true" endPc="268435935" name="dc" stackId="1" startPc="268435756"/>
+        <entry arg="true" endPc="268435935" name="x" stackId="2" startPc="268435756"/>
+        <entry arg="true" endPc="268435935" name="y" stackId="3" startPc="268435756"/>
+        <entry arg="true" endPc="268435935" name="r" stackId="4" startPc="268435756"/>
+        <entry arg="true" endPc="268435935" name="anteil" stackId="5" startPc="268435756"/>
+        <entry arg="true" endPc="268435935" name="farbe" stackId="6" startPc="268435756"/>
+        <entry endPc="268435919" name="a" stackId="7" startPc="268435814"/>
+        <entry endPc="268435919" name="ende" stackId="8" startPc="268435814"/>
+        <entry arg="true" endPc="268435992" name="v" stackId="1" startPc="268435936"/>
+        <entry arg="true" endPc="268436033" name="t" stackId="1" startPc="268435993"/>
+        <entry arg="true" endPc="268436033" name="i" stackId="2" startPc="268435993"/>
+        <entry endPc="268436033" name="s" stackId="3" startPc="268435996"/>
+        <entry endPc="268436133" name="g" stackId="1" startPc="268436037"/>
+        <entry arg="true" endPc="268436184" name="t" stackId="1" startPc="268436156"/>
+        <entry arg="true" endPc="268436184" name="i" stackId="2" startPc="268436156"/>
+        <entry endPc="268436350" name="it" stackId="1" startPc="268436188"/>
+        <entry endPc="268436350" name="c" stackId="2" startPc="268436188"/>
+        <entry endPc="268436347" name="ll" stackId="3" startPc="268436215"/>
+        <entry endPc="268436367" name="e" stackId="4" startPc="268436357"/>
+        <entry arg="true" endPc="268436460" name="dc" stackId="1" startPc="268436374"/>
+        <entry arg="true" endPc="268436460" name="x" stackId="2" startPc="268436374"/>
+        <entry arg="true" endPc="268436460" name="y" stackId="3" startPc="268436374"/>
+        <entry arg="true" endPc="268436460" name="label" stackId="4" startPc="268436374"/>
+        <entry arg="true" endPc="268436460" name="wert" stackId="5" startPc="268436374"/>
+        <entry arg="true" endPc="268436460" name="wertFarbe" stackId="6" startPc="268436374"/>
+        <entry endPc="268436518" name="e" stackId="1" startPc="268436508"/>
+        <entry arg="true" endPc="268436631" name="id" stackId="1" startPc="268436532"/>
+        <entry endPc="268436605" name="v" stackId="2" startPc="268436561"/>
+        <entry endPc="268436625" name="e" stackId="3" startPc="268436615"/>
+        <entry arg="true" endPc="268438812" name="dc" stackId="1" startPc="268436632"/>
+        <entry endPc="268438811" name="w" stackId="2" startPc="268436635"/>
+        <entry endPc="268438811" name="h" stackId="3" startPc="268436635"/>
+        <entry endPc="268438811" name="cx" stackId="4" startPc="268436635"/>
+        <entry endPc="268438811" name="cy" stackId="5" startPc="268436635"/>
+        <entry endPc="268438811" name="uhr" stackId="6" startPc="268436635"/>
+        <entry endPc="268438811" name="std" stackId="7" startPc="268436635"/>
+        <entry endPc="268438811" name="min" stackId="8" startPc="268436635"/>
+        <entry endPc="268438811" name="t" stackId="9" startPc="268436635"/>
+        <entry endPc="268438811" name="heute" stackId="10" startPc="268436635"/>
+        <entry endPc="268438811" name="vote" stackId="11" startPc="268436635"/>
+        <entry endPc="268436924" name="dx" stackId="12" startPc="268436798"/>
+        <entry endPc="268436924" name="dy" stackId="13" startPc="268436798"/>
+        <entry endPc="268438811" name="st" stackId="14" startPc="268436635"/>
+        <entry endPc="268438811" name="akku" stackId="15" startPc="268436635"/>
+        <entry endPc="268438811" name="n" stackId="16" startPc="268436635"/>
+        <entry endPc="268437185" name="i" stackId="17" startPc="268436963"/>
+        <entry endPc="268437175" name="a" stackId="18" startPc="268436963"/>
+        <entry endPc="268437175" name="r1" stackId="19" startPc="268436963"/>
+        <entry endPc="268437175" name="r2" stackId="20" startPc="268436963"/>
+        <entry endPc="268438811" name="tage" stackId="21" startPc="268436635"/>
+        <entry endPc="268438811" name="vf" stackId="22" startPc="268436635"/>
+        <entry endPc="268438811" name="rx" stackId="23" startPc="268436635"/>
+        <entry endPc="268438811" name="rr" stackId="24" startPc="268436635"/>
+        <entry endPc="268438811" name="ry" stackId="25" startPc="268436635"/>
+        <entry endPc="268438811" name="rd" stackId="26" startPc="268436635"/>
+        <entry endPc="268438811" name="lx" stackId="27" startPc="268436635"/>
+        <entry endPc="268438811" name="lo" stackId="28" startPc="268436635"/>
+        <entry endPc="268438811" name="hi" stackId="29" startPc="268436635"/>
+        <entry endPc="268438811" name="ist" stackId="30" startPc="268436635"/>
+        <entry endPc="268438811" name="lf" stackId="31" startPc="268436635"/>
+        <entry endPc="268438811" name="temp" stackId="32" startPc="268436635"/>
+        <entry endPc="268438811" name="wind" stackId="33" startPc="268436635"/>
+        <entry endPc="268438326" name="wc" stackId="34" startPc="268438202"/>
+        <entry endPc="268438343" name="e" stackId="35" startPc="268438333"/>
+        <entry endPc="268438811" name="yo" stackId="36" startPc="268436635"/>
+        <entry endPc="268438811" name="es" stackId="37" startPc="268436635"/>
+        <entry endPc="268438811" name="yu" stackId="38" startPc="268436635"/>
+        <entry endPc="268438811" name="pl" stackId="39" startPc="268436635"/>
+        <entry endPc="268438811" name="sp" stackId="40" startPc="268436635"/>
+        <entry endPc="268438811" name="g" stackId="41" startPc="268436635"/>
+        <entry endPc="268438811" name="wt" stackId="42" startPc="268436635"/>
+        <entry endPc="268438811" name="mo" stackId="43" startPc="268436635"/>
     </localVars>
     <deviceInfo deviceVersion="69f9c27a08d175c50b86464a70c24d15718945cb" partNumber="006-B4631-00"/>
     <annotations>
@@ -261,11 +311,11 @@
     </annotations>
     <dataEntryOffsetMappings>
         <dataEntry label="globals" offset="49" parentId="" symbolId="globals" type="module"/>
-        <dataEntry label="globals/Rez" offset="352" parentId="globals" symbolId="Rez" type="module"/>
-        <dataEntry label="globals/KiraZifferblattApp" offset="396" parentId="globals" symbolId="KiraZifferblattApp" type="class"/>
-        <dataEntry label="globals/KiraZifferblatt" offset="449" parentId="globals" symbolId="KiraZifferblatt" type="class"/>
-        <dataEntry label="globals/Rez/Drawables" offset="655" parentId="Rez" symbolId="Drawables" type="module"/>
-        <dataEntry label="globals/Rez/Strings" offset="690" parentId="Rez" symbolId="Strings" type="module"/>
+        <dataEntry label="globals/Rez" offset="229" parentId="globals" symbolId="Rez" type="module"/>
+        <dataEntry label="globals/KiraZifferblattApp" offset="273" parentId="globals" symbolId="KiraZifferblattApp" type="class"/>
+        <dataEntry label="globals/KiraZifferblatt" offset="326" parentId="globals" symbolId="KiraZifferblatt" type="class"/>
+        <dataEntry label="globals/Rez/Drawables" offset="514" parentId="Rez" symbolId="Drawables" type="module"/>
+        <dataEntry label="globals/Rez/Strings" offset="549" parentId="Rez" symbolId="Strings" type="module"/>
     </dataEntryOffsetMappings>
     <functions>
         <functionEntry accessMode="public" endPc="268435479" name="&lt;init&gt;" parent="Rez" startPc="268435460">
@@ -292,35 +342,62 @@
         <functionEntry accessMode="public" endPc="268435587" name="onExitSleep" parent="KiraZifferblatt" startPc="268435547">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268435714" name="teile" parent="KiraZifferblatt" startPc="268435588">
+        <functionEntry accessMode="public" endPc="268435628" name="richtung" parent="KiraZifferblatt" startPc="268435588">
+            <param id="grad"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268435750" name="wertKira" parent="KiraZifferblatt" startPc="268435715">
-            <param id="c"/>
+        <functionEntry accessMode="public" endPc="268435755" name="teile" parent="KiraZifferblatt" startPc="268435629">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268435798" name="zahl" parent="KiraZifferblatt" startPc="268435751">
+        <functionEntry accessMode="public" endPc="268435935" name="ring" parent="KiraZifferblatt" startPc="268435756">
+            <param id="dc"/>
+            <param id="x"/>
+            <param id="y"/>
+            <param id="r"/>
+            <param id="anteil"/>
+            <param id="farbe"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435992" name="bereitFarbe" parent="KiraZifferblatt" startPc="268435936">
+            <param id="v"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436033" name="zahl" parent="KiraZifferblatt" startPc="268435993">
             <param id="t"/>
             <param id="i"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268435898" name="heuteIso" parent="KiraZifferblatt" startPc="268435799">
+        <functionEntry accessMode="public" endPc="268436133" name="heuteIso" parent="KiraZifferblatt" startPc="268436034">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268435920" name="onEnterSleep" parent="KiraZifferblatt" startPc="268435899">
+        <functionEntry accessMode="public" endPc="268436155" name="onEnterSleep" parent="KiraZifferblatt" startPc="268436134">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268436086" name="kiraSuchen" parent="KiraZifferblatt" startPc="268435921">
+        <functionEntry accessMode="public" endPc="268436184" name="feld" parent="KiraZifferblatt" startPc="268436156">
+            <param id="t"/>
+            <param id="i"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268436304" name="initialize" parent="KiraZifferblatt" startPc="268436087">
+        <functionEntry accessMode="public" endPc="268436373" name="kiraSuchen" parent="KiraZifferblatt" startPc="268436185">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268436565" name="geaendert" parent="KiraZifferblatt" startPc="268436305">
+        <functionEntry accessMode="public" endPc="268436460" name="block" parent="KiraZifferblatt" startPc="268436374">
+            <param id="dc"/>
+            <param id="x"/>
+            <param id="y"/>
+            <param id="label"/>
+            <param id="wert"/>
+            <param id="wertFarbe"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436531" name="initialize" parent="KiraZifferblatt" startPc="268436461">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436631" name="geaendert" parent="KiraZifferblatt" startPc="268436532">
             <param id="id"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268438230" name="onUpdate" parent="KiraZifferblatt" startPc="268436566">
+        <functionEntry accessMode="public" endPc="268438812" name="onUpdate" parent="KiraZifferblatt" startPc="268436632">
             <param id="dc"/>
             <documentation/>
         </functionEntry>
