@@ -126,15 +126,17 @@ function kiraKomplikation(d as Dictionary) as Void {
             if (fo.get("es28") != null) { es28 = fo.get("es28").toNumber().toString(); }
         }
         t = (lab.equals("KIRA") ? "" : lab) + "|" + st + "|" + lo2 + "|" + hi2 + "|" + ist + "|" + (d.get("datum") != null ? d.get("datum").toString() : "") + "|" + zn + "|" + zt + "|" + rd
-            + "|" + pl + "|" + sp + "|" + zo + "|" + es + "|" + es28
-            + "|" + sieben(d, l) + "|" + formKurve(d);
+            + "|" + pl + "|" + sp + "|" + zo + "|" + es + "|" + es28;
         Complications.updateComplication(1, { :value => t });
+        // Lange Texte lehnt die Uhr ab – Diagrammdaten daher kompakt und getrennt (je 1 Zeichen pro Wert)
+        try { Complications.updateComplication(2, { :value => sieben(d, l) }); } catch (e2) { }
+        try { Complications.updateComplication(3, { :value => formKurve(d) }); } catch (e3) { }
     } catch (e) {
     }
 }
 
 // 7 Tage Last (rollierend, heute zuletzt) mit Soll-Rahmen je Tag fürs Zeigerzifferblatt:
-// "ist,ist,…;lo,lo,…;hi,hi,…" – Rahmen aus der letzten Vollabfrage der App (nur wenn von heute)
+// kompakt "IIIIIII;LLLLLLL;HHHHHHH" (ESS / 8) – Rahmen aus der letzten Vollabfrage der App (nur wenn von heute)
 (:background :glance)
 function sieben(d as Dictionary, l) as String {
     var ist = [] as Array;
@@ -163,10 +165,27 @@ function sieben(d as Dictionary, l) as String {
         // heutigen Wert immer frisch
         if (ist.size() > 0 && l instanceof Dictionary && l.get("istHeute") != null) { ist[ist.size() - 1] = l.get("istHeute"); }
     } catch (e) { }
-    return liste(ist) + ";" + liste(lo) + ";" + liste(hi);
+    return kodiert(ist, 8) + ";" + kodiert(lo, 8) + ";" + kodiert(hi, 8);
 }
 
-// Form 6 Wochen fürs Zeigerzifferblatt: "ctl,…;atl,…" (jeder 2. Tag, heute zuletzt) –
+// Werte als je 1 Zeichen (0-9A-Za-z = 0..61), Wert / teiler, fehlend = "_"
+(:background :glance)
+const ZEICHEN = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+(:background :glance)
+function kodiert(xs as Array, teiler as Number) as String {
+    var s = "";
+    for (var i = 0; i < xs.size(); i++) {
+        var v = xs[i];
+        if (v == null || v.toNumber() < 0) { s += "_"; continue; }
+        var k = (v.toFloat() / teiler + 0.5).toNumber();
+        if (k > 61) { k = 61; }
+        s += ZEICHEN.substring(k, k + 1);
+    }
+    return s;
+}
+
+// Form 6 Wochen fürs Zeigerzifferblatt (jeder 2. Tag, heute zuletzt) –
 // Kurve aus der letzten Vollabfrage der App, letzter Punkt immer aus dem aktuellen Stand
 (:background :glance)
 function formKurve(d as Dictionary) as String {
@@ -188,7 +207,35 @@ function formKurve(d as Dictionary) as String {
             else { c[c.size() - 1] = fo.get("ctl"); a[a.size() - 1] = fo.get("atl"); }
         }
     } catch (e) { }
-    return liste(c) + ";" + liste(a);
+    // "min,max,ctlHeute,atlHeute;CCCC…;AAAA…" – Kurven auf 0..61 zwischen min und max skaliert
+    var mn = 99999.0;
+    var mx = 0.0;
+    for (var i = 0; i < c.size(); i++) {
+        var p = [c[i], a[i]];
+        for (var k = 0; k < 2; k++) {
+            var v = p[k];
+            if (v != null && v.toFloat() >= 0) { if (v.toFloat() < mn) { mn = v.toFloat(); } if (v.toFloat() > mx) { mx = v.toFloat(); } }
+        }
+    }
+    if (c.size() == 0 || mx <= mn) { return ""; }
+    var sc = "";
+    var sa = "";
+    for (var i = 0; i < c.size(); i++) {
+        sc += zeichen(c[i], mn, mx);
+        sa += zeichen(a[i], mn, mx);
+    }
+    var cl = c[c.size() - 1];
+    var al = a[a.size() - 1];
+    return mn.toNumber().toString() + "," + mx.toNumber().toString() + "," + (cl == null ? "" : cl.toNumber().toString()) + "," + (al == null ? "" : al.toNumber().toString()) + ";" + sc + ";" + sa;
+}
+
+(:background :glance)
+function zeichen(v, mn as Float, mx as Float) as String {
+    if (v == null || v.toFloat() < 0) { return "_"; }
+    var k = ((v.toFloat() - mn) / (mx - mn) * 61 + 0.5).toNumber();
+    if (k < 0) { k = 0; }
+    if (k > 61) { k = 61; }
+    return ZEICHEN.substring(k, k + 1);
 }
 
 (:background :glance)

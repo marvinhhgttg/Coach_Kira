@@ -33,6 +33,10 @@ const VOTE_FARBE = {
 class KiraZeiger extends WatchUi.WatchFace {
     var kiraId as Complications.Id? = null;
     var kira as String? = null;
+    var wocheId as Complications.Id? = null;
+    var woche as String? = null;
+    var formId as Complications.Id? = null;
+    var form as String? = null;
     var schlaf as Boolean = false;
     var gesucht as Number = -1;
     var fKopf as Graphics.FontType = Graphics.FONT_XTINY;
@@ -68,14 +72,17 @@ class KiraZeiger extends WatchUi.WatchFace {
             var c = it.next();
             while (c != null) {
                 var ll = c.longLabel;
+                var lab = ll != null ? ll.toString().toUpper() : "";
                 var vv = c.value;
-                var passt = ll != null && ll.toString().toUpper().find("KIRA DATEN") != null;
-                if (!passt && vv instanceof String && vv.find("|") != null && c.getType() == Complications.COMPLICATION_TYPE_INVALID) { passt = true; }
-                if (passt) {
-                    kiraId = c.complicationId;
-                    if (kiraId != null) { Complications.subscribeToUpdates(kiraId); }
-                    if (vv != null) { kira = vv.toString(); }
-                    return;
+                var id = c.complicationId;
+                if (id != null) {
+                    if (lab.find("KIRA DATEN") != null || (kiraId == null && vv instanceof String && vv.find("|") != null && c.getType() == Complications.COMPLICATION_TYPE_INVALID)) {
+                        kiraId = id; Complications.subscribeToUpdates(id); if (vv != null) { kira = vv.toString(); }
+                    } else if (lab.find("KIRA WOCHE") != null) {
+                        wocheId = id; Complications.subscribeToUpdates(id); if (vv != null) { woche = vv.toString(); }
+                    } else if (lab.find("KIRA FORM") != null) {
+                        formId = id; Complications.subscribeToUpdates(id); if (vv != null) { form = vv.toString(); }
+                    }
                 }
                 c = it.next();
             }
@@ -84,11 +91,20 @@ class KiraZeiger extends WatchUi.WatchFace {
 
     function geaendert(id as Complications.Id) as Void {
         try {
-            if (kiraId != null && id.equals(kiraId)) {
-                var v = Complications.getComplication(id).value;
-                if (v != null) { kira = v.toString(); }
-            }
+            var v = Complications.getComplication(id).value;
+            if (v == null) { return; }
+            if (kiraId != null && id.equals(kiraId)) { kira = v.toString(); }
+            else if (wocheId != null && id.equals(wocheId)) { woche = v.toString(); }
+            else if (formId != null && id.equals(formId)) { form = v.toString(); }
         } catch (e) { }
+    }
+
+    // ein Zeichen (0-9A-Za-z) → 0..61, "_" oder fehlend → null
+    function dekod(s as String, i as Number) as Number? {
+        if (i >= s.length()) { return null; }
+        var z = s.substring(i, i + 1) as String;
+        if (z.equals("_")) { return null; }
+        return "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".find(z);
     }
 
     function onExitSleep() as Void {
@@ -112,13 +128,6 @@ class KiraZeiger extends WatchUi.WatchFace {
         }
         r.add(s);
         return r;
-    }
-
-    // leere oder negative Werte (-1 = keine Daten) gelten als fehlend
-    function wertOk(s as String) as Number? {
-        if (s.length() == 0) { return null; }
-        var v = s.toNumber();
-        return (v == null || v < 0) ? null : v;
     }
 
     function feld(t as Array<String>, i as Number) as String {
@@ -214,7 +223,7 @@ class KiraZeiger extends WatchUi.WatchFace {
             return;
         }
 
-        if (kiraId == null && gesucht != uhr.min) { gesucht = uhr.min; kiraSuchen(); }
+        if ((kiraId == null || wocheId == null || formId == null) && gesucht != uhr.min) { gesucht = uhr.min; kiraSuchen(); }
         var t = zerlegen(kira, "|");
         var heute = feld(t, 5).equals(heuteIso());
         var vote = feld(t, 0);
@@ -265,34 +274,46 @@ class KiraZeiger extends WatchUi.WatchFace {
         dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(lx, cy + rr + 7, fLabel, hi == null ? "SOLL" : (lo != null ? lo.toString() + "-" : "") + hi.toString(), Graphics.TEXT_JUSTIFY_CENTER);
 
-        // Diagramm 1: Last 7 Tage mit Soll-Band
-        var sieben = zerlegen(feld(t, 14), ";");
-        var istL = zerlegen(sieben.size() > 0 ? sieben[0] : null, ",");
-        var loL = zerlegen(sieben.size() > 1 ? sieben[1] : null, ",");
-        var hiL = zerlegen(sieben.size() > 2 ? sieben[2] : null, ",");
+        // Diagramm 1: Last 7 Tage mit Soll-Band (Komplikation „KIRA WOCHE“: IIIIIII;LLLLLLL;HHHHHHH, ESS / 8)
+        var wk = zerlegen(woche, ";");
+        var wI = wk.size() > 0 ? wk[0] : "";
+        var wL = wk.size() > 1 ? wk[1] : "";
+        var wH = wk.size() > 2 ? wk[2] : "";
         var x0 = (w * 0.31).toNumber();
         var x1 = (w * 0.69).toNumber();
         var y0 = (h * 0.24).toNumber();
         var y1 = (h * 0.40).toNumber();
-        var n = heute ? istL.size() : 0;
+        var n = heute ? wI.length() : 0;
         if (n < 2) {
             dc.setColor(GRAU, Graphics.COLOR_TRANSPARENT);
             dc.drawText(cx, (y0 + y1) / 2, fKlein, "LAST 7 T · APP ÖFFNEN", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         } else {
+            var vs = [] as Array<Number>;
+            var los = [] as Array<Number?>;
+            var his = [] as Array<Number?>;
             var mx = 1;
             for (var i = 0; i < n; i++) {
-                var v = istL[i].length() > 0 ? istL[i].toNumber() : 0;
-                var v2 = hiL.size() > i && hiL[i].length() > 0 ? hiL[i].toNumber() : 0;
-                if (v > mx) { mx = v; }
-                if (v2 > mx) { mx = v2; }
+                var v = dekod(wI, i);
+                var l1 = dekod(wL, i);
+                var h1 = dekod(wH, i);
+                vs.add(v == null ? 0 : v * 8);
+                los.add(l1 == null ? null : l1 * 8);
+                his.add(h1 == null ? null : h1 * 8);
+            }
+            los[n - 1] = lo;
+            his[n - 1] = hi;
+            if (ist != null) { vs[n - 1] = ist; }
+            for (var i = 0; i < n; i++) {
+                if (vs[i] > mx) { mx = vs[i]; }
+                var hh = his[i];
+                if (hh != null && hh > mx) { mx = hh; }
             }
             var bw = (x1 - x0) / n;
             for (var i = 0; i < n; i++) {
                 var x = x0 + i * bw;
-                var v = istL[i].length() > 0 ? istL[i].toNumber() : 0;
-                var l1 = loL.size() > i && loL[i].length() > 0 ? loL[i].toNumber() : null;
-                var h1 = hiL.size() > i && hiL[i].length() > 0 ? hiL[i].toNumber() : null;
-                if (i == n - 1) { l1 = lo; h1 = hi; }
+                var v = vs[i];
+                var l1 = los[i];
+                var h1 = his[i];
                 if (h1 != null && h1 > 0) {
                     var ya = y1 - ((y1 - y0) * h1 / mx);
                     var yb = y1 - ((y1 - y0) * (l1 == null ? 0 : l1) / mx);
@@ -304,7 +325,6 @@ class KiraZeiger extends WatchUi.WatchFace {
                 dc.setColor(lastFarbe(v, l1, h1), Graphics.COLOR_TRANSPARENT);
                 dc.fillRectangle(x + bw / 4, y1 - bh, bw / 2, bh);
             }
-            // Wochentage, heute weiß
             var g = Gregorian.info(Time.now(), Time.FORMAT_SHORT);
             var kz = ["S", "M", "D", "M", "D", "F", "S"];
             for (var i = 0; i < n; i++) {
@@ -314,52 +334,40 @@ class KiraZeiger extends WatchUi.WatchFace {
             }
         }
 
-        // Diagramm 2: Form 6 Wochen – Fitness (CTL, grün) gegen Ermüdung (ATL, orange)
-        var fk = zerlegen(feld(t, 15), ";");
-        var cL = zerlegen(fk.size() > 0 ? fk[0] : null, ",");
-        var aL = zerlegen(fk.size() > 1 ? fk[1] : null, ",");
+        // Diagramm 2: Form 6 Wochen (Komplikation „KIRA FORM“: min,max,ctl,atl;CCC…;AAA…)
+        var fk = zerlegen(form, ";");
+        var kopf = zerlegen(fk.size() > 0 ? fk[0] : null, ",");
+        var fC = fk.size() > 1 ? fk[1] : "";
+        var fA = fk.size() > 2 ? fk[2] : "";
         var b0 = (h * 0.545).toNumber();
         var b1 = (h * 0.645).toNumber();
-        var m = cL.size() < aL.size() ? cL.size() : aL.size();
-        var cVal = null;
-        var aVal = null;
+        var m = fC.length() < fA.length() ? fC.length() : fA.length();
         if (m >= 2) {
-            var mn = 99999;
-            var mx2 = 0;
-            for (var i = 0; i < m; i++) {
-                var v1 = wertOk(cL[i]);
-                var v2 = wertOk(aL[i]);
-                if (v1 != null) { if (v1 < mn) { mn = v1; } if (v1 > mx2) { mx2 = v1; } }
-                if (v2 != null) { if (v2 < mn) { mn = v2; } if (v2 > mx2) { mx2 = v2; } }
-            }
-            if (mx2 <= mn) { mx2 = mn + 1; }
             for (var k = 0; k < 2; k++) {
-                var xs = k == 0 ? aL : cL;
+                var xs = k == 0 ? fA : fC;
                 var pax = -1;
                 var pay = 0;
                 dc.setColor(k == 0 ? 0xE67E22 : 0x2ECC71, Graphics.COLOR_TRANSPARENT);
                 dc.setPenWidth(k == 0 ? 2 : 3);
                 for (var i = 0; i < m; i++) {
-                    var vv = wertOk(xs[i]);
+                    var vv = dekod(xs, i);
                     if (vv == null) { continue; }
                     var px = x0 + (x1 - x0) * i / (m - 1);
-                    var py = b1 - (b1 - b0) * (vv - mn) / (mx2 - mn);
+                    var py = b1 - (b1 - b0) * vv / 61;
                     if (pax >= 0) { dc.drawLine(pax, pay, px, py); }
                     pax = px;
                     pay = py;
                 }
             }
             dc.setPenWidth(1);
-            for (var i = m - 1; i >= 0 && (cVal == null || aVal == null); i--) {
-                if (cVal == null) { cVal = wertOk(cL[i]); }
-                if (aVal == null) { aVal = wertOk(aL[i]); }
-            }
         }
+        var cTxt = kopf.size() > 2 && kopf[2].length() > 0 ? kopf[2] : "-";
+        var aTxt = kopf.size() > 3 && kopf[3].length() > 0 ? kopf[3] : "-";
         var yt = b1 + 2;
         dc.setColor(0x2ECC71, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx - 4, yt, fKlein, "FIT " + (cVal == null ? "-" : cVal.toString()), Graphics.TEXT_JUSTIFY_RIGHT);
+        dc.drawText(cx - 4, yt, fKlein, "FIT " + cTxt, Graphics.TEXT_JUSTIFY_RIGHT);
         dc.setColor(0xE67E22, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx + 4, yt, fKlein, "ERM " + (aVal == null ? "-" : aVal.toString()), Graphics.TEXT_JUSTIFY_LEFT);
+        dc.drawText(cx + 4, yt, fKlein, "ERM " + aTxt, Graphics.TEXT_JUSTIFY_LEFT);
 
         // Datum
         var gd = Gregorian.info(Time.now(), Time.FORMAT_SHORT);

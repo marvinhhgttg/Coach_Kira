@@ -3,4 +3,6 @@
         <faceIt defaultText="@Strings.KompliLang"/>
     </complication>
     <complication id="1" access="private" longLabel="@Strings.KompliDaten" shortLabel="@Strings.KompliKurz" icon="@Drawables.KompliIcon"/>
+    <complication id="2" access="private" longLabel="@Strings.KompliWoche" shortLabel="@Strings.KompliKurz" icon="@Drawables.KompliIcon"/>
+    <complication id="3" access="private" longLabel="@Strings.KompliForm" shortLabel="@Strings.KompliKurz" icon="@Drawables.KompliIcon"/>
 </complications>
