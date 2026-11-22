@@ -35,6 +35,7 @@ class KiraZifferblatt extends WatchUi.WatchFace {
     var kiraId as Complications.Id? = null;
     var kira as String? = null;
     var schlaf as Boolean = false;
+    var gesucht as Number = -1;
 
     function initialize() {
         WatchFace.initialize();
@@ -48,7 +49,10 @@ class KiraZifferblatt extends WatchUi.WatchFace {
             var c = it.next();
             while (c != null) {
                 var ll = c.longLabel;
-                if (ll != null && ll.toString().equals("KIRA DATEN")) {
+                var vv = c.value;
+                var passt = ll != null && ll.toString().toUpper().find("KIRA DATEN") != null;
+                if (!passt && vv instanceof String && vv.find("|") != null && c.getType() == Complications.COMPLICATION_TYPE_INVALID) { passt = true; }
+                if (passt) {
                     kiraId = c.complicationId;
                     if (kiraId != null) { Complications.subscribeToUpdates(kiraId); }
                     if (c.value != null) { kira = c.value.toString(); }
@@ -154,6 +158,8 @@ class KiraZifferblatt extends WatchUi.WatchFace {
         var uhr = System.getClockTime();
         var std = uhr.hour.format("%02d");
         var min = uhr.min.format("%02d");
+        // noch nicht gefunden: einmal pro Minute erneut suchen
+        if (kiraId == null && gesucht != uhr.min) { gesucht = uhr.min; kiraSuchen(); }
         var t = teile();
         var heute = feld(t, 5).equals(heuteIso());
         var vote = feld(t, 0);
@@ -190,7 +196,7 @@ class KiraZifferblatt extends WatchUi.WatchFace {
         // Kira-Votum statt Markenname
         var vf = heute && VOTE_FARBE.hasKey(vote) ? VOTE_FARBE.get(vote) as Number : GRAU;
         dc.setColor(vf, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, (h * 0.145).toNumber(), Graphics.FONT_XTINY, kira == null ? "KIRA · APP ÖFFNEN" : "KIRA · " + (vote.length() > 0 ? vote : "-") + (heute ? "" : " (ALT)"), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, (h * 0.145).toNumber(), Graphics.FONT_XTINY, kira == null ? (kiraId == null ? "KIRA · APP ÖFFNEN" : "KIRA · WARTET") : "KIRA · " + (vote.length() > 0 ? vote : "-") + (heute ? "" : " (ALT)"), Graphics.TEXT_JUSTIFY_CENTER);
 
         // Uhrzeit: Stunden weiß, Minuten orange (wie fēnix)
         dc.setColor(0xE8E8E8, Graphics.COLOR_TRANSPARENT);

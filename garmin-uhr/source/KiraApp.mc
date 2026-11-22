@@ -91,7 +91,9 @@ function kiraKomplikation(d as Dictionary) as Void {
             if (hi != null) { wert = (lo != null ? lo.toNumber().toString() + "-" : "") + hi.toNumber().toString(); }
             else if (l.get("sollHeute") != null) { wert = l.get("sollHeute").toNumber().toString(); }
         }
-        Complications.updateComplication(0, { :value => wert, :shortLabel => lab, :units => "ESS" });
+        try {
+            Complications.updateComplication(0, { :value => wert, :shortLabel => lab, :unit => "ESS" });
+        } catch (e0) { }
         // 22.11.2026: Komplikation 1 (privat) für das Coach-Kira-Zifferblatt:
         // vote|stufe|lo|hi|ist|datum|ziel|zielTage|readiness
         var t = "";
@@ -125,7 +127,7 @@ function kiraKomplikation(d as Dictionary) as Void {
         }
         t = (lab.equals("KIRA") ? "" : lab) + "|" + st + "|" + lo2 + "|" + hi2 + "|" + ist + "|" + (d.get("datum") != null ? d.get("datum").toString() : "") + "|" + zn + "|" + zt + "|" + rd
             + "|" + pl + "|" + sp + "|" + zo + "|" + es + "|" + es28;
-        Complications.updateComplication(1, { :value => t, :shortLabel => "KIRA" });
+        Complications.updateComplication(1, { :value => t });
     } catch (e) {
     }
 }
