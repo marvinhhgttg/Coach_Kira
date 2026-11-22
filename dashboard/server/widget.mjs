@@ -5181,7 +5181,16 @@ async function uhrTeil(rahmen) {
       const di = days.findIndex((d) => d.date === ds[i]);
       const e = di > 0 ? lastEmpfehlung(days[di], days[di - 1], b) : null;
       const tagLast = (g.get(ds[i])?.akt || []).reduce((s2, x) => s2 + (x.last || 0), 0);
+      const echte = akt.filter((x) => (x.dauer_s || 0) >= 600 && (x.last || 0) > 0).reverse();
+      const zSum = [0, 0, 0, 0, 0];
+      for (const x of echte) (x.zonen_s || []).slice(0, 5).forEach((v, k) => {
+        zSum[k] += v || 0;
+      });
       letzte = {
+        einheiten: echte.slice(0, 4).map((x) => ({ name: String(x.name || "").slice(0, 28), sport: String(x.typ || ""), min: Math.round((x.dauer_s || 0) / 60), ess: Math.round(x.last || 0) })),
+        tagMin: Math.round(echte.reduce((s2, x) => s2 + (x.dauer_s || 0), 0) / 60),
+        tagKm: Math.round(echte.reduce((s2, x) => s2 + (x.km || 0), 0) * 10) / 10,
+        tagZ: zSum.map((v) => Math.round(v / 60)),
         d: ds[i],
         name: String(a.name || "").slice(0, 40),
         sport: String(a.typ || ""),

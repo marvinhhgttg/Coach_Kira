@@ -245,7 +245,15 @@ async function uhrTeil(rahmen: any) {
       const di = days.findIndex((d) => d.date === ds[i]);
       const e = di > 0 ? lastEmpfehlung(days[di], days[di - 1], b) : null;
       const tagLast = (g.get(ds[i])?.akt || []).reduce((s2: number, x: any) => s2 + (x.last || 0), 0);
+      // 22.11.2026: alle Einheiten des Tages (chronologisch) + Summen für die Uhr-Seite „Trainingstag“
+      const echte = akt.filter((x: any) => (x.dauer_s || 0) >= 600 && (x.last || 0) > 0).reverse();
+      const zSum = [0, 0, 0, 0, 0];
+      for (const x of echte) ((x.zonen_s || []) as number[]).slice(0, 5).forEach((v, k) => { zSum[k] += v || 0; });
       letzte = {
+        einheiten: echte.slice(0, 4).map((x: any) => ({ name: String(x.name || '').slice(0, 28), sport: String(x.typ || ''), min: Math.round((x.dauer_s || 0) / 60), ess: Math.round(x.last || 0) })),
+        tagMin: Math.round(echte.reduce((s2: number, x: any) => s2 + (x.dauer_s || 0), 0) / 60),
+        tagKm: Math.round(echte.reduce((s2: number, x: any) => s2 + (x.km || 0), 0) * 10) / 10,
+        tagZ: zSum.map((v) => Math.round(v / 60)),
         d: ds[i], name: String(a.name || '').slice(0, 40), sport: String(a.typ || ''), min: Math.round((a.dauer_s || 0) / 60),
         ess: Math.round(a.last || 0), tagEss: Math.round(tagLast), te: a.te_ae ?? null, tean: a.te_an ?? null, label: a.te_label ?? null,
         z: ((a.zonen_s || []) as number[]).slice(0, 5).map((v) => Math.round((v || 0) / 60)), km: a.km ?? null, hm: a.hm ?? null,

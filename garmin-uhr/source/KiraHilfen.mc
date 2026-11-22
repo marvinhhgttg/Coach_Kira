@@ -103,6 +103,11 @@ module KiraHilfen {
         return Storage.getValue("d");
     }
 
+    function heuteIso() as String {
+        var i = Gregorian.info(Time.now(), Time.FORMAT_SHORT);
+        return i.year.format("%04d") + "-" + (i.month as Number).format("%02d") + "-" + i.day.format("%02d");
+    }
+
     // Stand von heute? (datum im Format YYYY-MM-DD)
     function vonHeute(d) as Boolean {
         if (!(d instanceof Dictionary)) { return false; }

@@ -589,48 +589,57 @@ class KiraView extends WatchUi.View {
     }
 
     // Seite 7: letzte Einheit mit Zonen und Vergleich zum Rahmen
+    // 22.11.2026: Trainingstag statt nur letzter Einheit – Tagessumme groß, darunter alle Einheiten
     function seiteLetzte(dc as Graphics.Dc, u, h as Number) as Void {
-        if (!(u instanceof Dictionary) || !(u.get("letzte") instanceof Dictionary)) { ohneDaten(dc, h, "LETZTE EINHEIT"); return; }
+        if (!(u instanceof Dictionary) || !(u.get("letzte") instanceof Dictionary)) { ohneDaten(dc, h, "TRAININGSTAG"); return; }
         var a = u.get("letzte") as Dictionary;
         var w = dc.getWidth();
-        var y = zeile(dc, (h * 0.11).toNumber(), Graphics.FONT_XTINY, "LETZTE EINHEIT", 0x9A9A9A);
         var dt = a.get("d") != null ? a.get("d").toString() : "";
-        y = zeile(dc, y, Graphics.FONT_XTINY, KiraHilfen.wochentag(dt).substring(0, 2) + " · " + KiraHilfen.zahl(a.get("min"), 0) + " min" + (a.get("km") != null ? " · " + KiraHilfen.zahl(a.get("km"), 1) + " km" : ""), 0xBBBBBB);
-        y = zeile(dc, y, Graphics.FONT_XTINY, a.get("name") != null ? a.get("name").toString() : "", Graphics.COLOR_WHITE);
-        y = zeile(dc, y + 2, Graphics.FONT_MEDIUM, KiraHilfen.zahl(a.get("ess"), 0) + " ESS", Graphics.COLOR_WHITE);
+        var ein = a.get("einheiten");
+        var liste = ein instanceof Array ? ein as Array : [] as Array;
+        var n = liste.size();
+        var heuteTag = dt.equals(KiraHilfen.heuteIso());
+        var titel = heuteTag ? "TRAINING HEUTE" : "TRAINING " + KiraHilfen.wochentag(dt).toUpper();
+        var y = zeile(dc, (h * 0.11).toNumber(), Graphics.FONT_XTINY, titel, 0x9A9A9A);
+        var minT = a.get("tagMin") != null ? a.get("tagMin") : a.get("min");
+        var kmT = a.get("tagKm") != null ? a.get("tagKm") : a.get("km");
+        y = zeile(dc, y, Graphics.FONT_XTINY, (n > 1 ? n.toString() + "× · " : "") + KiraHilfen.zahl(minT, 0) + " min" + (kmT != null && kmT.toFloat() > 0 ? " · " + KiraHilfen.zahl(kmT, 1) + " km" : ""), 0xBBBBBB);
+        var summe = a.get("tagEss") != null ? a.get("tagEss") : a.get("ess");
+        y = zeile(dc, y + 2, Graphics.FONT_MEDIUM, KiraHilfen.zahl(summe, 0) + " ESS", Graphics.COLOR_WHITE);
         var lage = a.get("lage");
-        var lf = 0xBBBBBB;
-        var lt = "";
         if (lage != null && a.get("hi") != null) {
             var ls = lage.toString();
-            lf = ls.equals("darueber") ? 0xE67E22 : ls.equals("im Rahmen") ? 0x2ECC71 : 0x5DADE2;
-            // Lage bezieht sich auf die Tagessumme – bei mehreren Einheiten diese mit anzeigen
-            var te2 = a.get("tagEss");
-            var ess2 = a.get("ess");
-            var mehrere = te2 != null && ess2 != null && te2.toNumber() != ess2.toNumber();
-            lt = (mehrere ? "Tag " + KiraHilfen.zahl(te2, 0) + " · " : "") + (ls.equals("darueber") ? "über" : ls.equals("im Rahmen") ? "im" : "unter") + (mehrere ? " " : " Rahmen ") + KiraHilfen.zahl(a.get("lo"), 0) + "-" + KiraHilfen.zahl(a.get("hi"), 0);
+            var lf = ls.equals("darueber") ? 0xE67E22 : ls.equals("im Rahmen") ? 0x2ECC71 : 0x5DADE2;
+            var lt = (ls.equals("darueber") ? "über" : ls.equals("im Rahmen") ? "im" : "unter") + " Rahmen " + KiraHilfen.zahl(a.get("lo"), 0) + "-" + KiraHilfen.zahl(a.get("hi"), 0);
+            y = zeile(dc, y, Graphics.FONT_XTINY, lt, lf);
         }
-        if (lt.length() > 0) { y = zeile(dc, y, Graphics.FONT_XTINY, lt, lf); }
-        var te = a.get("te");
-        if (te != null) { y = zeile(dc, y, Graphics.FONT_XTINY, "TE " + KiraHilfen.zahl(te, 1) + "/" + KiraHilfen.zahl(a.get("tean"), 1), 0xBBBBBB); }
-        // Zonenbalken
-        var z = a.get("z");
+        // Einheiten: ESS · Minuten · Name
+        if (n == 0 && a.get("name") != null) {
+            y = zeile(dc, y, Graphics.FONT_XTINY, KiraHilfen.zahl(a.get("ess"), 0) + " · " + KiraHilfen.zahl(a.get("min"), 0) + "' · " + a.get("name").toString(), Graphics.COLOR_WHITE);
+        }
+        for (var i = 0; i < n && i < 3; i++) {
+            var e = liste[i];
+            if (!(e instanceof Dictionary)) { continue; }
+            y = zeile(dc, y, Graphics.FONT_XTINY, KiraHilfen.zahl(e.get("ess"), 0) + " · " + KiraHilfen.zahl(e.get("min"), 0) + "' · " + (e.get("name") != null ? e.get("name").toString() : ""), Graphics.COLOR_WHITE);
+        }
+        // Zonenbalken für den ganzen Tag
+        var z = a.get("tagZ") instanceof Array ? a.get("tagZ") : a.get("z");
         if (z instanceof Array && z.size() >= 5) {
-            var summe = 0;
-            for (var i = 0; i < 5; i++) { summe += z[i]; }
-            if (summe > 0) {
+            var sz = 0;
+            for (var i = 0; i < 5; i++) { sz += z[i]; }
+            if (sz > 0) {
                 var farben = [0x9AA5B1, 0x3498DB, 0x2ECC71, 0xE67E22, 0xE74C3C];
-                var x0 = (w * 0.18).toNumber();
-                var bw = (w * 0.64).toNumber();
+                var x0 = (w * 0.22).toNumber();
+                var bw = (w * 0.56).toNumber();
                 var x = x0;
                 y += 6;
                 for (var i = 0; i < 5; i++) {
-                    var b = bw * z[i] / summe;
+                    var b = bw * z[i] / sz;
                     dc.setColor(farben[i], Graphics.COLOR_TRANSPARENT);
-                    dc.fillRectangle(x, y, b, 14);
+                    dc.fillRectangle(x, y, b, 12);
                     x += b;
                 }
-                y += 18;
+                y += 16;
                 var t = "";
                 for (var i = 0; i < 5; i++) { if (z[i] > 0) { t += (t.length() > 0 ? " " : "") + "Z" + (i + 1).toString() + " " + z[i].toString() + "'"; } }
                 zeile(dc, y, Graphics.FONT_XTINY, t, 0x9A9A9A);
