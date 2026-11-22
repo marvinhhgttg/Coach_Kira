@@ -172,7 +172,7 @@ class KiraZifferblatt extends WatchUi.WatchFace {
 
     // 22.11.2026: Votum-Ring am Rand. Grundring = Votumsfarbe gedimmt (voller Kreis = Obergrenze des
     // Soll-Rahmens), Füllung = heutige Summenlast in Votumsfarbe, weißer Strich = Untergrenze,
-    // über der Obergrenze läuft eine zweite Runde in Orange auf der Innenseite. Kein Ring im Always-on.
+    // über der Obergrenze läuft eine zweite, gleich breite Runde in Orange innen daneben. Kein Ring im Always-on.
     function stufeFarbe(stufe as String, vote as String) as Number {
         if (stufe.equals("blau")) { return 0x3FA0F0; }
         if (stufe.equals("gruen")) { return 0x2ECC71; }
@@ -209,15 +209,16 @@ class KiraZifferblatt extends WatchUi.WatchFace {
         }
         if (a > 1.005) {
             var b = a - 1.0;
-            dc.setPenWidth(3);
+            // zweite Runde gleich breit, direkt innen daneben (1 px Abstand)
+            dc.setPenWidth(6);
             dc.setColor(0xFF6A00, Graphics.COLOR_TRANSPARENT);
-            if (b >= 0.999) { dc.drawCircle(cx, cy, r - 2); }
-            else { dc.drawArc(cx, cy, r - 2, Graphics.ARC_CLOCKWISE, 90, 90 - (b * 360).toNumber()); }
+            if (b >= 0.999) { dc.drawCircle(cx, cy, r - 7); }
+            else { dc.drawArc(cx, cy, r - 7, Graphics.ARC_CLOCKWISE, 90, 90 - (b * 360).toNumber()); }
         }
         if (lo != null && hi != null && hi > 0 && lo > 0 && lo < hi) {
             var w = Math.PI * 2 * lo / hi;
             var r1 = r + 3;
-            var r2 = r - 7;
+            var r2 = r - 11;
             dc.setPenWidth(3);
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
             dc.drawLine(cx + (r1 * Math.sin(w)).toNumber(), cy - (r1 * Math.cos(w)).toNumber(), cx + (r2 * Math.sin(w)).toNumber(), cy - (r2 * Math.cos(w)).toNumber());
@@ -260,8 +261,8 @@ class KiraZifferblatt extends WatchUi.WatchFace {
         var n = 30;
         for (var i = 0; i < n; i++) {
             var a = Math.toRadians(135 - i * 90.0 / (n - 1));
-            var r1 = cx - 15;
-            var r2 = cx - 29;
+            var r1 = cx - 19;
+            var r2 = cx - 33;
             dc.setColor(i < (akku / 100.0 * n) ? ORANGE : SPUR, Graphics.COLOR_TRANSPARENT);
             dc.setPenWidth(4);
             dc.drawLine(cx + (r1 * Math.cos(a)).toNumber(), cy - (r1 * Math.sin(a)).toNumber(),
