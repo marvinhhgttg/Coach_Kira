@@ -75,6 +75,17 @@ module KiraHilfen {
         return (m / 60).toString() + ":" + (m % 60).format("%02d") + " h";
     }
 
+    // Soll-Rahmen „20-60“ (Kern), sonst ältere Schnittstelle: sollHeute
+    function sollText(l as Dictionary) as String {
+        var lo = l.get("sollMin");
+        var hi = l.get("sollMax");
+        if (hi != null) {
+            if (lo == null || zahl(lo, 0).equals(zahl(hi, 0))) { return "bis " + zahl(hi, 0); }
+            return zahl(lo, 0) + "-" + zahl(hi, 0);
+        }
+        return zahl(l.get("sollHeute"), 0);
+    }
+
     function feld(d, a as String, b as String) {
         if (!(d instanceof Dictionary)) { return null; }
         var x = d.get(a);

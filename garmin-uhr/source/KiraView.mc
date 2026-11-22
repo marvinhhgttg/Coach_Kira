@@ -212,10 +212,14 @@ class KiraView extends WatchUi.View {
         var l = d.get("last");
         if (y < (h * 0.62).toNumber()) { y = (h * 0.62).toNumber(); } else { y += 6; }
         if (l instanceof Dictionary) {
-            y = zeile(dc, y, Graphics.FONT_SMALL, "Heute " + KiraHilfen.zahl(l.get("sollHeute"), 0) + " ESS", Graphics.COLOR_WHITE);
+            // 22.11.2026: Soll = Rahmen des Kerns (wie Cockpit), Plan darunter
+            y = zeile(dc, y, Graphics.FONT_SMALL, "Soll " + KiraHilfen.sollText(l) + " ESS", Graphics.COLOR_WHITE);
             var sp = l.get("sportHeute");
             var zo = l.get("zoneHeute");
-            var sz = (sp != null ? sp.toString() : "") + (zo != null ? " " + zo.toString() : "");
+            var plan = l.get("planHeute");
+            var sz = (plan != null ? "Plan " + KiraHilfen.zahl(plan, 0) : "") + (sp != null && sp.toString().length() > 0 ? " " + sp.toString() : "") + (zo != null && zo.toString().length() > 0 ? " " + zo.toString() : "");
+            var lage = l.get("planLage");
+            if (lage != null && lage.toString().equals("darueber") && l.get("erledigt") != true) { sz += " zu viel"; }
             if (l.get("erledigt") == true) { sz += (sz.length() > 0 ? " · " : "") + "erledigt"; }
             if (sz.length() > 0) { zeile(dc, y, Graphics.FONT_XTINY, sz, 0xBBBBBB); }
         }

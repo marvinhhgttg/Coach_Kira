@@ -3150,6 +3150,17 @@ function fetchGarminTage() {
   return p;
 }
 
+// src/kern/formeln.ts
+var ATL_MODEL = { a: -8.819849, b: 0.83645661, c: 1.24059231 };
+var CTL_MODEL = { a: -3.95042, b: 0.97283824, c: 0.2336734, g: 0.7, k: 7.1, win: 28 };
+function atlStep(atl, last) {
+  return ATL_MODEL.a + ATL_MODEL.b * atl + ATL_MODEL.c * last;
+}
+function ctlStep(ctl, last, mittel28) {
+  const m = CTL_MODEL;
+  return m.g * (m.a + m.b * ctl + m.c * last) + (1 - m.g) * m.k * mittel28;
+}
+
 // src/screens/RecoveryPanel.tsx
 var import_react7 = __toESM(require_react(), 1);
 
@@ -3217,6 +3228,37 @@ var VARS = [
   { key: "essDay", label: "Last", short: "Last", unit: "ESS" }
 ];
 var VAR = Object.fromEntries(VARS.map((v) => [v.key, v]));
+
+// src/kern/soll.ts
+var BAND = { REST: [0, 0.25], EASY: [0.3, 0.8], TRAIN: [0.7, 1.25], QUALITY: [1, 1.7] };
+function lastEmpfehlung(today, yesterday) {
+  const vote = today.vote;
+  const atl0 = yesterday?.atlPost ?? null;
+  const ctl0 = yesterday?.ctlPost ?? null;
+  if (!vote || atl0 == null || ctl0 == null || ctl0 <= 0) return null;
+  const m0 = ctl0 / 7.04;
+  const ctlNach = (L) => ctlStep(ctl0, L, (27 * m0 + L) / 28);
+  const acwrNach = (L) => atlStep(atl0, L) / ctlNach(L);
+  let halte = 0;
+  for (let L = 0; L <= 500; L += 1) if (ctlNach(L) >= ctl0) {
+    halte = L;
+    break;
+  }
+  let acwrGrenze = null;
+  for (let L = 0; L <= 600; L += 1) if (acwrNach(L) > 1.3) {
+    acwrGrenze = L - 1;
+    break;
+  }
+  const r5 = (x) => Math.max(0, Math.round(x / 5) * 5);
+  let [lo, hi] = BAND[vote].map((f3) => r5(f3 * halte));
+  let gedeckelt = false;
+  if (acwrGrenze != null && hi > acwrGrenze) {
+    hi = r5(Math.max(0, acwrGrenze));
+    gedeckelt = true;
+    if (lo > hi) lo = r5(hi * 0.6);
+  }
+  return { min: lo, max: hi, halte: r5(halte), acwrGrenze: acwrGrenze != null ? r5(acwrGrenze) : null, gedeckelt };
+}
 
 // src/components/GarminSportProfilTile.tsx
 var import_react6 = __toESM(require_react(), 1);
@@ -4898,6 +4940,9 @@ async function heuteTeil() {
       naechste = (sim.days || []).filter((x) => String(x.date).slice(0, 10) > heute2).slice(0, 4).map((x) => ({ d: String(x.date).slice(0, 10), ess: num(x.sim_load ?? x.load), sport: String(x.sport || ""), zone: String(x.zone || "") }));
   } catch {
   }
+  const ti = t ? days.length - 1 : -1;
+  const rahmen = t && ti > 0 ? lastEmpfehlung(t, days[ti - 1]) : null;
+  const planLoad = plan ? num(plan.load) : t?.essDay ?? null;
   const woche = days.slice(-7).map((d) => ({ d: d.date, ist: d.activityDone ? d.actual?.load ?? d.load ?? 0 : 0 }));
   return {
     datum: heute2,
@@ -4914,7 +4959,14 @@ async function heuteTeil() {
       befinden: t.befinden
     } : null,
     last: {
-      sollHeute: plan ? num(plan.load) : t?.essDay ?? null,
+      // sollHeute bleibt für ältere App-/Uhr-Versionen: Obergrenze des Rahmens
+      sollHeute: rahmen ? rahmen.max : planLoad,
+      sollMin: rahmen ? rahmen.min : null,
+      sollMax: rahmen ? rahmen.max : null,
+      sollText: rahmen ? `${rahmen.min}\u2013${rahmen.max}` : planLoad != null ? String(Math.round(planLoad)) : null,
+      halten: rahmen ? rahmen.halte : null,
+      planHeute: planLoad,
+      planLage: rahmen && planLoad != null && planLoad > 0 ? planLoad > rahmen.max ? "darueber" : planLoad < rahmen.min ? "darunter" : "im Rahmen" : null,
       sportHeute: plan ? String(plan.sport || "") : "",
       zoneHeute: plan ? String(plan.zone || "") : "",
       istHeute: t?.activityDone ? t.actual?.load ?? t.load ?? null : 0,

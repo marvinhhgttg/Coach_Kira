@@ -5,6 +5,7 @@
  * Aufruf: node server/widget.mjs  → JSON auf stdout
  */
 import { buildDays, RECOVERY_FETCH_METRICS, VOTE_LABEL, VOTE_LEVEL, type RecoveryDay } from '../src/kern/votum';
+import { lastEmpfehlung } from '../src/kern/soll';
 import { fetchChartData, fetchPlanSimulationWithTimeout } from '../src/lib/api';
 import { rangeFor } from '../src/lib/windows';
 import { fetchExtras } from '../src/lib/extras';
@@ -39,6 +40,10 @@ async function heuteTeil() {
         .slice(0, 4)
         .map((x: any) => ({ d: String(x.date).slice(0, 10), ess: num(x.sim_load ?? x.load), sport: String(x.sport || ''), zone: String(x.zone || '') }));
   } catch {}
+  // 22.11.2026: Soll = Soll-Rahmen des Kerns (wie „Empfehlung heute“ im Cockpit), Plan getrennt
+  const ti = t ? days.length - 1 : -1;
+  const rahmen = t && ti > 0 ? lastEmpfehlung(t, days[ti - 1]) : null;
+  const planLoad = plan ? num(plan.load) : t?.essDay ?? null;
   const woche = days.slice(-7).map((d) => ({ d: d.date, ist: d.activityDone ? d.actual?.load ?? d.load ?? 0 : 0 }));
   return {
     datum: heute,
@@ -59,7 +64,14 @@ async function heuteTeil() {
         }
       : null,
     last: {
-      sollHeute: plan ? num(plan.load) : t?.essDay ?? null,
+      // sollHeute bleibt für ältere App-/Uhr-Versionen: Obergrenze des Rahmens
+      sollHeute: rahmen ? rahmen.max : planLoad,
+      sollMin: rahmen ? rahmen.min : null,
+      sollMax: rahmen ? rahmen.max : null,
+      sollText: rahmen ? `${rahmen.min}–${rahmen.max}` : planLoad != null ? String(Math.round(planLoad)) : null,
+      halten: rahmen ? rahmen.halte : null,
+      planHeute: planLoad,
+      planLage: rahmen && planLoad != null && planLoad > 0 ? (planLoad > rahmen.max ? 'darueber' : planLoad < rahmen.min ? 'darunter' : 'im Rahmen') : null,
       sportHeute: plan ? String(plan.sport || '') : '',
       zoneHeute: plan ? String(plan.zone || '') : '',
       istHeute: t?.activityDone ? t.actual?.load ?? t.load ?? null : 0,

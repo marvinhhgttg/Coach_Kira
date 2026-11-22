@@ -28,10 +28,9 @@ class KiraGlance extends WatchUi.GlanceView {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(2 * r + 12, h / 3, Graphics.FONT_GLANCE, "KIRA · " + (label == null ? "-" : label.toString().toUpper()) + (heute ? "" : " (gestern)"),
             Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
-        var soll = KiraHilfen.feld(d, "last", "sollHeute");
-        var sport = KiraHilfen.feld(d, "last", "sportHeute");
-        var zone = KiraHilfen.feld(d, "last", "zoneHeute");
-        var zeile = "Soll " + KiraHilfen.zahl(soll, 0) + " ESS" + (sport != null ? " · " + sport : "") + (zone != null ? " " + zone : "");
+        var l = d.get("last");
+        var plan = KiraHilfen.feld(d, "last", "planHeute");
+        var zeile = "Soll " + (l instanceof Dictionary ? KiraHilfen.sollText(l) : "-") + " ESS" + (plan != null ? " · Plan " + KiraHilfen.zahl(plan, 0) : "");
         dc.setColor(0xBBBBBB, Graphics.COLOR_TRANSPARENT);
         dc.drawText(2, h * 3 / 4, Graphics.FONT_GLANCE, zeile, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
     }

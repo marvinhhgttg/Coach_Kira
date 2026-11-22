@@ -152,10 +152,10 @@ private func hrvText(_ m: WidgetDaten.Morgen?) -> String {
 
 private func essZeile(_ l: WidgetDaten.Last?) -> String {
     guard let l else { return "ESS heute: –" }
-    let soll = KiraStil.zahl(l.sollHeute)
-    if l.erledigt == true { return "ESS heute: Soll \(soll) · Ist \(KiraStil.zahl(l.istHeute))" }
+    if l.erledigt == true { return "ESS heute: Soll \(l.soll) · Ist \(KiraStil.zahl(l.istHeute))" }
     let sport = [l.sportHeute, l.zoneHeute].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
-    return "ESS heute: Soll \(soll)" + (sport.isEmpty ? "" : " · \(sport)")
+    let plan = l.planKurz.isEmpty ? "" : " · \(l.planKurz)" + (sport.isEmpty ? "" : " \(sport)") + (l.planLage == "darueber" ? " (zu viel)" : "")
+    return "ESS heute: Soll \(l.soll)" + plan
 }
 
 private func texteZeile(_ t: WidgetDaten.Texte?) -> String {
@@ -182,7 +182,7 @@ struct KleinView: View {
             Text(d.votum?.text ?? "–").font(.caption).foregroundStyle(.white).lineLimit(2)
             Spacer(minLength: 0)
             Text("Readiness \(KiraStil.zahl(d.morgen?.readiness))").font(.caption.weight(.semibold).monospacedDigit()).foregroundStyle(.white)
-            Text("Soll \(KiraStil.zahl(d.last?.sollHeute)) ESS · \(KiraStil.uhrzeit(d.stand))").font(.caption2).foregroundStyle(.white.opacity(0.55))
+            Text("Soll \(d.last?.soll ?? "–") ESS · \(KiraStil.uhrzeit(d.stand))").font(.caption2).foregroundStyle(.white.opacity(0.55))
         }
         .widgetURL(URL(string: "coachkira://heute"))
     }
@@ -312,7 +312,7 @@ struct RechteckView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 1) {
             Text("Kira · \(KiraStil.farbname(d.votum?.stufe))").font(.headline.weight(.heavy))
-            Text("Soll \(KiraStil.zahl(d.last?.sollHeute)) ESS · ACWR \(KiraStil.zahl(d.last?.acwr, stellen: 2))").font(.caption)
+            Text("Soll \(d.last?.soll ?? "–") ESS · ACWR \(KiraStil.zahl(d.last?.acwr, stellen: 2))").font(.caption)
             Text("Readiness \(KiraStil.zahl(d.morgen?.readiness)) · Schlaf \(KiraStil.zahl(d.morgen?.schlaf))").font(.caption2)
         }
         .widgetURL(URL(string: "coachkira://heute"))
@@ -322,7 +322,7 @@ struct RechteckView: View {
 struct InlineView: View {
     let d: WidgetDaten
     var body: some View {
-        Text("Kira: \(KiraStil.farbname(d.votum?.stufe)) · \(KiraStil.zahl(d.last?.sollHeute)) ESS")
+        Text("Kira: \(KiraStil.farbname(d.votum?.stufe)) · \(d.last?.soll ?? "–") ESS")
     }
 }
 
@@ -474,7 +474,7 @@ struct BelastungKleinView: View {
                 Text(KiraStil.zahl(d.last?.acwr, stellen: 2)).font(.title2.weight(.heavy).monospacedDigit()).foregroundStyle(farbe)
                 Text("ACWR").font(.caption2).foregroundStyle(.white.opacity(0.6))
             }
-            Text("Soll \(KiraStil.zahl(d.last?.sollHeute)) · Ist \(KiraStil.zahl(d.last?.istHeute))").font(.caption2.monospacedDigit()).foregroundStyle(.white)
+            Text("Soll \(d.last?.soll ?? "–") · Ist \(KiraStil.zahl(d.last?.istHeute))").font(.caption2.monospacedDigit()).foregroundStyle(.white)
             Spacer(minLength: 0)
             Balken(woche: d.last?.woche ?? [])
         }

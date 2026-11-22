@@ -127,10 +127,11 @@ struct HeuteNativView: View {
 
     private func lastKarte(_ d: WidgetDaten) -> some View {
         let l = d.last
-        let plan = [l?.sportHeute, l?.zoneHeute].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
+        let planSport = [l?.sportHeute, l?.zoneHeute].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
+        let plan = [l?.planKurz ?? "", planSport].filter { !$0.isEmpty }.joined(separator: " · ") + (l?.planLage == "darueber" && l?.erledigt != true ? " · über dem Rahmen" : "")
         return karte("Last") {
             HStack {
-                wert("Soll heute", "\(KiraStil.zahl(l?.sollHeute)) ESS")
+                wert("Soll heute", "\(l?.soll ?? "–") ESS")
                 wert(l?.erledigt == true ? "Ist (erledigt)" : "Ist", "\(KiraStil.zahl(l?.istHeute)) ESS")
                 wert("ACWR", KiraStil.zahl(l?.acwr, stellen: 2), farbe: acwrFarbe(l?.acwrBand))
             }

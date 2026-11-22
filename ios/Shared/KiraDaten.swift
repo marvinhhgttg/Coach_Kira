@@ -46,6 +46,16 @@ struct WidgetDaten: Codable {
         let acwr: Double?
         let acwrBand: String?
         let woche: [Tag]?
+        // 22.11.2026: Soll-Rahmen des Kerns (wie Cockpit), Plan getrennt
+        var sollMin: Double? = nil
+        var sollMax: Double? = nil
+        var sollText: String? = nil
+        var planHeute: Double? = nil
+        var planLage: String? = nil
+        /// „20–60“, ältere Server: Einzelwert
+        var soll: String { sollText ?? KiraStil.zahl(sollHeute) }
+        /// „Plan 180“ oder leer
+        var planKurz: String { planHeute.map { "Plan \(KiraStil.zahl($0))" } ?? "" }
     }
     struct Ziel: Codable {
         let name: String

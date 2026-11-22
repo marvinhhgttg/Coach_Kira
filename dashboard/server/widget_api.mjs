@@ -121,7 +121,7 @@ export function setupWidget(app, { getSetting, setSetting, originOk, texte }) {
     if (!originOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
     try {
       const a = await antwort(false);
-      res.json({ ok: true, datum: a.datum, vote: a.votum?.vote ?? null, readiness: a.morgen?.readiness ?? null, sollHeute: a.last?.sollHeute ?? null, acwr: a.last?.acwr ?? null, tourform: a.ziel?.tourform ?? null });
+      res.json({ ok: true, datum: a.datum, vote: a.votum?.vote ?? null, readiness: a.morgen?.readiness ?? null, sollHeute: a.last?.sollHeute ?? null, sollText: a.last?.sollText ?? null, planHeute: a.last?.planHeute ?? null, acwr: a.last?.acwr ?? null, tourform: a.ziel?.tourform ?? null });
     } catch (e) {
       res.status(502).json({ ok: false, error: String(e.message || e) });
     }

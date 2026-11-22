@@ -92,7 +92,7 @@ export function AppKopplungTile() {
           <button type="button" className="btn btn-ghost text-2xs px-2 py-0.5" onClick={pruefen} data-testid="widget-abgleich">Widget-Werte prüfen</button>
           {abgleich?.laden && <span>rechnet …</span>}
           {abgleich && !abgleich.laden && (abgleich.ok ? (
-            <span data-testid="widget-abgleich-werte">Widget zeigt: Votum {abgleich.vote ?? '–'} · Readiness {abgleich.readiness ?? '–'} · Soll heute {abgleich.sollHeute ?? '–'} ESS · ACWR {abgleich.acwr ?? '–'} · Tourform {abgleich.tourform ?? '–'} %</span>
+            <span data-testid="widget-abgleich-werte">Widget zeigt: Votum {abgleich.vote ?? '–'} · Readiness {abgleich.readiness ?? '–'} · Soll heute {abgleich.sollText ?? abgleich.sollHeute ?? '–'} ESS{abgleich.planHeute != null ? ` · Plan ${abgleich.planHeute}` : ''} · ACWR {abgleich.acwr ?? '–'} · Tourform {abgleich.tourform ?? '–'} %</span>
           ) : <span className="text-orange-300">{abgleich.error}</span>)}
         </div>
       </div>
