@@ -56,16 +56,41 @@ function plannedDemand(p: PlannedSession): Vote {
   return 'EASY';
 }
 
-function planVerdict(p: PlannedSession, vote: Vote): { ok: boolean; text: string } {
+function planVerdict(p: PlannedSession, vote: Vote, emp: Empfehlung | null): { ok: boolean; text: string } {
   const demand = plannedDemand(p);
   if (VOTE_ORDER.indexOf(demand) <= VOTE_ORDER.indexOf(vote)) {
     return { ok: true, text: `Plan passt zum Votum (${VOTE_LABEL[demand]} ≤ ${VOTE_LABEL[vote]}).` };
   }
-  const shorter = Math.max(30, Math.round((p.load * 0.6) / 5) * 5);
+  // 22.11.2026: eine Wahrheit – Kürzungsziel kommt aus dem Soll-Rahmen des Kerns (Empfehlung heute)
   if (vote === 'REST') return { ok: false, text: 'Einheit streichen oder durch 20–30 min Mobility ersetzen.' };
-  if (vote === 'EASY')
+  if (vote === 'EASY') {
+    if (emp && emp.max > 0) return { ok: false, text: `Einheit auf höchstens ${emp.max} ESS in Z1–Z2 kürzen oder mit einem lockeren Tag tauschen.` };
+    const shorter = Math.max(30, Math.round((p.load * 0.6) / 5) * 5);
     return { ok: false, text: `Einheit auf etwa ${shorter} ESS in Z1–Z2 kürzen oder mit einem lockeren Tag tauschen.` };
-  return { ok: false, text: 'Intensität rausnehmen: ähnliche Dauer in Z2, Intervalle auf einen besseren Tag schieben.' };
+  }
+  return { ok: false, text: `Intensität rausnehmen: in Z2 bleiben${emp && emp.max > 0 ? `, höchstens ${emp.max} ESS` : ', ähnliche Dauer'}, Intervalle auf einen besseren Tag schieben.` };
+}
+
+/** Dauer zur ESS-Spanne aus deinem Sportprofil (gleiche Rechnung überall). */
+function useDauerText(e: Empfehlung | null, plan: PlannedSession | null): string | null {
+  const { tage } = useGarminTage();
+  if (!e) return null;
+  const sport = plan && plan.load > 0 && plan.sport && plan.sport.toLowerCase() !== 'off' ? plan.sport : 'Bike';
+  const prof = sportProfile(tage, 120).find((x) => x.sport === sport);
+  const lph = lastJeStunde(prof);
+  return lph && e.max > 0 ? `≈ ${e.min > 0 ? fmtDauer((e.min / lph) * 3600) + '–' : 'bis '}${fmtDauer((e.max / lph) * 3600)} ${sport}` : null;
+}
+
+/** Empfehlungstext aus dem Soll-Rahmen – ersetzt die festen Minutenangaben je Votum. */
+function EmpfehlungText({ vote, e, plan }: { vote: Vote; e: Empfehlung | null; plan: PlannedSession | null }) {
+  const dauer = useDauerText(e, plan);
+  if (!e) return <>{VOTE_ADVICE[vote]}</>;
+  const spanne = `${e.min}–${e.max} ESS${dauer ? ` (${dauer})` : ''}`;
+  const t = vote === 'REST' ? (e.max <= 30 ? 'Ruhetag, höchstens 20–30 min Mobility.' : `Ruhetag oder höchstens ${e.max} ESS sehr locker / Mobility.`)
+    : vote === 'EASY' ? `${spanne} in Z1–Z2, keine Intervalle; morgen neu bewerten.`
+    : vote === 'TRAIN' ? `${spanne}, Schwerpunkt Z2.`
+    : `${spanne}; Qualitätseinheit (Schwelle/Intervalle) möglich, wenn sie geplant ist.`;
+  return <>{t}</>;
 }
 
 /** Heute schon trainiert? activity_done = x in der Timeline oder Plantag gesperrt (Ist-Wert übernommen). */
@@ -107,11 +132,7 @@ function doneVerdict(today: RecoveryDay): { ok: boolean; demand: Vote } | null {
 // Lastempfehlung heute (Soll-Rahmen) – seit Etappe 2b im Rechenkern: src/kern/soll.ts
 
 function EmpfehlungZeile({ e, vote, plan, ist = false }: { e: Empfehlung; vote: Vote; plan: PlannedSession | null; ist?: boolean }) {
-  const { tage } = useGarminTage();
-  const sport = plan && plan.load > 0 && plan.sport && plan.sport.toLowerCase() !== 'off' ? plan.sport : 'Bike';
-  const prof = sportProfile(tage, 120).find((p) => p.sport === sport);
-  const lph = lastJeStunde(prof);
-  const dauer = lph && e.max > 0 ? `≈ ${e.min > 0 ? fmtDauer((e.min / lph) * 3600) + '–' : 'bis '}${fmtDauer((e.max / lph) * 3600)} ${sport}` : null;
+  const dauer = useDauerText(e, plan);
   const lage = plan && plan.load > 0 ? (plan.load > e.max ? 'darüber' : plan.load < e.min ? 'darunter' : 'im Rahmen') : null;
   return (
     <div className="mt-2 border-t border-border pt-2 text-xs" data-testid="last-empfehlung">
@@ -175,7 +196,7 @@ function PlanCheck({ plan, today, yesterday }: { plan: PlannedSession | null | '
       </div>
     );
   }
-  const verdict = today.vote ? planVerdict(plan, today.vote) : null;
+  const verdict = today.vote ? planVerdict(plan, today.vote, emp) : null;
   const lvl: Level = !verdict ? 'leer' : verdict.ok ? 'gruen' : 'orange';
   return (
     <div className={`rounded border px-3 py-2 ${verdict ? (verdict.ok ? 'border-ampel-gruen/40' : 'border-ampel-orange/50') : 'border-border'} ${LEVEL_CELL[lvl]}`}>
@@ -705,7 +726,7 @@ function TodayCard({
         {vote && (
           <div>
             <div className="label mb-1">Empfehlung</div>
-            <p className="text-sm">{doneAdvice ?? VOTE_ADVICE[vote]}</p>
+            <p className="text-sm">{doneAdvice ?? <EmpfehlungText vote={vote} e={today.vote ? lastEmpfehlung(today, yesterday ?? null) : null} plan={plan && plan !== 'loading' ? plan : null} />}</p>
           </div>
         )}
         <p className="text-2xs text-ink-dim">
