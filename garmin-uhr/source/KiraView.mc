@@ -101,7 +101,7 @@ class KiraNetz {
             stop("Code abgelaufen – START");
             return;
         }
-        Communications.makeWebRequest(KIRA_BASIS + "/api/widget/uhr/status", { "id" => anfrageId },
+        Communications.makeWebRequest(KIRA_BASIS + "/api/widget/uhr/status?id=" + anfrageId, null,
             {
                 :method => Communications.HTTP_REQUEST_METHOD_GET,
                 :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON

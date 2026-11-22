@@ -27,6 +27,7 @@ class KiraFeldView extends WatchUi.DataField {
     var fitSumme as FitContributor.Field? = null;
     var unterwegs as Boolean = false;
     var naechsterAbruf as Number = 0;
+    var seit as Number = 0;
 
     function initialize() {
         DataField.initialize();
@@ -96,6 +97,8 @@ class KiraFeldView extends WatchUi.DataField {
 
     // ---- Netz (direkt aus dem Datenfeld) ----
     function abrufFaellig() as Void {
+        // hängende Anfrage nach 45 s verwerfen
+        if (unterwegs && System.getTimer() - seit > 45000) { unterwegs = false; Storage.setValue("rc", -300); }
         if (unterwegs || System.getTimer() < naechsterAbruf) { return; }
         if (!System.getDeviceSettings().phoneConnected) {
             Storage.setValue("rc", -104);
@@ -103,6 +106,7 @@ class KiraFeldView extends WatchUi.DataField {
             return;
         }
         unterwegs = true;
+        seit = System.getTimer();
         try {
             var tok = Storage.getValue("tok");
             var aid = Storage.getValue("aid");
@@ -113,7 +117,7 @@ class KiraFeldView extends WatchUi.DataField {
                       :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON },
                     method(:feldFertig));
             } else if (aid instanceof String) {
-                Communications.makeWebRequest(KIRA_BASIS + "/api/widget/uhr/status", { "id" => aid },
+                Communications.makeWebRequest(KIRA_BASIS + "/api/widget/uhr/status?id=" + aid, null,
                     { :method => Communications.HTTP_REQUEST_METHOD_GET, :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON },
                     method(:statusFertig));
             } else {
@@ -270,7 +274,8 @@ class KiraFeldView extends WatchUi.DataField {
         if (Storage.getValue("tok") == null) {
             var c = Storage.getValue("code");
             var rc = Storage.getValue("rc");
-            if (c != null) { unten = "Code " + c.toString(); }
+            // Code und ggf. Fehler im Wechsel (alle 3 s)
+            if (c != null && (!(rc instanceof Number) || (System.getTimer() / 3000) % 2 == 0)) { unten = "Code " + c.toString(); }
             else if (rc instanceof Number) { unten = fehlerText(rc); }
             else { unten = "koppelt ..."; }
         } else if (ra == null) {
