@@ -239,7 +239,8 @@ async function uhrTeil(rahmen: any) {
     const ds = [...g.keys()].filter((d) => d <= heute).sort();
     for (let i = ds.length - 1; i >= 0 && !letzte; i--) {
       const akt = (g.get(ds[i])?.akt || []).slice().sort((x: any, y: any) => String(y.start || '').localeCompare(String(x.start || '')));
-      const a: any = akt[0];
+      // 22.11.2026: Kurz-/Testaufzeichnungen (unter 10 min oder ohne Last) überspringen
+      const a: any = akt.find((x: any) => (x.dauer_s || 0) >= 600 && (x.last || 0) > 0);
       if (!a) continue;
       const di = days.findIndex((d) => d.date === ds[i]);
       const e = di > 0 ? lastEmpfehlung(days[di], days[di - 1], b) : null;

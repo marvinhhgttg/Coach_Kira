@@ -604,7 +604,11 @@ class KiraView extends WatchUi.View {
         if (lage != null && a.get("hi") != null) {
             var ls = lage.toString();
             lf = ls.equals("darueber") ? 0xE67E22 : ls.equals("im Rahmen") ? 0x2ECC71 : 0x5DADE2;
-            lt = (ls.equals("darueber") ? "über" : ls.equals("im Rahmen") ? "im" : "unter") + " Rahmen " + KiraHilfen.zahl(a.get("lo"), 0) + "-" + KiraHilfen.zahl(a.get("hi"), 0);
+            // Lage bezieht sich auf die Tagessumme – bei mehreren Einheiten diese mit anzeigen
+            var te2 = a.get("tagEss");
+            var ess2 = a.get("ess");
+            var mehrere = te2 != null && ess2 != null && te2.toNumber() != ess2.toNumber();
+            lt = (mehrere ? "Tag " + KiraHilfen.zahl(te2, 0) + " · " : "") + (ls.equals("darueber") ? "über" : ls.equals("im Rahmen") ? "im" : "unter") + (mehrere ? " " : " Rahmen ") + KiraHilfen.zahl(a.get("lo"), 0) + "-" + KiraHilfen.zahl(a.get("hi"), 0);
         }
         if (lt.length() > 0) { y = zeile(dc, y, Graphics.FONT_XTINY, lt, lf); }
         var te = a.get("te");

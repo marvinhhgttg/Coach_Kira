@@ -5176,7 +5176,7 @@ async function uhrTeil(rahmen) {
     const ds = [...g.keys()].filter((d) => d <= heute2).sort();
     for (let i = ds.length - 1; i >= 0 && !letzte; i--) {
       const akt = (g.get(ds[i])?.akt || []).slice().sort((x, y) => String(y.start || "").localeCompare(String(x.start || "")));
-      const a = akt[0];
+      const a = akt.find((x) => (x.dauer_s || 0) >= 600 && (x.last || 0) > 0);
       if (!a) continue;
       const di = days.findIndex((d) => d.date === ds[i]);
       const e = di > 0 ? lastEmpfehlung(days[di], days[di - 1], b) : null;
