@@ -4977,8 +4977,13 @@ var STATUS_TEXT = { QUALITY: "Qualit\xE4t m\xF6glich", TRAIN: "normal trainieren
 var tageMerk = [];
 async function heuteTeil() {
   const heute2 = iso();
-  const res = await fetchChartData(rangeFor(14, 28, 90), RECOVERY_FETCH_METRICS);
+  const res = await fetchChartData(rangeFor(14, 28, 90), [...RECOVERY_FETCH_METRICS, "fb_TR_obs"]);
   const days = buildDays(res.data || []).filter((d) => d.date <= heute2);
+  const trJetzt = (() => {
+    const r = (res.data || []).find((x) => String(x.date).slice(0, 10) === heute2);
+    const v = r ? num(r.fb_TR_obs) : null;
+    return v != null && v > 0 ? v : null;
+  })();
   tageMerk = days;
   const t = days.length && days[days.length - 1].date === heute2 ? days[days.length - 1] : null;
   let plan = null;
@@ -4999,7 +5004,10 @@ async function heuteTeil() {
     votum: t?.vote ? { stufe: VOTE_LEVEL[t.vote], vote: t.vote, label: VOTE_LABEL[t.vote], text: STATUS_TEXT[t.vote], gruende: t.reasons.slice(0, 3) } : { stufe: "grau", vote: null, label: "\u2013", text: t ? "Morgenwerte fehlen" : "noch keine Daten f\xFCr heute", gruende: t?.reasons?.slice(0, 1) || [] },
     morgen: t ? {
       eingetragen: !!t.hasMorningData,
-      readiness: t.readiness,
+      // 22.11.2026: Anzeige immer der neueste Wert (nach Aktivität), Votum bleibt beim Morgenwert
+      readiness: trJetzt ?? t.readiness,
+      readinessMorgen: t.readiness,
+      readinessQuelle: trJetzt != null && trJetzt !== t.readiness ? "aktuell" : "morgens",
       schlaf: t.sleepScore,
       schlafH: t.sleepH,
       hrv: t.hrv,

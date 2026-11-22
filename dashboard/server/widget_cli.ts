@@ -38,8 +38,10 @@ let tageMerk: RecoveryDay[] = [];
 async function heuteTeil() {
   const heute = iso();
   // wie Heute-Seite: Span 14 Tage + 28 Tage Vorlauf, mindestens 90 Tage
-  const res: any = await fetchChartData(rangeFor(14, 28, 90), RECOVERY_FETCH_METRICS as any);
+  // fb_TR_obs = laufend synchronisierte Trainingsbereitschaft (nach Aktivität), Garmin_Training_Readiness = Morgenwert
+  const res: any = await fetchChartData(rangeFor(14, 28, 90), [...RECOVERY_FETCH_METRICS, 'fb_TR_obs'] as any);
   const days: RecoveryDay[] = buildDays(res.data || []).filter((d) => d.date <= heute);
+  const trJetzt = (() => { const r = (res.data || []).find((x: any) => String(x.date).slice(0, 10) === heute); const v = r ? num(r.fb_TR_obs) : null; return v != null && v > 0 ? v : null; })();
   tageMerk = days;
   const t = days.length && days[days.length - 1].date === heute ? days[days.length - 1] : null;
   let plan: any = null;
@@ -67,7 +69,10 @@ async function heuteTeil() {
     morgen: t
       ? {
           eingetragen: !!t.hasMorningData,
-          readiness: t.readiness,
+          // 22.11.2026: Anzeige immer der neueste Wert (nach Aktivität), Votum bleibt beim Morgenwert
+          readiness: trJetzt ?? t.readiness,
+          readinessMorgen: t.readiness,
+          readinessQuelle: trJetzt != null && trJetzt !== t.readiness ? 'aktuell' : 'morgens',
           schlaf: t.sleepScore,
           schlafH: t.sleepH,
           hrv: t.hrv,
