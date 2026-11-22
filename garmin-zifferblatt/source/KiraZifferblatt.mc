@@ -169,6 +169,62 @@ class KiraZifferblatt extends WatchUi.WatchFace {
         return 0xE74C3C;
     }
 
+
+    // 22.11.2026: Votum-Ring am Rand. Grundring = Votumsfarbe gedimmt (voller Kreis = Obergrenze des
+    // Soll-Rahmens), Füllung = heutige Summenlast in Votumsfarbe, weißer Strich = Untergrenze,
+    // über der Obergrenze läuft eine zweite Runde in Orange auf der Innenseite. Kein Ring im Always-on.
+    function stufeFarbe(stufe as String, vote as String) as Number {
+        if (stufe.equals("blau")) { return 0x3FA0F0; }
+        if (stufe.equals("gruen")) { return 0x2ECC71; }
+        if (stufe.equals("gelb")) { return 0xF1C40F; }
+        if (stufe.equals("orange")) { return 0xEF7D00; }
+        if (stufe.equals("rot")) { return 0xE74C3C; }
+        return VOTE_FARBE.hasKey(vote) ? VOTE_FARBE.get(vote) as Number : GRAU;
+    }
+
+    function dimmen(f as Number) as Number {
+        var r = ((f >> 16) & 0xFF) * 42 / 100;
+        var g = ((f >> 8) & 0xFF) * 42 / 100;
+        var b = (f & 0xFF) * 42 / 100;
+        return (r << 16) | (g << 8) | b;
+    }
+
+    function votumRing(dc as Graphics.Dc, cx as Number, cy as Number, stufe as String, vote as String, lo as Number?, hi as Number?, ist as Number?, heute as Boolean) as Void {
+        var r = cx - 5;
+        dc.setPenWidth(6);
+        if (!heute || (stufe.length() == 0 && vote.length() == 0)) {
+            dc.setColor(0x303030, Graphics.COLOR_TRANSPARENT);
+            dc.drawCircle(cx, cy, r);
+            dc.setPenWidth(1);
+            return;
+        }
+        var f = stufeFarbe(stufe, vote);
+        dc.setColor(dimmen(f), Graphics.COLOR_TRANSPARENT);
+        dc.drawCircle(cx, cy, r);
+        var a = (hi != null && hi > 0 && ist != null && ist > 0) ? ist.toFloat() / hi : 0.0;
+        if (a > 0.005) {
+            dc.setColor(f, Graphics.COLOR_TRANSPARENT);
+            if (a >= 0.999) { dc.drawCircle(cx, cy, r); }
+            else { dc.drawArc(cx, cy, r, Graphics.ARC_CLOCKWISE, 90, 90 - (a * 360).toNumber()); }
+        }
+        if (a > 1.005) {
+            var b = a - 1.0;
+            dc.setPenWidth(3);
+            dc.setColor(0xFF6A00, Graphics.COLOR_TRANSPARENT);
+            if (b >= 0.999) { dc.drawCircle(cx, cy, r - 2); }
+            else { dc.drawArc(cx, cy, r - 2, Graphics.ARC_CLOCKWISE, 90, 90 - (b * 360).toNumber()); }
+        }
+        if (lo != null && hi != null && hi > 0 && lo > 0 && lo < hi) {
+            var w = Math.PI * 2 * lo / hi;
+            var r1 = r + 3;
+            var r2 = r - 7;
+            dc.setPenWidth(3);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.drawLine(cx + (r1 * Math.sin(w)).toNumber(), cy - (r1 * Math.cos(w)).toNumber(), cx + (r2 * Math.sin(w)).toNumber(), cy - (r2 * Math.cos(w)).toNumber());
+        }
+        dc.setPenWidth(1);
+    }
+
     function onUpdate(dc as Graphics.Dc) as Void {
         var w = dc.getWidth();
         var h = dc.getHeight();
@@ -196,14 +252,16 @@ class KiraZifferblatt extends WatchUi.WatchFace {
             return;
         }
 
+        votumRing(dc, cx, cy, feld(t, 1), vote, heute ? zahl(t, 2) : null, heute ? zahl(t, 3) : null, heute ? zahl(t, 4) : null, heute);
+
         // Akku: Strichbogen oben + Prozent / Tage
         var st = System.getSystemStats();
         var akku = st.battery;
         var n = 30;
         for (var i = 0; i < n; i++) {
             var a = Math.toRadians(135 - i * 90.0 / (n - 1));
-            var r1 = cx - 6;
-            var r2 = cx - 20;
+            var r1 = cx - 15;
+            var r2 = cx - 29;
             dc.setColor(i < (akku / 100.0 * n) ? ORANGE : SPUR, Graphics.COLOR_TRANSPARENT);
             dc.setPenWidth(4);
             dc.drawLine(cx + (r1 * Math.cos(a)).toNumber(), cy - (r1 * Math.sin(a)).toNumber(),
