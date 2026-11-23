@@ -104,7 +104,7 @@ class KiraZifferblatt extends WatchUi.WatchFace {
         WatchUi.requestUpdate();
     }
 
-    // 0 vote|1 stufe|2 lo|3 hi|4 ist|5 datum|6 ziel|7 zielTage|8 readiness|9 plan|10 sport|11 zone|12 es|13 es28
+    // 0 vote|1 stufe|2 lo|3 hi|4 ist|5 datum|6 ziel|7 zielTage|8 readiness|9 plan|10 sport|11 zone|12 es|13 es28|14 readinessZeit
     function teile() as Array<String> {
         var r = [] as Array<String>;
         var s = kira;
@@ -309,7 +309,7 @@ class KiraZifferblatt extends WatchUi.WatchFace {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(rx, ry, fRing, rd == null ? "-" : rd.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(rx, ry + rr + 8, fLabel, "BEREIT", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(rx, ry + rr + 8, fLabel, (heute && feld(t, 14).length() > 0 ? "TR " + feld(t, 14) : "BEREIT"), Graphics.TEXT_JUSTIFY_CENTER);
 
         // Rechts: heutige Summenlast gegen Soll
         var lx = w - rx;

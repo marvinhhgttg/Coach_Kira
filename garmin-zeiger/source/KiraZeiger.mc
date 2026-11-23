@@ -337,7 +337,7 @@ class KiraZeiger extends WatchUi.WatchFace {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(rx, cy, fRing, rd == null ? "-" : rd.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(rx, cy + rr + 7, fLabel, "BEREIT", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(rx, cy + rr + 7, fLabel, (heute && feld(t, 14).length() > 0 ? "TR " + feld(t, 14) : "BEREIT"), Graphics.TEXT_JUSTIFY_CENTER);
 
         var lx = w - rx;
         var lo = heute ? zahl(t, 2) : null;

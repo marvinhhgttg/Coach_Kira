@@ -90,7 +90,7 @@ export function setupWidget(app, { getSetting, setSetting, originOk, texte, apps
     try { w = JSON.parse(getSetting('garmin_live') || 'null'); } catch { w = null; }
     if (!w || w.datum !== heute() || !a || Date.now() - Number(w.at) > 3 * 3600 * 1000) return a;
     const o = { ...a, live: { at: w.at, trZeit: w.trZeit ?? null, status: w.status ?? null, erholH: w.erholH ?? null } };
-    if (w.tr != null && o.morgen) o.morgen = { ...o.morgen, readiness: w.tr, readinessQuelle: 'garmin live' };
+    if (w.tr != null && o.morgen) o.morgen = { ...o.morgen, readiness: w.tr, readinessQuelle: 'garmin live', readinessZeit: w.trZeit ?? null };
     if (o.last && w.acwr != null) o.last = { ...o.last, acwr: w.acwr, acwrBand: w.acwr > 1.5 ? 'hoch' : w.acwr > 1.3 ? 'erhoeht' : w.acwr < 0.8 ? 'niedrig' : 'korridor' };
     if (o.form) o.form = { ...o.form, ...(w.ctl != null ? { ctl: w.ctl } : {}), ...(w.atl != null ? { atl: w.atl } : {}), ...(w.es != null ? { es: w.es } : {}) };
     const u = o.uhr;

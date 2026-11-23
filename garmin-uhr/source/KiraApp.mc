@@ -125,8 +125,10 @@ function kiraKomplikation(d as Dictionary) as Void {
             if (fo.get("es") != null) { es = fo.get("es").toNumber().toString(); }
             if (fo.get("es28") != null) { es28 = fo.get("es28").toNumber().toString(); }
         }
+        // 23.11.2026: |14 Uhrzeit des Garmin-Bereitschaftswerts (z. B. 05:50), leer wenn unbekannt
+        var rz = m instanceof Dictionary && m.get("readinessZeit") != null ? m.get("readinessZeit").toString() : "";
         t = (lab.equals("KIRA") ? "" : lab) + "|" + st + "|" + lo2 + "|" + hi2 + "|" + ist + "|" + (d.get("datum") != null ? d.get("datum").toString() : "") + "|" + zn + "|" + zt + "|" + rd
-            + "|" + pl + "|" + sp + "|" + zo + "|" + es + "|" + es28;
+            + "|" + pl + "|" + sp + "|" + zo + "|" + es + "|" + es28 + "|" + rz;
         Complications.updateComplication(1, { :value => t });
         // Lange Texte lehnt die Uhr ab – Diagrammdaten daher kompakt und getrennt (je 1 Zeichen pro Wert)
         try { Complications.updateComplication(2, { :value => sieben(d, l) }); } catch (e2) { }
