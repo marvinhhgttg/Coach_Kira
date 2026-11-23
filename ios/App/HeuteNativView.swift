@@ -107,7 +107,7 @@ struct HeuteNativView: View {
                 Text("Morgenwerte noch nicht eingetragen.").font(.footnote).foregroundStyle(KiraStil.orange)
             }
             HStack {
-                wert("Readiness", KiraStil.zahl(m?.readiness))
+                wert("Readiness", KiraStil.zahl(m?.readiness), farbe: KiraStil.trFarbe(m?.readiness))
                 wert("Schlaf", "\(KiraStil.zahl(m?.schlaf)) · \(KiraStil.zahl(m?.schlafH, stellen: 1)) h")
             }
             HStack {

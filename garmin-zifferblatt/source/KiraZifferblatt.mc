@@ -162,11 +162,42 @@ class KiraZifferblatt extends WatchUi.WatchFace {
         return r[((grad + 22) % 360) / 45];
     }
 
+    // 23.11.2026: Trainingsbereitschaft im Garmin-Muster – 270°-Bogen (7:30 bis 4:30 Uhr), Segmente
+    // Schlecht <25 rot · Niedrig 25–49 orange · Mäßig 50–74 grün · Hoch 75–94 blau · Optimal 95+ lila, Punkt am Wert
     function bereitFarbe(v as Number) as Number {
-        if (v >= 75) { return 0x2ECC71; }
-        if (v >= 50) { return 0x3FB8F0; }
-        if (v >= 25) { return ORANGE; }
-        return 0xE74C3C;
+        if (v >= 95) { return 0x6E45E9; }
+        if (v >= 75) { return 0x3A78CF; }
+        if (v >= 50) { return 0x5DB75B; }
+        if (v >= 25) { return 0xE5822F; }
+        return 0xD9433A;
+    }
+
+    function bogenWinkel(v as Number) as Number {
+        var a = 225 - (v * 27) / 10;
+        return ((a % 360) + 360) % 360;
+    }
+
+    function bereitBogen(dc as Graphics.Dc, x as Number, y as Number, r as Number, pen as Number, v as Number?) as Void {
+        var grenzen = [0, 25, 50, 75, 95, 100];
+        var farben = [0xD9433A, 0xE5822F, 0x5DB75B, 0x3A78CF, 0x6E45E9];
+        dc.setPenWidth(pen);
+        for (var i = 0; i < 5; i++) {
+            var a1 = bogenWinkel(grenzen[i]) - (i > 0 ? 3 : 0);
+            var a2 = bogenWinkel(grenzen[i + 1]) + (i < 4 ? 3 : 0);
+            dc.setColor(v == null ? 0x3A3A3A : farben[i], Graphics.COLOR_TRANSPARENT);
+            dc.drawArc(x, y, r, Graphics.ARC_CLOCKWISE, ((a1 % 360) + 360) % 360, ((a2 % 360) + 360) % 360);
+        }
+        dc.setPenWidth(1);
+        if (v != null) {
+            var w = v > 100 ? 100 : (v < 0 ? 0 : v);
+            var rad = Math.toRadians(225 - w * 2.7);
+            var px = x + (r * Math.cos(rad)).toNumber();
+            var py = y - (r * Math.sin(rad)).toNumber();
+            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+            dc.fillCircle(px, py, pen / 2 + 5);
+            dc.setColor(bereitFarbe(w), Graphics.COLOR_TRANSPARENT);
+            dc.fillCircle(px, py, pen / 2 + 3);
+        }
     }
 
 
@@ -340,7 +371,7 @@ class KiraZifferblatt extends WatchUi.WatchFace {
         var rr = (w * 0.085).toNumber();
         var ry = (h * 0.49).toNumber();
         var rd = heute ? zahl(t, 8) : null;
-        ring(dc, rx, ry, rr, rd == null ? 0.0 : rd / 100.0, rd == null ? GRAU : bereitFarbe(rd));
+        bereitBogen(dc, rx, ry, rr, 7, rd);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(rx, ry, fRing, rd == null ? "-" : rd.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);

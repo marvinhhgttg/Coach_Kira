@@ -513,7 +513,7 @@ class KiraView extends WatchUi.View {
                 var x = (x0 + i * dx).toNumber();
                 var yy = (y + hoch - (hoch * (xs[i] - lo).toFloat() / (hi - lo))).toNumber();
                 var c = i < stufen.length() ? stufen.substring(i, i + 1) : "x";
-                dc.setColor(c.equals("g") ? 0x2ECC71 : c.equals("y") ? 0xF1C40F : c.equals("o") ? 0xE67E22 : c.equals("r") ? 0xE74C3C : c.equals("b") ? 0x3498DB : 0x888888, Graphics.COLOR_TRANSPARENT);
+                dc.setColor(c.equals("g") ? 0x2ECC71 : c.equals("y") ? 0xF1C40F : c.equals("o") ? 0xE67E22 : c.equals("r") ? 0xE74C3C : c.equals("b") ? 0x3A78CF : c.equals("v") ? 0x6E45E9 : c.equals("G") ? 0x5DB75B : c.equals("O") ? 0xE5822F : c.equals("R") ? 0xD9433A : 0x888888, Graphics.COLOR_TRANSPARENT);
                 dc.fillCircle(x, yy, i == n - 1 ? 6 : 4);
             }
         }

@@ -1,5 +1,6 @@
 import { type ReadinessForecast, type Model, explainModel } from '../lib/readinessModel';
 import { fmtNum } from '../lib/format';
+import { trFarbe, trName } from '../lib/trFarbe';
 
 const WD = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 
@@ -11,11 +12,6 @@ function dateShort(d: string): string {
   return `${dayOfWeek} ${parseInt(parts[2])}.${parts[1].padStart(2, '0')}`;
 }
 
-function readinessColor(r: number): string {
-  if (r >= 70) return 'text-green-300';
-  if (r >= 50) return 'text-yellow-300';
-  return 'text-orange-300';
-}
 
 export function ReadinessStrip({
   forecast,
@@ -46,7 +42,7 @@ export function ReadinessStrip({
           {forecast.map((f, i) => (
             <div key={i} className="flex flex-col items-center min-w-[4rem]">
               <span className="text-2xs text-ink-dim">{dateShort(f.date)}</span>
-              <span className={`tnum text-base ${readinessColor(f.readiness)}`}>
+              <span className="tnum text-base font-semibold" style={{ color: trFarbe(f.readiness) }} title={trName(f.readiness)}>
                 {f.readiness}
               </span>
               <span className="text-2xs text-ink-dim">

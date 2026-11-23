@@ -247,7 +247,8 @@ async function uhrTeil(rahmen: any) {
   const m = days.slice(-7);
   const m7 = {
     rd: m.map((d) => d.readiness ?? -1), hrv: m.map((d) => d.hrv ?? -1), rhr: m.map((d) => d.rhr ?? -1), sl: m.map((d) => d.sleepScore ?? -1),
-    rdS: m.map((d) => LV[d.levels.readiness] || 'x').join(''), hrvS: m.map((d) => LV[d.levels.hrv] || 'x').join(''),
+    // 23.11.2026: Bereitschaft im Garmin-Muster (R <25 · O <50 · G <75 · b <95 · v Optimal)
+    rdS: m.map((d) => (d.readiness == null ? 'x' : d.readiness >= 95 ? 'v' : d.readiness >= 75 ? 'b' : d.readiness >= 50 ? 'G' : d.readiness >= 25 ? 'O' : 'R')).join(''), hrvS: m.map((d) => LV[d.levels.hrv] || 'x').join(''),
     rhrS: m.map((d) => LV[d.levels.rhr] || 'x').join(''), slS: m.map((d) => LV[d.levels.sleep] || 'x').join(''),
   };
   // Form: CTL/ATL 42 Tage, Ausdauerwert 90 Tage (jeder 3. Tag)

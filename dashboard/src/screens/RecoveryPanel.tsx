@@ -24,6 +24,7 @@ import { atlStep, ctlStep, windowMean } from '../lib/ctlModel';
 import { lastEmpfehlung, type Empfehlung } from '../kern/soll';
 import { useGarminTage, fmtDauer } from '../lib/garmin';
 import { SERVER_BASE } from '../lib/cloudLLM';
+import { TR_BAENDER, trFarbe, trName } from '../lib/trFarbe';
 import { sportProfile, lastJeStunde } from '../components/GarminSportProfilTile';
 import { WINDOWS, ALL_RANGE, winLabel, winTitle, sliceWin, rangeFor, rangeDays, type WinKey } from '../lib/windows';
 import { assessMonotony, monoStufe, type MonoAssessment } from '../lib/monotony';
@@ -336,7 +337,7 @@ function WeekSummary({ days }: { days: RecoveryDay[] }) {
       <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
         <div>
           <dt className="text-2xs text-ink-dim">Ø Readiness</dt>
-          <dd className={`tnum font-semibold ${LEVEL_TEXT[levelReadiness(readinessAvg)]}`}>{readinessAvg != null ? fmtNum(readinessAvg) : '—'}</dd>
+          <dd className="tnum font-semibold" style={{ color: readinessAvg != null ? trFarbe(readinessAvg) : undefined }}>{readinessAvg != null ? fmtNum(readinessAvg) : '—'}</dd>
         </div>
         <div>
           <dt className="text-2xs text-ink-dim">Schlaf ggü. Ziel</dt>
@@ -488,7 +489,8 @@ function fmtDelta(v: number | null, digits = 0) {
   return `${r > 0 ? '+' : '−'}${fmtNum(Math.abs(r), digits)}`;
 }
 
-function Dot({ level }: { level: Level }) {
+function Dot({ level, hex }: { level: Level; hex?: string }) {
+  if (hex) return <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ background: hex }} aria-hidden />;
   return <span className={`inline-block w-2 h-2 rounded-full shrink-0 ${LEVEL_DOT[level]}`} aria-hidden />;
 }
 
@@ -615,12 +617,13 @@ function TodayCard({
   const readinessDiff = today.readiness != null && yesterday?.readiness != null ? today.readiness - yesterday.readiness : null;
   const sleepGap = today.sleepH != null ? today.sleepH - SLEEP_GOAL_H : null;
 
-  const rows: Array<{ label: string; value: string; hint: string; level: Level }> = [
+  const rows: Array<{ label: string; value: string; hint: string; level: Level; hex?: string }> = [
     {
       label: 'Readiness',
       value: today.readiness != null ? `${fmtNum(today.readiness)} / 100` : '—',
-      hint: [readinessDiff != null ? `${fmtDelta(readinessDiff)} ggü. gestern` : '', trJetzt != null && trJetzt !== today.readiness ? `jetzt ${fmtNum(trJetzt)}` : ''].filter(Boolean).join(' · '),
+      hint: [trName(today.readiness), readinessDiff != null ? `${fmtDelta(readinessDiff)} ggü. gestern` : '', trJetzt != null && trJetzt !== today.readiness ? `jetzt ${fmtNum(trJetzt)}` : ''].filter(Boolean).join(' · '),
       level: today.levels.readiness,
+      hex: today.readiness != null ? trFarbe(today.readiness) : undefined,
     },
     {
       label: 'RHR',
@@ -688,7 +691,7 @@ function TodayCard({
         {rows.map((r) => (
           <div key={r.label} className="grid grid-cols-[84px_minmax(0,1fr)] gap-2 items-baseline">
             <dt className="flex items-center gap-2 text-ink-muted">
-              <Dot level={r.level} />
+              <Dot level={r.level} hex={r.hex} />
               {r.label}
             </dt>
             <dd>
@@ -746,8 +749,8 @@ function TodayCard({
 // 7-Tage-Strip
 // ---------------------------------------------------------------------------
 function RecoveryStrip({ days, todayIso }: { days: RecoveryDay[]; todayIso: string }) {
-  const rows: Array<{ label: string; render: (d: RecoveryDay) => { text: string; level: Level } }> = [
-    { label: 'Readiness', render: (d) => ({ text: d.readiness != null ? fmtNum(d.readiness) : '—', level: d.levels.readiness }) },
+  const rows: Array<{ label: string; render: (d: RecoveryDay) => { text: string; level: Level; hex?: string } }> = [
+    { label: 'Readiness', render: (d) => ({ text: d.readiness != null ? fmtNum(d.readiness) : '—', level: d.levels.readiness, hex: d.readiness != null ? trFarbe(d.readiness) : undefined }) },
     {
       label: 'RHR vs. Baseline',
       render: (d) => ({ text: d.rhrDelta != null ? `${fmtDelta(d.rhrDelta)} bpm` : '—', level: d.levels.rhr }),
@@ -789,11 +792,11 @@ function RecoveryStrip({ days, todayIso }: { days: RecoveryDay[]; todayIso: stri
             <tr key={row.label}>
               <td className="px-3 py-2 text-ink-muted whitespace-nowrap sticky left-0 z-10 bg-bg-raised">{row.label}</td>
               {days.map((d) => {
-                const { text, level } = row.render(d);
+                const { text, level, hex } = row.render(d) as { text: string; level: Level; hex?: string };
                 return (
-                  <td key={d.date} className={`px-2 py-2 text-center whitespace-nowrap ${LEVEL_CELL[level]}`}>
+                  <td key={d.date} className={`px-2 py-2 text-center whitespace-nowrap ${hex ? '' : LEVEL_CELL[level]}`} style={hex ? { background: `${hex}1f` } : undefined}>
                     <span className="inline-flex items-center gap-1.5 tnum font-medium">
-                      <Dot level={level} />
+                      <Dot level={level} hex={hex} />
                       {text}
                     </span>
                   </td>
@@ -884,7 +887,7 @@ function FourLanes({ days }: { days: RecoveryDay[] }) {
 
   return (
     <div className="space-y-3">
-      <Lane title="Readiness" hint="≥75 grün · 55–74 gelb · <55 orange/rot" data={data} yDomain={[0, 100]}>
+      <Lane title="Readiness" hint="Garmin: 95+ optimal · 75–94 hoch · 50–74 mäßig · 25–49 niedrig · <25 schlecht" data={data} yDomain={[0, 100]}>
         <ReferenceLine y={75} stroke="#22c55e" strokeDasharray="3 3" />
         <ReferenceLine y={55} stroke="#eab308" strokeDasharray="3 3" />
         <Area type="monotone" dataKey="Readiness" stroke="#a855f7" fill="#a855f7" fillOpacity={0.18} strokeWidth={1.8} connectNulls isAnimationActive={false} />
@@ -956,7 +959,7 @@ function WichtigsteDaten({ today, todayIso, trJetzt = null, trLiveZeit = null }:
   const rMorgen = today?.readiness ?? null;
   const r = trJetzt ?? rMorgen;
   const rLvl = trJetzt != null ? levelReadiness(trJetzt) : today?.levels.readiness ?? 'leer';
-  const rStufe = r == null ? '' : r >= 75 ? 'Hoch' : r >= 50 ? 'Mäßig' : r >= 25 ? 'Niedrig' : 'Schlecht';
+  const rStufe = trName(r);
   const rUnter = r == null ? 'noch keine Morgenwerte' : trJetzt != null && rMorgen != null && trJetzt !== rMorgen ? `${rStufe} · ${trLiveZeit ? `Garmin ${trLiveZeit}` : 'aktuell'} · morgens ${Math.round(rMorgen)}` : trLiveZeit ? `${rStufe} · Garmin ${trLiveZeit}` : rStufe;
   const vote = today?.vote ?? null;
   const hrv = today?.hrv ?? null;
@@ -966,7 +969,7 @@ function WichtigsteDaten({ today, todayIso, trJetzt = null, trLiveZeit = null }:
   const bbFarbe = bb == null ? AMPEL_HEX.grau : bb >= 75 ? '#1976d2' : bb >= 50 ? '#4aa3df' : bb >= 26 ? '#ef7d00' : '#d64545';
   return (
     <StoryGrid spalten={4}>
-      <KpiKachel testid="kpi-readiness" titel="Trainingsbereitschaft" ring={r} wert={r != null ? Math.round(r) : '—'} farbe={AMPEL_HEX[rLvl]} unter={rUnter} />
+      <KpiKachel testid="kpi-readiness" titel="Trainingsbereitschaft" ring={r} wert={r != null ? Math.round(r) : '—'} farbe={r != null ? trFarbe(r) : AMPEL_HEX[rLvl]} baender={TR_BAENDER} unter={rUnter} />
       <KpiKachel testid="kpi-votum" titel="Tagesvotum" symbol={<Punkt farbe={vote ? AMPEL_HEX[VOTE_LEVEL[vote]] : AMPEL_HEX.grau} haken={vote === 'TRAIN' || vote === 'QUALITY'} />} wert={vote ? VOTE_LABEL[vote] : '—'} unter={vote ? VOTE_STATUS_TEXT[vote].replace(/^[A-ZÜ]+ — /, '') : 'noch offen'} />
       <KpiKachel testid="kpi-hrv" titel="HRV-Status" symbol={<Punkt farbe={hrvFarbe} />} wert={hrvTxt} unter={hrv != null ? `${Math.round(hrv)} ms${lo != null && hi != null ? ` · Band ${Math.round(lo)}–${Math.round(hi)}` : ''}` : undefined} />
       <KpiKachel testid="kpi-bb" titel="Body Battery" ring={bb} wert={bb != null ? Math.round(bb) : '—'} farbe={bbFarbe} unter={g?.bb_aufwachen != null ? 'beim Aufwachen' : bb != null ? 'Tageshoch' : 'keine Garmin-Daten'} />

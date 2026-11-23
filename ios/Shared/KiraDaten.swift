@@ -207,6 +207,23 @@ enum KiraStil {
         }
     }
 
+    /// 23.11.2026: Trainingsbereitschaft im Garmin-Muster (Schlecht <25 rot · Niedrig orange · Mäßig grün · Hoch 75+ blau · Optimal 95+ lila)
+    static func trFarbe(_ v: Double?) -> Color {
+        guard let v else { return .white }
+        if v >= 95 { return Color(red: 0.431, green: 0.271, blue: 0.914) }
+        if v >= 75 { return Color(red: 0.227, green: 0.471, blue: 0.812) }
+        if v >= 50 { return Color(red: 0.365, green: 0.718, blue: 0.357) }
+        if v >= 25 { return Color(red: 0.898, green: 0.510, blue: 0.184) }
+        return Color(red: 0.851, green: 0.263, blue: 0.227)
+    }
+    static let trVerlauf = Gradient(stops: [
+        .init(color: Color(red: 0.851, green: 0.263, blue: 0.227), location: 0.0), .init(color: Color(red: 0.851, green: 0.263, blue: 0.227), location: 0.24),
+        .init(color: Color(red: 0.898, green: 0.510, blue: 0.184), location: 0.26), .init(color: Color(red: 0.898, green: 0.510, blue: 0.184), location: 0.49),
+        .init(color: Color(red: 0.365, green: 0.718, blue: 0.357), location: 0.51), .init(color: Color(red: 0.365, green: 0.718, blue: 0.357), location: 0.74),
+        .init(color: Color(red: 0.227, green: 0.471, blue: 0.812), location: 0.76), .init(color: Color(red: 0.227, green: 0.471, blue: 0.812), location: 0.94),
+        .init(color: Color(red: 0.431, green: 0.271, blue: 0.914), location: 0.96), .init(color: Color(red: 0.431, green: 0.271, blue: 0.914), location: 1.0),
+    ])
+
     static func farbname(_ stufe: String?) -> String {
         switch stufe {
         case "blau": return "BLAU"

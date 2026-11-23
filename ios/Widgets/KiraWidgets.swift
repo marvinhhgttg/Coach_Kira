@@ -181,7 +181,7 @@ struct KleinView: View {
             Text(KiraStil.farbname(d.votum?.stufe)).font(.title.weight(.heavy)).foregroundStyle(farbe).minimumScaleFactor(0.7)
             Text(d.votum?.text ?? "–").font(.caption).foregroundStyle(.white).lineLimit(2)
             Spacer(minLength: 0)
-            Text("Readiness \(KiraStil.zahl(d.morgen?.readiness))").font(.caption.weight(.semibold).monospacedDigit()).foregroundStyle(.white)
+            Text("Readiness \(KiraStil.zahl(d.morgen?.readiness))").font(.caption.weight(.semibold).monospacedDigit()).foregroundStyle(KiraStil.trFarbe(d.morgen?.readiness))
             Text("Soll \(d.last?.soll ?? "–") ESS · \(KiraStil.uhrzeit(d.stand))").font(.caption2).foregroundStyle(.white.opacity(0.55))
         }
         .widgetURL(URL(string: "coachkira://heute"))
@@ -194,7 +194,7 @@ struct MittelView: View {
         VStack(alignment: .leading, spacing: 6) {
             Kopf(d: d)
             HStack(spacing: 14) {
-                Wert(titel: "Readiness", wert: KiraStil.zahl(d.morgen?.readiness))
+                Wert(titel: "Readiness", wert: KiraStil.zahl(d.morgen?.readiness), farbe: KiraStil.trFarbe(d.morgen?.readiness))
                 Wert(titel: "Schlaf", wert: KiraStil.zahl(d.morgen?.schlaf))
                 Wert(titel: "HRV", wert: hrvText(d.morgen))
                 Wert(titel: "RHR", wert: KiraStil.zahl(d.morgen?.rhr))
@@ -230,7 +230,7 @@ struct GrossView: View {
         VStack(alignment: .leading, spacing: 8) {
             Kopf(d: d)
             HStack(spacing: 14) {
-                Wert(titel: "Readiness", wert: KiraStil.zahl(d.morgen?.readiness))
+                Wert(titel: "Readiness", wert: KiraStil.zahl(d.morgen?.readiness), farbe: KiraStil.trFarbe(d.morgen?.readiness))
                 Wert(titel: "Schlaf", wert: KiraStil.zahl(d.morgen?.schlaf))
                 Wert(titel: "HRV", wert: hrvText(d.morgen))
                 Wert(titel: "RHR", wert: KiraStil.zahl(d.morgen?.rhr))
@@ -300,7 +300,7 @@ struct RundView: View {
             Text(KiraStil.zahl(d.morgen?.readiness))
         }
         .gaugeStyle(.accessoryCircular)
-        .tint(KiraStil.farbe(d.votum?.stufe))
+        .tint(KiraStil.trVerlauf)
         .widgetURL(URL(string: "coachkira://heute"))
     }
 }

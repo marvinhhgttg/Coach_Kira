@@ -253,7 +253,38 @@ export function StoryGrid({ spalten = 2, children }: { spalten?: 1 | 2 | 3 | 4; 
 }
 
 /** Kennzahl-Kachel wie „Wichtigste Daten“ in Garmin Connect. */
-export function KpiKachel({ titel, wert, unter, ring, farbe = '#1976d2', symbol, testid }: { titel: string; wert: ReactNode; unter?: ReactNode; ring?: number | null; farbe?: string; symbol?: ReactNode; testid?: string }) {
+/** 23.11.2026: Bogen wie bei Garmin – 270°, farbige Segmente je Bereich, Punkt an der Stelle des Werts. */
+export function BandBogen({ wert, max = 100, baender, groesse = 86 }: { wert: number | null; max?: number; baender: readonly { von: number; bis: number; farbe: string }[]; groesse?: number }) {
+  const c = groesse / 2, r = groesse / 2 - 7, start = 135, bogen = 270, luecke = 3;
+  const pt = (g: number) => { const a = (g * Math.PI) / 180; return [c + r * Math.cos(a), c + r * Math.sin(a)]; };
+  const arc = (g1: number, g2: number) => { const [x1, y1] = pt(g1), [x2, y2] = pt(g2); return `M ${x1} ${y1} A ${r} ${r} 0 ${g2 - g1 > 180 ? 1 : 0} 1 ${x2} ${y2}`; };
+  const winkel = (v: number) => start + (Math.max(0, Math.min(max, v)) / max) * bogen;
+  const [mx, my] = wert != null ? pt(winkel(wert)) : [0, 0];
+  const aktiv = wert != null ? baender.find((b) => wert >= b.von && wert < b.bis) ?? baender[baender.length - 1] : null;
+  return (
+    <svg width={groesse} height={groesse} viewBox={`0 0 ${groesse} ${groesse}`} className="absolute inset-0" aria-hidden>
+      {baender.map((b, i) => {
+        const g1 = winkel(b.von) + (i > 0 ? luecke / 2 : 0), g2 = winkel(Math.min(max, b.bis)) - (i < baender.length - 1 ? luecke / 2 : 0);
+        return g2 > g1 ? <path key={i} d={arc(g1, g2)} fill="none" stroke={b.farbe} strokeWidth="5" strokeLinecap={i === 0 || i === baender.length - 1 ? 'round' : 'butt'} /> : null;
+      })}
+      {aktiv && <circle cx={mx} cy={my} r="6.5" fill={aktiv.farbe} className="bogen-punkt" strokeWidth="2.5" />}
+    </svg>
+  );
+}
+
+export function KpiKachel({ titel, wert, unter, ring, farbe = '#1976d2', symbol, testid, baender }: { titel: string; wert: ReactNode; unter?: ReactNode; ring?: number | null; farbe?: string; symbol?: ReactNode; testid?: string; baender?: readonly { von: number; bis: number; farbe: string }[] }) {
+  if (baender) {
+    return (
+      <div className="panel kpi-kachel flex flex-col items-center justify-center text-center px-3 py-4" data-testid={testid}>
+        <div className="kpi-titel">{titel}</div>
+        <div className="relative mt-2 flex items-center justify-center" style={{ width: 86, height: 86 }}>
+          <BandBogen wert={ring ?? null} baender={baender} />
+          <span className="relative tnum text-2xl font-semibold text-ink">{wert}</span>
+        </div>
+        {unter && <div className="mt-1 text-2xs text-ink-muted leading-snug">{unter}</div>}
+      </div>
+    );
+  }
   const r = 34, u = 2 * Math.PI * r;
   const anteil = ring != null && Number.isFinite(ring) ? Math.max(0, Math.min(100, ring)) / 100 : null;
   return (
