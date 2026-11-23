@@ -95,6 +95,7 @@ async function heuteTeil() {
           hrv: t.hrv,
           hrvStufe: t.levels.hrv,
           rhr: t.rhr,
+          rhrStufe: t.levels.rhr,
           rhrDelta: t.rhrDelta,
           befinden: t.befinden,
         }
@@ -227,6 +228,9 @@ async function feldTeil(rahmen: any, t: RecoveryDay | null) {
   };
 }
 const LV: Record<string, string> = { gruen: 'g', gelb: 'y', orange: 'o', rot: 'r', blau: 'b' };
+// 23.11.2026: Garmin-Farbmuster (R rot · O orange · G grün · b blau · v lila). Höher-besser-Werte: Kiras Grün = Garmin Blau, Gelb = Grün
+const LV_G: Record<string, string> = { gruen: 'b', gelb: 'G', orange: 'O', rot: 'R', grau: 'v' };
+const LV_HRV: Record<string, string> = { gruen: 'G', gelb: 'O', orange: 'O', rot: 'R' };
 async function uhrTeil(rahmen: any) {
   const heute = iso();
   const days = tageMerk;
@@ -248,8 +252,8 @@ async function uhrTeil(rahmen: any) {
   const m7 = {
     rd: m.map((d) => d.readiness ?? -1), hrv: m.map((d) => d.hrv ?? -1), rhr: m.map((d) => d.rhr ?? -1), sl: m.map((d) => d.sleepScore ?? -1),
     // 23.11.2026: Bereitschaft im Garmin-Muster (R <25 · O <50 · G <75 · b <95 · v Optimal)
-    rdS: m.map((d) => (d.readiness == null ? 'x' : d.readiness >= 95 ? 'v' : d.readiness >= 75 ? 'b' : d.readiness >= 50 ? 'G' : d.readiness >= 25 ? 'O' : 'R')).join(''), hrvS: m.map((d) => LV[d.levels.hrv] || 'x').join(''),
-    rhrS: m.map((d) => LV[d.levels.rhr] || 'x').join(''), slS: m.map((d) => LV[d.levels.sleep] || 'x').join(''),
+    rdS: m.map((d) => (d.readiness == null ? 'x' : d.readiness >= 95 ? 'v' : d.readiness >= 75 ? 'b' : d.readiness >= 50 ? 'G' : d.readiness >= 25 ? 'O' : 'R')).join(''), hrvS: m.map((d) => LV_HRV[d.levels.hrv] || 'x').join(''),
+    rhrS: m.map((d) => LV_G[d.levels.rhr] || 'x').join(''), slS: m.map((d) => LV_G[d.levels.sleep] || 'x').join(''),
   };
   // Form: CTL/ATL 42 Tage, Ausdauerwert 90 Tage (jeder 3. Tag)
   let form: any = null;

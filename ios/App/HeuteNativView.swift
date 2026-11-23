@@ -108,11 +108,11 @@ struct HeuteNativView: View {
             }
             HStack {
                 wert("Readiness", KiraStil.zahl(m?.readiness), farbe: KiraStil.trFarbe(m?.readiness))
-                wert("Schlaf", "\(KiraStil.zahl(m?.schlaf)) · \(KiraStil.zahl(m?.schlafH, stellen: 1)) h")
+                wert("Schlaf", "\(KiraStil.zahl(m?.schlaf)) · \(KiraStil.zahl(m?.schlafH, stellen: 1)) h", farbe: KiraStil.schlafFarbe(m?.schlaf))
             }
             HStack {
-                wert("HRV", "\(KiraStil.zahl(m?.hrv)) ms", farbe: m?.hrvStufe == nil ? .white : KiraStil.farbe(m?.hrvStufe))
-                wert("Ruhepuls", rhrText(m))
+                wert("HRV", "\(KiraStil.zahl(m?.hrv)) ms", farbe: KiraStil.stufeHrv(m?.hrvStufe))
+                wert("Ruhepuls", rhrText(m), farbe: KiraStil.stufeG(m?.rhrStufe))
                 wert("Befinden", KiraStil.zahl(m?.befinden))
             }
         }
@@ -132,7 +132,7 @@ struct HeuteNativView: View {
         return karte("Last") {
             HStack {
                 wert("Soll heute", "\(l?.soll ?? "–") ESS")
-                wert(l?.erledigt == true ? "Ist (erledigt)" : "Ist", "\(KiraStil.zahl(l?.istHeute)) ESS")
+                wert(l?.erledigt == true ? "Ist (erledigt)" : "Ist", "\(KiraStil.zahl(l?.istHeute)) ESS", farbe: (l?.istHeute ?? 0) > 0 ? KiraStil.lastFarbe(l?.istHeute, lo: l?.sollMin, hi: l?.sollMax) : .white)
                 wert("ACWR", KiraStil.zahl(l?.acwr, stellen: 2), farbe: acwrFarbe(l?.acwrBand))
             }
             if !plan.isEmpty {
@@ -144,10 +144,10 @@ struct HeuteNativView: View {
 
     private func acwrFarbe(_ band: String?) -> Color {
         switch band {
-        case "hoch": return KiraStil.rot
-        case "erhoeht": return KiraStil.orange
-        case "niedrig": return KiraStil.blau
-        case "korridor": return KiraStil.gruen
+        case "hoch": return KiraStil.gRot
+        case "erhoeht": return KiraStil.gOrange
+        case "niedrig": return KiraStil.gBlau
+        case "korridor": return KiraStil.gGruen
         default: return .white
         }
     }
@@ -175,7 +175,7 @@ struct HeuteNativView: View {
         karte("Ziel") {
             HStack {
                 wert(z.name, "in \(z.tage) Tagen")
-                wert("Tourform", z.tourform == nil ? "–" : "\(KiraStil.zahl(z.tourform)) %")
+                wert("Tourform", z.tourform == nil ? "–" : "\(KiraStil.zahl(z.tourform)) %", farbe: KiraStil.tourformFarbe(z.tourform))
             }
         }
     }

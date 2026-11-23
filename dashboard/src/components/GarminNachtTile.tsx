@@ -1,4 +1,5 @@
 import { fmtDauer, fmtStunden, HRV_STATUS_DE } from '../lib/garmin';
+import { SCHLAF_SCORE_SKALA, farbeVon, nameVon } from '../lib/garminSkala';
 import { Panel } from './UI';
 import { GarminZonenBalken } from './GarminZonenBalken';
 import { fmtNum, fmtDateShort } from '../lib/format';
@@ -123,7 +124,7 @@ function NightContent({ g, datum }: { g: import('../lib/garmin').GarminTag; datu
       <div className="flex items-baseline gap-3 mb-3">
         <span className="text-2xl font-semibold tnum">{fmtStunden(dauerS)}</span>
         <div className="flex flex-col">
-          <span className="text-sm tnum">Score {sch.score ?? '—'}</span>
+          <span className="text-sm tnum font-semibold" style={{ color: sch.score != null ? farbeVon(SCHLAF_SCORE_SKALA, sch.score) : undefined }} title={nameVon(SCHLAF_SCORE_SKALA, sch.score)}>Score {sch.score ?? '—'}{sch.score != null ? ` · ${nameVon(SCHLAF_SCORE_SKALA, sch.score)}` : ''}</span>
           <div className="flex items-baseline gap-2 mt-0.5">
             <span className="text-2xs text-ink-dim">Bedarf {fmtBedarf(bedarfMin)}</span>
             <span className={`text-2xs tnum ${diffSek != null && diffSek < -30 * 60 ? 'text-orange-300' : ''}`}>

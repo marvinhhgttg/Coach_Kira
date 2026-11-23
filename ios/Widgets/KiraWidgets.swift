@@ -195,9 +195,9 @@ struct MittelView: View {
             Kopf(d: d)
             HStack(spacing: 14) {
                 Wert(titel: "Readiness", wert: KiraStil.zahl(d.morgen?.readiness), farbe: KiraStil.trFarbe(d.morgen?.readiness))
-                Wert(titel: "Schlaf", wert: KiraStil.zahl(d.morgen?.schlaf))
-                Wert(titel: "HRV", wert: hrvText(d.morgen))
-                Wert(titel: "RHR", wert: KiraStil.zahl(d.morgen?.rhr))
+                Wert(titel: "Schlaf", wert: KiraStil.zahl(d.morgen?.schlaf), farbe: KiraStil.schlafFarbe(d.morgen?.schlaf))
+                Wert(titel: "HRV", wert: hrvText(d.morgen), farbe: KiraStil.stufeHrv(d.morgen?.hrvStufe))
+                Wert(titel: "RHR", wert: KiraStil.zahl(d.morgen?.rhr), farbe: KiraStil.stufeG(d.morgen?.rhrStufe))
             }
             Text(essZeile(d.last)).font(.caption.monospacedDigit()).foregroundStyle(.white)
             Link(destination: URL(string: "coachkira://eingabe")!) {
@@ -231,9 +231,9 @@ struct GrossView: View {
             Kopf(d: d)
             HStack(spacing: 14) {
                 Wert(titel: "Readiness", wert: KiraStil.zahl(d.morgen?.readiness), farbe: KiraStil.trFarbe(d.morgen?.readiness))
-                Wert(titel: "Schlaf", wert: KiraStil.zahl(d.morgen?.schlaf))
-                Wert(titel: "HRV", wert: hrvText(d.morgen))
-                Wert(titel: "RHR", wert: KiraStil.zahl(d.morgen?.rhr))
+                Wert(titel: "Schlaf", wert: KiraStil.zahl(d.morgen?.schlaf), farbe: KiraStil.schlafFarbe(d.morgen?.schlaf))
+                Wert(titel: "HRV", wert: hrvText(d.morgen), farbe: KiraStil.stufeHrv(d.morgen?.hrvStufe))
+                Wert(titel: "RHR", wert: KiraStil.zahl(d.morgen?.rhr), farbe: KiraStil.stufeG(d.morgen?.rhrStufe))
             }
             Text(essZeile(d.last)).font(.caption.monospacedDigit()).foregroundStyle(.white)
             HStack(alignment: .bottom) {
@@ -354,7 +354,7 @@ struct ZielKleinView: View {
 }
 
 private func tourformFarbe(_ t: Double) -> Color {
-    t >= 85 ? KiraStil.gruen : t >= 60 ? KiraStil.gelb : KiraStil.orange
+    KiraStil.tourformFarbe(t)
 }
 
 struct ZielRechteckView: View {

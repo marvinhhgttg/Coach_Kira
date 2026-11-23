@@ -25,7 +25,9 @@ import {
 import { fmtDateTime, fmtRelative, fmtTime, fmtNum } from '../lib/format';
 import { proxyRunConsolidatedAnalysis, proxyRunStatusAiAnalysis, proxyRunSupervisor } from '../lib/proxy';
 import { AmpelChip, AmpelDot } from '../components/Ampel';
-import { ArcGauge, ErrorBox, KpiKachel, Modal, Panel, Skeleton, Spinner, StorySection, StoryGrid } from '../components/UI';
+import { ArcGauge, BandBogen, ErrorBox, KpiKachel, Modal, Panel, Skeleton, Spinner, StorySection, StoryGrid } from '../components/UI';
+import { SCORE_SKALA, acwrSkala, farbeVon, nameVon } from '../lib/garminSkala';
+import { ACWR_WARN, ACWR_HIGH } from '../kern/votumRegeln';
 import { RecoveryPanel } from './RecoveryPanel';
 import { AnomalyPanel } from './AnomalyPanel';
 import { KiraChat } from './KiraChat';
@@ -159,16 +161,10 @@ function scoreValue(item: StatusItemLike) {
   return Number.isFinite(w) ? Math.max(0, Math.min(100, w)) : 0;
 }
 
-function MiniRing({ score, farbe }: { score: number | null; farbe: string }) {
-  const r = 22, u = 2 * Math.PI * r;
-  const anteil = score == null ? 0 : Math.max(0, Math.min(100, score)) / 100;
+function MiniRing({ score }: { score: number | null; farbe?: string }) {
   return (
     <div className="relative flex items-center justify-center shrink-0" style={{ width: 56, height: 56 }}>
-      <svg width="56" height="56" viewBox="0 0 56 56" className="absolute inset-0">
-        <circle cx="28" cy="28" r={r} fill="none" stroke="currentColor" strokeOpacity="0.12" strokeWidth="5" />
-        {score != null && <circle cx="28" cy="28" r={r} fill="none" stroke={farbe} strokeWidth="5" strokeLinecap="round"
-          strokeDasharray={`${u * anteil} ${u}`} transform="rotate(-90 28 28)" />}
-      </svg>
+      <BandBogen wert={score} baender={SCORE_SKALA.baender} groesse={56} dicke={4} />
       <span className="relative tnum text-sm font-semibold text-ink">{score == null ? '—' : Math.round(score)}</span>
     </div>
   );
@@ -203,7 +199,8 @@ function zahlOderNull(v: unknown): number | null {
 const wertText = (v: unknown) => { const n = zahlOderNull(v); return n == null ? '—' : Math.round(n); };
 function scoreFarbe(v: unknown) {
   const n = zahlOderNull(v);
-  return n == null ? SCORE_HEX.grau : n >= 70 ? SCORE_HEX.gruen : n >= 50 ? SCORE_HEX.gelb : n >= 30 ? SCORE_HEX.orange : SCORE_HEX.rot;
+  // 23.11.2026: Garmin-Farbmuster mit Kiras Score-Schwellen 30/50/70
+  return n == null ? SCORE_HEX.grau : farbeVon(SCORE_SKALA, n);
 }
 const ampelText = (a: unknown) => { const t = String(a || '').trim().toLowerCase(); return t ? t.charAt(0).toUpperCase() + t.slice(1) : 'Status'; };
 function acwrText(a: number | null) {
@@ -213,6 +210,7 @@ function acwrText(a: number | null) {
   if (a < 0.8) return 'niedrig · Korridor 0,8–1,3';
   return 'im Korridor 0,8–1,3';
 }
+const ACWR_SK = acwrSkala(ACWR_WARN, ACWR_HIGH);
 function AcwrPunkt({ acwr }: { acwr: number | null }) {
   const f = acwr == null ? SCORE_HEX.grau : acwr > 1.5 ? SCORE_HEX.rot : acwr > 1.3 ? SCORE_HEX.orange : acwr < 0.8 ? SCORE_HEX.gelb : SCORE_HEX.gruen;
   return (
@@ -544,17 +542,19 @@ export function CommandCenter({
       <div className="space-y-4">
       {/* 21.11.2026: gleicher Stil wie „Wichtigste Daten“ (Ring, Wert, Unterzeile); Readiness steht oben schon */}
       <StoryGrid spalten={3}>
-        <KpiKachel testid="score-gesamt" titel={IST_V2 ? 'Supervisor-Score' : 'Gesamt'} ring={zahlOderNull(summary?.gesamtScore)} wert={wertText(summary?.gesamtScore)} farbe={scoreFarbe(summary?.gesamtScore)} unter={IST_V2 ? `Zweitmeinung · ${ampelText(summary?.gesamtAmpel)}` : ampelText(summary?.gesamtAmpel)} />
-        <KpiKachel testid="score-training" titel="Training" ring={zahlOderNull(summary?.trainingScore)} wert={wertText(summary?.trainingScore)} farbe={scoreFarbe(summary?.trainingScore)} unter="Training Score" />
-        <KpiKachel testid="score-recovery" titel="Recovery" ring={zahlOderNull(summary?.recoveryScore)} wert={wertText(summary?.recoveryScore)} farbe={scoreFarbe(summary?.recoveryScore)} unter="Recovery Score" />
-        <KpiKachel testid="score-kei" titel="KEI" ring={zahlOderNull(kei)} wert={wertText(kei)} farbe={scoreFarbe(kei)} unter="Effizienz" />
-        <KpiKachel testid="score-ernaehrung" titel="Ernährung" ring={zahlOderNull(nutrition)} wert={wertText(nutrition)} farbe={scoreFarbe(nutrition)} unter="Bilanz / Score" />
+        <KpiKachel testid="score-gesamt" skala={SCORE_SKALA} titel={IST_V2 ? 'Supervisor-Score' : 'Gesamt'} ring={zahlOderNull(summary?.gesamtScore)} wert={wertText(summary?.gesamtScore)} farbe={scoreFarbe(summary?.gesamtScore)} unter={IST_V2 ? `Zweitmeinung · ${ampelText(summary?.gesamtAmpel)}` : ampelText(summary?.gesamtAmpel)} />
+        <KpiKachel testid="score-training" skala={SCORE_SKALA} titel="Training" ring={zahlOderNull(summary?.trainingScore)} wert={wertText(summary?.trainingScore)} farbe={scoreFarbe(summary?.trainingScore)} unter="Training Score" />
+        <KpiKachel testid="score-recovery" skala={SCORE_SKALA} titel="Recovery" ring={zahlOderNull(summary?.recoveryScore)} wert={wertText(summary?.recoveryScore)} farbe={scoreFarbe(summary?.recoveryScore)} unter="Recovery Score" />
+        <KpiKachel testid="score-kei" skala={SCORE_SKALA} titel="KEI" ring={zahlOderNull(kei)} wert={wertText(kei)} farbe={scoreFarbe(kei)} unter="Effizienz" />
+        <KpiKachel testid="score-ernaehrung" skala={SCORE_SKALA} titel="Ernährung" ring={zahlOderNull(nutrition)} wert={wertText(nutrition)} farbe={scoreFarbe(nutrition)} unter="Bilanz / Score" />
         <KpiKachel
           testid="score-acwr"
           titel="ACWR"
-          symbol={<AcwrPunkt acwr={zahlOderNull(acwr)} />}
+          symbol={zahlOderNull(acwr) == null ? <AcwrPunkt acwr={null} /> : undefined}
+          ring={zahlOderNull(acwr)}
+          skala={zahlOderNull(acwr) != null ? ACWR_SK : null}
           wert={zahlOderNull(acwr) != null ? (zahlOderNull(acwr) as number).toFixed(2).replace('.', ',') : '—'}
-          unter={acwrText(zahlOderNull(acwr))}
+          unter={zahlOderNull(acwr) != null ? `${nameVon(ACWR_SK, zahlOderNull(acwr))} · Korridor 0,8–${String(ACWR_WARN).replace('.', ',')}` : acwrText(null)}
         />
       </StoryGrid>
 

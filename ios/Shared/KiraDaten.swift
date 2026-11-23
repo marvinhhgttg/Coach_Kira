@@ -32,6 +32,7 @@ struct WidgetDaten: Codable {
         let rhr: Double?
         let rhrDelta: Double?
         let befinden: Double?
+        var rhrStufe: String? = nil
     }
     struct Tag: Codable {
         let d: String
@@ -215,6 +216,38 @@ enum KiraStil {
         if v >= 50 { return Color(red: 0.365, green: 0.718, blue: 0.357) }
         if v >= 25 { return Color(red: 0.898, green: 0.510, blue: 0.184) }
         return Color(red: 0.851, green: 0.263, blue: 0.227)
+    }
+    /// 23.11.2026: Garmin-Palette für alle Werte, jeweils mit den individuellen Grenzen
+    static let gRot = Color(red: 0.851, green: 0.263, blue: 0.227)
+    static let gOrange = Color(red: 0.898, green: 0.510, blue: 0.184)
+    static let gGruen = Color(red: 0.365, green: 0.718, blue: 0.357)
+    static let gBlau = Color(red: 0.227, green: 0.471, blue: 0.812)
+    static let gLila = Color(red: 0.431, green: 0.271, blue: 0.914)
+    /// Garmin-Schlafscore: <60 schlecht · 60–79 ordentlich · 80–89 gut · 90+ ausgezeichnet
+    static func schlafFarbe(_ v: Double?) -> Color {
+        guard let v else { return .white }
+        return v >= 90 ? gBlau : v >= 80 ? gGruen : v >= 60 ? gOrange : gRot
+    }
+    /// Kiras Stufen bei „höher = besser“ (Ruhepuls, Schlaf, Befinden): Grün = Blau (gut), Gelb = Grün
+    static func stufeG(_ s: String?) -> Color {
+        switch s { case "gruen": return gBlau; case "gelb": return gGruen; case "orange": return gOrange; case "rot": return gRot; default: return .white }
+    }
+    /// HRV wie bei Garmin: im Band grün · knapp darunter/darüber orange · niedrig rot
+    static func stufeHrv(_ s: String?) -> Color {
+        switch s { case "gruen": return gGruen; case "gelb", "orange": return gOrange; case "rot": return gRot; default: return .white }
+    }
+    /// Tageslast gegen Kiras Soll-Rahmen: unter Soll blau · im Rahmen grün · darüber orange · > +15 % rot
+    static func lastFarbe(_ ist: Double?, lo: Double?, hi: Double?) -> Color {
+        guard let ist, let hi, hi > 0 else { return .white }
+        if ist > hi * 1.15 { return gRot }
+        if ist > hi { return gOrange }
+        if let lo, lo > 0, ist < lo { return gBlau }
+        return gGruen
+    }
+    /// Tourform (Kira: 60 / 80 %)
+    static func tourformFarbe(_ t: Double?) -> Color {
+        guard let t else { return .white }
+        return t >= 80 ? gBlau : t >= 60 ? gGruen : gOrange
     }
     static let trVerlauf = Gradient(stops: [
         .init(color: Color(red: 0.851, green: 0.263, blue: 0.227), location: 0.0), .init(color: Color(red: 0.851, green: 0.263, blue: 0.227), location: 0.24),

@@ -25,6 +25,8 @@ import { lastEmpfehlung, type Empfehlung } from '../kern/soll';
 import { useGarminTage, fmtDauer } from '../lib/garmin';
 import { SERVER_BASE } from '../lib/cloudLLM';
 import { TR_BAENDER, trFarbe, trName } from '../lib/trFarbe';
+import { BB_SKALA, hrvSkala, nameVon, farbeVon, stufeHex, lastSkala, wocheSkala } from '../lib/garminSkala';
+import { BandBalken } from '../components/UI';
 import { sportProfile, lastJeStunde } from '../components/GarminSportProfilTile';
 import { WINDOWS, ALL_RANGE, winLabel, winTitle, sliceWin, rangeFor, rangeDays, type WinKey } from '../lib/windows';
 import { assessMonotony, monoStufe, type MonoAssessment } from '../lib/monotony';
@@ -143,9 +145,15 @@ function EmpfehlungZeile({ e, vote, plan, ist = false }: { e: Empfehlung; vote: 
         <span className="font-semibold tnum text-ink">{vote === 'REST' && e.max <= 30 ? `0–${e.max} ESS (Ruhe, höchstens Mobility)` : `${e.min}–${e.max} ESS`}</span>
         {dauer && <span className="tnum text-ink-muted">{dauer}</span>}
       </div>
+      {/* 23.11.2026: Tageslast im Garmin-Muster gegen den persönlichen Soll-Rahmen */}
+      {lastSkala(e.min, e.max) && (
+        <div className="mt-1 max-w-sm" title={plan && plan.load > 0 ? `${ist ? 'Ist' : 'Plan'} ${fmtNum(plan.load)} ESS · ${nameVon(lastSkala(e.min, e.max), plan.load)}` : 'Soll-Rahmen'}>
+          <BandBalken wert={plan && plan.load > 0 ? plan.load : null} skala={lastSkala(e.min, e.max)!} hoehe={5} />
+        </div>
+      )}
       <div className="mt-0.5 text-2xs text-ink-dim tnum">
         Votum {VOTE_LABEL[vote]} · Fitness halten ≈ {e.halte} ESS{e.acwrGrenze != null ? ` · ACWR 1,3 bei ≈ ${e.acwrGrenze} ESS` : ''}{e.gedeckelt ? ' (Obergrenze dadurch gesenkt)' : ''}{e.persoenlich ? ` · Obergrenze persönlich ${e.persoenlich.faktor.toLocaleString('de-DE')}× statt ${e.persoenlich.standard} (${e.persoenlich.n} vergleichbare Tage, Readiness am Folgemorgen Ø ${e.persoenlich.d1 >= 0 ? '+' : ''}${e.persoenlich.d1.toLocaleString('de-DE')})` : ''}
-        {lage && <> · {ist ? 'Absolviert' : 'Plan'} {fmtNum(plan!.load)} ESS <span className={lage === 'im Rahmen' ? 'text-green-300' : 'text-orange-300'}>{lage}</span></>}
+        {lage && <> · {ist ? 'Absolviert' : 'Plan'} {fmtNum(plan!.load)} ESS <span style={{ color: farbeVon(lastSkala(e.min, e.max), plan!.load) }}>{lage}</span></>}
       </div>
     </div>
   );
@@ -273,7 +281,7 @@ function WeekLoadBars({ days }: { days: RecoveryDay[] }) {
         <span className="text-2xs text-ink-dim tnum whitespace-nowrap">
           Ø {fmtNum(avgPrev)} ESS
           {diffPct != null && (
-            <span className={`ml-1 ${Math.abs(diffPct) <= 15 ? 'text-ink-muted' : diffPct > 0 ? 'text-orange-300' : 'text-accent'}`}>
+            <span className="ml-1" style={{ color: farbeVon(wocheSkala(avgPrev), last.load) }}>
               · jetzt {diffPct > 0 ? '+' : ''}{diffPct} %
             </span>
           )}
@@ -286,8 +294,8 @@ function WeekLoadBars({ days }: { days: RecoveryDay[] }) {
             return (
               <div
                 key={w.end}
-                className={`flex-1 rounded-sm ${isLast ? 'wk-bar-last bg-accent' : 'wk-bar bg-accent/35'}`}
-                style={{ height: `${Math.max(2, (w.load / max) * 100)}%` }}
+                className={`flex-1 rounded-sm ${isLast ? 'wk-bar-last' : 'wk-bar'}`}
+                style={{ height: `${Math.max(2, (w.load / max) * 100)}%`, background: farbeVon(wocheSkala(avgPrev), w.load), opacity: isLast ? 1 : 0.45 }}
                 title={`${fmtDateShort(w.start).slice(0, 6)}–${fmtDateShort(w.end).slice(0, 6)}: ${fmtNum(w.load)} ESS`}
               />
             );
@@ -447,7 +455,7 @@ function Outlook({ days, plan }: { days: RecoveryDay[]; plan: PlanDaySim[] | nul
                     : `${fmtNum(p.load)} ESS ${p.sport}${p.zone ? ` ${p.zone}` : ''}`}
                 </div>
                 <div className="mt-0.5 flex items-center gap-1.5 text-2xs tnum">
-                  <Dot level={lvl} />
+                  <Dot level={lvl} hex={stufeHex('last', lvl)} />
                   <span className="text-ink-dim">
                     ACWR {preAcwr != null ? fmtNum(preAcwr, 2) : '—'} · Monotonie {preMono != null ? fmtNum(preMono, 2) : '—'}
                   </span>
@@ -633,6 +641,7 @@ function TodayCard({
           ? `${fmtNum(today.rhr)} bpm vs. Ø ${fmtNum(today.rhrBaseline, 1)} (28 T)`
           : 'Baseline noch nicht verfügbar',
       level: today.levels.rhr,
+      hex: stufeHex('hoeher-besser', today.levels.rhr),
     },
     {
       label: 'Schlaf',
@@ -644,12 +653,14 @@ function TodayCard({
             }`
           : '',
       level: today.levels.sleep,
+      hex: stufeHex('hoeher-besser', today.levels.sleep),
     },
     {
       label: 'HRV',
       value: today.hrv != null ? `${fmtNum(today.hrv)} ms` : '—',
-      hint: today.hrvLow != null ? `Normalband ${fmtNum(today.hrvLow)}–${fmtNum(today.hrvHigh)}` : '',
+      hint: today.hrvLow != null ? `${nameVon(hrvSkala(today.hrvLow, today.hrvHigh), today.hrv)} · Normalband ${fmtNum(today.hrvLow)}–${fmtNum(today.hrvHigh)}` : '',
       level: today.levels.hrv,
+      hex: stufeHex('hrv', today.levels.hrv),
     },
     {
       label: 'Belastung',
@@ -672,8 +683,10 @@ function TodayCard({
       value: today.befinden != null ? `${today.befinden} / 5` : '—',
       hint: today.befinden == null ? 'unten eintragen' : '',
       level: today.levels.befinden,
+      hex: stufeHex('hoeher-besser', today.levels.befinden),
     },
   ];
+  for (const row of rows) if (row.label === 'Belastung') row.hex = stufeHex('last', row.level);
 
   return (
     <div className={`panel-raised p-3 sm:p-4 h-full min-w-0 border ${lvl === 'rot' ? 'border-ampel-rot/40' : lvl === 'gelb' ? 'border-ampel-gelb/40' : lvl === 'blau' ? 'border-ampel-blau/50' : 'border-ampel-gruen/40'}`}>
@@ -753,18 +766,19 @@ function RecoveryStrip({ days, todayIso }: { days: RecoveryDay[]; todayIso: stri
     { label: 'Readiness', render: (d) => ({ text: d.readiness != null ? fmtNum(d.readiness) : '—', level: d.levels.readiness, hex: d.readiness != null ? trFarbe(d.readiness) : undefined }) },
     {
       label: 'RHR vs. Baseline',
-      render: (d) => ({ text: d.rhrDelta != null ? `${fmtDelta(d.rhrDelta)} bpm` : '—', level: d.levels.rhr }),
+      render: (d) => ({ text: d.rhrDelta != null ? `${fmtDelta(d.rhrDelta)} bpm` : '—', level: d.levels.rhr, hex: stufeHex('hoeher-besser', d.levels.rhr) }),
     },
-    { label: 'Schlaf', render: (d) => ({ text: fmtHm(d.sleepH), level: d.levels.sleep }) },
-    { label: 'HRV', render: (d) => ({ text: d.hrv != null ? fmtNum(d.hrv) : '—', level: d.levels.hrv }) },
+    { label: 'Schlaf', render: (d) => ({ text: fmtHm(d.sleepH), level: d.levels.sleep, hex: stufeHex('hoeher-besser', d.levels.sleep) }) },
+    { label: 'HRV', render: (d) => ({ text: d.hrv != null ? fmtNum(d.hrv) : '—', level: d.levels.hrv, hex: stufeHex('hrv', d.levels.hrv) }) },
     {
       label: 'Monotonie (Vortag)',
       render: (d) => ({
         text: d.monotony != null ? fmtNum(d.monotony, 2) : '—',
         level: d.monotony == null ? 'leer' : d.monoAssess?.cap === 'EASY' ? 'orange' : d.monoAssess?.cap === 'TRAIN' || monoStufe(d.monotony) === 'aufmerksam' ? 'gelb' : 'gruen',
+        hex: d.monotony == null ? undefined : stufeHex('last', d.monoAssess?.cap === 'EASY' ? 'orange' : d.monoAssess?.cap === 'TRAIN' || monoStufe(d.monotony) === 'aufmerksam' ? 'gelb' : 'gruen'),
       }),
     },
-    { label: 'Befinden', render: (d) => ({ text: d.befinden != null ? `${d.befinden}/5` : '—', level: d.levels.befinden }) },
+    { label: 'Befinden', render: (d) => ({ text: d.befinden != null ? `${d.befinden}/5` : '—', level: d.levels.befinden, hex: stufeHex('hoeher-besser', d.levels.befinden) }) },
   ];
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -966,13 +980,18 @@ function WichtigsteDaten({ today, todayIso, trJetzt = null, trLiveZeit = null }:
   const lo = today?.hrvLow ?? null, hi = today?.hrvHigh ?? null;
   const hrvTxt = hrv == null || lo == null || hi == null ? '—' : hrv < lo ? 'Unter dem Band' : hrv > hi ? 'Über dem Band' : 'Im Bereich';
   const hrvFarbe = hrvTxt === 'Im Bereich' ? AMPEL_HEX.gruen : hrvTxt === '—' ? AMPEL_HEX.grau : AMPEL_HEX.orange;
-  const bbFarbe = bb == null ? AMPEL_HEX.grau : bb >= 75 ? '#1976d2' : bb >= 50 ? '#4aa3df' : bb >= 26 ? '#ef7d00' : '#d64545';
+  const bbFarbe = bb == null ? AMPEL_HEX.grau : farbeVon(BB_SKALA, bb);
+  const hrvSk = hrvSkala(lo, hi);
   return (
     <StoryGrid spalten={4}>
       <KpiKachel testid="kpi-readiness" titel="Trainingsbereitschaft" ring={r} wert={r != null ? Math.round(r) : '—'} farbe={r != null ? trFarbe(r) : AMPEL_HEX[rLvl]} baender={TR_BAENDER} unter={rUnter} />
       <KpiKachel testid="kpi-votum" titel="Tagesvotum" symbol={<Punkt farbe={vote ? AMPEL_HEX[VOTE_LEVEL[vote]] : AMPEL_HEX.grau} haken={vote === 'TRAIN' || vote === 'QUALITY'} />} wert={vote ? VOTE_LABEL[vote] : '—'} unter={vote ? VOTE_STATUS_TEXT[vote].replace(/^[A-ZÜ]+ — /, '') : 'noch offen'} />
-      <KpiKachel testid="kpi-hrv" titel="HRV-Status" symbol={<Punkt farbe={hrvFarbe} />} wert={hrvTxt} unter={hrv != null ? `${Math.round(hrv)} ms${lo != null && hi != null ? ` · Band ${Math.round(lo)}–${Math.round(hi)}` : ''}` : undefined} />
-      <KpiKachel testid="kpi-bb" titel="Body Battery" ring={bb} wert={bb != null ? Math.round(bb) : '—'} farbe={bbFarbe} unter={g?.bb_aufwachen != null ? 'beim Aufwachen' : bb != null ? 'Tageshoch' : 'keine Garmin-Daten'} />
+      {hrvSk && hrv != null ? (
+        <KpiKachel testid="kpi-hrv" titel="HRV-Status" ring={hrv} skala={hrvSk} wert={Math.round(hrv)} unter={`${nameVon(hrvSk, hrv)} · Band ${Math.round(lo as number)}–${Math.round(hi as number)} ms`} />
+      ) : (
+        <KpiKachel testid="kpi-hrv" titel="HRV-Status" symbol={<Punkt farbe={hrvFarbe} />} wert={hrvTxt} unter={hrv != null ? `${Math.round(hrv)} ms` : undefined} />
+      )}
+      <KpiKachel testid="kpi-bb" titel="Body Battery" ring={bb} skala={BB_SKALA} wert={bb != null ? Math.round(bb) : '—'} farbe={bbFarbe} unter={bb != null ? `${nameVon(BB_SKALA, bb)} · ${g?.bb_aufwachen != null ? 'beim Aufwachen' : 'Tageshoch'}` : 'keine Garmin-Daten'} />
     </StoryGrid>
   );
 }

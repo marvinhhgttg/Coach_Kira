@@ -178,26 +178,7 @@ class KiraZifferblatt extends WatchUi.WatchFace {
     }
 
     function bereitBogen(dc as Graphics.Dc, x as Number, y as Number, r as Number, pen as Number, v as Number?) as Void {
-        var grenzen = [0, 25, 50, 75, 95, 100];
-        var farben = [0xD9433A, 0xE5822F, 0x5DB75B, 0x3A78CF, 0x6E45E9];
-        dc.setPenWidth(pen);
-        for (var i = 0; i < 5; i++) {
-            var a1 = bogenWinkel(grenzen[i]) - (i > 0 ? 3 : 0);
-            var a2 = bogenWinkel(grenzen[i + 1]) + (i < 4 ? 3 : 0);
-            dc.setColor(v == null ? 0x3A3A3A : farben[i], Graphics.COLOR_TRANSPARENT);
-            dc.drawArc(x, y, r, Graphics.ARC_CLOCKWISE, ((a1 % 360) + 360) % 360, ((a2 % 360) + 360) % 360);
-        }
-        dc.setPenWidth(1);
-        if (v != null) {
-            var w = v > 100 ? 100 : (v < 0 ? 0 : v);
-            var rad = Math.toRadians(225 - w * 2.7);
-            var px = x + (r * Math.cos(rad)).toNumber();
-            var py = y - (r * Math.sin(rad)).toNumber();
-            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-            dc.fillCircle(px, py, pen / 2 + 5);
-            dc.setColor(bereitFarbe(w), Graphics.COLOR_TRANSPARENT);
-            dc.fillCircle(px, py, pen / 2 + 3);
-        }
+        KiraSkala.bogen(dc, x, y, r, pen, v, KiraSkala.tr());
     }
 
 
@@ -278,22 +259,8 @@ class KiraZifferblatt extends WatchUi.WatchFace {
     // 23.11.2026: Wochen-Ring (dünn, außen um den Tagessummen-Ring): Wochen-Ist gegen Kiras Wochenbudget
     function wochenRing(dc as Graphics.Dc, x as Number, y as Number, r as Number, ist as Number?, bud as Number?) as Void {
         if (bud == null || bud <= 0) { return; }
-        var a = ist == null ? 0.0 : ist.toFloat() / bud;
-        dc.setPenWidth(4);
-        dc.setColor(0x123A40, Graphics.COLOR_TRANSPARENT);
-        dc.drawCircle(x, y, r);
-        if (a > 0.005) {
-            dc.setColor(0x00BCD4, Graphics.COLOR_TRANSPARENT);
-            if (a >= 0.999) { dc.drawCircle(x, y, r); }
-            else { dc.drawArc(x, y, r, Graphics.ARC_CLOCKWISE, 90, 90 - (a * 360).toNumber()); }
-        }
-        if (a > 1.005) {
-            var b = a - 1.0 > 1.0 ? 1.0 : a - 1.0;
-            dc.setColor(0xFF6A00, Graphics.COLOR_TRANSPARENT);
-            if (b >= 0.999) { dc.drawCircle(x, y, r); }
-            else { dc.drawArc(x, y, r, Graphics.ARC_CLOCKWISE, 90, 90 - (b * 360).toNumber()); }
-        }
-        dc.setPenWidth(1);
+        // 23.11.2026: Garmin-Muster mit Kiras Wochenbudget (85 / 100 / 115 %)
+        KiraSkala.bogen(dc, x, y, r, 3, ist == null ? 0 : ist, KiraSkala.woche(bud));
     }
 
     // Garmins Erholungszeit (Minuten, live von der Uhr) als Zeitpunkt: heute „17:20“, sonst „MI 07:10“; kurz = ohne Minuten
@@ -382,11 +349,8 @@ class KiraZifferblatt extends WatchUi.WatchFace {
         var lo = heute ? zahl(t, 2) : null;
         var hi = heute ? zahl(t, 3) : null;
         var ist = heute ? zahl(t, 4) : null;
-        var lf = GRAU;
-        if (hi != null && ist != null) {
-            lf = ist > hi * 1.15 ? 0xE74C3C : ist > hi ? 0xE67E22 : (lo != null && ist >= lo) ? 0x2ECC71 : 0x3FB8F0;
-        }
-        ring(dc, lx, ry, rr, (hi != null && hi > 0 && ist != null) ? ist.toFloat() / hi : 0.0, lf);
+        // 23.11.2026: Tageslast als Garmin-Bogen mit Kiras Soll-Rahmen (unter Soll blau · Rahmen grün · drüber orange · > +15 % rot)
+        KiraSkala.bogen(dc, lx, ry, rr, 7, ist, (hi != null && hi > 0) ? KiraSkala.last(lo, hi) : [[0, 100], [KiraSkala.GRAU]]);
         wochenRing(dc, lx, ry, rr + 8, zahl(t, 15), zahl(t, 16));
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(lx, ry, fRing, ist == null ? "-" : ist.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);

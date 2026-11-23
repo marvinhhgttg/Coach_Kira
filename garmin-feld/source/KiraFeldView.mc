@@ -316,10 +316,9 @@ class KiraFeldView extends WatchUi.DataField {
 
     function farbe(e as Number, ra as Array?) as Number {
         if (ra == null) { return Graphics.COLOR_WHITE; }
-        if (e > ra[1] * 1.15) { return 0xE74C3C; }
-        if (e > ra[1]) { return 0xE67E22; }
-        if (e >= ra[0]) { return 0x2ECC71; }
-        return 0x5DADE2;
+        if (ra[1] <= 0) { return Graphics.COLOR_WHITE; }
+        // 23.11.2026: Garmin-Farbmuster mit Kiras Soll-Rahmen
+        return KiraSkala.farbe(KiraSkala.last(ra[0], ra[1]), e);
     }
 
     function onUpdate(dc as Graphics.Dc) as Void {
@@ -375,14 +374,8 @@ class KiraFeldView extends WatchUi.DataField {
             var bw = (w * 0.5).toNumber();
             var x = cx - bw / 2;
             var y = (h * 0.06).toNumber() + dc.getFontHeight(Graphics.FONT_XTINY) + 4;
-            dc.setColor(0x333333, Graphics.COLOR_TRANSPARENT);
-            dc.fillRectangle(x, y, bw, 6);
-            var lo = (bw * ra[0] / ra[1]).toNumber();
-            dc.setColor(0x1E5631, Graphics.COLOR_TRANSPARENT);
-            dc.fillRectangle(x + lo, y, bw - lo, 6);
-            var p = e >= ra[1] ? bw : (bw * e / ra[1]).toNumber();
-            dc.setColor(c, Graphics.COLOR_TRANSPARENT);
-            dc.fillRectangle(x, y, p, 6);
+            // 23.11.2026: Garmin-Balken (Segmente nach Soll-Rahmen, Punkt am Ist)
+            KiraSkala.balken(dc, x, y, bw, 6, e, KiraSkala.last(ra[0], ra[1]), bg);
         }
     }
 }

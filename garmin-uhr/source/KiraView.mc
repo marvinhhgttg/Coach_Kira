@@ -273,11 +273,12 @@ class KiraView extends WatchUi.View {
         y += 6;
         if (m instanceof Dictionary && m.get("eingetragen") != false) {
             var zh = dc.getFontHeight(Graphics.FONT_XTINY) + dc.getFontHeight(Graphics.FONT_SMALL) + 2;
-            kachel(dc, w * 0.33, y, "Readiness", KiraHilfen.zahl(m.get("readiness"), 0));
-            kachel(dc, w * 0.67, y, "Schlaf", KiraHilfen.zahl(m.get("schlaf"), 0));
+            // 23.11.2026: Werte im Garmin-Farbmuster mit den jeweiligen Grenzen
+            kachelF(dc, w * 0.33, y, "Readiness", KiraHilfen.zahl(m.get("readiness"), 0), m.get("readiness") == null ? Graphics.COLOR_WHITE : KiraSkala.farbe(KiraSkala.tr(), m.get("readiness")));
+            kachelF(dc, w * 0.67, y, "Schlaf", KiraHilfen.zahl(m.get("schlaf"), 0), m.get("schlaf") == null ? Graphics.COLOR_WHITE : KiraSkala.farbe(KiraSkala.schlaf(), m.get("schlaf")));
             y += zh;
-            kachel(dc, w * 0.33, y, "HRV", KiraHilfen.zahl(m.get("hrv"), 0));
-            kachel(dc, w * 0.67, y, "Ruhepuls", KiraHilfen.zahl(m.get("rhr"), 0));
+            kachelF(dc, w * 0.33, y, "HRV", KiraHilfen.zahl(m.get("hrv"), 0), stufeHrv(m.get("hrvStufe")));
+            kachelF(dc, w * 0.67, y, "Ruhepuls", KiraHilfen.zahl(m.get("rhr"), 0), stufeG(m.get("rhrStufe")));
             y += zh;
         } else {
             y = zeile(dc, y + 20, Graphics.FONT_SMALL, "Morgenwerte fehlen", 0xE67E22) + 20;
@@ -291,7 +292,8 @@ class KiraView extends WatchUi.View {
         var l = d.get("last");
         if (l instanceof Dictionary) {
             var band = l.get("acwrBand");
-            y = zeile(dc, y, Graphics.FONT_XTINY, "ACWR " + KiraHilfen.zahl(l.get("acwr"), 2) + (band != null ? " · " + band.toString() : ""), Graphics.COLOR_WHITE);
+            var ac = l.get("acwr");
+            y = zeile(dc, y, Graphics.FONT_XTINY, "ACWR " + KiraHilfen.zahl(ac, 2) + (band != null ? " · " + band.toString() : ""), ac == null ? Graphics.COLOR_WHITE : (ac > 1.5 ? KiraSkala.ROT : ac > 1.3 ? KiraSkala.ORANGE : ac < 0.8 ? KiraSkala.BLAU : KiraSkala.GRUEN));
             var woche = l.get("woche");
             if (woche instanceof Array && woche.size() > 0) { balken(dc, y + 6, woche); }
         }
@@ -385,14 +387,11 @@ class KiraView extends WatchUi.View {
             var ist = wo.get("ist") != null ? wo.get("ist").toNumber() : 0;
             var bud = wo.get("budget").toNumber();
             y = zeile(dc, y + 8, Graphics.FONT_XTINY, "WOCHE MO-SO", 0x9A9A9A);
-            y = zeile(dc, y, Graphics.FONT_SMALL, ist.toString() + " / " + bud.toString() + " ESS", ist > bud ? 0xE67E22 : Graphics.COLOR_WHITE);
+            y = zeile(dc, y, Graphics.FONT_SMALL, ist.toString() + " / " + bud.toString() + " ESS", KiraSkala.farbe(KiraSkala.woche(bud), ist));
             var bw = (w * 0.5).toNumber();
             var x = w / 2 - bw / 2;
-            dc.setColor(0x333333, Graphics.COLOR_TRANSPARENT);
-            dc.fillRectangle(x, y + 4, bw, 8);
-            var p = ist >= bud ? bw : bw * ist / bud;
-            dc.setColor(ist > bud ? 0xE67E22 : 0x00BCD4, Graphics.COLOR_TRANSPARENT);
-            dc.fillRectangle(x, y + 4, p, 8);
+            // 23.11.2026: Garmin-Balken mit Kiras Wochenbudget
+            KiraSkala.balken(dc, x, y + 6, bw, 6, ist, KiraSkala.woche(bud), Graphics.COLOR_BLACK);
         }
     }
 
@@ -460,9 +459,9 @@ class KiraView extends WatchUi.View {
             var farbe = 0x555555;
             if (v > 0) {
                 trainiert += 1;
-                if (hi[i] > 0 && v > hi[i]) { farbe = 0xE67E22; }
-                else if (lo[i] >= 0 && v >= lo[i]) { farbe = 0x2ECC71; drin += 1; }
-                else { farbe = 0x5DADE2; }
+                // 23.11.2026: Garmin-Farbmuster mit dem Soll-Rahmen des Tages
+                if (hi[i] > 0) { farbe = KiraSkala.farbe(KiraSkala.last(lo[i], hi[i]), v); } else { farbe = 0xBBBBBB; }
+                if (hi[i] > 0 && v <= hi[i] && lo[i] >= 0 && v >= lo[i]) { drin += 1; }
             }
             var bh = v > 0 ? ((y1 - y0) * v / mx) : 3;
             if (bh < 3) { bh = 3; }
@@ -639,7 +638,7 @@ class KiraView extends WatchUi.View {
         var lage = a.get("lage");
         if (lage != null && a.get("hi") != null) {
             var ls = lage.toString();
-            var lf = ls.equals("darueber") ? 0xE67E22 : ls.equals("im Rahmen") ? 0x2ECC71 : 0x5DADE2;
+            var lf = ls.equals("darueber") ? KiraSkala.ORANGE : ls.equals("im Rahmen") ? KiraSkala.GRUEN : KiraSkala.BLAU;
             var lt = (ls.equals("darueber") ? "über" : ls.equals("im Rahmen") ? "im" : "unter") + " Rahmen " + KiraHilfen.zahl(a.get("lo"), 0) + "-" + KiraHilfen.zahl(a.get("hi"), 0);
             y = zeile(dc, y, Graphics.FONT_XTINY, lt, lf);
         }
@@ -658,7 +657,7 @@ class KiraView extends WatchUi.View {
             var sz = 0;
             for (var i = 0; i < 5; i++) { sz += z[i]; }
             if (sz > 0) {
-                var farben = [0x9AA5B1, 0x3498DB, 0x2ECC71, 0xE67E22, 0xE74C3C];
+                var farben = [0x9AA5B1, KiraSkala.BLAU, KiraSkala.GRUEN, KiraSkala.ORANGE, KiraSkala.ROT];
                 var x0 = (w * 0.22).toNumber();
                 var bw = (w * 0.56).toNumber();
                 var x = x0;
@@ -689,15 +688,8 @@ class KiraView extends WatchUi.View {
         var cx = w / 2;
         var cy = (h * 0.43).toNumber();
         var r = (h * 0.19).toNumber();
-        dc.setPenWidth(14);
-        dc.setColor(0x333333, Graphics.COLOR_TRANSPARENT);
-        dc.drawCircle(cx, cy, r);
-        var farbe = pz >= 80 ? 0x2ECC71 : pz >= 60 ? 0xF1C40F : 0xE67E22;
-        if (pz > 0) {
-            dc.setColor(farbe, Graphics.COLOR_TRANSPARENT);
-            dc.drawArc(cx, cy, r, Graphics.ARC_CLOCKWISE, 90, 90 - (pz * 360 / 100 >= 360 ? 359 : pz * 360 / 100));
-        }
-        dc.setPenWidth(1);
+        // 23.11.2026: Tourform als Garmin-Bogen (Kira: 60 / 80 %)
+        KiraSkala.bogen(dc, cx, cy, r, 12, p != null ? pz : null, KiraSkala.tourform());
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, cy, Graphics.FONT_SMALL, p != null ? pz.toString() + "%" : "-", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         var y = cy + r + 14;
@@ -714,6 +706,25 @@ class KiraView extends WatchUi.View {
                 }
             }
         }
+    }
+
+    function stufeG(s) as Number {
+        if (s == null) { return Graphics.COLOR_WHITE; }
+        var t = s.toString();
+        return t.equals("gruen") ? KiraSkala.BLAU : t.equals("gelb") ? KiraSkala.GRUEN : t.equals("orange") ? KiraSkala.ORANGE : t.equals("rot") ? KiraSkala.ROT : Graphics.COLOR_WHITE;
+    }
+
+    function stufeHrv(s) as Number {
+        if (s == null) { return Graphics.COLOR_WHITE; }
+        var t = s.toString();
+        return t.equals("gruen") ? KiraSkala.GRUEN : t.equals("orange") || t.equals("gelb") ? KiraSkala.ORANGE : t.equals("rot") ? KiraSkala.ROT : Graphics.COLOR_WHITE;
+    }
+
+    function kachelF(dc as Graphics.Dc, x, y as Number, titel as String, v as String, f as Number) as Void {
+        dc.setColor(0x9A9A9A, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(x, y, Graphics.FONT_XTINY, titel, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.setColor(f, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(x, y + dc.getFontHeight(Graphics.FONT_XTINY), Graphics.FONT_SMALL, v, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     function kachel(dc as Graphics.Dc, x, y as Number, titel as String, v as String) as Void {

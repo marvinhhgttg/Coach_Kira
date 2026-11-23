@@ -27,18 +27,19 @@ function fmtNum(n: number, dec = 0): string {
 }
 
 // Balken-Farbe nach Prozent (0..1)
+// 23.11.2026: Garmin-Farbmuster mit Kiras Grenzen 60 / 80 %
 function barColor(p: number): string {
   const pct = Math.round(p * 100);
-  if (pct >= 80) return 'bg-green-500';
-  if (pct >= 60) return 'bg-yellow-500';
-  return 'bg-orange-500';
+  if (pct >= 80) return 'bg-[#3A78CF]';
+  if (pct >= 60) return 'bg-[#5DB75B]';
+  return 'bg-[#E5822F]';
 }
 
 function barColorText(p: number): string {
   const pct = Math.round(p * 100);
-  if (pct >= 80) return 'text-green-500';
-  if (pct >= 60) return 'text-yellow-500';
-  return 'text-orange-500';
+  if (pct >= 80) return 'text-[#3A78CF]';
+  if (pct >= 60) return 'text-[#5DB75B]';
+  return 'text-[#E5822F]';
 }
 
 // Heutiges Datum (Mitternacht)

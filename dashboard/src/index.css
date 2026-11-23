@@ -363,3 +363,5 @@
 /* 23.11.2026: Punkt im Garmin-Bogen mit Lücke in Hintergrundfarbe */
 .bogen-punkt { stroke: #0f1319; }
 .garmin-mode .bogen-punkt { stroke: #ffffff; }
+:root { --bogen-rand: #0f1319; }
+.garmin-mode { --bogen-rand: #ffffff; }
