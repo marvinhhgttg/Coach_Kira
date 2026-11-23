@@ -262,6 +262,40 @@ class KiraZeiger extends WatchUi.WatchFace {
         return null;
     }
 
+
+    // 23.11.2026: Wochen-Ring (dünn, außen um den Tagessummen-Ring): Wochen-Ist gegen Kiras Wochenbudget
+    function wochenRing(dc as Graphics.Dc, x as Number, y as Number, r as Number, ist as Number?, bud as Number?) as Void {
+        if (bud == null || bud <= 0) { return; }
+        var a = ist == null ? 0.0 : ist.toFloat() / bud;
+        dc.setPenWidth(4);
+        dc.setColor(0x123A40, Graphics.COLOR_TRANSPARENT);
+        dc.drawCircle(x, y, r);
+        if (a > 0.005) {
+            dc.setColor(0x00BCD4, Graphics.COLOR_TRANSPARENT);
+            if (a >= 0.999) { dc.drawCircle(x, y, r); }
+            else { dc.drawArc(x, y, r, Graphics.ARC_CLOCKWISE, 90, 90 - (a * 360).toNumber()); }
+        }
+        if (a > 1.005) {
+            var b = a - 1.0 > 1.0 ? 1.0 : a - 1.0;
+            dc.setColor(0xFF6A00, Graphics.COLOR_TRANSPARENT);
+            if (b >= 0.999) { dc.drawCircle(x, y, r); }
+            else { dc.drawArc(x, y, r, Graphics.ARC_CLOCKWISE, 90, 90 - (b * 360).toNumber()); }
+        }
+        dc.setPenWidth(1);
+    }
+
+    // Garmins Erholungszeit (Minuten, live von der Uhr) als Zeitpunkt: heute „17:20“, sonst „MI 07:10“; kurz = ohne Minuten
+    function erholtAb(min as Number?, kurz as Boolean) as String {
+        if (min == null) { return "-"; }
+        if (min <= 0) { return "ERHOLT"; }
+        var jetzt = Gregorian.info(Time.now(), Time.FORMAT_SHORT);
+        var i = Gregorian.info(Time.now().add(new Time.Duration(min * 60)), Time.FORMAT_SHORT);
+        var wt = ["", "SO", "MO", "DI", "MI", "DO", "FR", "SA"];
+        var hm = i.hour.format("%02d") + ":" + i.min.format("%02d");
+        if (i.day == jetzt.day) { return hm; }
+        return wt[i.day_of_week as Number] + " " + (kurz ? i.hour.format("%02d") : hm);
+    }
+
     function onUpdate(dc as Graphics.Dc) as Void {
         var w = dc.getWidth();
         var h = dc.getHeight();
@@ -283,6 +317,7 @@ class KiraZeiger extends WatchUi.WatchFace {
 
         // Stundenstriche
         for (var i = 0; i < 12; i++) {
+            if (i == 3 || i == 9) { continue; }   // 3 und 9 Uhr: dort sitzen die Ringe
             var a = i * Math.PI / 6;
             var r1 = cx - 18;
             var r2 = (i % 3 == 0) ? cx - 40 : cx - 32;
@@ -329,7 +364,8 @@ class KiraZeiger extends WatchUi.WatchFace {
         var erh = nativ(Complications.COMPLICATION_TYPE_RECOVERY_TIME);
         var bbn = nativ(Complications.COMPLICATION_TYPE_BODY_BATTERY);
         dc.setColor(0xC8C8C8, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, (h * 0.718).toNumber(), fKlein, "ERH " + (erh == null ? "-" : ((erh + 59) / 60).toString() + "h"), Graphics.TEXT_JUSTIFY_CENTER);
+        var eab = erholtAb(erh, false);
+        dc.drawText(cx, (h * 0.718).toNumber(), fKlein, eab.equals("ERHOLT") ? eab : "ERH " + eab, Graphics.TEXT_JUSTIFY_CENTER);
         dc.drawText(cx, (h * 0.772).toNumber(), fKlein, "BB " + (bbn == null ? "-" : bbn.toString()), Graphics.TEXT_JUSTIFY_CENTER);
 
         var rx = (w * 0.15).toNumber();
@@ -346,10 +382,11 @@ class KiraZeiger extends WatchUi.WatchFace {
         var hi = heute ? zahl(t, 3) : null;
         var ist = heute ? zahl(t, 4) : null;
         ring(dc, lx, cy, rr, (hi != null && hi > 0 && ist != null) ? ist.toFloat() / hi : 0.0, ist == null ? GRAU : lastFarbe(ist, lo, hi));
+        wochenRing(dc, lx, cy, rr + 7, zahl(t, 15), zahl(t, 16));
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(lx, cy, fRing, ist == null ? "-" : ist.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(lx, cy + rr + 7, fLabel, hi == null ? "SOLL" : (lo != null ? lo.toString() + "-" : "") + hi.toString(), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(lx, cy + rr + (zahl(t, 16) != null ? 13 : 7), fLabel, hi == null ? "SOLL" : (lo != null ? lo.toString() + "-" : "") + hi.toString(), Graphics.TEXT_JUSTIFY_CENTER);
 
         // Diagramm 1: Last 7 Tage mit Soll-Band (Komplikation „KIRA WOCHE“: IIIIIII;LLLLLLL;HHHHHHH, ESS / 8)
         var wk = zerlegen(woche, ";");

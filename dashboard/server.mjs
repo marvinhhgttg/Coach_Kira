@@ -383,6 +383,13 @@ app.post('/api/garmin/live', (req, res) => {
     if (b[k] != null && b[k] !== '' && Number.isFinite(v) && v >= lo && v <= hi) w[k] = Math.round(v * 100) / 100;
   }
   for (const k of ['trZeit', 'status', 'trStufe']) if (b[k] != null) w[k] = String(b[k]).slice(0, 40);
+  // Einheiten von heute (Garmin-Liste): id, Start, Name, Minuten, Last
+  if (Array.isArray(b.akt)) {
+    w.akt = b.akt.slice(0, 8).map((x) => ({
+      id: String(x?.id ?? '').slice(0, 20), start: String(x?.start ?? '').slice(0, 19), name: String(x?.name ?? '').slice(0, 40),
+      typ: String(x?.typ ?? '').slice(0, 30), min: Math.max(0, Math.min(1440, Math.round(Number(x?.min) || 0))), last: Math.max(0, Math.min(2000, Math.round(Number(x?.last) || 0))),
+    })).sort((p, q) => p.start.localeCompare(q.start));
+  }
   setSetting('garmin_live', JSON.stringify(w));
   res.json({ ok: true, gespeichert: Object.keys(w).length - 3 });
 });

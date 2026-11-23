@@ -1,6 +1,7 @@
 // Coach Kira – Tagesvotum auf der Garmin-Uhr (fēnix 8 Pro), 21.11.2026.
 // Holt den Tagesstand aus dem Cockpit (/api/widget?uhr=1, Geräteschlüssel) – im Hintergrund alle 15 min
 // und beim Öffnen. Keine KI auf der Uhr: angezeigt wird das fertige Votum des Rechenkerns.
+import Toybox.ActivityMonitor;
 import Toybox.Application;
 import Toybox.Application.Storage;
 import Toybox.Background;
@@ -127,8 +128,15 @@ function kiraKomplikation(d as Dictionary) as Void {
         }
         // 23.11.2026: |14 Uhrzeit des Garmin-Bereitschaftswerts (z. B. 05:50), leer wenn unbekannt
         var rz = m instanceof Dictionary && m.get("readinessZeit") != null ? m.get("readinessZeit").toString() : "";
+        // 23.11.2026: |15 Wochen-Ist |16 Wochenbudget (Wochen-Ring auf den Zifferblättern)
+        var wi = "", wb = "";
+        var wo = d.get("woche");
+        if (wo instanceof Dictionary) {
+            if (wo.get("ist") != null) { wi = wo.get("ist").toNumber().toString(); }
+            if (wo.get("budget") != null) { wb = wo.get("budget").toNumber().toString(); }
+        }
         t = (lab.equals("KIRA") ? "" : lab) + "|" + st + "|" + lo2 + "|" + hi2 + "|" + ist + "|" + (d.get("datum") != null ? d.get("datum").toString() : "") + "|" + zn + "|" + zt + "|" + rd
-            + "|" + pl + "|" + sp + "|" + zo + "|" + es + "|" + es28 + "|" + rz;
+            + "|" + pl + "|" + sp + "|" + zo + "|" + es + "|" + es28 + "|" + rz + "|" + wi + "|" + wb;
         Complications.updateComplication(1, { :value => t });
         // Lange Texte lehnt die Uhr ab – Diagrammdaten daher kompakt und getrennt (je 1 Zeichen pro Wert)
         try { Complications.updateComplication(2, { :value => sieben(d, l) }); } catch (e2) { }
@@ -250,6 +258,52 @@ function liste(xs as Array) as String {
     return s;
 }
 
+// 23.11.2026: Garmins Erholungszeit live von der Uhr (Minuten) und daraus „erholt ab“
+(:background :glance)
+function erholMinuten() as Number? {
+    // Uhr-Apps dürfen keine Komplikationen lesen – Erholungszeit (Stunden) aus ActivityMonitor
+    try {
+        var i = ActivityMonitor.getInfo();
+        if (i has :timeToRecovery && i.timeToRecovery != null) { return (i.timeToRecovery as Number) * 60; }
+    } catch (e) { }
+    return null;
+}
+
+(:background :glance)
+function erholtAb(min as Number) as String {
+    if (min <= 0) { return "jetzt"; }
+    var jetzt = Gregorian.info(Time.now(), Time.FORMAT_SHORT);
+    var i = Gregorian.info(Time.now().add(new Time.Duration(min * 60)), Time.FORMAT_SHORT);
+    var wt = ["", "So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+    var tag = i.day == jetzt.day ? "heute" : wt[i.day_of_week as Number];
+    // Erholungszeit kommt in ganzen Stunden – daher nur auf die Stunde genau
+    return tag + " ~" + i.hour.format("%02d") + " Uhr";
+}
+
+// Nächster geplanter Tag mit Intensität (Zone 3 und höher) gegen die Erholungszeit: [Text, passt?] oder null
+(:background :glance)
+function intensitaetCheck(d as Dictionary, min as Number?) as Array? {
+    var n = d.get("naechste");
+    if (!(n instanceof Array)) { return null; }
+    for (var k = 0; k < n.size(); k++) {
+        var x = n[k];
+        if (!(x instanceof Dictionary)) { continue; }
+        var z = x.get("zone") != null ? x.get("zone").toString() : "";
+        var e = x.get("ess");
+        if (e == null || e.toNumber() <= 0) { continue; }
+        if (z.find("Z3") == null && z.find("Z4") == null && z.find("Z5") == null) { continue; }
+        var iso = x.get("d").toString();
+        var m = Gregorian.moment({ :year => iso.substring(0, 4).toNumber(), :month => iso.substring(5, 7).toNumber(), :day => iso.substring(8, 10).toNumber(), :hour => 8 });
+        // Gregorian.moment rechnet in UTC – 8 Uhr UTC ≈ 9 Uhr Berlin, als Trainingsbeginn genügt das
+        var wt = ["", "So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+        var info = Gregorian.info(m, Time.FORMAT_SHORT);
+        var name = wt[info.day_of_week as Number] + " " + (x.get("sport") != null ? x.get("sport").toString() : "") + " " + z;
+        var passt = min == null || Time.now().add(new Time.Duration(min * 60)).compare(m) <= 0;
+        return [name, passt];
+    }
+    return null;
+}
+
 // Hintergrund: höchstens alle 15 min, kleine Antwort
 (:background)
 class KiraHintergrund extends System.ServiceDelegate {
@@ -279,9 +333,37 @@ class KiraHintergrund extends System.ServiceDelegate {
         if (code == 200 && data instanceof Dictionary) {
             kiraKomplikation(data);
             melden(data);
+            fazitMelden(data);
             Background.exit(data);
         } else {
             Background.exit({ "fehler" => code });
+        }
+    }
+
+    // 23.11.2026: Kiras Fazit nach dem Speichern – einmal je neuer Einheit (Server erkennt sie ca. 10 min nach dem Abgleich)
+    function fazitMelden(d as Dictionary) as Void {
+        try {
+            var f = d.get("fazit");
+            if (!(f instanceof Dictionary) || f.get("id") == null) { return; }
+            var id = f.get("id").toString();
+            var alt = Storage.getValue("fazitId");
+            if (alt != null && alt.toString().equals(id)) { return; }
+            Storage.setValue("fazitId", id);
+            var jetzt = Gregorian.info(Time.now(), Time.FORMAT_SHORT);
+            if (jetzt.hour < 6 || jetzt.hour >= 23) { return; }
+            var text = f.get("text") != null ? f.get("text").toString() : "";
+            var min = erholMinuten();
+            if (min != null) { text += " Erholt ab " + erholtAb(min) + "."; }
+            var ic = intensitaetCheck(d, min);
+            if (ic != null && !(ic[1] as Boolean)) { text += " " + (ic[0] as String) + " kommt zu früh."; }
+            var titel = f.get("titel") != null ? f.get("titel").toString() : "Kira";
+            var unter = f.get("unter") != null ? f.get("unter").toString() : "";
+            if (Toybox has :Notifications && Notifications has :showNotification) {
+                Notifications.showNotification(titel, unter, { :body => text, :dismissPrevious => false });
+            } else if (Background has :requestApplicationWake) {
+                Background.requestApplicationWake(titel + " · " + unter);
+            }
+        } catch (e) {
         }
     }
 

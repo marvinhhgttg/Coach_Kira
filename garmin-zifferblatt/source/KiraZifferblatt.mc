@@ -239,7 +239,42 @@ class KiraZifferblatt extends WatchUi.WatchFace {
     function nativZeile() as Array<String> {
         var erh = nativ(Complications.COMPLICATION_TYPE_RECOVERY_TIME);
         var bb = nativ(Complications.COMPLICATION_TYPE_BODY_BATTERY);
-        return ["ERH " + (erh == null ? "-" : ((erh + 59) / 60).toString() + "h"), "BB " + (bb == null ? "-" : bb.toString())];
+        var e = erholtAb(erh, true);
+        return [e.equals("ERHOLT") || e.equals("-") ? (e.equals("-") ? "ERH -" : e) : "ERH " + e, "BB " + (bb == null ? "-" : bb.toString())];
+    }
+
+
+    // 23.11.2026: Wochen-Ring (dünn, außen um den Tagessummen-Ring): Wochen-Ist gegen Kiras Wochenbudget
+    function wochenRing(dc as Graphics.Dc, x as Number, y as Number, r as Number, ist as Number?, bud as Number?) as Void {
+        if (bud == null || bud <= 0) { return; }
+        var a = ist == null ? 0.0 : ist.toFloat() / bud;
+        dc.setPenWidth(4);
+        dc.setColor(0x123A40, Graphics.COLOR_TRANSPARENT);
+        dc.drawCircle(x, y, r);
+        if (a > 0.005) {
+            dc.setColor(0x00BCD4, Graphics.COLOR_TRANSPARENT);
+            if (a >= 0.999) { dc.drawCircle(x, y, r); }
+            else { dc.drawArc(x, y, r, Graphics.ARC_CLOCKWISE, 90, 90 - (a * 360).toNumber()); }
+        }
+        if (a > 1.005) {
+            var b = a - 1.0 > 1.0 ? 1.0 : a - 1.0;
+            dc.setColor(0xFF6A00, Graphics.COLOR_TRANSPARENT);
+            if (b >= 0.999) { dc.drawCircle(x, y, r); }
+            else { dc.drawArc(x, y, r, Graphics.ARC_CLOCKWISE, 90, 90 - (b * 360).toNumber()); }
+        }
+        dc.setPenWidth(1);
+    }
+
+    // Garmins Erholungszeit (Minuten, live von der Uhr) als Zeitpunkt: heute „17:20“, sonst „MI 07:10“; kurz = ohne Minuten
+    function erholtAb(min as Number?, kurz as Boolean) as String {
+        if (min == null) { return "-"; }
+        if (min <= 0) { return "ERHOLT"; }
+        var jetzt = Gregorian.info(Time.now(), Time.FORMAT_SHORT);
+        var i = Gregorian.info(Time.now().add(new Time.Duration(min * 60)), Time.FORMAT_SHORT);
+        var wt = ["", "SO", "MO", "DI", "MI", "DO", "FR", "SA"];
+        var hm = i.hour.format("%02d") + ":" + i.min.format("%02d");
+        if (i.day == jetzt.day) { return hm; }
+        return wt[i.day_of_week as Number] + " " + (kurz ? i.hour.format("%02d") : hm);
     }
 
     function onUpdate(dc as Graphics.Dc) as Void {
@@ -321,10 +356,11 @@ class KiraZifferblatt extends WatchUi.WatchFace {
             lf = ist > hi * 1.15 ? 0xE74C3C : ist > hi ? 0xE67E22 : (lo != null && ist >= lo) ? 0x2ECC71 : 0x3FB8F0;
         }
         ring(dc, lx, ry, rr, (hi != null && hi > 0 && ist != null) ? ist.toFloat() / hi : 0.0, lf);
+        wochenRing(dc, lx, ry, rr + 8, zahl(t, 15), zahl(t, 16));
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(lx, ry, fRing, ist == null ? "-" : ist.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(lx, ry + rr + 8, fLabel, (hi == null ? "-" : (lo != null ? lo.toString() + "-" : "") + hi.toString()), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(lx, ry + rr + (zahl(t, 16) != null ? 14 : 8), fLabel, (hi == null ? "-" : (lo != null ? lo.toString() + "-" : "") + hi.toString()), Graphics.TEXT_JUSTIFY_CENTER);
 
         // Oben links: Wetter · oben rechts: Ausdauerwert
         var temp = "-";

@@ -24,9 +24,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// node_modules/react/cjs/react.production.min.js
+// ../node_modules/react/cjs/react.production.min.js
 var require_react_production_min = __commonJS({
-  "node_modules/react/cjs/react.production.min.js"(exports) {
+  "../node_modules/react/cjs/react.production.min.js"(exports) {
     "use strict";
     var l = Symbol.for("react.element");
     var n = Symbol.for("react.portal");
@@ -297,9 +297,9 @@ var require_react_production_min = __commonJS({
   }
 });
 
-// node_modules/react/cjs/react.development.js
+// ../node_modules/react/cjs/react.development.js
 var require_react_development = __commonJS({
-  "node_modules/react/cjs/react.development.js"(exports, module) {
+  "../node_modules/react/cjs/react.development.js"(exports, module) {
     "use strict";
     if (process.env.NODE_ENV !== "production") {
       (function() {
@@ -2171,9 +2171,9 @@ var require_react_development = __commonJS({
   }
 });
 
-// node_modules/react/index.js
+// ../node_modules/react/index.js
 var require_react = __commonJS({
-  "node_modules/react/index.js"(exports, module) {
+  "../node_modules/react/index.js"(exports, module) {
     "use strict";
     if (process.env.NODE_ENV === "production") {
       module.exports = require_react_production_min();
@@ -2183,9 +2183,9 @@ var require_react = __commonJS({
   }
 });
 
-// node_modules/react/cjs/react-jsx-runtime.production.min.js
+// ../node_modules/react/cjs/react-jsx-runtime.production.min.js
 var require_react_jsx_runtime_production_min = __commonJS({
-  "node_modules/react/cjs/react-jsx-runtime.production.min.js"(exports) {
+  "../node_modules/react/cjs/react-jsx-runtime.production.min.js"(exports) {
     "use strict";
     var f3 = require_react();
     var k = Symbol.for("react.element");
@@ -2208,9 +2208,9 @@ var require_react_jsx_runtime_production_min = __commonJS({
   }
 });
 
-// node_modules/react/cjs/react-jsx-runtime.development.js
+// ../node_modules/react/cjs/react-jsx-runtime.development.js
 var require_react_jsx_runtime_development = __commonJS({
-  "node_modules/react/cjs/react-jsx-runtime.development.js"(exports) {
+  "../node_modules/react/cjs/react-jsx-runtime.development.js"(exports) {
     "use strict";
     if (process.env.NODE_ENV !== "production") {
       (function() {
@@ -3101,9 +3101,9 @@ var require_react_jsx_runtime_development = __commonJS({
   }
 });
 
-// node_modules/react/jsx-runtime.js
+// ../node_modules/react/jsx-runtime.js
 var require_jsx_runtime = __commonJS({
-  "node_modules/react/jsx-runtime.js"(exports, module) {
+  "../node_modules/react/jsx-runtime.js"(exports, module) {
     "use strict";
     if (process.env.NODE_ENV === "production") {
       module.exports = require_react_jsx_runtime_production_min();
@@ -3113,13 +3113,13 @@ var require_jsx_runtime = __commonJS({
   }
 });
 
-// src/lib/engine.ts
+// ../src/lib/engine.ts
 var import_react8 = __toESM(require_react(), 1);
 
-// src/lib/garmin.ts
+// ../src/lib/garmin.ts
 var import_react = __toESM(require_react(), 1);
 
-// src/lib/extras.ts
+// ../src/lib/extras.ts
 async function getJson(url) {
   const res = await fetch(url, { redirect: "follow", cache: "no-store" });
   const t = await res.text();
@@ -3136,7 +3136,7 @@ async function fetchExtras(typ, n = 30) {
   return j.items || [];
 }
 
-// src/lib/garmin.ts
+// ../src/lib/garmin.ts
 var cache = null;
 var CACHE_MS = 10 * 60 * 1e3;
 function fetchGarminTage() {
@@ -3150,7 +3150,7 @@ function fetchGarminTage() {
   return p;
 }
 
-// src/kern/formeln.ts
+// ../src/kern/formeln.ts
 var ATL_MODEL = { a: -8.819849, b: 0.83645661, c: 1.24059231 };
 var CTL_MODEL = { a: -3.95042, b: 0.97283824, c: 0.2336734, g: 0.7, k: 7.1, win: 28 };
 function atlStep(atl, last) {
@@ -3161,13 +3161,13 @@ function ctlStep(ctl, last, mittel28) {
   return m.g * (m.a + m.b * ctl + m.c * last) + (1 - m.g) * m.k * mittel28;
 }
 
-// src/screens/RecoveryPanel.tsx
+// ../src/screens/RecoveryPanel.tsx
 var import_react7 = __toESM(require_react(), 1);
 
-// src/components/ZeitraumWahl.tsx
+// ../src/components/ZeitraumWahl.tsx
 var import_react2 = __toESM(require_react(), 1);
 
-// src/lib/windows.ts
+// ../src/lib/windows.ts
 var ALL_RANGE = "9999d";
 var isCustom = (w) => typeof w === "object" && w !== null;
 var heute = () => (/* @__PURE__ */ new Date()).toLocaleDateString("sv-SE");
@@ -3190,17 +3190,17 @@ function rangeFor(w, lead = 0, min = 0) {
   return ALL_RANGE;
 }
 
-// src/components/ZeitraumWahl.tsx
+// ../src/components/ZeitraumWahl.tsx
 var import_jsx_runtime = __toESM(require_jsx_runtime(), 1);
 
-// src/components/BefindenHinweis.tsx
+// ../src/components/BefindenHinweis.tsx
 var import_react3 = __toESM(require_react(), 1);
 var import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
 
-// src/lib/useErfahrung.ts
+// ../src/lib/useErfahrung.ts
 var import_react4 = __toESM(require_react(), 1);
 
-// src/kern/soll.ts
+// ../src/kern/soll.ts
 var BAND = { REST: [0, 0.25], EASY: [0.3, 0.8], TRAIN: [0.7, 1.25], QUALITY: [1, 1.7] };
 var BAND_MIN_N = 8;
 var BAND_FENSTER = 0.4;
@@ -3268,11 +3268,11 @@ function lastEmpfehlung(today, yesterday, baender) {
   return { min: lo, max: hi, halte: r5(halte), acwrGrenze: acwrGrenze != null ? r5(acwrGrenze) : null, gedeckelt, persoenlich };
 }
 
-// src/lib/cloudLLM.ts
+// ../src/lib/cloudLLM.ts
 var SENTINEL = "__PORT_5000__";
 var SERVER_BASE = SENTINEL.startsWith("__PORT") ? "" : "/" + SENTINEL.replace(/^\/+/, "");
 
-// src/lib/format.ts
+// ../src/lib/format.ts
 function fmtNum(v, digits = 0) {
   if (v === null || v === void 0 || !Number.isFinite(v)) return "\u2014";
   return v.toLocaleString("de-DE", {
@@ -3281,10 +3281,10 @@ function fmtNum(v, digits = 0) {
   });
 }
 
-// src/components/UI.tsx
+// ../src/components/UI.tsx
 var import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
 
-// src/screens/CorrelationPanel.tsx
+// ../src/screens/CorrelationPanel.tsx
 var import_react5 = __toESM(require_react(), 1);
 var import_jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
 var VARS = [
@@ -3297,11 +3297,11 @@ var VARS = [
 ];
 var VAR = Object.fromEntries(VARS.map((v) => [v.key, v]));
 
-// src/components/GarminSportProfilTile.tsx
+// ../src/components/GarminSportProfilTile.tsx
 var import_react6 = __toESM(require_react(), 1);
 var import_jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
 
-// src/lib/monotony.ts
+// ../src/lib/monotony.ts
 var MONO = { GUT: 1.5, NORMAL: 2, UNGUENSTIG: 2.5, WARNUNG: 3 };
 function monoStufe(v) {
   if (v == null || !Number.isFinite(v)) return null;
@@ -3382,10 +3382,10 @@ var MONOTONIE_REGEL_TEXT = [
   "Entscheidend ist die Kombination mit der Gesamtlast (Strain = Wochenlast \xD7 Monotonie). Monotonie senkst du durch klaren Rhythmus: harte Reize klar hart, lockere Tage wirklich locker, mindestens ein echter Erholungstag bei hoher Gesamtlast \u2013 nicht durch weniger Gesamtlast."
 ].join("\n");
 
-// src/screens/RecoveryPanel.tsx
+// ../src/screens/RecoveryPanel.tsx
 var import_jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
 
-// src/lib/chatContext.ts
+// ../src/lib/chatContext.ts
 var OLLAMA_HTTP = "http://localhost:11434";
 var OLLAMA_HTTPS = "https://localhost:11435";
 var IST_MAC_APP = typeof window !== "undefined" && !!window.webkit?.messageHandlers?.kiraMac;
@@ -3404,7 +3404,7 @@ var KIRA_SYSTEM = [
   "Bei Schmerzen, Krankheit oder medizinischen Fragen: auf Arzt bzw. Physiotherapie verweisen."
 ].join("\n");
 
-// src/lib/engine.ts
+// ../src/lib/engine.ts
 var KEY = "ck_kira_engine_v2";
 function read() {
   try {
@@ -3416,7 +3416,7 @@ function read() {
 }
 var store = read();
 
-// src/lib/api.ts
+// ../src/lib/api.ts
 var BASE_URL = "https://script.google.com/macros/s/AKfycbxCEN11KRlFaLL7uVJyeBLCrRJVmfBWagSmqvyJ8Ci7nwxi8HbolzTy23Z-G2mivC2h/exec";
 function cb() {
   return Date.now().toString();
@@ -3538,7 +3538,7 @@ function toNum(v) {
   return Number.isFinite(n) ? n : null;
 }
 
-// src/kern/votumRegeln.ts
+// ../src/kern/votumRegeln.ts
 var SLEEP_GOAL_H = 7.5;
 var RHR_BASELINE_DAYS = 28;
 var RHR_BASELINE_MIN_VALUES = 7;
@@ -3763,7 +3763,7 @@ function buildDays(raw) {
   });
 }
 
-// src/lib/planning.ts
+// ../src/lib/planning.ts
 function zielArt(z2) {
   if (z2.art === "sonstiges" && /marsch|wander|walk|hike|trekking|pilger/i.test(`${z2.name} ${z2.notiz || ""}`)) return "marsch";
   return z2.art;
@@ -3780,7 +3780,7 @@ function tourLast(z2, faktoren) {
   return Math.round(base + z2.hm / 100 * per100);
 }
 
-// src/lib/paket4.ts
+// ../src/lib/paket4.ts
 function toNum2(v) {
   if (v === null || v === void 0 || v === "" || String(v).trim() === "") return null;
   const s = String(v).trim();
@@ -3931,7 +3931,7 @@ function tourform(t, z2, persTourLast) {
   };
 }
 
-// src/lib/essRechner.ts
+// ../src/lib/essRechner.ts
 var PROFILE = [
   { id: "run", label: "Laufen", sport: "Run", typen: ["running", "treadmill_running", "trail_running"], tempo: "pace" },
   { id: "bike_road", label: "Rennrad", sport: "Bike", typen: ["road_biking", "cycling"], tempo: "kmh" },
@@ -4182,7 +4182,7 @@ function vorwaerts(m, ein) {
   return { ess, lo: ess * (1 - fehler), hi: ess * (1 + fehler), werte: w, geschaetzt: g, modell: typ, hinweise };
 }
 
-// src/data/skitouren_garmin.json
+// ../src/data/skitouren_garmin.json
 var skitouren_garmin_default = {
   quelle: "Garmin Connect API (activitylist-service), abgerufen 29.10.2026",
   hinweis: "12/2022\u201312/2023: Garmin-Last etwa doppelt so hoch wie davor und mit der aktuellen Uhr \u2013 nicht vergleichbar",
@@ -4630,7 +4630,7 @@ var skitouren_garmin_default = {
   ]
 };
 
-// src/data/lange_maersche_garmin.json
+// ../src/data/lange_maersche_garmin.json
 var lange_maersche_garmin_default = {
   quelle: "Garmin Connect API, abgerufen 29.10.2026",
   auswahl: "Gehen/Wandern \u2265 4 h, h\xF6chstens 40 Hm/km",
@@ -4809,7 +4809,7 @@ var lange_maersche_garmin_default = {
   ]
 };
 
-// src/lib/tourEss.ts
+// ../src/lib/tourEss.ts
 var MIN_N = 8;
 function eigeneSkitouren(tage) {
   const m = /* @__PURE__ */ new Map();
@@ -4956,7 +4956,7 @@ function tourLastPersoenlich(z2, modelle, skitouren = [], bergtouren = []) {
   return { ess: sum("ess"), lo: sum("lo"), hi: sum("hi"), teile, hinweise };
 }
 
-// server/widget_cli.ts
+// widget_cli.ts
 var baenderJetzt = null;
 async function baenderLaden() {
   if (baenderJetzt) return baenderJetzt;
@@ -5009,8 +5009,25 @@ async function heuteTeil() {
   const rahmen = t && ti > 0 ? lastEmpfehlung(t, days[ti - 1], await baenderLaden()) : null;
   const planLoad = plan ? num(plan.load) : t?.essDay ?? null;
   const woche = days.slice(-7).map((d) => ({ d: d.date, ist: d.activityDone ? d.actual?.load ?? d.load ?? 0 : 0 }));
+  const montag = (() => {
+    const d = /* @__PURE__ */ new Date(heute2 + "T12:00:00Z");
+    const wd = (d.getUTCDay() + 6) % 7;
+    d.setUTCDate(d.getUTCDate() - wd);
+    return d.toISOString().slice(0, 10);
+  })();
+  const sonntag = (() => {
+    const d = /* @__PURE__ */ new Date(montag + "T12:00:00Z");
+    d.setUTCDate(d.getUTCDate() + 6);
+    return d.toISOString().slice(0, 10);
+  })();
+  const istTag = (d) => d.activityDone ? d.actual?.load ?? d.load ?? 0 : 0;
+  const wIstVorher = days.filter((d) => d.date >= montag && d.date < heute2).reduce((a, d) => a + istTag(d), 0);
+  const wIstHeute = t ? istTag(t) : 0;
+  const wPlanRest = naechste.filter((x) => x.d <= sonntag).reduce((a, x) => a + (x.ess || 0), 0);
+  const wocheTeil = { kw: montag, istVorher: Math.round(wIstVorher), ist: Math.round(wIstVorher + wIstHeute), budgetBasis: Math.round(wIstVorher + Math.max(wIstHeute, planLoad || 0) + wPlanRest) };
   return {
     datum: heute2,
+    woche: wocheTeil,
     votum: t?.vote ? { stufe: VOTE_LEVEL[t.vote], vote: t.vote, label: VOTE_LABEL[t.vote], text: STATUS_TEXT[t.vote], gruende: t.reasons.slice(0, 3) } : { stufe: "grau", vote: null, label: "\u2013", text: t ? "Morgenwerte fehlen" : "noch keine Daten f\xFCr heute", gruende: t?.reasons?.slice(0, 1) || [] },
     morgen: t ? {
       eingetragen: !!t.hasMorningData,
@@ -5158,6 +5175,8 @@ async function feldTeil(rahmen, t) {
     min: rahmen ? rahmen.min : null,
     max: rahmen ? rahmen.max : null,
     raten,
+    // 23.11.2026: ESS heute schon gespeicherter Einheiten – das Datenfeld rechnet Tagesstand = vorher + laufend
+    vorher: Math.round((g.get(iso())?.akt || []).reduce((a, x) => a + ((x.last || 0) > 0 ? x.last : 0), 0)),
     n: Object.fromEntries(Object.entries(pro).map(([k, v]) => [k, v.length]))
   };
 }

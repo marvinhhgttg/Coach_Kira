@@ -69,8 +69,17 @@ async function heuteTeil() {
   const rahmen = t && ti > 0 ? lastEmpfehlung(t, days[ti - 1], await baenderLaden()) : null;
   const planLoad = plan ? num(plan.load) : t?.essDay ?? null;
   const woche = days.slice(-7).map((d) => ({ d: d.date, ist: d.activityDone ? d.actual?.load ?? d.load ?? 0 : 0 }));
+  // 23.11.2026: Wochen-Ring – Ist Mo..heute und Plan-Budget Mo..So (vergangene Tage Ist, ab heute Plan)
+  const montag = (() => { const d = new Date(heute + 'T12:00:00Z'); const wd = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - wd); return d.toISOString().slice(0, 10); })();
+  const sonntag = (() => { const d = new Date(montag + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + 6); return d.toISOString().slice(0, 10); })();
+  const istTag = (d: RecoveryDay) => (d.activityDone ? d.actual?.load ?? d.load ?? 0 : 0);
+  const wIstVorher = days.filter((d) => d.date >= montag && d.date < heute).reduce((a, d) => a + istTag(d), 0);
+  const wIstHeute = t ? istTag(t) : 0;
+  const wPlanRest = naechste.filter((x) => x.d <= sonntag).reduce((a, x) => a + (x.ess || 0), 0);
+  const wocheTeil = { kw: montag, istVorher: Math.round(wIstVorher), ist: Math.round(wIstVorher + wIstHeute), budgetBasis: Math.round(wIstVorher + Math.max(wIstHeute, planLoad || 0) + wPlanRest) };
   return {
     datum: heute,
+    woche: wocheTeil,
     votum: t?.vote
       ? { stufe: VOTE_LEVEL[t.vote], vote: t.vote, label: VOTE_LABEL[t.vote], text: STATUS_TEXT[t.vote], gruende: t.reasons.slice(0, 3) }
       : { stufe: 'grau', vote: null, label: '–', text: t ? 'Morgenwerte fehlen' : 'noch keine Daten für heute', gruende: t?.reasons?.slice(0, 1) || [] },
@@ -212,6 +221,8 @@ async function feldTeil(rahmen: any, t: RecoveryDay | null) {
   return {
     datum: iso(), vote: t?.vote ?? null, label: t?.vote ? VOTE_LABEL[t.vote] : '–',
     min: rahmen ? rahmen.min : null, max: rahmen ? rahmen.max : null, raten,
+    // 23.11.2026: ESS heute schon gespeicherter Einheiten – das Datenfeld rechnet Tagesstand = vorher + laufend
+    vorher: Math.round(((g.get(iso())?.akt || []) as any[]).reduce((a: number, x: any) => a + ((x.last || 0) > 0 ? x.last : 0), 0)),
     n: Object.fromEntries(Object.entries(pro).map(([k, v]) => [k, v.length])),
   };
 }

@@ -21,6 +21,12 @@ class KiraFeldView extends WatchUi.DataField {
     var maxGemeldet as Boolean = false;
     var minGemeldet as Boolean = false;
     var easyGemeldet as Boolean = false;
+    // 23.11.2026 Live-Coach: Warnung vor der Obergrenze, Zonenwächter mit Wiederholung, ESS-Verlauf je Minute
+    var warnGemeldet as Boolean = false;
+    var waechterAb as Float = 300.0;
+    var verlauf as Array<Float> = [] as Array<Float>;
+    var verlaufMin as Number = -1;
+    var startGeprueft as Boolean = false;
     var hinweisBis as Number = 0;
     var hinweis as String = "";
     var fitLive as FitContributor.Field? = null;
@@ -189,6 +195,31 @@ class KiraFeldView extends WatchUi.DataField {
         maxGemeldet = false;
         minGemeldet = false;
         easyGemeldet = false;
+        warnGemeldet = false;
+        waechterAb = 300.0;
+        verlauf = [] as Array<Float>;
+        verlaufMin = -1;
+        startGeprueft = false;
+    }
+
+    // ESS heute schon gespeicherter Einheiten (vom Server, Mac meldet alle 10 min)
+    function vorher() as Number {
+        var f = feld();
+        if (f == null) { return 0; }
+        var d = f.get("datum");
+        if (d instanceof String && !d.equals(heute())) { return 0; }
+        var v = f.get("vorher");
+        return v instanceof Number ? v : (v instanceof Float ? v.toNumber() : 0);
+    }
+
+    // ESS pro Minute über die letzten bis zu 10 Minuten (null, solange zu wenig Verlauf)
+    function rate() as Float? {
+        var n = verlauf.size();
+        if (n < 4) { return null; }
+        var a = n > 11 ? verlauf[n - 11] : verlauf[0];
+        var m = n > 11 ? 10 : n - 1;
+        var r = (ess - a) / m;
+        return r > 0.05 ? r : null;
     }
 
     function onTimerStart() as Void {
@@ -217,6 +248,12 @@ class KiraFeldView extends WatchUi.DataField {
         var s = 0.0;
         for (var i = 0; i < 5; i++) { s += sek[i] / 3600.0 * (r[i] as Number).toFloat(); }
         ess = s;
+        var tm = info.timerTime != null ? (info.timerTime as Number) / 60000 : 0;
+        if (tm != verlaufMin) {
+            verlaufMin = tm;
+            verlauf.add(ess);
+            if (verlauf.size() > 12) { verlauf = verlauf.slice(1, null) as Array<Float>; }
+        }
         var e = ess.toNumber();
         if (fitLive != null) { fitLive.setData(e); }
         if (fitSumme != null) { fitSumme.setData(e); }
@@ -225,21 +262,47 @@ class KiraFeldView extends WatchUi.DataField {
 
     function pruefen(e as Number) as Void {
         var ra = rahmen();
+        var tag = vorher() + e;
         if (ra != null) {
-            if (!minGemeldet && e >= ra[0] && ra[0] > 0) {
-                minGemeldet = true;
-                melden("Rahmen erreicht", [new Attention.VibeProfile(60, 300)]);
+            // schon vor dem Start erreicht: nicht noch einmal melden
+            if (!startGeprueft) {
+                startGeprueft = true;
+                var v0 = vorher();
+                if (ra[0] > 0 && v0 >= ra[0]) { minGemeldet = true; }
+                if (v0 > ra[1]) { maxGemeldet = true; warnGemeldet = true; }
             }
-            if (!maxGemeldet && e > ra[1]) {
+            if (!minGemeldet && tag >= ra[0] && ra[0] > 0) {
+                minGemeldet = true;
+                melden("Untergrenze erreicht", [new Attention.VibeProfile(60, 300)]);
+            }
+            var r = rate();
+            if (!warnGemeldet && r != null && tag < ra[1] && (ra[1] - tag) / r <= 5.0) {
+                warnGemeldet = true;
+                melden("Obergrenze in ~5 min", [new Attention.VibeProfile(80, 300), new Attention.VibeProfile(0, 200), new Attention.VibeProfile(80, 300)]);
+            }
+            if (!maxGemeldet && tag > ra[1]) {
                 maxGemeldet = true;
+                warnGemeldet = true;
                 melden("Obergrenze " + ra[1].toString(), [new Attention.VibeProfile(100, 500), new Attention.VibeProfile(0, 250),
                     new Attention.VibeProfile(100, 500), new Attention.VibeProfile(0, 250), new Attention.VibeProfile(100, 500)]);
             }
         }
+        // Zonenwächter: Easy/Rest → Zeit ab Zone 3, Train → Zeit ab Zone 4; nach 5 min, dann alle 10 min
         var f = feld();
-        if (!easyGemeldet && f != null && "EASY".equals(f.get("vote")) && rahmen() != null && sek[2] + sek[3] + sek[4] > 300.0) {
-            easyGemeldet = true;
-            melden("Easy: locker bleiben", [new Attention.VibeProfile(80, 400), new Attention.VibeProfile(0, 200), new Attention.VibeProfile(80, 400)]);
+        if (f != null && rahmen() != null) {
+            var vote = f.get("vote");
+            var easy = "EASY".equals(vote) || "REST".equals(vote);
+            var train = "TRAIN".equals(vote);
+            if (easy || train) {
+                var t = easy ? sek[2] + sek[3] + sek[4] : sek[3] + sek[4];
+                var schwelle = train && waechterAb < 600.0 ? 600.0 : waechterAb;
+                if (t > schwelle) {
+                    var min = (t / 60).toNumber();
+                    waechterAb = schwelle + 600.0;
+                    melden((easy ? (("REST".equals(vote)) ? "Ruhetag: " : "Easy: ") + min.toString() + "' ab Z3" : "Train: " + min.toString() + "' ab Z4"),
+                        [new Attention.VibeProfile(80, 400), new Attention.VibeProfile(0, 200), new Attention.VibeProfile(80, 400)]);
+                }
+            }
         }
     }
 
@@ -268,7 +331,9 @@ class KiraFeldView extends WatchUi.DataField {
         var w = dc.getWidth();
         var h = dc.getHeight();
         var cx = w / 2;
-        var e = ess.toNumber();
+        var einheit = ess.toNumber();
+        var vor = vorher();
+        var e = vor + einheit;              // Tagesstand: schon gespeicherte Einheiten + laufende Einheit
         var ra = rahmen();
         var unten = "";
         if (Storage.getValue("tok") == null) {
@@ -281,8 +346,12 @@ class KiraFeldView extends WatchUi.DataField {
         } else if (ra == null) {
             var rc = Storage.getValue("rc");
             unten = rc instanceof Number ? fehlerText(rc) : "Rahmen lädt";
+        } else if (e > ra[1]) {
+            unten = "+" + (e - ra[1]).toString() + " über " + ra[1].toString();
         } else {
-            unten = "/ " + ra[0].toString() + "-" + ra[1].toString();
+            // Restbudget bis zur Obergrenze und Zeit bis dort beim aktuellen Tempo
+            var r = rate();
+            unten = "noch " + (ra[1] - e).toString() + (r != null ? " · ~" + ((ra[1] - e) / r).toNumber().toString() + "'" : " bis " + ra[1].toString());
         }
         if (System.getTimer() < hinweisBis) { unten = hinweis; }
         var c = farbe(e, ra);
@@ -296,7 +365,7 @@ class KiraFeldView extends WatchUi.DataField {
             return;
         }
         dc.setColor(grau, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, (h * 0.06).toNumber(), Graphics.FONT_XTINY, "KIRA ESS", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, (h * 0.06).toNumber(), Graphics.FONT_XTINY, vor > 0 ? "KIRA TAG · EINH. " + einheit.toString() : "KIRA ESS", Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(c, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, h / 2, h > 160 ? Graphics.FONT_NUMBER_HOT : Graphics.FONT_NUMBER_MEDIUM, e.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         dc.setColor(System.getTimer() < hinweisBis ? c : grau, Graphics.COLOR_TRANSPARENT);

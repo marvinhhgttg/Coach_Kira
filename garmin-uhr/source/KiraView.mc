@@ -161,9 +161,9 @@ class KiraNetz {
 }
 
 class KiraView extends WatchUi.View {
-    // 0 Votum, 1 Werte, 2 Woche, 3 Last 14 T, 4 Morgen 7 T, 5 Form-Kurve, 6 Letzte Einheit, 7 Ziel, 8 Jetzt
+    // 0 Votum, 1 Werte, 2 Woche, 3 Last 14 T, 4 Morgen 7 T, 5 Form-Kurve, 6 Letzte Einheit, 7 Ziel, 8 Jetzt, 9 Erholung & Woche
     var seite as Number = 0;
-    const SEITEN = 9;
+    const SEITEN = 10;
 
     function initialize() {
         View.initialize();
@@ -219,6 +219,7 @@ class KiraView extends WatchUi.View {
         else if (seite == 5) { seiteKurve(dc, d, u, h); }
         else if (seite == 6) { seiteLetzte(dc, u, h); }
         else if (seite == 7) { seiteZiel(dc, d, h); }
+        else if (seite == 9) { seiteErholung(dc, d, h); }
         else { seiteForm(dc, d, h); }
         // Seitenanzeige rechts
         var w = dc.getWidth();
@@ -364,6 +365,35 @@ class KiraView extends WatchUi.View {
         kachel(dc, w * 0.50, y, "Stress", KiraHilfen.zahl(st, 0));
         kachel(dc, w * 0.73, y, "Schritte", sch != null ? (sch >= 10000 ? (sch / 1000).toString() + "k" : sch.toString()) : "-");
         zeile(dc, y + zh + 2, Graphics.FONT_XTINY, "live von der Uhr", 0x777777);
+    }
+
+    // 23.11.2026: Bereit-ab (Garmin-Erholungszeit live von der Uhr, abgeglichen mit Kiras Plan) und Wochen-Budget
+    function seiteErholung(dc as Graphics.Dc, d as Dictionary, h as Number) as Void {
+        var w = dc.getWidth();
+        var y = (h * 0.11).toNumber();
+        y = zeile(dc, y, Graphics.FONT_XTINY, "ERHOLUNG & WOCHE", 0x9A9A9A);
+        var min = erholMinuten();
+        y = zeile(dc, y + 4, Graphics.FONT_XTINY, min != null && min <= 0 ? "Garmin: erholt" : "Erholt ab (Garmin)", 0x9A9A9A);
+        y = zeile(dc, y, Graphics.FONT_MEDIUM, min == null ? "-" : erholtAb(min), min != null && min <= 0 ? 0x2ECC71 : Graphics.COLOR_WHITE);
+        if (min != null && min > 0) { y = zeile(dc, y, Graphics.FONT_XTINY, "noch " + ((min + 59) / 60).toString() + " h", 0x9A9A9A); }
+        var ic = intensitaetCheck(d, min);
+        if (ic != null) {
+            y = zeile(dc, y + 4, Graphics.FONT_XTINY, (ic[0] as String) + ((ic[1] as Boolean) ? ": passt" : ": zu früh"), (ic[1] as Boolean) ? 0x2ECC71 : 0xE67E22);
+        }
+        var wo = d.get("woche");
+        if (wo instanceof Dictionary && wo.get("budget") != null && wo.get("budget").toNumber() > 0) {
+            var ist = wo.get("ist") != null ? wo.get("ist").toNumber() : 0;
+            var bud = wo.get("budget").toNumber();
+            y = zeile(dc, y + 8, Graphics.FONT_XTINY, "WOCHE MO-SO", 0x9A9A9A);
+            y = zeile(dc, y, Graphics.FONT_SMALL, ist.toString() + " / " + bud.toString() + " ESS", ist > bud ? 0xE67E22 : Graphics.COLOR_WHITE);
+            var bw = (w * 0.5).toNumber();
+            var x = w / 2 - bw / 2;
+            dc.setColor(0x333333, Graphics.COLOR_TRANSPARENT);
+            dc.fillRectangle(x, y + 4, bw, 8);
+            var p = ist >= bud ? bw : bw * ist / bud;
+            dc.setColor(ist > bud ? 0xE67E22 : 0x00BCD4, Graphics.COLOR_TRANSPARENT);
+            dc.fillRectangle(x, y + 4, p, 8);
+        }
     }
 
     // Letzter Wert aus der Sensor-Historie der Uhr

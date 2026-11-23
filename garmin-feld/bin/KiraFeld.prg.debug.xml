@@ -3,257 +3,313 @@
     <manifest filename="/home/user/workspace/ck-repo/garmin-feld/manifest.xml"/>
     <pcToLineNum>
         <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="1" lineNum="15" parent="globals/KiraFeldView" pc="268435460" symbol="&lt;init&gt;"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" id="2" lineNum="13" parent="globals/KiraFeldApp" pc="268435472" symbol="&lt;init&gt;"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen" id="3" lineNum="7" parent="globals/Rez" pc="268435484" symbol="&lt;init&gt;"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="43" parent="globals/KiraFeldView" pc="268435504" symbol="sportLesen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="44" parent="globals/KiraFeldView" pc="268435507" symbol="sportLesen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="46" parent="globals/KiraFeldView" pc="268435510" symbol="sportLesen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="47" parent="globals/KiraFeldView" pc="268435522" symbol="sportLesen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="47" parent="globals/KiraFeldView" pc="268435528" symbol="sportLesen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="48" parent="globals/KiraFeldView" pc="268435546" symbol="sportLesen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="49" parent="globals/KiraFeldView" pc="268435562" symbol="sportLesen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="49" parent="globals/KiraFeldView" pc="268435568" symbol="sportLesen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="50" parent="globals/KiraFeldView" pc="268435583" symbol="sportLesen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="50" parent="globals/KiraFeldView" pc="268435591" symbol="sportLesen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="51" parent="globals/KiraFeldView" pc="268435606" symbol="sportLesen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="51" parent="globals/KiraFeldView" pc="268435614" symbol="sportLesen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="52" parent="globals/KiraFeldView" pc="268435629" symbol="sportLesen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="52" parent="globals/KiraFeldView" pc="268435653" symbol="sportLesen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="53" parent="globals/KiraFeldView" pc="268435668" symbol="sportLesen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="53" parent="globals/KiraFeldView" pc="268435692" symbol="sportLesen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="54" parent="globals/KiraFeldView" pc="268435707" symbol="sportLesen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="56" parent="globals/KiraFeldView" pc="268435719" symbol="sportLesen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="57" parent="globals/KiraFeldView" pc="268435743" symbol="sportLesen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="57" parent="globals/KiraFeldView" pc="268435763" symbol="sportLesen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="58" parent="globals/KiraFeldView" pc="268435781" symbol="sportLesen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="5" lineNum="144" parent="globals/KiraFeldView" pc="268435798" symbol="anfrageFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="5" lineNum="145" parent="globals/KiraFeldView" pc="268435800" symbol="anfrageFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="5" lineNum="146" parent="globals/KiraFeldView" pc="268435843" symbol="anfrageFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="5" lineNum="147" parent="globals/KiraFeldView" pc="268435882" symbol="anfrageFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="5" lineNum="148" parent="globals/KiraFeldView" pc="268435921" symbol="anfrageFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="5" lineNum="150" parent="globals/KiraFeldView" pc="268435937" symbol="anfrageFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="6" lineNum="137" parent="globals/KiraFeldView" pc="268435952" symbol="fertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="6" lineNum="138" parent="globals/KiraFeldView" pc="268435954" symbol="fertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="6" lineNum="139" parent="globals/KiraFeldView" pc="268435962" symbol="fertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="6" lineNum="140" parent="globals/KiraFeldView" pc="268435982" symbol="fertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="6" lineNum="141" parent="globals/KiraFeldView" pc="268436002" symbol="fertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="7" lineNum="79" parent="globals/KiraFeldView" pc="268436014" symbol="rahmen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="7" lineNum="80" parent="globals/KiraFeldView" pc="268436017" symbol="rahmen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="7" lineNum="81" parent="globals/KiraFeldView" pc="268436025" symbol="rahmen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="7" lineNum="81" parent="globals/KiraFeldView" pc="268436069" symbol="rahmen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="7" lineNum="82" parent="globals/KiraFeldView" pc="268436074" symbol="rahmen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="7" lineNum="83" parent="globals/KiraFeldView" pc="268436090" symbol="rahmen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="7" lineNum="83" parent="globals/KiraFeldView" pc="268436125" symbol="rahmen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="7" lineNum="84" parent="globals/KiraFeldView" pc="268436130" symbol="rahmen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="99" parent="globals/KiraFeldView" pc="268436181" symbol="abrufFaellig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="101" parent="globals/KiraFeldView" pc="268436184" symbol="abrufFaellig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="101" parent="globals/KiraFeldView" pc="268436216" symbol="abrufFaellig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="101" parent="globals/KiraFeldView" pc="268436224" symbol="abrufFaellig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="102" parent="globals/KiraFeldView" pc="268436248" symbol="abrufFaellig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="102" parent="globals/KiraFeldView" pc="268436275" symbol="abrufFaellig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="103" parent="globals/KiraFeldView" pc="268436279" symbol="abrufFaellig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="104" parent="globals/KiraFeldView" pc="268436298" symbol="abrufFaellig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="105" parent="globals/KiraFeldView" pc="268436318" symbol="abrufFaellig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="106" parent="globals/KiraFeldView" pc="268436339" symbol="abrufFaellig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="108" parent="globals/KiraFeldView" pc="268436343" symbol="abrufFaellig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="109" parent="globals/KiraFeldView" pc="268436351" symbol="abrufFaellig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="111" parent="globals/KiraFeldView" pc="268436368" symbol="abrufFaellig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="112" parent="globals/KiraFeldView" pc="268436387" symbol="abrufFaellig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="113" parent="globals/KiraFeldView" pc="268436406" symbol="abrufFaellig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="114" parent="globals/KiraFeldView" pc="268436421" symbol="abrufFaellig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="119" parent="globals/KiraFeldView" pc="268436501" symbol="abrufFaellig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="120" parent="globals/KiraFeldView" pc="268436516" symbol="abrufFaellig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="124" parent="globals/KiraFeldView" pc="268436574" symbol="abrufFaellig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="130" parent="globals/KiraFeldView" pc="268436647" symbol="abrufFaellig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="131" parent="globals/KiraFeldView" pc="268436651" symbol="abrufFaellig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="132" parent="globals/KiraFeldView" pc="268436659" symbol="abrufFaellig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="133" parent="globals/KiraFeldView" pc="268436679" symbol="abrufFaellig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="198" parent="globals/KiraFeldView" pc="268436713" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="199" parent="globals/KiraFeldView" pc="268436716" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="200" parent="globals/KiraFeldView" pc="268436723" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="201" parent="globals/KiraFeldView" pc="268436735" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="202" parent="globals/KiraFeldView" pc="268436758" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="203" parent="globals/KiraFeldView" pc="268436767" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="203" parent="globals/KiraFeldView" pc="268436783" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="204" parent="globals/KiraFeldView" pc="268436791" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="205" parent="globals/KiraFeldView" pc="268436799" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="205" parent="globals/KiraFeldView" pc="268436826" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="206" parent="globals/KiraFeldView" pc="268436830" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="207" parent="globals/KiraFeldView" pc="268436837" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="208" parent="globals/KiraFeldView" pc="268436841" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="208" parent="globals/KiraFeldView" pc="268436851" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="209" parent="globals/KiraFeldView" pc="268436858" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="209" parent="globals/KiraFeldView" pc="268436869" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="210" parent="globals/KiraFeldView" pc="268436875" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="210" parent="globals/KiraFeldView" pc="268436886" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="211" parent="globals/KiraFeldView" pc="268436893" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="211" parent="globals/KiraFeldView" pc="268436904" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="212" parent="globals/KiraFeldView" pc="268436911" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="212" parent="globals/KiraFeldView" pc="268436922" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="213" parent="globals/KiraFeldView" pc="268436929" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="214" parent="globals/KiraFeldView" pc="268436933" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="214" parent="globals/KiraFeldView" pc="268436940" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="215" parent="globals/KiraFeldView" pc="268436944" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="216" parent="globals/KiraFeldView" pc="268436966" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="217" parent="globals/KiraFeldView" pc="268436974" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="218" parent="globals/KiraFeldView" pc="268436977" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="218" parent="globals/KiraFeldView" pc="268436988" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="219" parent="globals/KiraFeldView" pc="268437029" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="220" parent="globals/KiraFeldView" pc="268437038" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="221" parent="globals/KiraFeldView" pc="268437051" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="221" parent="globals/KiraFeldView" pc="268437060" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="222" parent="globals/KiraFeldView" pc="268437079" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="222" parent="globals/KiraFeldView" pc="268437088" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="223" parent="globals/KiraFeldView" pc="268437107" symbol="compute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="10" lineNum="254" parent="globals/KiraFeldView" pc="268437119" symbol="farbe"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="10" lineNum="255" parent="globals/KiraFeldView" pc="268437121" symbol="farbe"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="10" lineNum="255" parent="globals/KiraFeldView" pc="268437127" symbol="farbe"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="10" lineNum="256" parent="globals/KiraFeldView" pc="268437136" symbol="farbe"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="10" lineNum="256" parent="globals/KiraFeldView" pc="268437153" symbol="farbe"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="10" lineNum="257" parent="globals/KiraFeldView" pc="268437162" symbol="farbe"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="10" lineNum="257" parent="globals/KiraFeldView" pc="268437173" symbol="farbe"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="10" lineNum="258" parent="globals/KiraFeldView" pc="268437182" symbol="farbe"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="10" lineNum="258" parent="globals/KiraFeldView" pc="268437192" symbol="farbe"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="10" lineNum="259" parent="globals/KiraFeldView" pc="268437200" symbol="farbe"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="11" lineNum="61" parent="globals/KiraFeldView" pc="268437205" symbol="feld"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="11" lineNum="62" parent="globals/KiraFeldView" pc="268437208" symbol="feld"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="11" lineNum="63" parent="globals/KiraFeldView" pc="268437227" symbol="feld"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="12" lineNum="92" parent="globals/KiraFeldView" pc="268437249" symbol="fehlerText"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="12" lineNum="93" parent="globals/KiraFeldView" pc="268437251" symbol="fehlerText"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="12" lineNum="93" parent="globals/KiraFeldView" pc="268437259" symbol="fehlerText"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="12" lineNum="94" parent="globals/KiraFeldView" pc="268437268" symbol="fehlerText"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="12" lineNum="94" parent="globals/KiraFeldView" pc="268437275" symbol="fehlerText"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="12" lineNum="95" parent="globals/KiraFeldView" pc="268437292" symbol="fehlerText"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="13" lineNum="171" parent="globals/KiraFeldView" pc="268437306" symbol="feldFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="13" lineNum="172" parent="globals/KiraFeldView" pc="268437308" symbol="feldFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="13" lineNum="173" parent="globals/KiraFeldView" pc="268437332" symbol="feldFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="13" lineNum="174" parent="globals/KiraFeldView" pc="268437348" symbol="feldFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="13" lineNum="175" parent="globals/KiraFeldView" pc="268437364" symbol="feldFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="13" lineNum="176" parent="globals/KiraFeldView" pc="268437384" symbol="feldFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="13" lineNum="177" parent="globals/KiraFeldView" pc="268437401" symbol="feldFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="13" lineNum="178" parent="globals/KiraFeldView" pc="268437410" symbol="feldFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="13" lineNum="179" parent="globals/KiraFeldView" pc="268437428" symbol="feldFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="13" lineNum="180" parent="globals/KiraFeldView" pc="268437446" symbol="feldFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="13" lineNum="182" parent="globals/KiraFeldView" pc="268437460" symbol="feldFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="226" parent="globals/KiraFeldView" pc="268437475" symbol="pruefen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="227" parent="globals/KiraFeldView" pc="268437478" symbol="pruefen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="228" parent="globals/KiraFeldView" pc="268437486" symbol="pruefen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="229" parent="globals/KiraFeldView" pc="268437492" symbol="pruefen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="230" parent="globals/KiraFeldView" pc="268437520" symbol="pruefen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="231" parent="globals/KiraFeldView" pc="268437528" symbol="pruefen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="233" parent="globals/KiraFeldView" pc="268437579" symbol="pruefen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="234" parent="globals/KiraFeldView" pc="268437599" symbol="pruefen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="235" parent="globals/KiraFeldView" pc="268437607" symbol="pruefen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="239" parent="globals/KiraFeldView" pc="268437791" symbol="pruefen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="240" parent="globals/KiraFeldView" pc="268437799" symbol="pruefen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="241" parent="globals/KiraFeldView" pc="268437890" symbol="pruefen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="242" parent="globals/KiraFeldView" pc="268437898" symbol="pruefen"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="87" parent="globals/KiraFeldView" pc="268438009" symbol="heute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="88" parent="globals/KiraFeldView" pc="268438012" symbol="heute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="89" parent="globals/KiraFeldView" pc="268438037" symbol="heute"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="16" lineNum="154" parent="globals/KiraFeldView" pc="268438109" symbol="statusFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="16" lineNum="155" parent="globals/KiraFeldView" pc="268438111" symbol="statusFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="16" lineNum="156" parent="globals/KiraFeldView" pc="268438154" symbol="statusFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="16" lineNum="157" parent="globals/KiraFeldView" pc="268438193" symbol="statusFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="16" lineNum="158" parent="globals/KiraFeldView" pc="268438211" symbol="statusFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="16" lineNum="159" parent="globals/KiraFeldView" pc="268438229" symbol="statusFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="16" lineNum="160" parent="globals/KiraFeldView" pc="268438243" symbol="statusFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="16" lineNum="161" parent="globals/KiraFeldView" pc="268438252" symbol="statusFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="16" lineNum="162" parent="globals/KiraFeldView" pc="268438268" symbol="statusFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="16" lineNum="163" parent="globals/KiraFeldView" pc="268438277" symbol="statusFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="16" lineNum="164" parent="globals/KiraFeldView" pc="268438295" symbol="statusFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="16" lineNum="165" parent="globals/KiraFeldView" pc="268438313" symbol="statusFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="16" lineNum="167" parent="globals/KiraFeldView" pc="268438327" symbol="statusFertig"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="17" lineNum="194" parent="globals/KiraFeldView" pc="268438342" symbol="onTimerStart"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="17" lineNum="195" parent="globals/KiraFeldView" pc="268438344" symbol="onTimerStart"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="18" lineNum="186" parent="globals/KiraFeldView" pc="268438352" symbol="onTimerReset"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="18" lineNum="187" parent="globals/KiraFeldView" pc="268438354" symbol="onTimerReset"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="18" lineNum="188" parent="globals/KiraFeldView" pc="268438366" symbol="onTimerReset"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="18" lineNum="189" parent="globals/KiraFeldView" pc="268438374" symbol="onTimerReset"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="18" lineNum="190" parent="globals/KiraFeldView" pc="268438382" symbol="onTimerReset"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="18" lineNum="191" parent="globals/KiraFeldView" pc="268438390" symbol="onTimerReset"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="19" lineNum="66" parent="globals/KiraFeldView" pc="268438399" symbol="raten"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="19" lineNum="67" parent="globals/KiraFeldView" pc="268438402" symbol="raten"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="19" lineNum="68" parent="globals/KiraFeldView" pc="268438410" symbol="raten"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="19" lineNum="69" parent="globals/KiraFeldView" pc="268438416" symbol="raten"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="19" lineNum="70" parent="globals/KiraFeldView" pc="268438433" symbol="raten"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="19" lineNum="71" parent="globals/KiraFeldView" pc="268438448" symbol="raten"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="19" lineNum="72" parent="globals/KiraFeldView" pc="268438465" symbol="raten"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="19" lineNum="72" parent="globals/KiraFeldView" pc="268438494" symbol="raten"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="19" lineNum="75" parent="globals/KiraFeldView" pc="268438506" symbol="raten"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="20" lineNum="32" parent="globals/KiraFeldView" pc="268438512" symbol="initialize"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="20" lineNum="33" parent="globals/KiraFeldView" pc="268438515" symbol="initialize"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="20" lineNum="35" parent="globals/KiraFeldView" pc="268438527" symbol="initialize"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="20" lineNum="37" parent="globals/KiraFeldView" pc="268438574" symbol="initialize"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="20" lineNum="39" parent="globals/KiraFeldView" pc="268438628" symbol="initialize"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="20" lineNum="40" parent="globals/KiraFeldView" pc="268438644" symbol="initialize"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="21" lineNum="246" parent="globals/KiraFeldView" pc="268438652" symbol="melden"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="21" lineNum="247" parent="globals/KiraFeldView" pc="268438655" symbol="melden"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="21" lineNum="248" parent="globals/KiraFeldView" pc="268438664" symbol="melden"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="21" lineNum="249" parent="globals/KiraFeldView" pc="268438685" symbol="melden"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="21" lineNum="250" parent="globals/KiraFeldView" pc="268438700" symbol="melden"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="21" lineNum="250" parent="globals/KiraFeldView" pc="268438721" symbol="melden"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="262" parent="globals/KiraFeldView" pc="268438741" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="263" parent="globals/KiraFeldView" pc="268438744" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="264" parent="globals/KiraFeldView" pc="268438752" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="265" parent="globals/KiraFeldView" pc="268438770" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="266" parent="globals/KiraFeldView" pc="268438791" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="267" parent="globals/KiraFeldView" pc="268438805" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="268" parent="globals/KiraFeldView" pc="268438813" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="269" parent="globals/KiraFeldView" pc="268438822" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="270" parent="globals/KiraFeldView" pc="268438831" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="271" parent="globals/KiraFeldView" pc="268438838" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="272" parent="globals/KiraFeldView" pc="268438851" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="273" parent="globals/KiraFeldView" pc="268438859" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="274" parent="globals/KiraFeldView" pc="268438866" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="275" parent="globals/KiraFeldView" pc="268438887" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="276" parent="globals/KiraFeldView" pc="268438906" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="278" parent="globals/KiraFeldView" pc="268438925" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="278" parent="globals/KiraFeldView" pc="268438969" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="279" parent="globals/KiraFeldView" pc="268438988" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="279" parent="globals/KiraFeldView" pc="268439003" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="280" parent="globals/KiraFeldView" pc="268439018" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="281" parent="globals/KiraFeldView" pc="268439028" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="282" parent="globals/KiraFeldView" pc="268439034" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="283" parent="globals/KiraFeldView" pc="268439053" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="285" parent="globals/KiraFeldView" pc="268439091" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="287" parent="globals/KiraFeldView" pc="268439127" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="287" parent="globals/KiraFeldView" pc="268439146" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="288" parent="globals/KiraFeldView" pc="268439156" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="289" parent="globals/KiraFeldView" pc="268439170" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="289" parent="globals/KiraFeldView" pc="268439181" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="290" parent="globals/KiraFeldView" pc="268439188" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="292" parent="globals/KiraFeldView" pc="268439196" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="293" parent="globals/KiraFeldView" pc="268439210" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="294" parent="globals/KiraFeldView" pc="268439241" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="295" parent="globals/KiraFeldView" pc="268439255" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="296" parent="globals/KiraFeldView" pc="268439288" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="298" parent="globals/KiraFeldView" pc="268439292" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="299" parent="globals/KiraFeldView" pc="268439306" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="300" parent="globals/KiraFeldView" pc="268439340" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="301" parent="globals/KiraFeldView" pc="268439354" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="302" parent="globals/KiraFeldView" pc="268439396" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="303" parent="globals/KiraFeldView" pc="268439434" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="305" parent="globals/KiraFeldView" pc="268439481" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="306" parent="globals/KiraFeldView" pc="268439505" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="307" parent="globals/KiraFeldView" pc="268439521" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="308" parent="globals/KiraFeldView" pc="268439531" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="309" parent="globals/KiraFeldView" pc="268439561" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="310" parent="globals/KiraFeldView" pc="268439577" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="311" parent="globals/KiraFeldView" pc="268439595" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="312" parent="globals/KiraFeldView" pc="268439616" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="313" parent="globals/KiraFeldView" pc="268439632" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="314" parent="globals/KiraFeldView" pc="268439656" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="315" parent="globals/KiraFeldView" pc="268439691" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="316" parent="globals/KiraFeldView" pc="268439705" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" id="23" lineNum="18" parent="globals/KiraFeldApp" pc="268439727" symbol="getInitialView"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" id="23" lineNum="19" parent="globals/KiraFeldApp" pc="268439729" symbol="getInitialView"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" id="24" lineNum="14" parent="globals/KiraFeldApp" pc="268439755" symbol="initialize"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" id="24" lineNum="15" parent="globals/KiraFeldApp" pc="268439757" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="1" lineNum="27" parent="globals/KiraFeldView" pc="268435471" symbol="&lt;init&gt;"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" id="2" lineNum="13" parent="globals/KiraFeldApp" pc="268435481" symbol="&lt;init&gt;"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen" id="3" lineNum="7" parent="globals/Rez" pc="268435493" symbol="&lt;init&gt;"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="49" parent="globals/KiraFeldView" pc="268435513" symbol="sportLesen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="50" parent="globals/KiraFeldView" pc="268435516" symbol="sportLesen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="52" parent="globals/KiraFeldView" pc="268435519" symbol="sportLesen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="53" parent="globals/KiraFeldView" pc="268435531" symbol="sportLesen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="53" parent="globals/KiraFeldView" pc="268435537" symbol="sportLesen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="54" parent="globals/KiraFeldView" pc="268435555" symbol="sportLesen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="55" parent="globals/KiraFeldView" pc="268435571" symbol="sportLesen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="55" parent="globals/KiraFeldView" pc="268435577" symbol="sportLesen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="56" parent="globals/KiraFeldView" pc="268435592" symbol="sportLesen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="56" parent="globals/KiraFeldView" pc="268435600" symbol="sportLesen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="57" parent="globals/KiraFeldView" pc="268435615" symbol="sportLesen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="57" parent="globals/KiraFeldView" pc="268435623" symbol="sportLesen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="58" parent="globals/KiraFeldView" pc="268435638" symbol="sportLesen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="58" parent="globals/KiraFeldView" pc="268435662" symbol="sportLesen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="59" parent="globals/KiraFeldView" pc="268435677" symbol="sportLesen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="59" parent="globals/KiraFeldView" pc="268435701" symbol="sportLesen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="60" parent="globals/KiraFeldView" pc="268435716" symbol="sportLesen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="62" parent="globals/KiraFeldView" pc="268435728" symbol="sportLesen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="63" parent="globals/KiraFeldView" pc="268435752" symbol="sportLesen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="63" parent="globals/KiraFeldView" pc="268435772" symbol="sportLesen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="4" lineNum="64" parent="globals/KiraFeldView" pc="268435790" symbol="sportLesen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="5" lineNum="150" parent="globals/KiraFeldView" pc="268435807" symbol="anfrageFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="5" lineNum="151" parent="globals/KiraFeldView" pc="268435809" symbol="anfrageFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="5" lineNum="152" parent="globals/KiraFeldView" pc="268435852" symbol="anfrageFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="5" lineNum="153" parent="globals/KiraFeldView" pc="268435891" symbol="anfrageFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="5" lineNum="154" parent="globals/KiraFeldView" pc="268435930" symbol="anfrageFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="5" lineNum="156" parent="globals/KiraFeldView" pc="268435946" symbol="anfrageFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="6" lineNum="143" parent="globals/KiraFeldView" pc="268435961" symbol="fertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="6" lineNum="144" parent="globals/KiraFeldView" pc="268435963" symbol="fertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="6" lineNum="145" parent="globals/KiraFeldView" pc="268435971" symbol="fertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="6" lineNum="146" parent="globals/KiraFeldView" pc="268435991" symbol="fertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="6" lineNum="147" parent="globals/KiraFeldView" pc="268436011" symbol="fertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="7" lineNum="85" parent="globals/KiraFeldView" pc="268436023" symbol="rahmen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="7" lineNum="86" parent="globals/KiraFeldView" pc="268436026" symbol="rahmen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="7" lineNum="87" parent="globals/KiraFeldView" pc="268436034" symbol="rahmen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="7" lineNum="87" parent="globals/KiraFeldView" pc="268436078" symbol="rahmen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="7" lineNum="88" parent="globals/KiraFeldView" pc="268436083" symbol="rahmen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="7" lineNum="89" parent="globals/KiraFeldView" pc="268436099" symbol="rahmen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="7" lineNum="89" parent="globals/KiraFeldView" pc="268436134" symbol="rahmen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="7" lineNum="90" parent="globals/KiraFeldView" pc="268436139" symbol="rahmen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="105" parent="globals/KiraFeldView" pc="268436190" symbol="abrufFaellig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="107" parent="globals/KiraFeldView" pc="268436193" symbol="abrufFaellig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="107" parent="globals/KiraFeldView" pc="268436225" symbol="abrufFaellig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="107" parent="globals/KiraFeldView" pc="268436233" symbol="abrufFaellig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="108" parent="globals/KiraFeldView" pc="268436257" symbol="abrufFaellig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="108" parent="globals/KiraFeldView" pc="268436284" symbol="abrufFaellig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="109" parent="globals/KiraFeldView" pc="268436288" symbol="abrufFaellig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="110" parent="globals/KiraFeldView" pc="268436307" symbol="abrufFaellig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="111" parent="globals/KiraFeldView" pc="268436327" symbol="abrufFaellig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="112" parent="globals/KiraFeldView" pc="268436348" symbol="abrufFaellig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="114" parent="globals/KiraFeldView" pc="268436352" symbol="abrufFaellig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="115" parent="globals/KiraFeldView" pc="268436360" symbol="abrufFaellig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="117" parent="globals/KiraFeldView" pc="268436377" symbol="abrufFaellig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="118" parent="globals/KiraFeldView" pc="268436396" symbol="abrufFaellig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="119" parent="globals/KiraFeldView" pc="268436415" symbol="abrufFaellig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="120" parent="globals/KiraFeldView" pc="268436430" symbol="abrufFaellig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="125" parent="globals/KiraFeldView" pc="268436510" symbol="abrufFaellig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="126" parent="globals/KiraFeldView" pc="268436525" symbol="abrufFaellig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="130" parent="globals/KiraFeldView" pc="268436583" symbol="abrufFaellig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="136" parent="globals/KiraFeldView" pc="268436656" symbol="abrufFaellig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="137" parent="globals/KiraFeldView" pc="268436660" symbol="abrufFaellig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="138" parent="globals/KiraFeldView" pc="268436668" symbol="abrufFaellig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="8" lineNum="139" parent="globals/KiraFeldView" pc="268436688" symbol="abrufFaellig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="229" parent="globals/KiraFeldView" pc="268436722" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="230" parent="globals/KiraFeldView" pc="268436725" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="231" parent="globals/KiraFeldView" pc="268436732" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="232" parent="globals/KiraFeldView" pc="268436744" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="233" parent="globals/KiraFeldView" pc="268436767" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="234" parent="globals/KiraFeldView" pc="268436776" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="234" parent="globals/KiraFeldView" pc="268436792" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="235" parent="globals/KiraFeldView" pc="268436800" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="236" parent="globals/KiraFeldView" pc="268436808" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="236" parent="globals/KiraFeldView" pc="268436835" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="237" parent="globals/KiraFeldView" pc="268436839" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="238" parent="globals/KiraFeldView" pc="268436846" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="239" parent="globals/KiraFeldView" pc="268436850" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="239" parent="globals/KiraFeldView" pc="268436860" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="240" parent="globals/KiraFeldView" pc="268436867" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="240" parent="globals/KiraFeldView" pc="268436878" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="241" parent="globals/KiraFeldView" pc="268436884" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="241" parent="globals/KiraFeldView" pc="268436895" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="242" parent="globals/KiraFeldView" pc="268436902" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="242" parent="globals/KiraFeldView" pc="268436913" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="243" parent="globals/KiraFeldView" pc="268436920" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="243" parent="globals/KiraFeldView" pc="268436931" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="244" parent="globals/KiraFeldView" pc="268436938" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="245" parent="globals/KiraFeldView" pc="268436942" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="245" parent="globals/KiraFeldView" pc="268436949" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="246" parent="globals/KiraFeldView" pc="268436953" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="247" parent="globals/KiraFeldView" pc="268436975" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="248" parent="globals/KiraFeldView" pc="268436983" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="249" parent="globals/KiraFeldView" pc="268436986" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="249" parent="globals/KiraFeldView" pc="268436997" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="250" parent="globals/KiraFeldView" pc="268437038" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="251" parent="globals/KiraFeldView" pc="268437047" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="252" parent="globals/KiraFeldView" pc="268437074" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="253" parent="globals/KiraFeldView" pc="268437085" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="254" parent="globals/KiraFeldView" pc="268437094" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="255" parent="globals/KiraFeldView" pc="268437113" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="255" parent="globals/KiraFeldView" pc="268437130" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="257" parent="globals/KiraFeldView" pc="268437159" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="258" parent="globals/KiraFeldView" pc="268437172" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="258" parent="globals/KiraFeldView" pc="268437181" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="259" parent="globals/KiraFeldView" pc="268437200" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="259" parent="globals/KiraFeldView" pc="268437209" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="9" lineNum="260" parent="globals/KiraFeldView" pc="268437228" symbol="compute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="10" lineNum="317" parent="globals/KiraFeldView" pc="268437240" symbol="farbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="10" lineNum="318" parent="globals/KiraFeldView" pc="268437242" symbol="farbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="10" lineNum="318" parent="globals/KiraFeldView" pc="268437248" symbol="farbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="10" lineNum="319" parent="globals/KiraFeldView" pc="268437257" symbol="farbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="10" lineNum="319" parent="globals/KiraFeldView" pc="268437274" symbol="farbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="10" lineNum="320" parent="globals/KiraFeldView" pc="268437283" symbol="farbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="10" lineNum="320" parent="globals/KiraFeldView" pc="268437294" symbol="farbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="10" lineNum="321" parent="globals/KiraFeldView" pc="268437303" symbol="farbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="10" lineNum="321" parent="globals/KiraFeldView" pc="268437313" symbol="farbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="10" lineNum="322" parent="globals/KiraFeldView" pc="268437321" symbol="farbe"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="11" lineNum="216" parent="globals/KiraFeldView" pc="268437326" symbol="rate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="11" lineNum="217" parent="globals/KiraFeldView" pc="268437329" symbol="rate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="11" lineNum="218" parent="globals/KiraFeldView" pc="268437342" symbol="rate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="11" lineNum="218" parent="globals/KiraFeldView" pc="268437350" symbol="rate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="11" lineNum="219" parent="globals/KiraFeldView" pc="268437355" symbol="rate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="11" lineNum="220" parent="globals/KiraFeldView" pc="268437386" symbol="rate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="11" lineNum="221" parent="globals/KiraFeldView" pc="268437406" symbol="rate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="11" lineNum="222" parent="globals/KiraFeldView" pc="268437419" symbol="rate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="12" lineNum="67" parent="globals/KiraFeldView" pc="268437437" symbol="feld"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="12" lineNum="68" parent="globals/KiraFeldView" pc="268437440" symbol="feld"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="12" lineNum="69" parent="globals/KiraFeldView" pc="268437459" symbol="feld"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="13" lineNum="98" parent="globals/KiraFeldView" pc="268437481" symbol="fehlerText"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="13" lineNum="99" parent="globals/KiraFeldView" pc="268437483" symbol="fehlerText"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="13" lineNum="99" parent="globals/KiraFeldView" pc="268437491" symbol="fehlerText"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="13" lineNum="100" parent="globals/KiraFeldView" pc="268437500" symbol="fehlerText"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="13" lineNum="100" parent="globals/KiraFeldView" pc="268437507" symbol="fehlerText"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="13" lineNum="101" parent="globals/KiraFeldView" pc="268437524" symbol="fehlerText"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="177" parent="globals/KiraFeldView" pc="268437538" symbol="feldFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="178" parent="globals/KiraFeldView" pc="268437540" symbol="feldFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="179" parent="globals/KiraFeldView" pc="268437564" symbol="feldFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="180" parent="globals/KiraFeldView" pc="268437580" symbol="feldFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="181" parent="globals/KiraFeldView" pc="268437596" symbol="feldFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="182" parent="globals/KiraFeldView" pc="268437616" symbol="feldFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="183" parent="globals/KiraFeldView" pc="268437633" symbol="feldFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="184" parent="globals/KiraFeldView" pc="268437642" symbol="feldFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="185" parent="globals/KiraFeldView" pc="268437660" symbol="feldFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="186" parent="globals/KiraFeldView" pc="268437678" symbol="feldFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="14" lineNum="188" parent="globals/KiraFeldView" pc="268437692" symbol="feldFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="263" parent="globals/KiraFeldView" pc="268437707" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="264" parent="globals/KiraFeldView" pc="268437710" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="265" parent="globals/KiraFeldView" pc="268437718" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="266" parent="globals/KiraFeldView" pc="268437729" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="268" parent="globals/KiraFeldView" pc="268437735" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="269" parent="globals/KiraFeldView" pc="268437744" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="270" parent="globals/KiraFeldView" pc="268437752" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="271" parent="globals/KiraFeldView" pc="268437760" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="271" parent="globals/KiraFeldView" pc="268437779" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="272" parent="globals/KiraFeldView" pc="268437790" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="272" parent="globals/KiraFeldView" pc="268437801" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="272" parent="globals/KiraFeldView" pc="268437809" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="274" parent="globals/KiraFeldView" pc="268437823" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="275" parent="globals/KiraFeldView" pc="268437851" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="276" parent="globals/KiraFeldView" pc="268437859" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="278" parent="globals/KiraFeldView" pc="268437910" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="279" parent="globals/KiraFeldView" pc="268437918" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="280" parent="globals/KiraFeldView" pc="268437964" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="281" parent="globals/KiraFeldView" pc="268437972" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="283" parent="globals/KiraFeldView" pc="268438082" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="284" parent="globals/KiraFeldView" pc="268438102" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="285" parent="globals/KiraFeldView" pc="268438110" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="286" parent="globals/KiraFeldView" pc="268438118" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="291" parent="globals/KiraFeldView" pc="268438302" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="292" parent="globals/KiraFeldView" pc="268438310" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="293" parent="globals/KiraFeldView" pc="268438326" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="294" parent="globals/KiraFeldView" pc="268438343" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="295" parent="globals/KiraFeldView" pc="268438381" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="296" parent="globals/KiraFeldView" pc="268438398" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="297" parent="globals/KiraFeldView" pc="268438408" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="298" parent="globals/KiraFeldView" pc="268438461" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="299" parent="globals/KiraFeldView" pc="268438495" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="300" parent="globals/KiraFeldView" pc="268438503" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="301" parent="globals/KiraFeldView" pc="268438516" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="15" lineNum="302" parent="globals/KiraFeldView" pc="268438531" symbol="pruefen"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="16" lineNum="93" parent="globals/KiraFeldView" pc="268438715" symbol="heute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="16" lineNum="94" parent="globals/KiraFeldView" pc="268438718" symbol="heute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="16" lineNum="95" parent="globals/KiraFeldView" pc="268438743" symbol="heute"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="17" lineNum="160" parent="globals/KiraFeldView" pc="268438815" symbol="statusFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="17" lineNum="161" parent="globals/KiraFeldView" pc="268438817" symbol="statusFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="17" lineNum="162" parent="globals/KiraFeldView" pc="268438860" symbol="statusFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="17" lineNum="163" parent="globals/KiraFeldView" pc="268438899" symbol="statusFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="17" lineNum="164" parent="globals/KiraFeldView" pc="268438917" symbol="statusFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="17" lineNum="165" parent="globals/KiraFeldView" pc="268438935" symbol="statusFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="17" lineNum="166" parent="globals/KiraFeldView" pc="268438949" symbol="statusFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="17" lineNum="167" parent="globals/KiraFeldView" pc="268438958" symbol="statusFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="17" lineNum="168" parent="globals/KiraFeldView" pc="268438974" symbol="statusFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="17" lineNum="169" parent="globals/KiraFeldView" pc="268438983" symbol="statusFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="17" lineNum="170" parent="globals/KiraFeldView" pc="268439001" symbol="statusFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="17" lineNum="171" parent="globals/KiraFeldView" pc="268439019" symbol="statusFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="17" lineNum="173" parent="globals/KiraFeldView" pc="268439033" symbol="statusFertig"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="18" lineNum="225" parent="globals/KiraFeldView" pc="268439048" symbol="onTimerStart"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="18" lineNum="226" parent="globals/KiraFeldView" pc="268439050" symbol="onTimerStart"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="19" lineNum="192" parent="globals/KiraFeldView" pc="268439058" symbol="onTimerReset"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="19" lineNum="193" parent="globals/KiraFeldView" pc="268439060" symbol="onTimerReset"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="19" lineNum="194" parent="globals/KiraFeldView" pc="268439072" symbol="onTimerReset"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="19" lineNum="195" parent="globals/KiraFeldView" pc="268439080" symbol="onTimerReset"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="19" lineNum="196" parent="globals/KiraFeldView" pc="268439088" symbol="onTimerReset"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="19" lineNum="197" parent="globals/KiraFeldView" pc="268439096" symbol="onTimerReset"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="19" lineNum="198" parent="globals/KiraFeldView" pc="268439104" symbol="onTimerReset"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="19" lineNum="199" parent="globals/KiraFeldView" pc="268439112" symbol="onTimerReset"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="19" lineNum="200" parent="globals/KiraFeldView" pc="268439124" symbol="onTimerReset"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="19" lineNum="201" parent="globals/KiraFeldView" pc="268439133" symbol="onTimerReset"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="19" lineNum="202" parent="globals/KiraFeldView" pc="268439142" symbol="onTimerReset"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="20" lineNum="206" parent="globals/KiraFeldView" pc="268439151" symbol="vorher"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="20" lineNum="207" parent="globals/KiraFeldView" pc="268439154" symbol="vorher"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="20" lineNum="208" parent="globals/KiraFeldView" pc="268439162" symbol="vorher"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="20" lineNum="208" parent="globals/KiraFeldView" pc="268439168" symbol="vorher"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="20" lineNum="209" parent="globals/KiraFeldView" pc="268439173" symbol="vorher"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="20" lineNum="210" parent="globals/KiraFeldView" pc="268439189" symbol="vorher"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="20" lineNum="210" parent="globals/KiraFeldView" pc="268439224" symbol="vorher"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="20" lineNum="211" parent="globals/KiraFeldView" pc="268439229" symbol="vorher"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="20" lineNum="212" parent="globals/KiraFeldView" pc="268439245" symbol="vorher"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="21" lineNum="72" parent="globals/KiraFeldView" pc="268439293" symbol="raten"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="21" lineNum="73" parent="globals/KiraFeldView" pc="268439296" symbol="raten"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="21" lineNum="74" parent="globals/KiraFeldView" pc="268439304" symbol="raten"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="21" lineNum="75" parent="globals/KiraFeldView" pc="268439310" symbol="raten"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="21" lineNum="76" parent="globals/KiraFeldView" pc="268439327" symbol="raten"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="21" lineNum="77" parent="globals/KiraFeldView" pc="268439342" symbol="raten"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="21" lineNum="78" parent="globals/KiraFeldView" pc="268439359" symbol="raten"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="21" lineNum="78" parent="globals/KiraFeldView" pc="268439388" symbol="raten"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="21" lineNum="81" parent="globals/KiraFeldView" pc="268439400" symbol="raten"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="38" parent="globals/KiraFeldView" pc="268439406" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="39" parent="globals/KiraFeldView" pc="268439409" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="41" parent="globals/KiraFeldView" pc="268439421" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="43" parent="globals/KiraFeldView" pc="268439468" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="45" parent="globals/KiraFeldView" pc="268439522" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="22" lineNum="46" parent="globals/KiraFeldView" pc="268439538" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="23" lineNum="309" parent="globals/KiraFeldView" pc="268439546" symbol="melden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="23" lineNum="310" parent="globals/KiraFeldView" pc="268439549" symbol="melden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="23" lineNum="311" parent="globals/KiraFeldView" pc="268439558" symbol="melden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="23" lineNum="312" parent="globals/KiraFeldView" pc="268439579" symbol="melden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="23" lineNum="313" parent="globals/KiraFeldView" pc="268439594" symbol="melden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="23" lineNum="313" parent="globals/KiraFeldView" pc="268439615" symbol="melden"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="325" parent="globals/KiraFeldView" pc="268439635" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="326" parent="globals/KiraFeldView" pc="268439638" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="327" parent="globals/KiraFeldView" pc="268439646" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="328" parent="globals/KiraFeldView" pc="268439664" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="329" parent="globals/KiraFeldView" pc="268439685" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="330" parent="globals/KiraFeldView" pc="268439699" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="331" parent="globals/KiraFeldView" pc="268439707" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="332" parent="globals/KiraFeldView" pc="268439716" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="333" parent="globals/KiraFeldView" pc="268439725" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="334" parent="globals/KiraFeldView" pc="268439732" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="335" parent="globals/KiraFeldView" pc="268439745" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="336" parent="globals/KiraFeldView" pc="268439753" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="337" parent="globals/KiraFeldView" pc="268439760" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="338" parent="globals/KiraFeldView" pc="268439768" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="339" parent="globals/KiraFeldView" pc="268439775" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="340" parent="globals/KiraFeldView" pc="268439796" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="341" parent="globals/KiraFeldView" pc="268439815" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="343" parent="globals/KiraFeldView" pc="268439834" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="343" parent="globals/KiraFeldView" pc="268439878" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="344" parent="globals/KiraFeldView" pc="268439897" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="344" parent="globals/KiraFeldView" pc="268439912" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="345" parent="globals/KiraFeldView" pc="268439927" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="346" parent="globals/KiraFeldView" pc="268439937" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="347" parent="globals/KiraFeldView" pc="268439943" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="348" parent="globals/KiraFeldView" pc="268439962" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="349" parent="globals/KiraFeldView" pc="268440000" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="350" parent="globals/KiraFeldView" pc="268440011" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="353" parent="globals/KiraFeldView" pc="268440054" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="354" parent="globals/KiraFeldView" pc="268440062" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="356" parent="globals/KiraFeldView" pc="268440146" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="356" parent="globals/KiraFeldView" pc="268440165" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="357" parent="globals/KiraFeldView" pc="268440175" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="358" parent="globals/KiraFeldView" pc="268440189" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="358" parent="globals/KiraFeldView" pc="268440200" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="359" parent="globals/KiraFeldView" pc="268440207" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="361" parent="globals/KiraFeldView" pc="268440215" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="362" parent="globals/KiraFeldView" pc="268440229" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="363" parent="globals/KiraFeldView" pc="268440260" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="364" parent="globals/KiraFeldView" pc="268440274" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="365" parent="globals/KiraFeldView" pc="268440307" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="367" parent="globals/KiraFeldView" pc="268440311" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="368" parent="globals/KiraFeldView" pc="268440325" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="369" parent="globals/KiraFeldView" pc="268440382" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="370" parent="globals/KiraFeldView" pc="268440396" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="371" parent="globals/KiraFeldView" pc="268440438" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="372" parent="globals/KiraFeldView" pc="268440476" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="374" parent="globals/KiraFeldView" pc="268440523" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="375" parent="globals/KiraFeldView" pc="268440547" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="376" parent="globals/KiraFeldView" pc="268440563" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="377" parent="globals/KiraFeldView" pc="268440573" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="378" parent="globals/KiraFeldView" pc="268440603" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="379" parent="globals/KiraFeldView" pc="268440619" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="380" parent="globals/KiraFeldView" pc="268440637" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="381" parent="globals/KiraFeldView" pc="268440658" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="382" parent="globals/KiraFeldView" pc="268440674" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="383" parent="globals/KiraFeldView" pc="268440698" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="384" parent="globals/KiraFeldView" pc="268440733" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" id="24" lineNum="385" parent="globals/KiraFeldView" pc="268440747" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" id="25" lineNum="18" parent="globals/KiraFeldApp" pc="268440769" symbol="getInitialView"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" id="25" lineNum="19" parent="globals/KiraFeldApp" pc="268440771" symbol="getInitialView"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" id="26" lineNum="14" parent="globals/KiraFeldApp" pc="268440797" symbol="initialize"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" id="26" lineNum="15" parent="globals/KiraFeldApp" pc="268440799" symbol="initialize"/>
     </pcToLineNum>
     <symbolTable>
         <entry id="8388639" module="true" symbol="Graphics"/>
-        <entry field="true" id="40" symbol="FitLabel"/>
+        <entry field="true" id="47" symbol="FitLabel"/>
         <entry id="6" object="true" symbol="KiraFeldView"/>
         <entry id="8388632" method="true" symbol="&lt;init&gt;"/>
         <entry id="8389849" symbol="units"/>
@@ -263,28 +319,32 @@
         <entry field="true" id="18" symbol="fitSumme"/>
         <entry id="8390424" module="true" symbol="Storage"/>
         <entry id="28" method="true" symbol="rahmen"/>
+        <entry field="true" id="41" symbol="warnGemeldet"/>
         <entry id="8388647" module="true" symbol="UserProfile"/>
         <entry field="true" id="22" symbol="hinweisBis"/>
         <entry field="true" id="8388611" module="true" symbol="Toybox"/>
-        <entry field="true" id="34" symbol="unterwegs"/>
+        <entry field="true" id="36" symbol="unterwegs"/>
         <entry id="20" method="true" symbol="heute"/>
         <entry id="8389747" method="true" symbol="onTimerStart"/>
-        <entry field="true" id="38" symbol="AppName"/>
-        <entry field="true" id="36" symbol="zuletzt"/>
+        <entry field="true" id="45" symbol="AppName"/>
+        <entry field="true" id="43" symbol="zuletzt"/>
         <entry field="true" id="25" symbol="minGemeldet"/>
         <entry id="4" module="true" symbol="globals/Rez/Strings"/>
         <entry id="8389594" symbol="headers"/>
         <entry id="8388631" module="true" symbol="Activity"/>
         <entry id="8388648" module="true" symbol="WatchUi"/>
         <entry id="2" module="true" symbol="globals/Rez"/>
+        <entry field="true" id="38" symbol="verlaufMin"/>
         <entry id="8389124" method="true" symbol="onUpdate"/>
+        <entry id="29" method="true" symbol="rate"/>
         <entry id="8388771" module="true" object="true" symbol="Drawables"/>
-        <entry id="32" method="true" symbol="sportLesen"/>
-        <entry id="33" method="true" symbol="statusFertig"/>
+        <entry id="33" method="true" symbol="sportLesen"/>
+        <entry id="35" method="true" symbol="statusFertig"/>
+        <entry field="true" id="40" symbol="waechterAb"/>
         <entry id="8389137" method="true" symbol="compute"/>
-        <entry id="31" symbol="sek"/>
+        <entry id="32" symbol="sek"/>
         <entry id="8388987" method="true" symbol="vibrate"/>
-        <entry id="29" method="true" symbol="raten"/>
+        <entry id="30" method="true" symbol="raten"/>
         <entry field="true" id="10" symbol="easyGemeldet"/>
         <entry id="13" method="true" symbol="fehlerText"/>
         <entry id="8388637" module="true" symbol="Communications"/>
@@ -296,96 +356,119 @@
         <entry id="8389752" method="true" symbol="onTimerReset"/>
         <entry id="7" symbol="RATEN_START"/>
         <entry field="true" id="11" symbol="ess"/>
-        <entry field="true" id="39" symbol="FitEinheit"/>
+        <entry field="true" id="46" symbol="FitEinheit"/>
         <entry id="8388786" method="true" symbol="method"/>
         <entry id="8388644" module="true" symbol="System"/>
         <entry id="16" method="true" symbol="fertig"/>
         <entry id="8388769" module="true" object="true" symbol="Rez"/>
         <entry id="8388640" module="true" symbol="Lang"/>
         <entry id="9" method="true" symbol="anfrageFertig"/>
-        <entry field="true" id="41" symbol="FitTitel"/>
-        <entry field="true" id="37" symbol="LauncherIcon"/>
+        <entry field="true" id="48" symbol="FitTitel"/>
+        <entry field="true" id="44" symbol="LauncherIcon"/>
         <entry id="8388610" symbol="statics"/>
         <entry id="8389350" module="true" symbol="globals"/>
         <entry id="8388770" module="true" object="true" symbol="Strings"/>
         <entry id="8388702" method="true" symbol="initialize"/>
+        <entry field="true" id="34" symbol="startGeprueft"/>
         <entry id="8389780" module="true" symbol="FitContributor"/>
         <entry id="8" method="true" symbol="abrufFaellig"/>
-        <entry field="true" id="35" symbol="zonen"/>
+        <entry field="true" id="42" symbol="zonen"/>
         <entry field="true" id="19" symbol="gruppe"/>
         <entry id="8389280" method="true" symbol="getInitialView"/>
         <entry id="8389847" symbol="mesgType"/>
         <entry id="12" method="true" symbol="farbe"/>
         <entry id="8388636" module="true" symbol="Attention"/>
         <entry id="15" method="true" symbol="feldFertig"/>
-        <entry field="true" id="30" symbol="seit"/>
+        <entry id="39" method="true" symbol="vorher"/>
+        <entry field="true" id="31" symbol="seit"/>
         <entry id="8388635" module="true" symbol="Application"/>
         <entry id="14" method="true" symbol="feld"/>
+        <entry field="true" id="37" symbol="verlauf"/>
         <entry field="true" id="21" symbol="hinweis"/>
     </symbolTable>
     <localVars>
-        <entry endPc="268435796" name="sp" stackId="1" startPc="268435507"/>
-        <entry endPc="268435539" name="p" stackId="2" startPc="268435510"/>
-        <entry endPc="268435556" name="e" stackId="3" startPc="268435546"/>
-        <entry endPc="268435774" name="z" stackId="4" startPc="268435719"/>
-        <entry endPc="268435791" name="e" stackId="5" startPc="268435781"/>
-        <entry arg="true" endPc="268435951" name="rc" stackId="1" startPc="268435798"/>
-        <entry arg="true" endPc="268435951" name="data" stackId="2" startPc="268435798"/>
-        <entry arg="true" endPc="268436013" name="rc" stackId="1" startPc="268435952"/>
-        <entry arg="true" endPc="268436013" name="warte" stackId="2" startPc="268435952"/>
-        <entry endPc="268436180" name="f" stackId="1" startPc="268436017"/>
-        <entry endPc="268436180" name="d" stackId="2" startPc="268436017"/>
-        <entry endPc="268436640" name="tok" stackId="1" startPc="268436368"/>
-        <entry endPc="268436640" name="aid" stackId="2" startPc="268436368"/>
-        <entry endPc="268436706" name="e" stackId="3" startPc="268436647"/>
-        <entry arg="true" endPc="268437118" name="info" stackId="1" startPc="268436713"/>
-        <entry endPc="268437117" name="jetzt" stackId="2" startPc="268436716"/>
-        <entry endPc="268437117" name="dt" stackId="3" startPc="268436716"/>
-        <entry endPc="268437117" name="hr" stackId="4" startPc="268436716"/>
-        <entry endPc="268437117" name="z" stackId="5" startPc="268436716"/>
-        <entry endPc="268437117" name="k" stackId="6" startPc="268436716"/>
-        <entry endPc="268437117" name="r" stackId="7" startPc="268436716"/>
-        <entry endPc="268437117" name="s" stackId="8" startPc="268436716"/>
-        <entry endPc="268437028" name="i" stackId="9" startPc="268436988"/>
-        <entry endPc="268437117" name="e" stackId="10" startPc="268436716"/>
-        <entry arg="true" endPc="268437204" name="e" stackId="1" startPc="268437119"/>
-        <entry arg="true" endPc="268437204" name="ra" stackId="2" startPc="268437119"/>
-        <entry endPc="268437248" name="f" stackId="1" startPc="268437208"/>
-        <entry arg="true" endPc="268437305" name="rc" stackId="1" startPc="268437249"/>
-        <entry arg="true" endPc="268437474" name="rc" stackId="1" startPc="268437306"/>
-        <entry arg="true" endPc="268437474" name="data" stackId="2" startPc="268437306"/>
-        <entry arg="true" endPc="268438008" name="e" stackId="1" startPc="268437475"/>
-        <entry endPc="268438007" name="ra" stackId="2" startPc="268437478"/>
-        <entry endPc="268438007" name="f" stackId="3" startPc="268437478"/>
-        <entry endPc="268438108" name="g" stackId="1" startPc="268438012"/>
-        <entry arg="true" endPc="268438341" name="rc" stackId="1" startPc="268438109"/>
-        <entry arg="true" endPc="268438341" name="data" stackId="2" startPc="268438109"/>
-        <entry endPc="268438511" name="f" stackId="1" startPc="268438402"/>
-        <entry endPc="268438502" name="r" stackId="2" startPc="268438416"/>
-        <entry endPc="268438499" name="g" stackId="3" startPc="268438448"/>
-        <entry endPc="268438638" name="e" stackId="1" startPc="268438628"/>
-        <entry arg="true" endPc="268438740" name="text" stackId="1" startPc="268438652"/>
-        <entry arg="true" endPc="268438740" name="vibe" stackId="2" startPc="268438652"/>
-        <entry endPc="268438731" name="e" stackId="3" startPc="268438721"/>
-        <entry arg="true" endPc="268439726" name="dc" stackId="1" startPc="268438741"/>
-        <entry endPc="268439725" name="bg" stackId="2" startPc="268438744"/>
-        <entry endPc="268439725" name="fg" stackId="3" startPc="268438744"/>
-        <entry endPc="268439725" name="grau" stackId="4" startPc="268438744"/>
-        <entry endPc="268439725" name="w" stackId="5" startPc="268438744"/>
-        <entry endPc="268439725" name="h" stackId="6" startPc="268438744"/>
-        <entry endPc="268439725" name="cx" stackId="7" startPc="268438744"/>
-        <entry endPc="268439725" name="e" stackId="8" startPc="268438744"/>
-        <entry endPc="268439725" name="ra" stackId="9" startPc="268438744"/>
-        <entry endPc="268439725" name="unten" stackId="10" startPc="268438744"/>
-        <entry endPc="268439024" name="c" stackId="11" startPc="268438887"/>
-        <entry endPc="268439024" name="rc" stackId="12" startPc="268438887"/>
-        <entry endPc="268439087" name="rc" stackId="13" startPc="268439034"/>
-        <entry endPc="268439725" name="c" stackId="14" startPc="268438744"/>
-        <entry endPc="268439722" name="bw" stackId="15" startPc="268439505"/>
-        <entry endPc="268439722" name="x" stackId="16" startPc="268439505"/>
-        <entry endPc="268439722" name="y" stackId="17" startPc="268439505"/>
-        <entry endPc="268439722" name="lo" stackId="18" startPc="268439505"/>
-        <entry endPc="268439722" name="p" stackId="19" startPc="268439505"/>
+        <entry endPc="268435805" name="sp" stackId="1" startPc="268435516"/>
+        <entry endPc="268435548" name="p" stackId="2" startPc="268435519"/>
+        <entry endPc="268435565" name="e" stackId="3" startPc="268435555"/>
+        <entry endPc="268435783" name="z" stackId="4" startPc="268435728"/>
+        <entry endPc="268435800" name="e" stackId="5" startPc="268435790"/>
+        <entry arg="true" endPc="268435960" name="rc" stackId="1" startPc="268435807"/>
+        <entry arg="true" endPc="268435960" name="data" stackId="2" startPc="268435807"/>
+        <entry arg="true" endPc="268436022" name="rc" stackId="1" startPc="268435961"/>
+        <entry arg="true" endPc="268436022" name="warte" stackId="2" startPc="268435961"/>
+        <entry endPc="268436189" name="f" stackId="1" startPc="268436026"/>
+        <entry endPc="268436189" name="d" stackId="2" startPc="268436026"/>
+        <entry endPc="268436649" name="tok" stackId="1" startPc="268436377"/>
+        <entry endPc="268436649" name="aid" stackId="2" startPc="268436377"/>
+        <entry endPc="268436715" name="e" stackId="3" startPc="268436656"/>
+        <entry arg="true" endPc="268437239" name="info" stackId="1" startPc="268436722"/>
+        <entry endPc="268437238" name="jetzt" stackId="2" startPc="268436725"/>
+        <entry endPc="268437238" name="dt" stackId="3" startPc="268436725"/>
+        <entry endPc="268437238" name="hr" stackId="4" startPc="268436725"/>
+        <entry endPc="268437238" name="z" stackId="5" startPc="268436725"/>
+        <entry endPc="268437238" name="k" stackId="6" startPc="268436725"/>
+        <entry endPc="268437238" name="r" stackId="7" startPc="268436725"/>
+        <entry endPc="268437238" name="s" stackId="8" startPc="268436725"/>
+        <entry endPc="268437037" name="i" stackId="9" startPc="268436997"/>
+        <entry endPc="268437238" name="tm" stackId="10" startPc="268436725"/>
+        <entry endPc="268437238" name="e" stackId="11" startPc="268436725"/>
+        <entry arg="true" endPc="268437325" name="e" stackId="1" startPc="268437240"/>
+        <entry arg="true" endPc="268437325" name="ra" stackId="2" startPc="268437240"/>
+        <entry endPc="268437436" name="n" stackId="1" startPc="268437329"/>
+        <entry endPc="268437436" name="a" stackId="2" startPc="268437329"/>
+        <entry endPc="268437436" name="m" stackId="3" startPc="268437329"/>
+        <entry endPc="268437436" name="r" stackId="4" startPc="268437329"/>
+        <entry endPc="268437480" name="f" stackId="1" startPc="268437440"/>
+        <entry arg="true" endPc="268437537" name="rc" stackId="1" startPc="268437481"/>
+        <entry arg="true" endPc="268437706" name="rc" stackId="1" startPc="268437538"/>
+        <entry arg="true" endPc="268437706" name="data" stackId="2" startPc="268437538"/>
+        <entry arg="true" endPc="268438714" name="e" stackId="1" startPc="268437707"/>
+        <entry endPc="268438713" name="ra" stackId="2" startPc="268437710"/>
+        <entry endPc="268438713" name="tag" stackId="3" startPc="268437710"/>
+        <entry endPc="268437819" name="v0" stackId="4" startPc="268437744"/>
+        <entry endPc="268438298" name="r" stackId="5" startPc="268437735"/>
+        <entry endPc="268438713" name="f" stackId="6" startPc="268437710"/>
+        <entry endPc="268438710" name="vote" stackId="7" startPc="268438326"/>
+        <entry endPc="268438710" name="easy" stackId="8" startPc="268438326"/>
+        <entry endPc="268438710" name="train" stackId="9" startPc="268438326"/>
+        <entry endPc="268438707" name="t" stackId="10" startPc="268438408"/>
+        <entry endPc="268438707" name="schwelle" stackId="11" startPc="268438408"/>
+        <entry endPc="268438704" name="min" stackId="12" startPc="268438503"/>
+        <entry endPc="268438814" name="g" stackId="1" startPc="268438718"/>
+        <entry arg="true" endPc="268439047" name="rc" stackId="1" startPc="268438815"/>
+        <entry arg="true" endPc="268439047" name="data" stackId="2" startPc="268438815"/>
+        <entry endPc="268439292" name="f" stackId="1" startPc="268439154"/>
+        <entry endPc="268439292" name="d" stackId="2" startPc="268439154"/>
+        <entry endPc="268439292" name="v" stackId="3" startPc="268439154"/>
+        <entry endPc="268439405" name="f" stackId="1" startPc="268439296"/>
+        <entry endPc="268439396" name="r" stackId="2" startPc="268439310"/>
+        <entry endPc="268439393" name="g" stackId="3" startPc="268439342"/>
+        <entry endPc="268439532" name="e" stackId="1" startPc="268439522"/>
+        <entry arg="true" endPc="268439634" name="text" stackId="1" startPc="268439546"/>
+        <entry arg="true" endPc="268439634" name="vibe" stackId="2" startPc="268439546"/>
+        <entry endPc="268439625" name="e" stackId="3" startPc="268439615"/>
+        <entry arg="true" endPc="268440768" name="dc" stackId="1" startPc="268439635"/>
+        <entry endPc="268440767" name="bg" stackId="2" startPc="268439638"/>
+        <entry endPc="268440767" name="fg" stackId="3" startPc="268439638"/>
+        <entry endPc="268440767" name="grau" stackId="4" startPc="268439638"/>
+        <entry endPc="268440767" name="w" stackId="5" startPc="268439638"/>
+        <entry endPc="268440767" name="h" stackId="6" startPc="268439638"/>
+        <entry endPc="268440767" name="cx" stackId="7" startPc="268439638"/>
+        <entry endPc="268440767" name="einheit" stackId="8" startPc="268439638"/>
+        <entry endPc="268440767" name="vor" stackId="9" startPc="268439638"/>
+        <entry endPc="268440767" name="e" stackId="10" startPc="268439638"/>
+        <entry endPc="268440767" name="ra" stackId="11" startPc="268439638"/>
+        <entry endPc="268440767" name="unten" stackId="12" startPc="268439638"/>
+        <entry endPc="268439933" name="c" stackId="13" startPc="268439796"/>
+        <entry endPc="268439933" name="rc" stackId="14" startPc="268439796"/>
+        <entry endPc="268439996" name="rc" stackId="15" startPc="268439943"/>
+        <entry endPc="268440145" name="r" stackId="16" startPc="268440054"/>
+        <entry endPc="268440767" name="c" stackId="17" startPc="268439638"/>
+        <entry endPc="268440764" name="bw" stackId="18" startPc="268440547"/>
+        <entry endPc="268440764" name="x" stackId="19" startPc="268440547"/>
+        <entry endPc="268440764" name="y" stackId="20" startPc="268440547"/>
+        <entry endPc="268440764" name="lo" stackId="21" startPc="268440547"/>
+        <entry endPc="268440764" name="p" stackId="22" startPc="268440547"/>
     </localVars>
     <deviceInfo deviceVersion="69f9c27a08d175c50b86464a70c24d15718945cb" partNumber="006-B4631-00"/>
     <annotations>
@@ -398,98 +481,104 @@
     <dataEntryOffsetMappings>
         <dataEntry label="globals" offset="49" parentId="" symbolId="globals" type="module"/>
         <dataEntry label="globals/KiraFeldView" offset="160" parentId="globals" symbolId="KiraFeldView" type="class"/>
-        <dataEntry label="globals/KiraFeldApp" offset="501" parentId="globals" symbolId="KiraFeldApp" type="class"/>
-        <dataEntry label="globals/Rez" offset="554" parentId="globals" symbolId="Rez" type="module"/>
-        <dataEntry label="globals/Rez/Drawables" offset="598" parentId="Rez" symbolId="Drawables" type="module"/>
-        <dataEntry label="globals/Rez/Strings" offset="633" parentId="Rez" symbolId="Strings" type="module"/>
+        <dataEntry label="globals/KiraFeldApp" offset="564" parentId="globals" symbolId="KiraFeldApp" type="class"/>
+        <dataEntry label="globals/Rez" offset="617" parentId="globals" symbolId="Rez" type="module"/>
+        <dataEntry label="globals/Rez/Drawables" offset="661" parentId="Rez" symbolId="Drawables" type="module"/>
+        <dataEntry label="globals/Rez/Strings" offset="696" parentId="Rez" symbolId="Strings" type="module"/>
     </dataEntryOffsetMappings>
     <functions>
-        <functionEntry accessMode="public" endPc="268435471" name="&lt;init&gt;" parent="KiraFeldView" startPc="268435460">
+        <functionEntry accessMode="public" endPc="268435480" name="&lt;init&gt;" parent="KiraFeldView" startPc="268435460">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268435483" name="&lt;init&gt;" parent="KiraFeldApp" startPc="268435472">
+        <functionEntry accessMode="public" endPc="268435492" name="&lt;init&gt;" parent="KiraFeldApp" startPc="268435481">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268435503" name="&lt;init&gt;" parent="Rez" startPc="268435484">
+        <functionEntry accessMode="public" endPc="268435512" name="&lt;init&gt;" parent="Rez" startPc="268435493">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268435797" name="sportLesen" parent="KiraFeldView" startPc="268435504">
+        <functionEntry accessMode="public" endPc="268435806" name="sportLesen" parent="KiraFeldView" startPc="268435513">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268435951" name="anfrageFertig" parent="KiraFeldView" startPc="268435798">
+        <functionEntry accessMode="public" endPc="268435960" name="anfrageFertig" parent="KiraFeldView" startPc="268435807">
             <param id="rc"/>
             <param id="data"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268436013" name="fertig" parent="KiraFeldView" startPc="268435952">
+        <functionEntry accessMode="public" endPc="268436022" name="fertig" parent="KiraFeldView" startPc="268435961">
             <param id="rc"/>
             <param id="warte"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268436180" name="rahmen" parent="KiraFeldView" startPc="268436014">
+        <functionEntry accessMode="public" endPc="268436189" name="rahmen" parent="KiraFeldView" startPc="268436023">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268436712" name="abrufFaellig" parent="KiraFeldView" startPc="268436181">
+        <functionEntry accessMode="public" endPc="268436721" name="abrufFaellig" parent="KiraFeldView" startPc="268436190">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268437118" name="compute" parent="KiraFeldView" startPc="268436713">
+        <functionEntry accessMode="public" endPc="268437239" name="compute" parent="KiraFeldView" startPc="268436722">
             <param id="info"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268437204" name="farbe" parent="KiraFeldView" startPc="268437119">
+        <functionEntry accessMode="public" endPc="268437325" name="farbe" parent="KiraFeldView" startPc="268437240">
             <param id="e"/>
             <param id="ra"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268437248" name="feld" parent="KiraFeldView" startPc="268437205">
+        <functionEntry accessMode="public" endPc="268437436" name="rate" parent="KiraFeldView" startPc="268437326">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268437305" name="fehlerText" parent="KiraFeldView" startPc="268437249">
+        <functionEntry accessMode="public" endPc="268437480" name="feld" parent="KiraFeldView" startPc="268437437">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268437537" name="fehlerText" parent="KiraFeldView" startPc="268437481">
             <param id="rc"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268437474" name="feldFertig" parent="KiraFeldView" startPc="268437306">
+        <functionEntry accessMode="public" endPc="268437706" name="feldFertig" parent="KiraFeldView" startPc="268437538">
             <param id="rc"/>
             <param id="data"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268438008" name="pruefen" parent="KiraFeldView" startPc="268437475">
+        <functionEntry accessMode="public" endPc="268438714" name="pruefen" parent="KiraFeldView" startPc="268437707">
             <param id="e"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268438108" name="heute" parent="KiraFeldView" startPc="268438009">
+        <functionEntry accessMode="public" endPc="268438814" name="heute" parent="KiraFeldView" startPc="268438715">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268438341" name="statusFertig" parent="KiraFeldView" startPc="268438109">
+        <functionEntry accessMode="public" endPc="268439047" name="statusFertig" parent="KiraFeldView" startPc="268438815">
             <param id="rc"/>
             <param id="data"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268438351" name="onTimerStart" parent="KiraFeldView" startPc="268438342">
+        <functionEntry accessMode="public" endPc="268439057" name="onTimerStart" parent="KiraFeldView" startPc="268439048">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268438398" name="onTimerReset" parent="KiraFeldView" startPc="268438352">
+        <functionEntry accessMode="public" endPc="268439150" name="onTimerReset" parent="KiraFeldView" startPc="268439058">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268438511" name="raten" parent="KiraFeldView" startPc="268438399">
+        <functionEntry accessMode="public" endPc="268439292" name="vorher" parent="KiraFeldView" startPc="268439151">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268438651" name="initialize" parent="KiraFeldView" startPc="268438512">
+        <functionEntry accessMode="public" endPc="268439405" name="raten" parent="KiraFeldView" startPc="268439293">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268438740" name="melden" parent="KiraFeldView" startPc="268438652">
+        <functionEntry accessMode="public" endPc="268439545" name="initialize" parent="KiraFeldView" startPc="268439406">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268439634" name="melden" parent="KiraFeldView" startPc="268439546">
             <param id="text"/>
             <param id="vibe"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268439726" name="onUpdate" parent="KiraFeldView" startPc="268438741">
+        <functionEntry accessMode="public" endPc="268440768" name="onUpdate" parent="KiraFeldView" startPc="268439635">
             <param id="dc"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268439754" name="getInitialView" parent="KiraFeldApp" startPc="268439727">
+        <functionEntry accessMode="public" endPc="268440796" name="getInitialView" parent="KiraFeldApp" startPc="268440769">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268439769" name="initialize" parent="KiraFeldApp" startPc="268439755">
+        <functionEntry accessMode="public" endPc="268440811" name="initialize" parent="KiraFeldApp" startPc="268440797">
             <documentation/>
         </functionEntry>
         <functionEntry accessMode="public" name="&lt;init&gt;" parent="Drawables">

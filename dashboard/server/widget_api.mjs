@@ -90,6 +90,12 @@ export function setupWidget(app, { getSetting, setSetting, originOk, texte, apps
     try { w = JSON.parse(getSetting('garmin_live') || 'null'); } catch { w = null; }
     if (!w || w.datum !== heute() || !a || Date.now() - Number(w.at) > 3 * 3600 * 1000) return a;
     const o = { ...a, live: { at: w.at, trZeit: w.trZeit ?? null, status: w.status ?? null, erholH: w.erholH ?? null } };
+    // Einheiten von heute live vom Mac (nach dem Speichern auf der Uhr, ca. 10 min Verzug)
+    const akt = Array.isArray(w.akt) ? w.akt : [];
+    const aktSumme = Math.round(akt.reduce((s, x) => s + (Number(x.last) > 0 ? Number(x.last) : 0), 0));
+    if (akt.length) o.liveAkt = akt;
+    if (o.uhr && o.uhr.feld && aktSumme > (o.uhr.feld.vorher || 0)) o.uhr = { ...o.uhr, feld: { ...o.uhr.feld, vorher: aktSumme } };
+    if (o.last && aktSumme > (o.last.istHeute || 0)) o.last = { ...o.last, istHeute: aktSumme, erledigt: true };
     if (w.tr != null && o.morgen) o.morgen = { ...o.morgen, readiness: w.tr, readinessQuelle: 'garmin live', readinessZeit: w.trZeit ?? null };
     if (o.last && w.acwr != null) o.last = { ...o.last, acwr: w.acwr, acwrBand: w.acwr > 1.5 ? 'hoch' : w.acwr > 1.3 ? 'erhoeht' : w.acwr < 0.8 ? 'niedrig' : 'korridor' };
     if (o.form) o.form = { ...o.form, ...(w.ctl != null ? { ctl: w.ctl } : {}), ...(w.atl != null ? { atl: w.atl } : {}), ...(w.es != null ? { es: w.es } : {}) };
@@ -100,8 +106,41 @@ export function setupWidget(app, { getSetting, setSetting, originOk, texte, apps
     }
     return o;
   }
+  // 23.11.2026: Wochenbudget je Kalenderwoche einmal festhalten (erster Abruf der Woche = Kiras Plan Mo..So)
+  function woche(o) {
+    const w = o && o.woche;
+    if (!w || !w.kw) return o;
+    let snap = lesen('wochen_budget', null);
+    if (!snap || snap.kw !== w.kw || !(snap.budget > 0)) {
+      snap = { kw: w.kw, budget: w.budgetBasis, at: Date.now(), rekonstruiert: w.istVorher > 0 };
+      if (snap.budget > 0) schreiben('wochen_budget', snap);
+    }
+    const istHeute = o.last && o.last.istHeute != null ? o.last.istHeute : 0;
+    const ist = Math.max(w.ist || 0, (w.istVorher || 0) + istHeute);
+    return { ...o, woche: { kw: w.kw, ist, budget: snap.budget, rekonstruiert: !!snap.rekonstruiert } };
+  }
+  // 23.11.2026: Kiras Fazit nach dem Speichern – die Uhr meldet es einmal je neuer Einheit
+  function fazit(o) {
+    try {
+      if (!o || o.datum !== heute()) return o;
+      let ein = [];
+      if (Array.isArray(o.liveAkt) && o.liveAkt.length) ein = o.liveAkt.filter((x) => Number(x.last) > 0 && Number(x.min) >= 10);
+      else if (o.uhr && o.uhr.letzte && o.uhr.letzte.d === o.datum) ein = (o.uhr.letzte.einheiten || []).map((x) => ({ id: null, start: '', name: x.name, min: x.min, last: x.ess }));
+      if (!ein.length) return o;
+      const letzte = ein[ein.length - 1];
+      const tag = Math.round(ein.reduce((s, x) => s + Number(x.last || 0), 0));
+      const lo = o.last?.sollMin, hi = o.last?.sollMax;
+      const lage = hi == null ? '' : tag > hi ? `über Rahmen ${lo ?? 0}–${hi}` : lo != null && tag < lo ? `unter Rahmen ${lo}–${hi}` : `im Rahmen ${lo ?? 0}–${hi}`;
+      const n = (o.naechste || [])[0];
+      const morgen = !n ? '' : !n.ess ? 'Morgen Ruhetag.' : `Morgen ${n.sport || 'Training'}${n.zone ? ' ' + n.zone : ''} ${Math.round(n.ess)} ESS.`;
+      const id = String(letzte.id || `${o.datum}-${ein.length}-${tag}`);
+      return { ...o, fazit: { id, titel: `Kira: ${tag} ESS heute`, unter: lage, text: `${ein.length > 1 ? ein.length + ' Einheiten · ' : ''}${String(letzte.name || '').slice(0, 24)} ${letzte.min}' ${Math.round(letzte.last)} ESS. ${morgen}`.trim() } };
+    } catch {
+      return o;
+    }
+  }
   async function antwort(frisch = false) {
-    return live(await antwortRoh(frisch));
+    return fazit(woche(live(await antwortRoh(frisch))));
   }
   async function antwortRoh(frisch = false) {
     const alt = !cache || cache.daten?.datum !== heute() || Date.now() - cache.at > CACHE_MS;
@@ -122,7 +161,7 @@ export function setupWidget(app, { getSetting, setSetting, originOk, texte, apps
       const a = await antwort(req.query.frisch === '1');
       if (req.query.uhr === '1') {
         // Garmin-Uhr: wenig Speicher im Hintergrund – nur was die Uhr anzeigt
-        const { texte: _t, uhr: u, ...rest } = a;
+        const { texte: _t, uhr: u, liveAkt: _la, ...rest } = a;
         // lange Einheiten aus Kiras Wochenplan (Server) an die nächsten Tage hängen
         let wp = null;
         try { wp = JSON.parse(getSetting('wochenplan') || 'null'); } catch { wp = null; }

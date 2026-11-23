@@ -112,6 +112,18 @@ def abrufen(g, tag: str) -> dict:
         log(f"Trainingszustand: {type(e).__name__}: {str(e)[:120]}")
         if "429" in str(e):
             raise
+    # Einheiten von heute (für Kiras Fazit nach dem Speichern und den Tagesstand im Datenfeld)
+    try:
+        akt = g.get_activities_by_date(tag, tag) or []
+        w["akt"] = [{
+            "id": x.get("activityId"), "start": str(x.get("startTimeLocal") or "")[:19],
+            "name": x.get("activityName") or "", "typ": (x.get("activityType") or {}).get("typeKey") or "",
+            "min": round(float(x.get("duration") or 0) / 60.0), "last": round(float(x.get("activityTrainingLoad") or 0)),
+        } for x in akt[:8] if isinstance(x, dict)]
+    except Exception as e:
+        log(f"Einheiten: {type(e).__name__}: {str(e)[:120]}")
+        if "429" in str(e):
+            raise
     # Ausdauerwert
     try:
         es = g.get_endurance_score(tag) or {}
@@ -162,7 +174,7 @@ def main() -> None:
         s.update({"zuletzt": jetzt.isoformat(timespec="seconds"), "werte": w, "antwort": r})
         s.pop("pause_bis", None)
         STATE.write_text(json.dumps(s, ensure_ascii=False))
-        log("gemeldet " + " ".join(f"{k}={w[k]}" for k in ("tr", "trZeit", "atl", "ctl", "acwr", "es", "status") if k in w))
+        log("gemeldet " + " ".join(f"{k}={w[k]}" for k in ("tr", "trZeit", "atl", "ctl", "acwr", "es", "status") if k in w) + f" akt={len(w.get('akt') or [])}")
     except Exception as e:
         log(f"Meldung fehlgeschlagen: {type(e).__name__}: {str(e)[:150]}")
 
