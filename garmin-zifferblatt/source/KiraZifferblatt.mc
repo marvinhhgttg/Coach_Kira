@@ -226,6 +226,22 @@ class KiraZifferblatt extends WatchUi.WatchFace {
         dc.setPenWidth(1);
     }
 
+
+    // 23.11.2026: Live-Werte direkt von der Uhr (Garmin-Komplikationen): Erholungszeit (Minuten), Body Battery
+    function nativ(typ as Complications.Type) as Number? {
+        try {
+            var c = Complications.getComplication(new Complications.Id(typ));
+            if (c != null && c.value != null) { return c.value.toNumber(); }
+        } catch (e) { }
+        return null;
+    }
+
+    function nativZeile() as Array<String> {
+        var erh = nativ(Complications.COMPLICATION_TYPE_RECOVERY_TIME);
+        var bb = nativ(Complications.COMPLICATION_TYPE_BODY_BATTERY);
+        return ["ERH " + (erh == null ? "-" : ((erh + 59) / 60).toString() + "h"), "BB " + (bb == null ? "-" : bb.toString())];
+    }
+
     function onUpdate(dc as Graphics.Dc) as Void {
         var w = dc.getWidth();
         var h = dc.getHeight();
@@ -326,17 +342,22 @@ class KiraZifferblatt extends WatchUi.WatchFace {
         block(dc, (w * 0.81).toNumber(), yo, "AUSD.", es == null ? "-" : es.toString(), Graphics.COLOR_WHITE);
 
         // Unten links: Wind (km/h) · unten rechts: Plan
-        var yu = (h * 0.69).toNumber();
+        var yu = (h * 0.67).toNumber();
         block(dc, (w * 0.27).toNumber(), yu, "WIND", wind, Graphics.COLOR_WHITE);
         var pl = heute ? zahl(t, 9) : null;
         var sp = feld(t, 10);
         block(dc, (w * 0.73).toNumber(), yu, "PLAN" + (sp.length() > 0 && heute ? " " + sp.toUpper() : ""), pl == null ? "-" : (pl == 0 ? "Ruhe" : pl.toString()), Graphics.COLOR_WHITE);
+
+        // Live von der Uhr: Erholungszeit · Body Battery
+        var nz = nativZeile();
+        dc.setColor(0xC8C8C8, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(cx, (h * 0.818).toNumber(), fLabel, nz[0] + " · " + nz[1], Graphics.TEXT_JUSTIFY_CENTER);
 
         // Datum unten
         var g = Gregorian.info(Time.now(), Time.FORMAT_SHORT);
         var wt = ["", "SO", "MO", "DI", "MI", "DO", "FR", "SA"];
         var mo = ["", "JAN", "FEB", "MÄR", "APR", "MAI", "JUN", "JUL", "AUG", "SEP", "OKT", "NOV", "DEZ"];
         dc.setColor(0xD0D0D0, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, (h * 0.86).toNumber(), fDatum, wt[g.day_of_week as Number] + " " + g.day.toString() + ". " + mo[g.month as Number], Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, (h * 0.875).toNumber(), fDatum, wt[g.day_of_week as Number] + " " + g.day.toString() + ". " + mo[g.month as Number], Graphics.TEXT_JUSTIFY_CENTER);
     }
 }

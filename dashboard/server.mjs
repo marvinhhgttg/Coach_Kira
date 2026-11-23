@@ -368,6 +368,30 @@ app.post('/api/garmin/anfrage/status', (req, res) => {
   res.json({ ok: true });
 });
 
+// 23.11.2026: Garmin-Livewerte. Der Mac (kira_garmin_live.py, alle 10 min) liest über den Garmin-Login
+// Trainingsbereitschaft, akute/chronische Last, ACWR, Trainingszustand und Ausdauerwert und meldet sie hier.
+// Nur für die Anzeige (Uhr, Zifferblätter, Widget, Heute-Seite). Die Timeline bleibt die Wahrheit, das Votum
+// rechnet weiter mit den Morgenwerten.
+const LIVE_FELDER = { tr: [0, 100], atl: [0, 5000], ctl: [0, 5000], acwr: [0, 10], es: [0, 15000], erholH: [0, 200], vo2: [10, 100] };
+app.post('/api/garmin/live', (req, res) => {
+  const b = req.body || {};
+  const datum = String(b.datum || '');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(datum)) return res.status(400).json({ ok: false, error: 'datum fehlt' });
+  const w = { datum, at: now(), quelle: 'garmin' };
+  for (const [k, [lo, hi]] of Object.entries(LIVE_FELDER)) {
+    const v = Number(b[k]);
+    if (b[k] != null && b[k] !== '' && Number.isFinite(v) && v >= lo && v <= hi) w[k] = Math.round(v * 100) / 100;
+  }
+  for (const k of ['trZeit', 'status', 'trStufe']) if (b[k] != null) w[k] = String(b[k]).slice(0, 40);
+  setSetting('garmin_live', JSON.stringify(w));
+  res.json({ ok: true, gespeichert: Object.keys(w).length - 3 });
+});
+app.get('/api/garmin/live', (req, res) => {
+  let w = null;
+  try { w = JSON.parse(getSetting('garmin_live') || 'null'); } catch { w = null; }
+  res.json({ ok: true, live: w });
+});
+
 // Workout an Garmin senden: Cockpit legt das fertige Workout als Auftrag ab, der Mac (60-s-Takt) lädt es
 // mit dem eigenen Garmin-Login hoch und legt es in den Garmin-Kalender. Der Server hält nur die Warteschlange.
 function garminWorkouts() {

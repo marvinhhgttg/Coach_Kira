@@ -1376,9 +1376,21 @@ MORGEN_BIS = (10, 0)
 TAKT_SONST_MIN = 28
 
 
+def _live_abruf() -> None:
+    """23.11.2026: Garmin-Livewerte (kira_garmin_live.py, eigene venv) bei jedem Takt – unabhängig vom Abruftakt."""
+    skript = BASE / "kira_garmin_live.py"
+    if not GARMIN_VENV_PY.exists() or not skript.exists():
+        return
+    try:
+        subprocess.run([str(GARMIN_VENV_PY), str(skript)], timeout=120, capture_output=True)
+    except Exception as e:
+        log(f"[garmin] live: {type(e).__name__}: {str(e)[:120]}")
+
+
 def cmd_tick(force: bool = False):
     """Takt/Fenster prüfen, doppelte Läufe sperren, dann abrufen."""
     import fcntl
+    _live_abruf()
     now = datetime.datetime.now(TZ)
     hm = (now.hour, now.minute)
     if not force:

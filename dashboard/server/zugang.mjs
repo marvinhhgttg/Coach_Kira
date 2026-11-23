@@ -24,6 +24,9 @@ const gleich = (a, b) => {
 const REGELN = [
   // [Methode, Pfad, Klasse]
   ['POST', /^\/api\/garmin\/(anfrage|workout)\/status$/, 'mac'],
+  // 23.11.2026: Garmin-Livewerte vom Mac (Bereitschaft, akute/chronische Last, Ausdauerwert) – nur Anzeige
+  ['POST', /^\/api\/garmin\/live$/, 'mac'],
+  ['GET', /^\/api\/garmin\/live$/, 'gemischt'],
   ['POST', /^\/api\/garmin\/(anfrage|workout)$/, 'cockpit'],
   ['GET', /^\/api\/garmin\/(anfrage|workout)$/, 'gemischt'],
   ['POST', /^\/api\/llm$/, 'gemischt'],

@@ -23,6 +23,7 @@ import { CorrelationPanel } from './CorrelationPanel';
 import { atlStep, ctlStep, windowMean } from '../lib/ctlModel';
 import { lastEmpfehlung, type Empfehlung } from '../kern/soll';
 import { useGarminTage, fmtDauer } from '../lib/garmin';
+import { SERVER_BASE } from '../lib/cloudLLM';
 import { sportProfile, lastJeStunde } from '../components/GarminSportProfilTile';
 import { WINDOWS, ALL_RANGE, winLabel, winTitle, sliceWin, rangeFor, rangeDays, type WinKey } from '../lib/windows';
 import { assessMonotony, monoStufe, type MonoAssessment } from '../lib/monotony';
@@ -947,7 +948,7 @@ function Punkt({ farbe, haken = false }: { farbe: string; haken?: boolean }) {
     </span>
   );
 }
-function WichtigsteDaten({ today, todayIso, trJetzt = null }: { today: RecoveryDay | null; todayIso: string; trJetzt?: number | null }) {
+function WichtigsteDaten({ today, todayIso, trJetzt = null, trLiveZeit = null }: { today: RecoveryDay | null; todayIso: string; trJetzt?: number | null; trLiveZeit?: string | null }) {
   const { tage } = useGarminTage();
   const g = tage?.get(todayIso);
   const bb = g?.bb_aufwachen ?? g?.tag?.bb_max ?? null;
@@ -956,7 +957,7 @@ function WichtigsteDaten({ today, todayIso, trJetzt = null }: { today: RecoveryD
   const r = trJetzt ?? rMorgen;
   const rLvl = trJetzt != null ? levelReadiness(trJetzt) : today?.levels.readiness ?? 'leer';
   const rStufe = r == null ? '' : r >= 75 ? 'Hoch' : r >= 50 ? 'Mäßig' : r >= 25 ? 'Niedrig' : 'Schlecht';
-  const rUnter = r == null ? 'noch keine Morgenwerte' : trJetzt != null && rMorgen != null && trJetzt !== rMorgen ? `${rStufe} · aktuell · morgens ${Math.round(rMorgen)}` : rStufe;
+  const rUnter = r == null ? 'noch keine Morgenwerte' : trJetzt != null && rMorgen != null && trJetzt !== rMorgen ? `${rStufe} · ${trLiveZeit ? `Garmin ${trLiveZeit}` : 'aktuell'} · morgens ${Math.round(rMorgen)}` : trLiveZeit ? `${rStufe} · Garmin ${trLiveZeit}` : rStufe;
   const vote = today?.vote ?? null;
   const hrv = today?.hrv ?? null;
   const lo = today?.hrvLow ?? null, hi = today?.hrvHigh ?? null;
@@ -1068,7 +1069,19 @@ export function RecoveryPanel({
   }, []);
 
   const todayIso = localIsoDate();
-  const trJetzt = (() => { const z = (raw || []).find((x: any) => String(x.date).slice(0, 10) === todayIso); const v = z ? Number(String(z.fb_TR_obs ?? '').replace(',', '.')) : NaN; return Number.isFinite(v) && v > 0 ? v : null; })();
+  // 23.11.2026: Garmin-Livewert vom Mac (alle 10 min) hat Vorrang vor dem Timeline-Wert
+  const [garminLive, setGarminLive] = useState<{ datum: string; at: number; tr?: number; trZeit?: string } | null>(null);
+  useEffect(() => {
+    let aus = false;
+    const holen = () => fetch(`${SERVER_BASE}/api/garmin/live?cb=${Date.now()}`, { cache: 'no-store' }).then((r) => r.json()).then((j) => { if (!aus) setGarminLive(j?.live ?? null); }).catch(() => {});
+    holen();
+    const iv = setInterval(holen, 5 * 60 * 1000);
+    return () => { aus = true; clearInterval(iv); };
+  }, []);
+  const liveTr = garminLive && garminLive.datum === todayIso && garminLive.tr != null && Date.now() - Number(garminLive.at) < 3 * 3600 * 1000 ? garminLive.tr : null;
+  const trTimeline = (() => { const z = (raw || []).find((x: any) => String(x.date).slice(0, 10) === todayIso); const v = z ? Number(String(z.fb_TR_obs ?? '').replace(',', '.')) : NaN; return Number.isFinite(v) && v > 0 ? v : null; })();
+  const trJetzt = liveTr ?? trTimeline;
+  const trLiveZeit = liveTr != null ? new Date(Number(garminLive!.at)).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin' }) : null;
   const yDate = new Date();
   yDate.setDate(yDate.getDate() - 1);
   const yesterdayIso = localIsoDate(yDate);
@@ -1123,7 +1136,7 @@ export function RecoveryPanel({
     return (
       <>
         <StorySection id="wichtig" titel="Wichtigste Daten" unter="Wie stehst du heute da?" rechts={aktualisieren}>
-          <WichtigsteDaten today={today} todayIso={todayIso} trJetzt={trJetzt} />
+          <WichtigsteDaten today={today} todayIso={todayIso} trJetzt={trJetzt} trLiveZeit={trLiveZeit} />
         </StorySection>
         <StorySection id="fokus" titel="Im Fokus" unter="Was sagt Kira für heute, und wie war die Nacht?">
           <StoryGrid>

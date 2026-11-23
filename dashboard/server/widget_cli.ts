@@ -34,13 +34,21 @@ const num = (v: unknown) => {
 const STATUS_TEXT: Record<string, string> = { QUALITY: 'Qualität möglich', TRAIN: 'normal trainieren', EASY: 'locker trainieren', REST: 'Erholung priorisieren' };
 
 let tageMerk: RecoveryDay[] = [];
+// 23.11.2026: neuester Garmin-Wert eines Tages: nach Aktivität (fb…_obs) vor Morgenwert (garmin…)
+const neuWert = (r: any, post: string, morgen: string): number | null => {
+  const p = r ? num(r[post]) : null;
+  if (p != null && p > 0) return p;
+  const m = r ? num(r[morgen]) : null;
+  return m != null && m > 0 ? m : null;
+};
 
 async function heuteTeil() {
   const heute = iso();
   // wie Heute-Seite: Span 14 Tage + 28 Tage Vorlauf, mindestens 90 Tage
   // fb_TR_obs = laufend synchronisierte Trainingsbereitschaft (nach Aktivität), Garmin_Training_Readiness = Morgenwert
-  const res: any = await fetchChartData(rangeFor(14, 28, 90), [...RECOVERY_FETCH_METRICS, 'fb_TR_obs'] as any);
+  const res: any = await fetchChartData(rangeFor(14, 28, 90), [...RECOVERY_FETCH_METRICS, 'fb_TR_obs', 'fbACWR_obs', 'garminACWR'] as any);
   const days: RecoveryDay[] = buildDays(res.data || []).filter((d) => d.date <= heute);
+  const acwrJetzt = (() => { const r = (res.data || []).find((x: any) => String(x.date).slice(0, 10) === heute); return neuWert(r, 'fbACWR_obs', 'garminACWR'); })();
   const trJetzt = (() => { const r = (res.data || []).find((x: any) => String(x.date).slice(0, 10) === heute); const v = r ? num(r.fb_TR_obs) : null; return v != null && v > 0 ? v : null; })();
   tageMerk = days;
   const t = days.length && days[days.length - 1].date === heute ? days[days.length - 1] : null;
@@ -95,8 +103,10 @@ async function heuteTeil() {
       zoneHeute: plan ? String(plan.zone || '') : '',
       istHeute: t?.activityDone ? t.actual?.load ?? t.load ?? null : 0,
       erledigt: !!t?.activityDone,
-      acwr: t?.acwr ?? null,
-      acwrBand: t?.acwr == null ? null : t.acwr > 1.5 ? 'hoch' : t.acwr > 1.3 ? 'erhoeht' : t.acwr < 0.8 ? 'niedrig' : 'korridor',
+      // 23.11.2026: Anzeige neuester Garmin-Wert von heute, Votum-Basis (gestern nach Aktivität) getrennt
+      acwr: acwrJetzt ?? t?.acwr ?? null,
+      acwrVotum: t?.acwr ?? null,
+      acwrBand: (() => { const v = acwrJetzt ?? t?.acwr; return v == null ? null : v > 1.5 ? 'hoch' : v > 1.3 ? 'erhoeht' : v < 0.8 ? 'niedrig' : 'korridor'; })(),
       woche,
     },
     naechste,
@@ -107,7 +117,7 @@ async function heuteTeil() {
 /** Uhr Seite 4: Form (CTL/ATL/Monotonie, Endurance Score mit 28-Tage-Änderung) und Garmin-Tag. */
 async function formTeil() {
   const heute = iso();
-  const res: any = await fetchChartData('35d' as any, ['fbCTL_obs', 'fbATL_obs', 'garminEnduranceScore', 'Monotony7'] as any);
+  const res: any = await fetchChartData('35d' as any, ['fbCTL_obs', 'fbATL_obs', 'garminCTL', 'garminATL', 'garminEnduranceScore', 'Monotony7'] as any);
   const rows = (res?.data || []).filter((r: any) => String(r.date).slice(0, 10) <= heute);
   const letzter = (k: string) => { for (let i = rows.length - 1; i >= 0; i--) { const v = num(rows[i][k]); if (v != null && v !== 0) return { v, d: String(rows[i].date).slice(0, 10), i }; } return null; };
   const es = letzter('garminEnduranceScore');
@@ -124,7 +134,8 @@ async function formTeil() {
     const t = g.get(heute);
     if (t) tag = { bbAufwachen: t.bb_aufwachen ?? null, bbMax: t.tag?.bb_max ?? null, stress: t.tag?.stress_avg ?? null, schritte: t.tag?.schritte ?? null };
   } catch {}
-  return { ctl: letzter('fbCTL_obs')?.v ?? null, atl: letzter('fbATL_obs')?.v ?? null, monotonie: letzter('Monotony7')?.v ?? null, es: es?.v ?? null, es28, tag };
+  const letzterNeu = (post: string, morgen: string) => { for (let i = rows.length - 1; i >= 0; i--) { const v = neuWert(rows[i], post, morgen); if (v != null) return v; } return null; };
+  return { ctl: letzterNeu('fbCTL_obs', 'garminCTL'), atl: letzterNeu('fbATL_obs', 'garminATL'), monotonie: letzter('Monotony7')?.v ?? null, es: es?.v ?? null, es28, tag };
 }
 
 async function zielTeil() {
@@ -231,11 +242,12 @@ async function uhrTeil(rahmen: any) {
   // Form: CTL/ATL 42 Tage, Ausdauerwert 90 Tage (jeder 3. Tag)
   let form: any = null;
   try {
-    const r: any = await fetchChartData('100d' as any, ['fbCTL_obs', 'fbATL_obs', 'garminEnduranceScore'] as any);
+    const r: any = await fetchChartData('100d' as any, ['fbCTL_obs', 'fbATL_obs', 'garminCTL', 'garminATL', 'garminEnduranceScore'] as any);
     const rows = (r?.data || []).filter((x: any) => String(x.date).slice(0, 10) <= heute);
     const reihe = (k: string, n: number) => rows.slice(-n).map((x: any) => { const v = num(x[k]); return v == null || v <= 0 ? -1 : Math.round(v); });
     const es = reihe('garminEnduranceScore', 90).filter((_: number, i: number, a: number[]) => (a.length - 1 - i) % 3 === 0);
-    form = { ctl: reihe('fbCTL_obs', 42), atl: reihe('fbATL_obs', 42), es };
+    const reihe2 = (post: string, morgen: string, n: number) => rows.slice(-n).map((x: any) => { const v = neuWert(x, post, morgen); return v == null ? -1 : Math.round(v); });
+    form = { ctl: reihe2('fbCTL_obs', 'garminCTL', 42), atl: reihe2('fbATL_obs', 'garminATL', 42), es };
   } catch {}
   // Letzte Einheit
   let letzte: any = null;

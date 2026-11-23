@@ -252,6 +252,16 @@ class KiraZeiger extends WatchUi.WatchFace {
         dc.setPenWidth(1);
     }
 
+
+    // 23.11.2026: Live-Werte direkt von der Uhr (Garmin-Komplikationen): Erholungszeit (Minuten), Body Battery
+    function nativ(typ as Complications.Type) as Number? {
+        try {
+            var c = Complications.getComplication(new Complications.Id(typ));
+            if (c != null && c.value != null) { return c.value.toNumber(); }
+        } catch (e) { }
+        return null;
+    }
+
     function onUpdate(dc as Graphics.Dc) as Void {
         var w = dc.getWidth();
         var h = dc.getHeight();
@@ -313,6 +323,12 @@ class KiraZeiger extends WatchUi.WatchFace {
         var sp = heute ? feld(t, 10) : "";
         block(dc, (w * 0.22).toNumber(), (h * 0.69).toNumber(), "WIND", wind);
         block(dc, (w * 0.78).toNumber(), (h * 0.69).toNumber(), "PLAN", pl == null ? "-" : (pl == 0 ? "Ruhe" : (sp.length() > 0 ? sp + " " : "") + pl.toString()));
+        // Live von der Uhr, Mitte unten zwischen WIND und PLAN: Erholungszeit und Body Battery
+        var erh = nativ(Complications.COMPLICATION_TYPE_RECOVERY_TIME);
+        var bbn = nativ(Complications.COMPLICATION_TYPE_BODY_BATTERY);
+        dc.setColor(0xC8C8C8, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(cx, (h * 0.718).toNumber(), fKlein, "ERH " + (erh == null ? "-" : ((erh + 59) / 60).toString() + "h"), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, (h * 0.772).toNumber(), fKlein, "BB " + (bbn == null ? "-" : bbn.toString()), Graphics.TEXT_JUSTIFY_CENTER);
 
         var rx = (w * 0.15).toNumber();
         var rr = (w * 0.074).toNumber();
