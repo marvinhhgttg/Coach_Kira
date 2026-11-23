@@ -3184,7 +3184,7 @@ _home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_309_82_315_4_sto
     }
     [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc"; @line = 317; @symbol_functiondef = [farbe,317,13,18]; @symbol_param<0> = [e,317,19,20]; @symbol_param<0>_type<0> = [Number,317,24,30]; @symbol_param<1> = [ra,317,32,34]; @symbol_param<1>_type<0> = [Array,317,38,43]; @symbol_return<0> = [Number,317,49,55]; ]
     function farbe(e as Number, ra as Array or Null) as Number {
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_317_56_323_4_start:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_317_56_322_4_start:
 [ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 318 8 ]
 _home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_318_8_318_55_if_stmt:
         %tmp.1 = lgetv %ra;
@@ -3204,288 +3204,271 @@ _home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_318_24_318_55_st
         goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_318_8_318_55_if_end;
 _home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_318_8_318_55_if_end:
 [ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 319 8 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_319_8_319_49_if_stmt:
-        %tmp.6 = lgetv %e;
-        symbol [ e %tmp.6 319 12 13 ];
-        %tmp.7 = lgetv %ra;
-        symbol [ ra %tmp.7 319 16 18 ];
-        %tmp.8 = 1;
-        %tmp.9 = agetv %tmp.7 %tmp.8;
-        %tmp.10 = 1.15;
-        %tmp.11 = mul %tmp.9 %tmp.10;
-        %tmp.12 = gt %tmp.6 %tmp.11;
-        bf %tmp.12 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_319_8_319_49_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_319_8_319_49_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_319_30_319_49_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 319 32 ]
-        %tmp.13 = 0xE74C3C;
-        ret %tmp.13;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_319_30_319_49_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_319_8_319_49_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_319_8_319_49_if_end:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 320 8 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_320_8_320_42_if_stmt:
-        %tmp.14 = lgetv %e;
-        symbol [ e %tmp.14 320 12 13 ];
-        %tmp.15 = lgetv %ra;
-        symbol [ ra %tmp.15 320 16 18 ];
-        %tmp.16 = 1;
-        %tmp.17 = agetv %tmp.15 %tmp.16;
-        %tmp.18 = gt %tmp.14 %tmp.17;
-        bf %tmp.18 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_320_8_320_42_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_320_8_320_42_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_320_23_320_42_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 320 25 ]
-        %tmp.19 = 0xE67E22;
-        ret %tmp.19;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_320_23_320_42_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_320_8_320_42_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_320_8_320_42_if_end:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_319_8_319_55_if_stmt:
+        %tmp.6 = lgetv %ra;
+        symbol [ ra %tmp.6 319 12 14 ];
+        %tmp.7 = 1;
+        %tmp.8 = agetv %tmp.6 %tmp.7;
+        %tmp.9 = 0;
+        %tmp.10 = lte %tmp.8 %tmp.9;
+        bf %tmp.10 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_319_8_319_55_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_319_8_319_55_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_319_24_319_55_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 319 26 ]
+        symbol [ Graphics %tmp.11 319 33 41 ];
+        %tmp.11 = getm $.Toybox.Graphics;
+        symbol [ COLOR_WHITE %tmp.12 319 42 53 ];
+        %tmp.12 = getv %tmp.11 :COLOR_WHITE;
+        ret %tmp.12;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_319_24_319_55_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_319_8_319_55_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_319_8_319_55_if_end:
 [ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 321 8 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_321_8_321_43_if_stmt:
-        %tmp.20 = lgetv %e;
-        symbol [ e %tmp.20 321 12 13 ];
-        %tmp.21 = lgetv %ra;
-        symbol [ ra %tmp.21 321 17 19 ];
-        %tmp.22 = 0;
-        %tmp.23 = agetv %tmp.21 %tmp.22;
-        %tmp.24 = gte %tmp.20 %tmp.23;
-        bf %tmp.24 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_321_8_321_43_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_321_8_321_43_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_321_24_321_43_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 321 26 ]
-        %tmp.25 = 0x2ECC71;
-        ret %tmp.25;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_321_24_321_43_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_321_8_321_43_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_321_8_321_43_if_end:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 322 8 ]
-        %tmp.26 = 0x5DADE2;
-        ret %tmp.26;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_317_56_323_4_stop:
+        symbol [ KiraSkala %tmp.14 321 15 24 ];
+        %tmp.14 = getv ? :KiraSkala;
+        symbol [ farbe %tmp.15 321 25 30 ];
+        %tmp.15 = getv function %tmp.14 :farbe;
+        symbol [ KiraSkala %tmp.17 321 31 40 ];
+        %tmp.17 = getv ? :KiraSkala;
+        symbol [ last %tmp.18 321 41 45 ];
+        %tmp.18 = getv function %tmp.17 :last;
+        %tmp.19 = lgetv %ra;
+        symbol [ ra %tmp.19 321 46 48 ];
+        %tmp.20 = 0;
+        %tmp.21 = agetv %tmp.19 %tmp.20;
+        %tmp.22 = lgetv %ra;
+        symbol [ ra %tmp.22 321 53 55 ];
+        %tmp.23 = 1;
+        %tmp.24 = agetv %tmp.22 %tmp.23;
+        %tmp.25 = invoke %tmp.17 %tmp.18(%tmp.21, %tmp.24);
+        %tmp.26 = lgetv %e;
+        symbol [ e %tmp.26 321 61 62 ];
+        %tmp.27 = invoke %tmp.14 %tmp.15(%tmp.25, %tmp.26);
+        ret %tmp.27;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_317_56_322_4_stop:
     }
-    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc"; @line = 325; @symbol_functiondef = [onUpdate,325,13,21]; @symbol_param<0> = [dc,325,22,24]; @symbol_param<0>_type<0> = [Graphics,325,28,36]; @symbol_param<0>_type<1> = [Dc,325,37,39]; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc"; @line = 324; @symbol_functiondef = [onUpdate,324,13,21]; @symbol_param<0> = [dc,324,22,24]; @symbol_param<0>_type<0> = [Graphics,324,28,36]; @symbol_param<0>_type<1> = [Dc,324,37,39]; ]
     function onUpdate(dc as Graphics.Dc) as Void {
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 326 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_stop" ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 325 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_stop" ]
         %bg.1 = local;
-        symbol [ bg %bg.1 326 12 14 ];
+        symbol [ bg %bg.1 325 12 14 ];
         %tmp.1 = self;
-        symbol [ getBackgroundColor %tmp.2 326 17 35 ];
+        symbol [ getBackgroundColor %tmp.2 325 17 35 ];
         %tmp.2 = getv function %tmp.1 :getBackgroundColor;
         %tmp.3 = invoke %tmp.1 %tmp.2();
         lputv %bg.1 %tmp.3;
-        symbol [ bg %bg.1 326 12 14 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 327 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_stop" ]
+        symbol [ bg %bg.1 325 12 14 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 326 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_stop" ]
         %fg.2 = local;
-        symbol [ fg %fg.2 327 12 14 ];
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_327_17_327_78_begin:
+        symbol [ fg %fg.2 326 12 14 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_326_17_326_78_begin:
         %tmp.4 = lgetv %bg.1;
-        symbol [ bg %tmp.4 327 17 19 ];
-        symbol [ Graphics %tmp.5 327 23 31 ];
+        symbol [ bg %tmp.4 326 17 19 ];
+        symbol [ Graphics %tmp.5 326 23 31 ];
         %tmp.5 = getm $.Toybox.Graphics;
-        symbol [ COLOR_BLACK %tmp.6 327 32 43 ];
+        symbol [ COLOR_BLACK %tmp.6 326 32 43 ];
         %tmp.6 = getv %tmp.5 :COLOR_BLACK;
         %tmp.7 = eq %tmp.4 %tmp.6;
-        bf %tmp.7 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_327_17_327_78_else_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_327_17_327_78_true:
-        symbol [ Graphics %tmp.8 327 46 54 ];
+        bf %tmp.7 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_326_17_326_78_else_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_326_17_326_78_true:
+        symbol [ Graphics %tmp.8 326 46 54 ];
         %tmp.8 = getm $.Toybox.Graphics;
-        symbol [ COLOR_WHITE %tmp.9 327 55 66 ];
+        symbol [ COLOR_WHITE %tmp.9 326 55 66 ];
         %tmp.9 = getv %tmp.8 :COLOR_WHITE;
         push %tmp.9;
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_327_17_327_78_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_327_17_327_78_else_false:
-        symbol [ Graphics %tmp.10 327 69 77 ];
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_326_17_326_78_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_326_17_326_78_else_false:
+        symbol [ Graphics %tmp.10 326 69 77 ];
         %tmp.10 = getm $.Toybox.Graphics;
-        symbol [ COLOR_BLACK %tmp.11 327 78 89 ];
+        symbol [ COLOR_BLACK %tmp.11 326 78 89 ];
         %tmp.11 = getv %tmp.10 :COLOR_BLACK;
         push %tmp.11;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_327_17_327_78_end:
-        %tmp.12 = phi [%tmp.7 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_327_17_327_78_begin] [%tmp.9 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_327_17_327_78_true] [%tmp.11 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_327_17_327_78_else_false] [%tmp.12 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_327_17_327_78_end];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_326_17_326_78_end:
+        %tmp.12 = phi [%tmp.7 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_326_17_326_78_begin] [%tmp.9 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_326_17_326_78_true] [%tmp.11 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_326_17_326_78_else_false] [%tmp.12 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_326_17_326_78_end];
         lputv %fg.2 %tmp.12;
-        symbol [ fg %fg.2 327 12 14 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 328 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_stop" ]
+        symbol [ fg %fg.2 326 12 14 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 327 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_stop" ]
         %grau.3 = local;
-        symbol [ grau %grau.3 328 12 16 ];
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_328_19_328_59_begin:
+        symbol [ grau %grau.3 327 12 16 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_327_19_327_59_begin:
         %tmp.13 = lgetv %bg.1;
-        symbol [ bg %tmp.13 328 19 21 ];
-        symbol [ Graphics %tmp.14 328 25 33 ];
+        symbol [ bg %tmp.13 327 19 21 ];
+        symbol [ Graphics %tmp.14 327 25 33 ];
         %tmp.14 = getm $.Toybox.Graphics;
-        symbol [ COLOR_BLACK %tmp.15 328 34 45 ];
+        symbol [ COLOR_BLACK %tmp.15 327 34 45 ];
         %tmp.15 = getv %tmp.14 :COLOR_BLACK;
         %tmp.16 = eq %tmp.13 %tmp.15;
-        bf %tmp.16 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_328_19_328_59_else_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_328_19_328_59_true:
+        bf %tmp.16 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_327_19_327_59_else_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_327_19_327_59_true:
         %tmp.17 = 0x9A9A9A;
         push %tmp.17;
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_328_19_328_59_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_328_19_328_59_else_false:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_327_19_327_59_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_327_19_327_59_else_false:
         %tmp.18 = 0x555555;
         push %tmp.18;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_328_19_328_59_end:
-        %tmp.19 = phi [%tmp.16 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_328_19_328_59_begin] [%tmp.17 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_328_19_328_59_true] [%tmp.18 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_328_19_328_59_else_false] [%tmp.19 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_328_19_328_59_end];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_327_19_327_59_end:
+        %tmp.19 = phi [%tmp.16 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_327_19_327_59_begin] [%tmp.17 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_327_19_327_59_true] [%tmp.18 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_327_19_327_59_else_false] [%tmp.19 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_327_19_327_59_end];
         lputv %grau.3 %tmp.19;
-        symbol [ grau %grau.3 328 12 16 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 329 8 ]
+        symbol [ grau %grau.3 327 12 16 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 328 8 ]
         %tmp.20 = lgetv %dc;
-        symbol [ dc %tmp.20 329 8 10 ];
-        symbol [ setColor %tmp.21 329 11 19 ];
+        symbol [ dc %tmp.20 328 8 10 ];
+        symbol [ setColor %tmp.21 328 11 19 ];
         %tmp.21 = getv function %tmp.20 :setColor;
         %tmp.22 = lgetv %fg.2;
-        symbol [ fg %tmp.22 329 20 22 ];
+        symbol [ fg %tmp.22 328 20 22 ];
         %tmp.23 = lgetv %bg.1;
-        symbol [ bg %tmp.23 329 24 26 ];
+        symbol [ bg %tmp.23 328 24 26 ];
         invoke %tmp.20 %tmp.21(%tmp.22, %tmp.23);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 330 8 ]
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 329 8 ]
         %tmp.24 = lgetv %dc;
-        symbol [ dc %tmp.24 330 8 10 ];
-        symbol [ clear %tmp.25 330 11 16 ];
+        symbol [ dc %tmp.24 329 8 10 ];
+        symbol [ clear %tmp.25 329 11 16 ];
         %tmp.25 = getv function %tmp.24 :clear;
         invoke %tmp.24 %tmp.25();
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 331 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_stop" ]
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 330 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_stop" ]
         %w.4 = local;
-        symbol [ w %w.4 331 12 13 ];
+        symbol [ w %w.4 330 12 13 ];
         %tmp.26 = lgetv %dc;
-        symbol [ dc %tmp.26 331 16 18 ];
-        symbol [ getWidth %tmp.27 331 19 27 ];
+        symbol [ dc %tmp.26 330 16 18 ];
+        symbol [ getWidth %tmp.27 330 19 27 ];
         %tmp.27 = getv function %tmp.26 :getWidth;
         %tmp.28 = invoke %tmp.26 %tmp.27();
         lputv %w.4 %tmp.28;
-        symbol [ w %w.4 331 12 13 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 332 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_stop" ]
+        symbol [ w %w.4 330 12 13 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 331 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_stop" ]
         %h.5 = local;
-        symbol [ h %h.5 332 12 13 ];
+        symbol [ h %h.5 331 12 13 ];
         %tmp.29 = lgetv %dc;
-        symbol [ dc %tmp.29 332 16 18 ];
-        symbol [ getHeight %tmp.30 332 19 28 ];
+        symbol [ dc %tmp.29 331 16 18 ];
+        symbol [ getHeight %tmp.30 331 19 28 ];
         %tmp.30 = getv function %tmp.29 :getHeight;
         %tmp.31 = invoke %tmp.29 %tmp.30();
         lputv %h.5 %tmp.31;
-        symbol [ h %h.5 332 12 13 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 333 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_stop" ]
+        symbol [ h %h.5 331 12 13 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 332 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_stop" ]
         %cx.6 = local;
-        symbol [ cx %cx.6 333 12 14 ];
+        symbol [ cx %cx.6 332 12 14 ];
         %tmp.32 = lgetv %w.4;
-        symbol [ w %tmp.32 333 17 18 ];
+        symbol [ w %tmp.32 332 17 18 ];
         %tmp.33 = 2;
         %tmp.34 = div %tmp.32 %tmp.33;
         lputv %cx.6 %tmp.34;
-        symbol [ cx %cx.6 333 12 14 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 334 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_stop" ]
+        symbol [ cx %cx.6 332 12 14 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 333 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_stop" ]
         %einheit.7 = local;
-        symbol [ einheit %einheit.7 334 12 19 ];
-        symbol [ ess %tmp.36 334 22 25 ];
+        symbol [ einheit %einheit.7 333 12 19 ];
+        symbol [ ess %tmp.36 333 22 25 ];
         %tmp.36 = getv ? :ess;
-        symbol [ toNumber %tmp.37 334 26 34 ];
+        symbol [ toNumber %tmp.37 333 26 34 ];
         %tmp.37 = getv function %tmp.36 :toNumber;
         %tmp.38 = invoke %tmp.36 %tmp.37();
         lputv %einheit.7 %tmp.38;
-        symbol [ einheit %einheit.7 334 12 19 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 335 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_stop" ]
+        symbol [ einheit %einheit.7 333 12 19 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 334 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_stop" ]
         %vor.8 = local;
-        symbol [ vor %vor.8 335 12 15 ];
+        symbol [ vor %vor.8 334 12 15 ];
         %tmp.39 = self;
-        symbol [ vorher %tmp.40 335 18 24 ];
+        symbol [ vorher %tmp.40 334 18 24 ];
         %tmp.40 = getv function %tmp.39 :vorher;
         %tmp.41 = invoke %tmp.39 %tmp.40();
         lputv %vor.8 %tmp.41;
-        symbol [ vor %vor.8 335 12 15 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 336 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_stop" ]
+        symbol [ vor %vor.8 334 12 15 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 335 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_stop" ]
         %e.9 = local;
-        symbol [ e %e.9 336 12 13 ];
+        symbol [ e %e.9 335 12 13 ];
         %tmp.42 = lgetv %vor.8;
-        symbol [ vor %tmp.42 336 16 19 ];
+        symbol [ vor %tmp.42 335 16 19 ];
         %tmp.43 = lgetv %einheit.7;
-        symbol [ einheit %tmp.43 336 22 29 ];
+        symbol [ einheit %tmp.43 335 22 29 ];
         %tmp.44 = add %tmp.42 %tmp.43;
         lputv %e.9 %tmp.44;
-        symbol [ e %e.9 336 12 13 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 337 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_stop" ]
+        symbol [ e %e.9 335 12 13 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 336 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_stop" ]
         %ra.10 = local;
-        symbol [ ra %ra.10 337 12 14 ];
+        symbol [ ra %ra.10 336 12 14 ];
         %tmp.45 = self;
-        symbol [ rahmen %tmp.46 337 17 23 ];
+        symbol [ rahmen %tmp.46 336 17 23 ];
         %tmp.46 = getv function %tmp.45 :rahmen;
         %tmp.47 = invoke %tmp.45 %tmp.46();
         lputv %ra.10 %tmp.47;
-        symbol [ ra %ra.10 337 12 14 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 338 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_stop" ]
+        symbol [ ra %ra.10 336 12 14 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 337 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_stop" ]
         %unten.11 = local;
-        symbol [ unten %unten.11 338 12 17 ];
+        symbol [ unten %unten.11 337 12 17 ];
         %tmp.48 = "";
         lputv %unten.11 %tmp.48;
-        symbol [ unten %unten.11 338 12 17 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 339 8 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_339_8_355_8_if_stmt:
-        symbol [ Storage %tmp.49 339 12 19 ];
+        symbol [ unten %unten.11 337 12 17 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 338 8 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_338_8_354_8_if_stmt:
+        symbol [ Storage %tmp.49 338 12 19 ];
         %tmp.49 = getm $.Toybox.Application.Storage;
-        symbol [ getValue %tmp.50 339 20 28 ];
+        symbol [ getValue %tmp.50 338 20 28 ];
         %tmp.50 = getv function %tmp.49 :getValue;
         %tmp.51 = "tok";
         %tmp.52 = invoke %tmp.49 %tmp.50(%tmp.51);
         %tmp.53 = null;
         %tmp.54 = eq %tmp.52 %tmp.53;
-        bf %tmp.54 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_339_8_355_8_if_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_339_8_355_8_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_339_45_346_8_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 340 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_339_45_346_8_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_339_45_346_8_stop" ]
+        bf %tmp.54 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_338_8_354_8_if_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_338_8_354_8_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_338_45_345_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 339 12 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_338_45_345_8_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_338_45_345_8_stop" ]
         %c.12 = local;
-        symbol [ c %c.12 340 16 17 ];
-        symbol [ Storage %tmp.55 340 20 27 ];
+        symbol [ c %c.12 339 16 17 ];
+        symbol [ Storage %tmp.55 339 20 27 ];
         %tmp.55 = getm $.Toybox.Application.Storage;
-        symbol [ getValue %tmp.56 340 28 36 ];
+        symbol [ getValue %tmp.56 339 28 36 ];
         %tmp.56 = getv function %tmp.55 :getValue;
         %tmp.57 = "code";
         %tmp.58 = invoke %tmp.55 %tmp.56(%tmp.57);
         lputv %c.12 %tmp.58;
-        symbol [ c %c.12 340 16 17 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 341 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_339_45_346_8_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_339_45_346_8_stop" ]
+        symbol [ c %c.12 339 16 17 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 340 12 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_338_45_345_8_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_338_45_345_8_stop" ]
         %rc.13 = local;
-        symbol [ rc %rc.13 341 16 18 ];
-        symbol [ Storage %tmp.59 341 21 28 ];
+        symbol [ rc %rc.13 340 16 18 ];
+        symbol [ Storage %tmp.59 340 21 28 ];
         %tmp.59 = getm $.Toybox.Application.Storage;
-        symbol [ getValue %tmp.60 341 29 37 ];
+        symbol [ getValue %tmp.60 340 29 37 ];
         %tmp.60 = getv function %tmp.59 :getValue;
         %tmp.61 = "rc";
         %tmp.62 = invoke %tmp.59 %tmp.60(%tmp.61);
         lputv %rc.13 %tmp.62;
-        symbol [ rc %rc.13 341 16 18 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 343 12 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_12_345_42_if_stmt:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_16_343_92_begin:
+        symbol [ rc %rc.13 340 16 18 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 342 12 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_342_12_344_42_if_stmt:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_342_16_342_92_begin:
         %tmp.63 = lgetv %c.12;
-        symbol [ c %tmp.63 343 16 17 ];
+        symbol [ c %tmp.63 342 16 17 ];
         %tmp.64 = null;
         %tmp.65 = ne %tmp.63 %tmp.64;
-        bf %tmp.65 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_12_345_42_if_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_29_343_92_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_30_343_91_begin:
+        bf %tmp.65 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_342_12_344_42_if_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_342_29_342_92_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_342_30_342_91_begin:
         %tmp.66 = lgetv %rc.13;
-        symbol [ rc %tmp.66 343 32 34 ];
-        symbol [ Number %tmp.68 343 46 52 ];
+        symbol [ rc %tmp.66 342 32 34 ];
+        symbol [ Number %tmp.68 342 46 52 ];
         %tmp.68 = getv ? :Number;
         %tmp.69 = isa %tmp.66 %tmp.68;
         %tmp.70 = not %tmp.69;
-        bt %tmp.70 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_12_345_42_if_true;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_57_343_91_false:
-        symbol [ System %tmp.71 343 58 64 ];
+        bt %tmp.70 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_342_12_344_42_if_true;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_342_57_342_91_false:
+        symbol [ System %tmp.71 342 58 64 ];
         %tmp.71 = getm $.Toybox.System;
-        symbol [ getTimer %tmp.72 343 65 73 ];
+        symbol [ getTimer %tmp.72 342 65 73 ];
         %tmp.72 = getv function %tmp.71 :getTimer;
         %tmp.73 = invoke %tmp.71 %tmp.72();
         %tmp.74 = 3000;
@@ -3495,820 +3478,713 @@ _home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_57_343_91_fa
         %tmp.78 = 0;
         %tmp.79 = eq %tmp.77 %tmp.78;
         push %tmp.79;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_57_343_91_end:
-        %tmp.80 = phi [%tmp.70 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_30_343_91_begin] [%tmp.79 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_57_343_91_false] [%tmp.80 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_57_343_91_end];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_342_57_342_91_end:
+        %tmp.80 = phi [%tmp.70 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_342_30_342_91_begin] [%tmp.79 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_342_57_342_91_false] [%tmp.80 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_342_57_342_91_end];
         push %tmp.80;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_29_343_92_end:
-        %tmp.81 = phi [%tmp.65 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_16_343_92_begin] [%tmp.80 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_29_343_92_true] [%tmp.81 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_29_343_92_end];
-        bf %tmp.81 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_12_345_42_if_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_12_345_42_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_95_343_129_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 343 97 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_342_29_342_92_end:
+        %tmp.81 = phi [%tmp.65 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_342_16_342_92_begin] [%tmp.80 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_342_29_342_92_true] [%tmp.81 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_342_29_342_92_end];
+        bf %tmp.81 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_342_12_344_42_if_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_342_12_344_42_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_342_95_342_129_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 342 97 ]
         %tmp.82 = "Code ";
         %tmp.83 = lgetv %c.12;
-        symbol [ c %tmp.83 343 115 116 ];
+        symbol [ c %tmp.83 342 115 116 ];
         %tmp.84 = as %tmp.83 { (!Null) };
-        symbol [ toString %tmp.85 343 117 125 ];
+        symbol [ toString %tmp.85 342 117 125 ];
         %tmp.85 = getv function %tmp.84 :toString;
         %tmp.86 = invoke %tmp.84 %tmp.85();
         %tmp.87 = add %tmp.82 %tmp.86;
         lputv %unten.11 %tmp.87;
-        symbol [ unten %unten.11 343 97 102 ];
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_95_343_129_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_12_345_42_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_12_345_42_if_false:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 344 17 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_344_17_345_42_if_stmt:
+        symbol [ unten %unten.11 342 97 102 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_342_95_342_129_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_342_12_344_42_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_342_12_344_42_if_false:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 343 17 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_17_344_42_if_stmt:
         %tmp.88 = lgetv %rc.13;
-        symbol [ rc %tmp.88 344 21 23 ];
-        symbol [ Number %tmp.90 344 35 41 ];
+        symbol [ rc %tmp.88 343 21 23 ];
+        symbol [ Number %tmp.90 343 35 41 ];
         %tmp.90 = getv ? :Number;
         %tmp.91 = isa %tmp.88 %tmp.90;
-        bf %tmp.91 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_344_17_345_42_if_else_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_344_17_345_42_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_344_43_344_69_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 344 45 ]
+        bf %tmp.91 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_17_344_42_if_else_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_17_344_42_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_43_343_69_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 343 45 ]
         %tmp.92 = self;
-        symbol [ fehlerText %tmp.93 344 53 63 ];
+        symbol [ fehlerText %tmp.93 343 53 63 ];
         %tmp.93 = getv function %tmp.92 :fehlerText;
         %tmp.94 = lgetv %rc.13;
-        symbol [ rc %tmp.94 344 64 66 ];
+        symbol [ rc %tmp.94 343 64 66 ];
         %tmp.95 = as %tmp.94 { (Number) };
         %tmp.96 = invoke %tmp.92 %tmp.93(%tmp.95);
         lputv %unten.11 %tmp.96;
-        symbol [ unten %unten.11 344 45 50 ];
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_344_43_344_69_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_344_17_345_42_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_344_17_345_42_if_else_false:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_345_17_345_42_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 345 19 ]
+        symbol [ unten %unten.11 343 45 50 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_43_343_69_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_17_344_42_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_17_344_42_if_else_false:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_344_17_344_42_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 344 19 ]
         %tmp.97 = "koppelt ...";
         lputv %unten.11 %tmp.97;
-        symbol [ unten %unten.11 345 19 24 ];
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_345_17_345_42_stop:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_344_17_345_42_if_end:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_12_345_42_if_end:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_339_45_346_8_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_339_8_355_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_339_8_355_8_if_false:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 346 15 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_346_15_355_8_if_stmt:
+        symbol [ unten %unten.11 344 19 24 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_344_17_344_42_stop:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_343_17_344_42_if_end:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_342_12_344_42_if_end:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_338_45_345_8_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_338_8_354_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_338_8_354_8_if_false:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 345 15 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_345_15_354_8_if_stmt:
         %tmp.98 = lgetv %ra.10;
-        symbol [ ra %tmp.98 346 19 21 ];
+        symbol [ ra %tmp.98 345 19 21 ];
         %tmp.99 = null;
         %tmp.100 = eq %tmp.98 %tmp.99;
-        bf %tmp.100 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_346_15_355_8_if_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_346_15_355_8_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_346_31_349_8_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 347 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_346_31_349_8_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_346_31_349_8_stop" ]
+        bf %tmp.100 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_345_15_354_8_if_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_345_15_354_8_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_345_31_348_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 346 12 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_345_31_348_8_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_345_31_348_8_stop" ]
         %rc.14 = local;
-        symbol [ rc %rc.14 347 16 18 ];
-        symbol [ Storage %tmp.101 347 21 28 ];
+        symbol [ rc %rc.14 346 16 18 ];
+        symbol [ Storage %tmp.101 346 21 28 ];
         %tmp.101 = getm $.Toybox.Application.Storage;
-        symbol [ getValue %tmp.102 347 29 37 ];
+        symbol [ getValue %tmp.102 346 29 37 ];
         %tmp.102 = getv function %tmp.101 :getValue;
         %tmp.103 = "rc";
         %tmp.104 = invoke %tmp.101 %tmp.102(%tmp.103);
         lputv %rc.14 %tmp.104;
-        symbol [ rc %rc.14 347 16 18 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 348 12 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_348_20_348_60_begin:
+        symbol [ rc %rc.14 346 16 18 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 347 12 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_347_20_347_60_begin:
         %tmp.105 = lgetv %rc.14;
-        symbol [ rc %tmp.105 348 20 22 ];
-        symbol [ Number %tmp.107 348 34 40 ];
+        symbol [ rc %tmp.105 347 20 22 ];
+        symbol [ Number %tmp.107 347 34 40 ];
         %tmp.107 = getv ? :Number;
         %tmp.108 = isa %tmp.105 %tmp.107;
-        bf %tmp.108 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_348_20_348_60_else_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_348_20_348_60_true:
+        bf %tmp.108 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_347_20_347_60_else_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_347_20_347_60_true:
         %tmp.109 = self;
-        symbol [ fehlerText %tmp.110 348 43 53 ];
+        symbol [ fehlerText %tmp.110 347 43 53 ];
         %tmp.110 = getv function %tmp.109 :fehlerText;
         %tmp.111 = lgetv %rc.14;
-        symbol [ rc %tmp.111 348 54 56 ];
+        symbol [ rc %tmp.111 347 54 56 ];
         %tmp.112 = as %tmp.111 { (Number) };
         %tmp.113 = invoke %tmp.109 %tmp.110(%tmp.112);
         push %tmp.113;
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_348_20_348_60_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_348_20_348_60_else_false:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_347_20_347_60_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_347_20_347_60_else_false:
         %tmp.114 = "Rahmen lädt";
         push %tmp.114;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_348_20_348_60_end:
-        %tmp.115 = phi [%tmp.108 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_348_20_348_60_begin] [%tmp.113 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_348_20_348_60_true] [%tmp.114 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_348_20_348_60_else_false] [%tmp.115 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_348_20_348_60_end];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_347_20_347_60_end:
+        %tmp.115 = phi [%tmp.108 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_347_20_347_60_begin] [%tmp.113 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_347_20_347_60_true] [%tmp.114 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_347_20_347_60_else_false] [%tmp.115 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_347_20_347_60_end];
         lputv %unten.11 %tmp.115;
-        symbol [ unten %unten.11 348 12 17 ];
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_346_31_349_8_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_346_15_355_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_346_15_355_8_if_false:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 349 15 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_349_15_355_8_if_stmt:
+        symbol [ unten %unten.11 347 12 17 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_345_31_348_8_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_345_15_354_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_345_15_354_8_if_false:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 348 15 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_348_15_354_8_if_stmt:
         %tmp.116 = lgetv %e.9;
-        symbol [ e %tmp.116 349 19 20 ];
+        symbol [ e %tmp.116 348 19 20 ];
         %tmp.117 = lgetv %ra.10;
-        symbol [ ra %tmp.117 349 23 25 ];
+        symbol [ ra %tmp.117 348 23 25 ];
         %tmp.118 = as %tmp.117 { (!Null) };
         %tmp.119 = 1;
         %tmp.120 = agetv %tmp.118 %tmp.119;
         %tmp.121 = gt %tmp.116 %tmp.120;
-        bf %tmp.121 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_349_15_355_8_if_else_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_349_15_355_8_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_349_30_351_8_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 350 12 ]
+        bf %tmp.121 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_348_15_354_8_if_else_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_348_15_354_8_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_348_30_350_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 349 12 ]
         %tmp.122 = "+";
         %tmp.123 = lgetv %e.9;
-        symbol [ e %tmp.123 350 27 28 ];
+        symbol [ e %tmp.123 349 27 28 ];
         %tmp.124 = lgetv %ra.10;
-        symbol [ ra %tmp.124 350 31 33 ];
+        symbol [ ra %tmp.124 349 31 33 ];
         %tmp.125 = as %tmp.124 { (!Null) };
         %tmp.126 = 1;
         %tmp.127 = agetv %tmp.125 %tmp.126;
         %tmp.128 = sub %tmp.123 %tmp.127;
-        symbol [ toString %tmp.129 350 38 46 ];
+        symbol [ toString %tmp.129 349 38 46 ];
         %tmp.129 = getv function %tmp.128 :toString;
         %tmp.130 = invoke %tmp.128 %tmp.129();
         %tmp.131 = add %tmp.122 %tmp.130;
         %tmp.132 = " über ";
         %tmp.133 = add %tmp.131 %tmp.132;
         %tmp.134 = lgetv %ra.10;
-        symbol [ ra %tmp.134 350 62 64 ];
+        symbol [ ra %tmp.134 349 62 64 ];
         %tmp.135 = as %tmp.134 { (!Null) };
         %tmp.136 = 1;
         %tmp.137 = agetv %tmp.135 %tmp.136;
-        symbol [ toString %tmp.138 350 68 76 ];
+        symbol [ toString %tmp.138 349 68 76 ];
         %tmp.138 = getv function %tmp.137 :toString;
         %tmp.139 = invoke %tmp.137 %tmp.138();
         %tmp.140 = add %tmp.133 %tmp.139;
         lputv %unten.11 %tmp.140;
-        symbol [ unten %unten.11 350 12 17 ];
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_349_30_351_8_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_349_15_355_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_349_15_355_8_if_else_false:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_351_15_355_8_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 353 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_351_15_355_8_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_351_15_355_8_stop" ]
+        symbol [ unten %unten.11 349 12 17 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_348_30_350_8_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_348_15_354_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_348_15_354_8_if_else_false:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_350_15_354_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 352 12 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_350_15_354_8_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_350_15_354_8_stop" ]
         %r.15 = local;
-        symbol [ r %r.15 353 16 17 ];
+        symbol [ r %r.15 352 16 17 ];
         %tmp.141 = self;
-        symbol [ rate %tmp.142 353 20 24 ];
+        symbol [ rate %tmp.142 352 20 24 ];
         %tmp.142 = getv function %tmp.141 :rate;
         %tmp.143 = invoke %tmp.141 %tmp.142();
         lputv %r.15 %tmp.143;
-        symbol [ r %r.15 353 16 17 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 354 12 ]
+        symbol [ r %r.15 352 16 17 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 353 12 ]
         %tmp.144 = "noch ";
         %tmp.145 = lgetv %ra.10;
-        symbol [ ra %tmp.145 354 31 33 ];
+        symbol [ ra %tmp.145 353 31 33 ];
         %tmp.146 = as %tmp.145 { (!Null) };
         %tmp.147 = 1;
         %tmp.148 = agetv %tmp.146 %tmp.147;
         %tmp.149 = lgetv %e.9;
-        symbol [ e %tmp.149 354 39 40 ];
+        symbol [ e %tmp.149 353 39 40 ];
         %tmp.150 = sub %tmp.148 %tmp.149;
-        symbol [ toString %tmp.151 354 42 50 ];
+        symbol [ toString %tmp.151 353 42 50 ];
         %tmp.151 = getv function %tmp.150 :toString;
         %tmp.152 = invoke %tmp.150 %tmp.151();
         %tmp.153 = add %tmp.144 %tmp.152;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_354_56_354_150_begin:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_353_56_353_150_begin:
         %tmp.154 = lgetv %r.15;
-        symbol [ r %tmp.154 354 56 57 ];
+        symbol [ r %tmp.154 353 56 57 ];
         %tmp.155 = null;
         %tmp.156 = ne %tmp.154 %tmp.155;
-        bf %tmp.156 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_354_56_354_150_else_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_354_56_354_150_true:
+        bf %tmp.156 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_353_56_353_150_else_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_353_56_353_150_true:
         %tmp.157 = " · ~";
         %tmp.158 = lgetv %ra.10;
-        symbol [ ra %tmp.158 354 79 81 ];
+        symbol [ ra %tmp.158 353 79 81 ];
         %tmp.159 = as %tmp.158 { (!Null) };
         %tmp.160 = 1;
         %tmp.161 = agetv %tmp.159 %tmp.160;
         %tmp.162 = lgetv %e.9;
-        symbol [ e %tmp.162 354 87 88 ];
+        symbol [ e %tmp.162 353 87 88 ];
         %tmp.163 = sub %tmp.161 %tmp.162;
         %tmp.164 = lgetv %r.15;
-        symbol [ r %tmp.164 354 92 93 ];
+        symbol [ r %tmp.164 353 92 93 ];
         %tmp.165 = as %tmp.164 { (!Null) };
         %tmp.166 = div %tmp.163 %tmp.165;
-        symbol [ toNumber %tmp.167 354 95 103 ];
+        symbol [ toNumber %tmp.167 353 95 103 ];
         %tmp.167 = getv function %tmp.166 :toNumber;
         %tmp.168 = invoke %tmp.166 %tmp.167();
-        symbol [ toString %tmp.169 354 106 114 ];
+        symbol [ toString %tmp.169 353 106 114 ];
         %tmp.169 = getv function %tmp.168 :toString;
         %tmp.170 = invoke %tmp.168 %tmp.169();
         %tmp.171 = add %tmp.157 %tmp.170;
         %tmp.172 = "'";
         %tmp.173 = add %tmp.171 %tmp.172;
         push %tmp.173;
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_354_56_354_150_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_354_56_354_150_else_false:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_353_56_353_150_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_353_56_353_150_else_false:
         %tmp.174 = " bis ";
         %tmp.175 = lgetv %ra.10;
-        symbol [ ra %tmp.175 354 135 137 ];
+        symbol [ ra %tmp.175 353 135 137 ];
         %tmp.176 = as %tmp.175 { (!Null) };
         %tmp.177 = 1;
         %tmp.178 = agetv %tmp.176 %tmp.177;
-        symbol [ toString %tmp.179 354 141 149 ];
+        symbol [ toString %tmp.179 353 141 149 ];
         %tmp.179 = getv function %tmp.178 :toString;
         %tmp.180 = invoke %tmp.178 %tmp.179();
         %tmp.181 = add %tmp.174 %tmp.180;
         push %tmp.181;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_354_56_354_150_end:
-        %tmp.182 = phi [%tmp.156 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_354_56_354_150_begin] [%tmp.173 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_354_56_354_150_true] [%tmp.181 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_354_56_354_150_else_false] [%tmp.182 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_354_56_354_150_end];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_353_56_353_150_end:
+        %tmp.182 = phi [%tmp.156 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_353_56_353_150_begin] [%tmp.173 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_353_56_353_150_true] [%tmp.181 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_353_56_353_150_else_false] [%tmp.182 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_353_56_353_150_end];
         %tmp.183 = add %tmp.153 %tmp.182;
         lputv %unten.11 %tmp.183;
-        symbol [ unten %unten.11 354 12 17 ];
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_351_15_355_8_stop:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_349_15_355_8_if_end:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_346_15_355_8_if_end:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_339_8_355_8_if_end:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 356 8 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_356_8_356_63_if_stmt:
-        symbol [ System %tmp.184 356 12 18 ];
+        symbol [ unten %unten.11 353 12 17 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_350_15_354_8_stop:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_348_15_354_8_if_end:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_345_15_354_8_if_end:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_338_8_354_8_if_end:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 355 8 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_355_8_355_63_if_stmt:
+        symbol [ System %tmp.184 355 12 18 ];
         %tmp.184 = getm $.Toybox.System;
-        symbol [ getTimer %tmp.185 356 19 27 ];
+        symbol [ getTimer %tmp.185 355 19 27 ];
         %tmp.185 = getv function %tmp.184 :getTimer;
         %tmp.186 = invoke %tmp.184 %tmp.185();
-        symbol [ hinweisBis %tmp.188 356 32 42 ];
+        symbol [ hinweisBis %tmp.188 355 32 42 ];
         %tmp.188 = getv ? :hinweisBis;
         %tmp.189 = lt %tmp.186 %tmp.188;
-        bf %tmp.189 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_356_8_356_63_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_356_8_356_63_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_356_44_356_63_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 356 46 ]
-        symbol [ hinweis %tmp.191 356 54 61 ];
+        bf %tmp.189 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_355_8_355_63_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_355_8_355_63_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_355_44_355_63_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 355 46 ]
+        symbol [ hinweis %tmp.191 355 54 61 ];
         %tmp.191 = getv ? :hinweis;
         lputv %unten.11 %tmp.191;
-        symbol [ unten %unten.11 356 46 51 ];
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_356_44_356_63_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_356_8_356_63_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_356_8_356_63_if_end:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 357 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_stop" ]
+        symbol [ unten %unten.11 355 46 51 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_355_44_355_63_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_355_8_355_63_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_355_8_355_63_if_end:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 356 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_stop" ]
         %c.16 = local;
-        symbol [ c %c.16 357 12 13 ];
+        symbol [ c %c.16 356 12 13 ];
         %tmp.192 = self;
-        symbol [ farbe %tmp.193 357 16 21 ];
+        symbol [ farbe %tmp.193 356 16 21 ];
         %tmp.193 = getv function %tmp.192 :farbe;
         %tmp.194 = lgetv %e.9;
-        symbol [ e %tmp.194 357 22 23 ];
+        symbol [ e %tmp.194 356 22 23 ];
         %tmp.195 = lgetv %ra.10;
-        symbol [ ra %tmp.195 357 25 27 ];
+        symbol [ ra %tmp.195 356 25 27 ];
         %tmp.196 = invoke %tmp.192 %tmp.193(%tmp.194, %tmp.195);
         lputv %c.16 %tmp.196;
-        symbol [ c %c.16 357 12 13 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 358 8 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_358_8_358_49_if_stmt:
+        symbol [ c %c.16 356 12 13 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 357 8 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_357_8_357_49_if_stmt:
         %tmp.197 = lgetv %c.16;
-        symbol [ c %tmp.197 358 12 13 ];
-        symbol [ Graphics %tmp.198 358 17 25 ];
+        symbol [ c %tmp.197 357 12 13 ];
+        symbol [ Graphics %tmp.198 357 17 25 ];
         %tmp.198 = getm $.Toybox.Graphics;
-        symbol [ COLOR_WHITE %tmp.199 358 26 37 ];
+        symbol [ COLOR_WHITE %tmp.199 357 26 37 ];
         %tmp.199 = getv %tmp.198 :COLOR_WHITE;
         %tmp.200 = eq %tmp.197 %tmp.199;
-        bf %tmp.200 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_358_8_358_49_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_358_8_358_49_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_358_39_358_49_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 358 41 ]
+        bf %tmp.200 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_357_8_357_49_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_357_8_357_49_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_357_39_357_49_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 357 41 ]
         %tmp.201 = lgetv %fg.2;
-        symbol [ fg %tmp.201 358 45 47 ];
+        symbol [ fg %tmp.201 357 45 47 ];
         lputv %c.16 %tmp.201;
-        symbol [ c %c.16 358 41 42 ];
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_358_39_358_49_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_358_8_358_49_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_358_8_358_49_if_end:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 359 8 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_359_8_366_8_if_stmt:
+        symbol [ c %c.16 357 41 42 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_357_39_357_49_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_357_8_357_49_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_357_8_357_49_if_end:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 358 8 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_358_8_365_8_if_stmt:
         %tmp.202 = lgetv %h.5;
-        symbol [ h %tmp.202 359 12 13 ];
+        symbol [ h %tmp.202 358 12 13 ];
         %tmp.203 = 90;
         %tmp.204 = lt %tmp.202 %tmp.203;
-        bf %tmp.204 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_359_8_366_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_359_8_366_8_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_359_20_366_8_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 361 12 ]
+        bf %tmp.204 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_358_8_365_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_358_8_365_8_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_358_20_365_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 360 12 ]
         %tmp.205 = lgetv %dc;
-        symbol [ dc %tmp.205 361 12 14 ];
-        symbol [ setColor %tmp.206 361 15 23 ];
+        symbol [ dc %tmp.205 360 12 14 ];
+        symbol [ setColor %tmp.206 360 15 23 ];
         %tmp.206 = getv function %tmp.205 :setColor;
         %tmp.207 = lgetv %c.16;
-        symbol [ c %tmp.207 361 24 25 ];
-        symbol [ Graphics %tmp.208 361 27 35 ];
+        symbol [ c %tmp.207 360 24 25 ];
+        symbol [ Graphics %tmp.208 360 27 35 ];
         %tmp.208 = getm $.Toybox.Graphics;
-        symbol [ COLOR_TRANSPARENT %tmp.209 361 36 53 ];
+        symbol [ COLOR_TRANSPARENT %tmp.209 360 36 53 ];
         %tmp.209 = getv %tmp.208 :COLOR_TRANSPARENT;
         invoke %tmp.205 %tmp.206(%tmp.207, %tmp.209);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 362 12 ]
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 361 12 ]
         %tmp.210 = lgetv %dc;
-        symbol [ dc %tmp.210 362 12 14 ];
-        symbol [ drawText %tmp.211 362 15 23 ];
+        symbol [ dc %tmp.210 361 12 14 ];
+        symbol [ drawText %tmp.211 361 15 23 ];
         %tmp.211 = getv function %tmp.210 :drawText;
         %tmp.212 = lgetv %cx.6;
-        symbol [ cx %tmp.212 362 24 26 ];
+        symbol [ cx %tmp.212 361 24 26 ];
         %tmp.213 = lgetv %h.5;
-        symbol [ h %tmp.213 362 28 29 ];
+        symbol [ h %tmp.213 361 28 29 ];
         %tmp.214 = 2;
         %tmp.215 = div %tmp.213 %tmp.214;
         %tmp.216 = 4;
         %tmp.217 = sub %tmp.215 %tmp.216;
-        symbol [ Graphics %tmp.218 362 39 47 ];
+        symbol [ Graphics %tmp.218 361 39 47 ];
         %tmp.218 = getm $.Toybox.Graphics;
-        symbol [ FONT_NUMBER_MILD %tmp.219 362 48 64 ];
+        symbol [ FONT_NUMBER_MILD %tmp.219 361 48 64 ];
         %tmp.219 = getv %tmp.218 :FONT_NUMBER_MILD;
         %tmp.220 = lgetv %e.9;
-        symbol [ e %tmp.220 362 66 67 ];
-        symbol [ toString %tmp.221 362 68 76 ];
+        symbol [ e %tmp.220 361 66 67 ];
+        symbol [ toString %tmp.221 361 68 76 ];
         %tmp.221 = getv function %tmp.220 :toString;
         %tmp.222 = invoke %tmp.220 %tmp.221();
-        symbol [ Graphics %tmp.223 362 80 88 ];
+        symbol [ Graphics %tmp.223 361 80 88 ];
         %tmp.223 = getm $.Toybox.Graphics;
-        symbol [ TEXT_JUSTIFY_CENTER %tmp.224 362 89 108 ];
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.224 361 89 108 ];
         %tmp.224 = getv %tmp.223 :TEXT_JUSTIFY_CENTER;
-        symbol [ Graphics %tmp.225 362 111 119 ];
+        symbol [ Graphics %tmp.225 361 111 119 ];
         %tmp.225 = getm $.Toybox.Graphics;
-        symbol [ TEXT_JUSTIFY_VCENTER %tmp.226 362 120 140 ];
+        symbol [ TEXT_JUSTIFY_VCENTER %tmp.226 361 120 140 ];
         %tmp.226 = getv %tmp.225 :TEXT_JUSTIFY_VCENTER;
         %tmp.227 = bitor %tmp.224 %tmp.226;
         invoke %tmp.210 %tmp.211(%tmp.212, %tmp.217, %tmp.219, %tmp.222, %tmp.227);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 363 12 ]
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 362 12 ]
         %tmp.228 = lgetv %dc;
-        symbol [ dc %tmp.228 363 12 14 ];
-        symbol [ setColor %tmp.229 363 15 23 ];
+        symbol [ dc %tmp.228 362 12 14 ];
+        symbol [ setColor %tmp.229 362 15 23 ];
         %tmp.229 = getv function %tmp.228 :setColor;
         %tmp.230 = lgetv %grau.3;
-        symbol [ grau %tmp.230 363 24 28 ];
-        symbol [ Graphics %tmp.231 363 30 38 ];
+        symbol [ grau %tmp.230 362 24 28 ];
+        symbol [ Graphics %tmp.231 362 30 38 ];
         %tmp.231 = getm $.Toybox.Graphics;
-        symbol [ COLOR_TRANSPARENT %tmp.232 363 39 56 ];
+        symbol [ COLOR_TRANSPARENT %tmp.232 362 39 56 ];
         %tmp.232 = getv %tmp.231 :COLOR_TRANSPARENT;
         invoke %tmp.228 %tmp.229(%tmp.230, %tmp.232);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 364 12 ]
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 363 12 ]
         %tmp.233 = lgetv %dc;
-        symbol [ dc %tmp.233 364 12 14 ];
-        symbol [ drawText %tmp.234 364 15 23 ];
+        symbol [ dc %tmp.233 363 12 14 ];
+        symbol [ drawText %tmp.234 363 15 23 ];
         %tmp.234 = getv function %tmp.233 :drawText;
         %tmp.235 = lgetv %cx.6;
-        symbol [ cx %tmp.235 364 24 26 ];
+        symbol [ cx %tmp.235 363 24 26 ];
         %tmp.236 = lgetv %h.5;
-        symbol [ h %tmp.236 364 28 29 ];
+        symbol [ h %tmp.236 363 28 29 ];
         %tmp.237 = 2;
         %tmp.238 = sub %tmp.236 %tmp.237;
         %tmp.239 = lgetv %dc;
-        symbol [ dc %tmp.239 364 36 38 ];
-        symbol [ getFontHeight %tmp.240 364 39 52 ];
+        symbol [ dc %tmp.239 363 36 38 ];
+        symbol [ getFontHeight %tmp.240 363 39 52 ];
         %tmp.240 = getv function %tmp.239 :getFontHeight;
-        symbol [ Graphics %tmp.241 364 53 61 ];
+        symbol [ Graphics %tmp.241 363 53 61 ];
         %tmp.241 = getm $.Toybox.Graphics;
-        symbol [ FONT_XTINY %tmp.242 364 62 72 ];
+        symbol [ FONT_XTINY %tmp.242 363 62 72 ];
         %tmp.242 = getv %tmp.241 :FONT_XTINY;
         %tmp.243 = invoke %tmp.239 %tmp.240(%tmp.242);
         %tmp.244 = sub %tmp.238 %tmp.243;
-        symbol [ Graphics %tmp.245 364 75 83 ];
+        symbol [ Graphics %tmp.245 363 75 83 ];
         %tmp.245 = getm $.Toybox.Graphics;
-        symbol [ FONT_XTINY %tmp.246 364 84 94 ];
+        symbol [ FONT_XTINY %tmp.246 363 84 94 ];
         %tmp.246 = getv %tmp.245 :FONT_XTINY;
         %tmp.247 = lgetv %unten.11;
-        symbol [ unten %tmp.247 364 96 101 ];
-        symbol [ Graphics %tmp.248 364 103 111 ];
+        symbol [ unten %tmp.247 363 96 101 ];
+        symbol [ Graphics %tmp.248 363 103 111 ];
         %tmp.248 = getm $.Toybox.Graphics;
-        symbol [ TEXT_JUSTIFY_CENTER %tmp.249 364 112 131 ];
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.249 363 112 131 ];
         %tmp.249 = getv %tmp.248 :TEXT_JUSTIFY_CENTER;
         invoke %tmp.233 %tmp.234(%tmp.235, %tmp.244, %tmp.246, %tmp.247, %tmp.249);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 365 12 ]
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 364 12 ]
         ret ?;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_359_20_366_8_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_359_8_366_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_359_8_366_8_if_end:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 367 8 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_358_20_365_8_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_358_8_365_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_358_8_365_8_if_end:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 366 8 ]
         %tmp.250 = lgetv %dc;
-        symbol [ dc %tmp.250 367 8 10 ];
-        symbol [ setColor %tmp.251 367 11 19 ];
+        symbol [ dc %tmp.250 366 8 10 ];
+        symbol [ setColor %tmp.251 366 11 19 ];
         %tmp.251 = getv function %tmp.250 :setColor;
         %tmp.252 = lgetv %grau.3;
-        symbol [ grau %tmp.252 367 20 24 ];
-        symbol [ Graphics %tmp.253 367 26 34 ];
+        symbol [ grau %tmp.252 366 20 24 ];
+        symbol [ Graphics %tmp.253 366 26 34 ];
         %tmp.253 = getm $.Toybox.Graphics;
-        symbol [ COLOR_TRANSPARENT %tmp.254 367 35 52 ];
+        symbol [ COLOR_TRANSPARENT %tmp.254 366 35 52 ];
         %tmp.254 = getv %tmp.253 :COLOR_TRANSPARENT;
         invoke %tmp.250 %tmp.251(%tmp.252, %tmp.254);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 368 8 ]
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 367 8 ]
         %tmp.255 = lgetv %dc;
-        symbol [ dc %tmp.255 368 8 10 ];
-        symbol [ drawText %tmp.256 368 11 19 ];
+        symbol [ dc %tmp.255 367 8 10 ];
+        symbol [ drawText %tmp.256 367 11 19 ];
         %tmp.256 = getv function %tmp.255 :drawText;
         %tmp.257 = lgetv %cx.6;
-        symbol [ cx %tmp.257 368 20 22 ];
+        symbol [ cx %tmp.257 367 20 22 ];
         %tmp.258 = lgetv %h.5;
-        symbol [ h %tmp.258 368 25 26 ];
+        symbol [ h %tmp.258 367 25 26 ];
         %tmp.259 = 0.06;
         %tmp.260 = mul %tmp.258 %tmp.259;
-        symbol [ toNumber %tmp.261 368 35 43 ];
+        symbol [ toNumber %tmp.261 367 35 43 ];
         %tmp.261 = getv function %tmp.260 :toNumber;
         %tmp.262 = invoke %tmp.260 %tmp.261();
-        symbol [ Graphics %tmp.263 368 47 55 ];
+        symbol [ Graphics %tmp.263 367 47 55 ];
         %tmp.263 = getm $.Toybox.Graphics;
-        symbol [ FONT_XTINY %tmp.264 368 56 66 ];
+        symbol [ FONT_XTINY %tmp.264 367 56 66 ];
         %tmp.264 = getv %tmp.263 :FONT_XTINY;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_368_68_368_121_begin:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_367_68_367_121_begin:
         %tmp.265 = lgetv %vor.8;
-        symbol [ vor %tmp.265 368 68 71 ];
+        symbol [ vor %tmp.265 367 68 71 ];
         %tmp.266 = 0;
         %tmp.267 = gt %tmp.265 %tmp.266;
-        bf %tmp.267 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_368_68_368_121_else_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_368_68_368_121_true:
+        bf %tmp.267 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_367_68_367_121_else_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_367_68_367_121_true:
         %tmp.268 = "KIRA TAG · EINH. ";
         %tmp.269 = lgetv %einheit.7;
-        symbol [ einheit %tmp.269 368 100 107 ];
-        symbol [ toString %tmp.270 368 108 116 ];
+        symbol [ einheit %tmp.269 367 100 107 ];
+        symbol [ toString %tmp.270 367 108 116 ];
         %tmp.270 = getv function %tmp.269 :toString;
         %tmp.271 = invoke %tmp.269 %tmp.270();
         %tmp.272 = add %tmp.268 %tmp.271;
         push %tmp.272;
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_368_68_368_121_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_368_68_368_121_else_false:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_367_68_367_121_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_367_68_367_121_else_false:
         %tmp.273 = "KIRA ESS";
         push %tmp.273;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_368_68_368_121_end:
-        %tmp.274 = phi [%tmp.267 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_368_68_368_121_begin] [%tmp.272 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_368_68_368_121_true] [%tmp.273 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_368_68_368_121_else_false] [%tmp.274 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_368_68_368_121_end];
-        symbol [ Graphics %tmp.275 368 133 141 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_367_68_367_121_end:
+        %tmp.274 = phi [%tmp.267 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_367_68_367_121_begin] [%tmp.272 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_367_68_367_121_true] [%tmp.273 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_367_68_367_121_else_false] [%tmp.274 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_367_68_367_121_end];
+        symbol [ Graphics %tmp.275 367 133 141 ];
         %tmp.275 = getm $.Toybox.Graphics;
-        symbol [ TEXT_JUSTIFY_CENTER %tmp.276 368 142 161 ];
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.276 367 142 161 ];
         %tmp.276 = getv %tmp.275 :TEXT_JUSTIFY_CENTER;
         invoke %tmp.255 %tmp.256(%tmp.257, %tmp.262, %tmp.264, %tmp.274, %tmp.276);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 369 8 ]
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 368 8 ]
         %tmp.277 = lgetv %dc;
-        symbol [ dc %tmp.277 369 8 10 ];
-        symbol [ setColor %tmp.278 369 11 19 ];
+        symbol [ dc %tmp.277 368 8 10 ];
+        symbol [ setColor %tmp.278 368 11 19 ];
         %tmp.278 = getv function %tmp.277 :setColor;
         %tmp.279 = lgetv %c.16;
-        symbol [ c %tmp.279 369 20 21 ];
-        symbol [ Graphics %tmp.280 369 23 31 ];
+        symbol [ c %tmp.279 368 20 21 ];
+        symbol [ Graphics %tmp.280 368 23 31 ];
         %tmp.280 = getm $.Toybox.Graphics;
-        symbol [ COLOR_TRANSPARENT %tmp.281 369 32 49 ];
+        symbol [ COLOR_TRANSPARENT %tmp.281 368 32 49 ];
         %tmp.281 = getv %tmp.280 :COLOR_TRANSPARENT;
         invoke %tmp.277 %tmp.278(%tmp.279, %tmp.281);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 370 8 ]
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 369 8 ]
         %tmp.282 = lgetv %dc;
-        symbol [ dc %tmp.282 370 8 10 ];
-        symbol [ drawText %tmp.283 370 11 19 ];
+        symbol [ dc %tmp.282 369 8 10 ];
+        symbol [ drawText %tmp.283 369 11 19 ];
         %tmp.283 = getv function %tmp.282 :drawText;
         %tmp.284 = lgetv %cx.6;
-        symbol [ cx %tmp.284 370 20 22 ];
+        symbol [ cx %tmp.284 369 20 22 ];
         %tmp.285 = lgetv %h.5;
-        symbol [ h %tmp.285 370 24 25 ];
+        symbol [ h %tmp.285 369 24 25 ];
         %tmp.286 = 2;
         %tmp.287 = div %tmp.285 %tmp.286;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_370_31_370_77_begin:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_369_31_369_77_begin:
         %tmp.288 = lgetv %h.5;
-        symbol [ h %tmp.288 370 31 32 ];
+        symbol [ h %tmp.288 369 31 32 ];
         %tmp.289 = 160;
         %tmp.290 = gt %tmp.288 %tmp.289;
-        bf %tmp.290 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_370_31_370_77_else_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_370_31_370_77_true:
-        symbol [ Graphics %tmp.291 370 41 49 ];
+        bf %tmp.290 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_369_31_369_77_else_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_369_31_369_77_true:
+        symbol [ Graphics %tmp.291 369 41 49 ];
         %tmp.291 = getm $.Toybox.Graphics;
-        symbol [ FONT_NUMBER_HOT %tmp.292 370 50 65 ];
+        symbol [ FONT_NUMBER_HOT %tmp.292 369 50 65 ];
         %tmp.292 = getv %tmp.291 :FONT_NUMBER_HOT;
         push %tmp.292;
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_370_31_370_77_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_370_31_370_77_else_false:
-        symbol [ Graphics %tmp.293 370 68 76 ];
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_369_31_369_77_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_369_31_369_77_else_false:
+        symbol [ Graphics %tmp.293 369 68 76 ];
         %tmp.293 = getm $.Toybox.Graphics;
-        symbol [ FONT_NUMBER_MEDIUM %tmp.294 370 77 95 ];
+        symbol [ FONT_NUMBER_MEDIUM %tmp.294 369 77 95 ];
         %tmp.294 = getv %tmp.293 :FONT_NUMBER_MEDIUM;
         push %tmp.294;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_370_31_370_77_end:
-        %tmp.295 = phi [%tmp.290 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_370_31_370_77_begin] [%tmp.292 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_370_31_370_77_true] [%tmp.294 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_370_31_370_77_else_false] [%tmp.295 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_370_31_370_77_end];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_369_31_369_77_end:
+        %tmp.295 = phi [%tmp.290 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_369_31_369_77_begin] [%tmp.292 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_369_31_369_77_true] [%tmp.294 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_369_31_369_77_else_false] [%tmp.295 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_369_31_369_77_end];
         %tmp.296 = lgetv %e.9;
-        symbol [ e %tmp.296 370 97 98 ];
-        symbol [ toString %tmp.297 370 99 107 ];
+        symbol [ e %tmp.296 369 97 98 ];
+        symbol [ toString %tmp.297 369 99 107 ];
         %tmp.297 = getv function %tmp.296 :toString;
         %tmp.298 = invoke %tmp.296 %tmp.297();
-        symbol [ Graphics %tmp.299 370 111 119 ];
+        symbol [ Graphics %tmp.299 369 111 119 ];
         %tmp.299 = getm $.Toybox.Graphics;
-        symbol [ TEXT_JUSTIFY_CENTER %tmp.300 370 120 139 ];
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.300 369 120 139 ];
         %tmp.300 = getv %tmp.299 :TEXT_JUSTIFY_CENTER;
-        symbol [ Graphics %tmp.301 370 142 150 ];
+        symbol [ Graphics %tmp.301 369 142 150 ];
         %tmp.301 = getm $.Toybox.Graphics;
-        symbol [ TEXT_JUSTIFY_VCENTER %tmp.302 370 151 171 ];
+        symbol [ TEXT_JUSTIFY_VCENTER %tmp.302 369 151 171 ];
         %tmp.302 = getv %tmp.301 :TEXT_JUSTIFY_VCENTER;
         %tmp.303 = bitor %tmp.300 %tmp.302;
         invoke %tmp.282 %tmp.283(%tmp.284, %tmp.287, %tmp.295, %tmp.298, %tmp.303);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 371 8 ]
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 370 8 ]
         %tmp.304 = lgetv %dc;
-        symbol [ dc %tmp.304 371 8 10 ];
-        symbol [ setColor %tmp.305 371 11 19 ];
+        symbol [ dc %tmp.304 370 8 10 ];
+        symbol [ setColor %tmp.305 370 11 19 ];
         %tmp.305 = getv function %tmp.304 :setColor;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_371_20_371_57_begin:
-        symbol [ System %tmp.306 371 20 26 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_370_20_370_57_begin:
+        symbol [ System %tmp.306 370 20 26 ];
         %tmp.306 = getm $.Toybox.System;
-        symbol [ getTimer %tmp.307 371 27 35 ];
+        symbol [ getTimer %tmp.307 370 27 35 ];
         %tmp.307 = getv function %tmp.306 :getTimer;
         %tmp.308 = invoke %tmp.306 %tmp.307();
-        symbol [ hinweisBis %tmp.310 371 40 50 ];
+        symbol [ hinweisBis %tmp.310 370 40 50 ];
         %tmp.310 = getv ? :hinweisBis;
         %tmp.311 = lt %tmp.308 %tmp.310;
-        bf %tmp.311 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_371_20_371_57_else_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_371_20_371_57_true:
+        bf %tmp.311 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_370_20_370_57_else_false;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_370_20_370_57_true:
         %tmp.312 = lgetv %c.16;
-        symbol [ c %tmp.312 371 53 54 ];
+        symbol [ c %tmp.312 370 53 54 ];
         push %tmp.312;
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_371_20_371_57_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_371_20_371_57_else_false:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_370_20_370_57_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_370_20_370_57_else_false:
         %tmp.313 = lgetv %grau.3;
-        symbol [ grau %tmp.313 371 57 61 ];
+        symbol [ grau %tmp.313 370 57 61 ];
         push %tmp.313;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_371_20_371_57_end:
-        %tmp.314 = phi [%tmp.311 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_371_20_371_57_begin] [%tmp.312 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_371_20_371_57_true] [%tmp.313 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_371_20_371_57_else_false] [%tmp.314 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_371_20_371_57_end];
-        symbol [ Graphics %tmp.315 371 63 71 ];
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_370_20_370_57_end:
+        %tmp.314 = phi [%tmp.311 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_370_20_370_57_begin] [%tmp.312 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_370_20_370_57_true] [%tmp.313 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_370_20_370_57_else_false] [%tmp.314 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_370_20_370_57_end];
+        symbol [ Graphics %tmp.315 370 63 71 ];
         %tmp.315 = getm $.Toybox.Graphics;
-        symbol [ COLOR_TRANSPARENT %tmp.316 371 72 89 ];
+        symbol [ COLOR_TRANSPARENT %tmp.316 370 72 89 ];
         %tmp.316 = getv %tmp.315 :COLOR_TRANSPARENT;
         invoke %tmp.304 %tmp.305(%tmp.314, %tmp.316);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 372 8 ]
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 371 8 ]
         %tmp.317 = lgetv %dc;
-        symbol [ dc %tmp.317 372 8 10 ];
-        symbol [ drawText %tmp.318 372 11 19 ];
+        symbol [ dc %tmp.317 371 8 10 ];
+        symbol [ drawText %tmp.318 371 11 19 ];
         %tmp.318 = getv function %tmp.317 :drawText;
         %tmp.319 = lgetv %cx.6;
-        symbol [ cx %tmp.319 372 20 22 ];
+        symbol [ cx %tmp.319 371 20 22 ];
         %tmp.320 = lgetv %h.5;
-        symbol [ h %tmp.320 372 24 25 ];
+        symbol [ h %tmp.320 371 24 25 ];
         %tmp.321 = lgetv %h.5;
-        symbol [ h %tmp.321 372 29 30 ];
+        symbol [ h %tmp.321 371 29 30 ];
         %tmp.322 = 0.06;
         %tmp.323 = mul %tmp.321 %tmp.322;
-        symbol [ toNumber %tmp.324 372 39 47 ];
+        symbol [ toNumber %tmp.324 371 39 47 ];
         %tmp.324 = getv function %tmp.323 :toNumber;
         %tmp.325 = invoke %tmp.323 %tmp.324();
         %tmp.326 = sub %tmp.320 %tmp.325;
         %tmp.327 = lgetv %dc;
-        symbol [ dc %tmp.327 372 52 54 ];
-        symbol [ getFontHeight %tmp.328 372 55 68 ];
+        symbol [ dc %tmp.327 371 52 54 ];
+        symbol [ getFontHeight %tmp.328 371 55 68 ];
         %tmp.328 = getv function %tmp.327 :getFontHeight;
-        symbol [ Graphics %tmp.329 372 69 77 ];
+        symbol [ Graphics %tmp.329 371 69 77 ];
         %tmp.329 = getm $.Toybox.Graphics;
-        symbol [ FONT_TINY %tmp.330 372 78 87 ];
+        symbol [ FONT_TINY %tmp.330 371 78 87 ];
         %tmp.330 = getv %tmp.329 :FONT_TINY;
         %tmp.331 = invoke %tmp.327 %tmp.328(%tmp.330);
         %tmp.332 = sub %tmp.326 %tmp.331;
-        symbol [ Graphics %tmp.333 372 90 98 ];
+        symbol [ Graphics %tmp.333 371 90 98 ];
         %tmp.333 = getm $.Toybox.Graphics;
-        symbol [ FONT_TINY %tmp.334 372 99 108 ];
+        symbol [ FONT_TINY %tmp.334 371 99 108 ];
         %tmp.334 = getv %tmp.333 :FONT_TINY;
         %tmp.335 = lgetv %unten.11;
-        symbol [ unten %tmp.335 372 110 115 ];
-        symbol [ Graphics %tmp.336 372 117 125 ];
+        symbol [ unten %tmp.335 371 110 115 ];
+        symbol [ Graphics %tmp.336 371 117 125 ];
         %tmp.336 = getm $.Toybox.Graphics;
-        symbol [ TEXT_JUSTIFY_CENTER %tmp.337 372 126 145 ];
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.337 371 126 145 ];
         %tmp.337 = getv %tmp.336 :TEXT_JUSTIFY_CENTER;
         invoke %tmp.317 %tmp.318(%tmp.319, %tmp.332, %tmp.334, %tmp.335, %tmp.337);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 374 8 ]
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_8_386_8_if_stmt:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_12_374_43_begin:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_12_374_34_begin:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 373 8 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_8_379_8_if_stmt:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_12_373_43_begin:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_12_373_34_begin:
         %tmp.338 = lgetv %ra.10;
-        symbol [ ra %tmp.338 374 12 14 ];
+        symbol [ ra %tmp.338 373 12 14 ];
         %tmp.339 = null;
         %tmp.340 = ne %tmp.338 %tmp.339;
-        bf %tmp.340 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_8_386_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_26_374_34_true:
+        bf %tmp.340 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_8_379_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_26_373_34_true:
         %tmp.341 = lgetv %ra.10;
-        symbol [ ra %tmp.341 374 26 28 ];
+        symbol [ ra %tmp.341 373 26 28 ];
         %tmp.342 = as %tmp.341 { (!Null) };
         %tmp.343 = 1;
         %tmp.344 = agetv %tmp.342 %tmp.343;
         %tmp.345 = 0;
         %tmp.346 = gt %tmp.344 %tmp.345;
         push %tmp.346;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_26_374_34_end:
-        %tmp.347 = phi [%tmp.340 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_12_374_34_begin] [%tmp.346 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_26_374_34_true] [%tmp.347 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_26_374_34_end];
-        bf %tmp.347 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_8_386_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_39_374_43_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_26_373_34_end:
+        %tmp.347 = phi [%tmp.340 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_12_373_34_begin] [%tmp.346 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_26_373_34_true] [%tmp.347 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_26_373_34_end];
+        bf %tmp.347 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_8_379_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_39_373_43_true:
         %tmp.348 = lgetv %h.5;
-        symbol [ h %tmp.348 374 39 40 ];
+        symbol [ h %tmp.348 373 39 40 ];
         %tmp.349 = 120;
         %tmp.350 = gt %tmp.348 %tmp.349;
         push %tmp.350;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_39_374_43_end:
-        %tmp.351 = phi [%tmp.347 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_12_374_43_begin] [%tmp.350 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_39_374_43_true] [%tmp.351 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_39_374_43_end];
-        bf %tmp.351 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_8_386_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_8_386_8_if_true:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_48_386_8_start:
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 375 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_48_386_8_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_48_386_8_stop" ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_39_373_43_end:
+        %tmp.351 = phi [%tmp.347 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_12_373_43_begin] [%tmp.350 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_39_373_43_true] [%tmp.351 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_39_373_43_end];
+        bf %tmp.351 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_8_379_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_8_379_8_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_48_379_8_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 374 12 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_48_379_8_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_48_379_8_stop" ]
         %bw.17 = local;
-        symbol [ bw %bw.17 375 16 18 ];
+        symbol [ bw %bw.17 374 16 18 ];
         %tmp.352 = lgetv %w.4;
-        symbol [ w %tmp.352 375 22 23 ];
+        symbol [ w %tmp.352 374 22 23 ];
         %tmp.353 = 0.5;
         %tmp.354 = mul %tmp.352 %tmp.353;
-        symbol [ toNumber %tmp.355 375 31 39 ];
+        symbol [ toNumber %tmp.355 374 31 39 ];
         %tmp.355 = getv function %tmp.354 :toNumber;
         %tmp.356 = invoke %tmp.354 %tmp.355();
         lputv %bw.17 %tmp.356;
-        symbol [ bw %bw.17 375 16 18 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 376 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_48_386_8_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_48_386_8_stop" ]
+        symbol [ bw %bw.17 374 16 18 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 375 12 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_48_379_8_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_48_379_8_stop" ]
         %x.18 = local;
-        symbol [ x %x.18 376 16 17 ];
+        symbol [ x %x.18 375 16 17 ];
         %tmp.357 = lgetv %cx.6;
-        symbol [ cx %tmp.357 376 20 22 ];
+        symbol [ cx %tmp.357 375 20 22 ];
         %tmp.358 = lgetv %bw.17;
-        symbol [ bw %tmp.358 376 25 27 ];
+        symbol [ bw %tmp.358 375 25 27 ];
         %tmp.359 = 2;
         %tmp.360 = div %tmp.358 %tmp.359;
         %tmp.361 = sub %tmp.357 %tmp.360;
         lputv %x.18 %tmp.361;
-        symbol [ x %x.18 376 16 17 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 377 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_48_386_8_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_48_386_8_stop" ]
+        symbol [ x %x.18 375 16 17 ];
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 376 12 ]
+        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_48_379_8_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_48_379_8_stop" ]
         %y.19 = local;
-        symbol [ y %y.19 377 16 17 ];
+        symbol [ y %y.19 376 16 17 ];
         %tmp.362 = lgetv %h.5;
-        symbol [ h %tmp.362 377 21 22 ];
+        symbol [ h %tmp.362 376 21 22 ];
         %tmp.363 = 0.06;
         %tmp.364 = mul %tmp.362 %tmp.363;
-        symbol [ toNumber %tmp.365 377 31 39 ];
+        symbol [ toNumber %tmp.365 376 31 39 ];
         %tmp.365 = getv function %tmp.364 :toNumber;
         %tmp.366 = invoke %tmp.364 %tmp.365();
         %tmp.367 = lgetv %dc;
-        symbol [ dc %tmp.367 377 44 46 ];
-        symbol [ getFontHeight %tmp.368 377 47 60 ];
+        symbol [ dc %tmp.367 376 44 46 ];
+        symbol [ getFontHeight %tmp.368 376 47 60 ];
         %tmp.368 = getv function %tmp.367 :getFontHeight;
-        symbol [ Graphics %tmp.369 377 61 69 ];
+        symbol [ Graphics %tmp.369 376 61 69 ];
         %tmp.369 = getm $.Toybox.Graphics;
-        symbol [ FONT_XTINY %tmp.370 377 70 80 ];
+        symbol [ FONT_XTINY %tmp.370 376 70 80 ];
         %tmp.370 = getv %tmp.369 :FONT_XTINY;
         %tmp.371 = invoke %tmp.367 %tmp.368(%tmp.370);
         %tmp.372 = add %tmp.366 %tmp.371;
         %tmp.373 = 4;
         %tmp.374 = add %tmp.372 %tmp.373;
         lputv %y.19 %tmp.374;
-        symbol [ y %y.19 377 16 17 ];
+        symbol [ y %y.19 376 16 17 ];
 [ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 378 12 ]
-        %tmp.375 = lgetv %dc;
-        symbol [ dc %tmp.375 378 12 14 ];
-        symbol [ setColor %tmp.376 378 15 23 ];
-        %tmp.376 = getv function %tmp.375 :setColor;
-        %tmp.377 = 0x333333;
-        symbol [ Graphics %tmp.378 378 34 42 ];
-        %tmp.378 = getm $.Toybox.Graphics;
-        symbol [ COLOR_TRANSPARENT %tmp.379 378 43 60 ];
-        %tmp.379 = getv %tmp.378 :COLOR_TRANSPARENT;
-        invoke %tmp.375 %tmp.376(%tmp.377, %tmp.379);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 379 12 ]
-        %tmp.380 = lgetv %dc;
-        symbol [ dc %tmp.380 379 12 14 ];
-        symbol [ fillRectangle %tmp.381 379 15 28 ];
-        %tmp.381 = getv function %tmp.380 :fillRectangle;
-        %tmp.382 = lgetv %x.18;
-        symbol [ x %tmp.382 379 29 30 ];
-        %tmp.383 = lgetv %y.19;
-        symbol [ y %tmp.383 379 32 33 ];
-        %tmp.384 = lgetv %bw.17;
-        symbol [ bw %tmp.384 379 35 37 ];
-        %tmp.385 = 6;
-        invoke %tmp.380 %tmp.381(%tmp.382, %tmp.383, %tmp.384, %tmp.385);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 380 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_48_386_8_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_48_386_8_stop" ]
-        %lo.20 = local;
-        symbol [ lo %lo.20 380 16 18 ];
-        %tmp.386 = lgetv %bw.17;
-        symbol [ bw %tmp.386 380 22 24 ];
+        symbol [ KiraSkala %tmp.376 378 12 21 ];
+        %tmp.376 = getv ? :KiraSkala;
+        symbol [ balken %tmp.377 378 22 28 ];
+        %tmp.377 = getv function %tmp.376 :balken;
+        %tmp.378 = lgetv %dc;
+        symbol [ dc %tmp.378 378 29 31 ];
+        %tmp.379 = lgetv %x.18;
+        symbol [ x %tmp.379 378 33 34 ];
+        %tmp.380 = lgetv %y.19;
+        symbol [ y %tmp.380 378 36 37 ];
+        %tmp.381 = lgetv %bw.17;
+        symbol [ bw %tmp.381 378 39 41 ];
+        %tmp.382 = 6;
+        %tmp.383 = lgetv %e.9;
+        symbol [ e %tmp.383 378 46 47 ];
+        symbol [ KiraSkala %tmp.385 378 49 58 ];
+        %tmp.385 = getv ? :KiraSkala;
+        symbol [ last %tmp.386 378 59 63 ];
+        %tmp.386 = getv function %tmp.385 :last;
         %tmp.387 = lgetv %ra.10;
-        symbol [ ra %tmp.387 380 27 29 ];
+        symbol [ ra %tmp.387 378 64 66 ];
         %tmp.388 = as %tmp.387 { (!Null) };
         %tmp.389 = 0;
         %tmp.390 = agetv %tmp.388 %tmp.389;
-        %tmp.391 = mul %tmp.386 %tmp.390;
-        %tmp.392 = lgetv %ra.10;
-        symbol [ ra %tmp.392 380 35 37 ];
-        %tmp.393 = as %tmp.392 { (!Null) };
-        %tmp.394 = 1;
-        %tmp.395 = agetv %tmp.393 %tmp.394;
-        %tmp.396 = div %tmp.391 %tmp.395;
-        symbol [ toNumber %tmp.397 380 42 50 ];
-        %tmp.397 = getv function %tmp.396 :toNumber;
-        %tmp.398 = invoke %tmp.396 %tmp.397();
-        lputv %lo.20 %tmp.398;
-        symbol [ lo %lo.20 380 16 18 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 381 12 ]
-        %tmp.399 = lgetv %dc;
-        symbol [ dc %tmp.399 381 12 14 ];
-        symbol [ setColor %tmp.400 381 15 23 ];
-        %tmp.400 = getv function %tmp.399 :setColor;
-        %tmp.401 = 0x1E5631;
-        symbol [ Graphics %tmp.402 381 34 42 ];
-        %tmp.402 = getm $.Toybox.Graphics;
-        symbol [ COLOR_TRANSPARENT %tmp.403 381 43 60 ];
-        %tmp.403 = getv %tmp.402 :COLOR_TRANSPARENT;
-        invoke %tmp.399 %tmp.400(%tmp.401, %tmp.403);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 382 12 ]
-        %tmp.404 = lgetv %dc;
-        symbol [ dc %tmp.404 382 12 14 ];
-        symbol [ fillRectangle %tmp.405 382 15 28 ];
-        %tmp.405 = getv function %tmp.404 :fillRectangle;
-        %tmp.406 = lgetv %x.18;
-        symbol [ x %tmp.406 382 29 30 ];
-        %tmp.407 = lgetv %lo.20;
-        symbol [ lo %tmp.407 382 33 35 ];
-        %tmp.408 = add %tmp.406 %tmp.407;
-        %tmp.409 = lgetv %y.19;
-        symbol [ y %tmp.409 382 37 38 ];
-        %tmp.410 = lgetv %bw.17;
-        symbol [ bw %tmp.410 382 40 42 ];
-        %tmp.411 = lgetv %lo.20;
-        symbol [ lo %tmp.411 382 45 47 ];
-        %tmp.412 = sub %tmp.410 %tmp.411;
-        %tmp.413 = 6;
-        invoke %tmp.404 %tmp.405(%tmp.408, %tmp.409, %tmp.412, %tmp.413);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 383 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_48_386_8_start" "_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_48_386_8_stop" ]
-        %p.21 = local;
-        symbol [ p %p.21 383 16 17 ];
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_383_20_383_64_begin:
-        %tmp.414 = lgetv %e.9;
-        symbol [ e %tmp.414 383 20 21 ];
-        %tmp.415 = lgetv %ra.10;
-        symbol [ ra %tmp.415 383 25 27 ];
-        %tmp.416 = as %tmp.415 { (!Null) };
-        %tmp.417 = 1;
-        %tmp.418 = agetv %tmp.416 %tmp.417;
-        %tmp.419 = gte %tmp.414 %tmp.418;
-        bf %tmp.419 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_383_20_383_64_else_false;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_383_20_383_64_true:
-        %tmp.420 = lgetv %bw.17;
-        symbol [ bw %tmp.420 383 33 35 ];
-        push %tmp.420;
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_383_20_383_64_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_383_20_383_64_else_false:
-        %tmp.421 = lgetv %bw.17;
-        symbol [ bw %tmp.421 383 39 41 ];
-        %tmp.422 = lgetv %e.9;
-        symbol [ e %tmp.422 383 44 45 ];
-        %tmp.423 = mul %tmp.421 %tmp.422;
-        %tmp.424 = lgetv %ra.10;
-        symbol [ ra %tmp.424 383 48 50 ];
-        %tmp.425 = as %tmp.424 { (!Null) };
-        %tmp.426 = 1;
-        %tmp.427 = agetv %tmp.425 %tmp.426;
-        %tmp.428 = div %tmp.423 %tmp.427;
-        symbol [ toNumber %tmp.429 383 55 63 ];
-        %tmp.429 = getv function %tmp.428 :toNumber;
-        %tmp.430 = invoke %tmp.428 %tmp.429();
-        push %tmp.430;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_383_20_383_64_end:
-        %tmp.431 = phi [%tmp.419 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_383_20_383_64_begin] [%tmp.420 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_383_20_383_64_true] [%tmp.430 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_383_20_383_64_else_false] [%tmp.431 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_383_20_383_64_end];
-        lputv %p.21 %tmp.431;
-        symbol [ p %p.21 383 16 17 ];
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 384 12 ]
-        %tmp.432 = lgetv %dc;
-        symbol [ dc %tmp.432 384 12 14 ];
-        symbol [ setColor %tmp.433 384 15 23 ];
-        %tmp.433 = getv function %tmp.432 :setColor;
-        %tmp.434 = lgetv %c.16;
-        symbol [ c %tmp.434 384 24 25 ];
-        symbol [ Graphics %tmp.435 384 27 35 ];
-        %tmp.435 = getm $.Toybox.Graphics;
-        symbol [ COLOR_TRANSPARENT %tmp.436 384 36 53 ];
-        %tmp.436 = getv %tmp.435 :COLOR_TRANSPARENT;
-        invoke %tmp.432 %tmp.433(%tmp.434, %tmp.436);
-[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 385 12 ]
-        %tmp.437 = lgetv %dc;
-        symbol [ dc %tmp.437 385 12 14 ];
-        symbol [ fillRectangle %tmp.438 385 15 28 ];
-        %tmp.438 = getv function %tmp.437 :fillRectangle;
-        %tmp.439 = lgetv %x.18;
-        symbol [ x %tmp.439 385 29 30 ];
-        %tmp.440 = lgetv %y.19;
-        symbol [ y %tmp.440 385 32 33 ];
-        %tmp.441 = lgetv %p.21;
-        symbol [ p %tmp.441 385 35 36 ];
-        %tmp.442 = 6;
-        invoke %tmp.437 %tmp.438(%tmp.439, %tmp.440, %tmp.441, %tmp.442);
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_48_386_8_stop:
-        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_8_386_8_if_end;
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_374_8_386_8_if_end:
-_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_325_49_387_4_stop:
+        %tmp.391 = lgetv %ra.10;
+        symbol [ ra %tmp.391 378 71 73 ];
+        %tmp.392 = as %tmp.391 { (!Null) };
+        %tmp.393 = 1;
+        %tmp.394 = agetv %tmp.392 %tmp.393;
+        %tmp.395 = invoke %tmp.385 %tmp.386(%tmp.390, %tmp.394);
+        %tmp.396 = lgetv %bg.1;
+        symbol [ bg %tmp.396 378 79 81 ];
+        invoke %tmp.376 %tmp.377(%tmp.378, %tmp.379, %tmp.380, %tmp.381, %tmp.382, %tmp.383, %tmp.395, %tmp.396);
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_48_379_8_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_8_379_8_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_373_8_379_8_if_end:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldView_mc_324_49_380_4_stop:
     }
 }
 [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc"; @line = 1; ]
 <init> {
 [ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldView.mc" 13 6 ]
-    %tmp.443 = newa 5;
-    %tmp.444 = 20;
-    %tmp.445 = dup %tmp.443;
-    %tmp.446 = aputv %tmp.445 0 %tmp.444;
-    %tmp.447 = 45;
-    %tmp.448 = dup %tmp.446;
-    %tmp.449 = aputv %tmp.448 1 %tmp.447;
-    %tmp.450 = 80;
-    %tmp.451 = dup %tmp.449;
-    %tmp.452 = aputv %tmp.451 2 %tmp.450;
-    %tmp.453 = 130;
-    %tmp.454 = dup %tmp.452;
-    %tmp.455 = aputv %tmp.454 3 %tmp.453;
-    %tmp.456 = 190;
-    %tmp.457 = dup %tmp.455;
-    %tmp.458 = aputv %tmp.457 4 %tmp.456;
-    putv self :RATEN_START %tmp.458;
+    %tmp.397 = newa 5;
+    %tmp.398 = 20;
+    %tmp.399 = dup %tmp.397;
+    %tmp.400 = aputv %tmp.399 0 %tmp.398;
+    %tmp.401 = 45;
+    %tmp.402 = dup %tmp.400;
+    %tmp.403 = aputv %tmp.402 1 %tmp.401;
+    %tmp.404 = 80;
+    %tmp.405 = dup %tmp.403;
+    %tmp.406 = aputv %tmp.405 2 %tmp.404;
+    %tmp.407 = 130;
+    %tmp.408 = dup %tmp.406;
+    %tmp.409 = aputv %tmp.408 3 %tmp.407;
+    %tmp.410 = 190;
+    %tmp.411 = dup %tmp.409;
+    %tmp.412 = aputv %tmp.411 4 %tmp.410;
+    putv self :RATEN_START %tmp.412;
 }

@@ -467,7 +467,7 @@ class KiraZeiger extends WatchUi.WatchFace {
                 var bh = v > 0 ? ((y1 - y0) * v / mx) : 2;
                 if (bh < 2) { bh = 2; }
                 // 23.11.2026: Balken blasser, ATL/CTL liegen darüber
-                dc.setColor(blass(lastFarbe(v, l1, h1), 45), Graphics.COLOR_TRANSPARENT);
+                dc.setColor(blass(lastFarbe(v, l1, h1), 70), Graphics.COLOR_TRANSPARENT);
                 dc.fillRectangle(x + bw / 4, y1 - bh, bw / 2, bh);
             }
             kurven(dc, x0, bw, y0, y1, 0, false);
