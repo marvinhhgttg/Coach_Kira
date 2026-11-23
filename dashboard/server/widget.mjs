@@ -3160,6 +3160,10 @@ function ctlStep(ctl, last, mittel28) {
   const m = CTL_MODEL;
   return m.g * (m.a + m.b * ctl + m.c * last) + (1 - m.g) * m.k * mittel28;
 }
+function windowMean(reihe, win = CTL_MODEL.win) {
+  const w = reihe.slice(-win);
+  return w.length ? w.reduce((a, b) => a + b, 0) / w.length : 0;
+}
 
 // ../src/screens/RecoveryPanel.tsx
 var import_react7 = __toESM(require_react(), 1);
@@ -5048,6 +5052,7 @@ var num = (v) => {
 };
 var STATUS_TEXT = { QUALITY: "Qualit\xE4t m\xF6glich", TRAIN: "normal trainieren", EASY: "locker trainieren", REST: "Erholung priorisieren" };
 var tageMerk = [];
+var plan7Merk = null;
 var neuWert = (r, post, morgen) => {
   const p = r ? num(r[post]) : null;
   if (p != null && p > 0) return p;
@@ -5076,6 +5081,25 @@ async function heuteTeil() {
     plan = sim?.ok ? (sim.days || []).find((x) => String(x.date).slice(0, 10) === heute2) || null : null;
     if (sim?.ok)
       naechste = (sim.days || []).filter((x) => String(x.date).slice(0, 10) > heute2).slice(0, 7).map((x) => ({ d: String(x.date).slice(0, 10), ess: num(x.sim_load ?? x.load), sport: String(x.sport || ""), zone: String(x.zone || "") }));
+  } catch {
+  }
+  try {
+    if (t && t.atlPost != null && t.ctlPost != null && naechste.length) {
+      let atl = t.atlPost, ctl = t.ctlPost;
+      const loads = days.map((d) => d.essDay ?? 0);
+      const p7 = { start: naechste[0].d, ess: [], atl: [], ctl: [], acwr: [] };
+      for (const x of naechste.slice(0, 7)) {
+        const l = x.ess ?? 0;
+        loads.push(l);
+        atl = atlStep(atl, l);
+        ctl = ctlStep(ctl, l, windowMean(loads));
+        p7.ess.push(Math.round(l));
+        p7.atl.push(Math.round(atl));
+        p7.ctl.push(Math.round(ctl));
+        p7.acwr.push(ctl > 0 ? Math.round(atl / ctl * 100) / 100 : 0);
+      }
+      plan7Merk = p7;
+    }
   } catch {
   }
   const ti = t ? days.length - 1 : -1;
@@ -5344,7 +5368,7 @@ async function uhrTeil(rahmen) {
     feld = await feldTeil(rahmen, t);
   } catch {
   }
-  return { l14, m7, form, letzte, feld };
+  return { l14, m7, form, letzte, feld, plan7: plan7Merk };
 }
 var [h, z, f] = await Promise.all([heuteTeil(), zielTeil().catch(() => null), formTeil().catch(() => null)]);
 var u = null;

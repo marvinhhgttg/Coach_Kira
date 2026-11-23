@@ -13,6 +13,7 @@ import { ladeP4, tourform as berechneTourform } from '../src/lib/paket4';
 import { zielArt, type Ziel } from '../src/lib/planning';
 import { fetchGarminTage } from '../src/lib/garmin';
 import { lerneModelle } from '../src/lib/essRechner';
+import { atlStep, ctlStep, windowMean } from '../src/kern/formeln';
 import { eigeneBergtouren, eigeneSkitouren, setzeGarminTage, tourLastPersoenlich } from '../src/lib/tourEss';
 
 // 22.11.2026: persönliche Soll-Obergrenzen aus der ganzen Historie (wie Cockpit)
@@ -34,6 +35,7 @@ const num = (v: unknown) => {
 const STATUS_TEXT: Record<string, string> = { QUALITY: 'Qualität möglich', TRAIN: 'normal trainieren', EASY: 'locker trainieren', REST: 'Erholung priorisieren' };
 
 let tageMerk: RecoveryDay[] = [];
+let plan7Merk: { start: string; ess: number[]; atl: number[]; ctl: number[]; acwr: number[] } | null = null;
 // 23.11.2026: neuester Garmin-Wert eines Tages: nach Aktivität (fb…_obs) vor Morgenwert (garmin…)
 const neuWert = (r: any, post: string, morgen: string): number | null => {
   const p = r ? num(r[post]) : null;
@@ -63,6 +65,22 @@ async function heuteTeil() {
         .filter((x: any) => String(x.date).slice(0, 10) > heute)
         .slice(0, 7)
         .map((x: any) => ({ d: String(x.date).slice(0, 10), ess: num(x.sim_load ?? x.load), sport: String(x.sport || ''), zone: String(x.zone || '') }));
+  } catch {}
+  // 23.11.2026: Plan der nächsten 7 Tage mit ATL/CTL-Prognose (Kiras Formel ab Stand Ende heute, wie Ausblick im Cockpit)
+  try {
+    if (t && t.atlPost != null && t.ctlPost != null && naechste.length) {
+      let atl = t.atlPost, ctl = t.ctlPost;
+      const loads = days.map((d) => d.essDay ?? 0);
+      const p7 = { start: naechste[0].d, ess: [] as number[], atl: [] as number[], ctl: [] as number[], acwr: [] as number[] };
+      for (const x of naechste.slice(0, 7)) {
+        const l = x.ess ?? 0;
+        loads.push(l);
+        atl = atlStep(atl, l);
+        ctl = ctlStep(ctl, l, windowMean(loads));
+        p7.ess.push(Math.round(l)); p7.atl.push(Math.round(atl)); p7.ctl.push(Math.round(ctl)); p7.acwr.push(ctl > 0 ? Math.round((atl / ctl) * 100) / 100 : 0);
+      }
+      plan7Merk = p7;
+    }
   } catch {}
   // 22.11.2026: Soll = Soll-Rahmen des Kerns (wie „Empfehlung heute“ im Cockpit), Plan getrennt
   const ti = t ? days.length - 1 : -1;
@@ -297,7 +315,7 @@ async function uhrTeil(rahmen: any) {
   } catch {}
   let feld: any = null;
   try { feld = await feldTeil(rahmen, t); } catch {}
-  return { l14, m7, form, letzte, feld };
+  return { l14, m7, form, letzte, feld, plan7: plan7Merk };
 }
 
 const [h, z, f] = await Promise.all([heuteTeil(), zielTeil().catch(() => null), formTeil().catch(() => null)]);

@@ -47,11 +47,11 @@ class KiraZeiger extends WatchUi.WatchFace {
 
     function initialize() {
         WatchFace.initialize();
-        fKopf = schrift(["RobotoCondensedBold", "RobotoCondensedRegular"], 28, Graphics.FONT_XTINY);
-        fLabel = schrift(["RobotoCondensedBold", "RobotoCondensedRegular"], 25, Graphics.FONT_XTINY);
-        fWert = schrift(["RobotoCondensedRegular", "RobotoRegular"], 33, Graphics.FONT_TINY);
-        fRing = schrift(["RobotoCondensedBold", "RobotoMedium"], 32, Graphics.FONT_TINY);
-        fKlein = schrift(["RobotoCondensedRegular", "RobotoRegular"], 22, Graphics.FONT_XTINY);
+        fKopf = schrift(["RobotoCondensedBold", "RobotoCondensedRegular"], 31, Graphics.FONT_XTINY);
+        fLabel = schrift(["RobotoCondensedBold", "RobotoCondensedRegular"], 28, Graphics.FONT_XTINY);
+        fWert = schrift(["RobotoCondensedRegular", "RobotoRegular"], 36, Graphics.FONT_TINY);
+        fRing = schrift(["RobotoCondensedBold", "RobotoMedium"], 35, Graphics.FONT_TINY);
+        fKlein = schrift(["RobotoCondensedRegular", "RobotoRegular"], 25, Graphics.FONT_XTINY);
         try { Complications.registerComplicationChangeCallback(method(:geaendert)); } catch (e) { }
         kiraSuchen();
     }
@@ -187,6 +187,40 @@ class KiraZeiger extends WatchUi.WatchFace {
 
     function bereitBogen(dc as Graphics.Dc, x as Number, y as Number, r as Number, pen as Number, v as Number?) as Void {
         KiraSkala.bogen(dc, x, y, r, pen, v, KiraSkala.tr());
+    }
+
+    function blass(f as Number, p as Number) as Number {
+        return ((((f >> 16) & 0xFF) * p / 100) << 16) | ((((f >> 8) & 0xFF) * p / 100) << 8) | ((f & 0xFF) * p / 100);
+    }
+
+    // 23.11.2026: ATL (orange) und CTL (grün) aus „KIRA FORM“ v2, Punkte ab (0 = letzte 7 Tage, 7 = Plan), Skala 0..max
+    function kurven(dc as Graphics.Dc, x0 as Number, bw as Number, y0 as Number, y1 as Number, ab as Number, gestrichelt as Boolean) as Void {
+        var fk = zerlegen(form, ";");
+        var kopf = zerlegen(fk.size() > 0 ? fk[0] : null, ",");
+        if (kopf.size() == 0 || !kopf[0].equals("v2") || fk.size() < 3) { return; }
+        for (var k = 0; k < 2; k++) {
+            var xs = k == 0 ? fk[2] : fk[1];
+            dc.setColor(k == 0 ? KiraSkala.ORANGE : KiraSkala.GRUEN, Graphics.COLOR_TRANSPARENT);
+            dc.setPenWidth(k == 0 ? 2 : 3);
+            var pax = -1;
+            var pay = 0;
+            for (var i = 0; i < 7; i++) {
+                var vv = dekod(xs, ab + i);
+                if (vv == null) { pax = -1; continue; }
+                var px = x0 + i * bw + bw / 2;
+                var py = y1 - (y1 - y0) * vv / 61;
+                if (pax >= 0) {
+                    if (gestrichelt) {
+                        for (var s = 0; s < 4; s++) {
+                            dc.drawLine(pax + (px - pax) * (2 * s) / 8, pay + (py - pay) * (2 * s) / 8, pax + (px - pax) * (2 * s + 1) / 8, pay + (py - pay) * (2 * s + 1) / 8);
+                        }
+                    } else { dc.drawLine(pax, pay, px, py); }
+                }
+                pax = px;
+                pay = py;
+            }
+        }
+        dc.setPenWidth(1);
     }
 
     function lastFarbe(ist as Number, lo as Number?, hi as Number?) as Number {
@@ -333,7 +367,7 @@ class KiraZeiger extends WatchUi.WatchFace {
         var st = System.getSystemStats();
         var tage = (st has :batteryInDays) && st.batteryInDays != null ? st.batteryInDays.toNumber() : null;
         dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, (h * 0.085).toNumber(), fKopf, st.battery.toNumber().toString() + "%" + (tage != null ? " · " + tage.toString() + "T" : ""), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, (h * 0.072).toNumber(), fKopf, st.battery.toNumber().toString() + "%" + (tage != null ? " · " + tage.toString() + "T" : ""), Graphics.TEXT_JUSTIFY_CENTER);
         var vf = heute && VOTE_FARBE.hasKey(vote) ? VOTE_FARBE.get(vote) as Number : GRAU;
         dc.setColor(vf, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, (h * 0.135).toNumber(), fKopf, kira == null ? (kiraId == null ? "KIRA · APP ÖFFNEN" : "KIRA · WARTET") : "KIRA · " + (vote.length() > 0 ? vote : "-") + (heute ? "" : " (ALT)"), Graphics.TEXT_JUSTIFY_CENTER);
@@ -360,8 +394,8 @@ class KiraZeiger extends WatchUi.WatchFace {
         var bbn = nativ(Complications.COMPLICATION_TYPE_BODY_BATTERY);
         dc.setColor(0xC8C8C8, Graphics.COLOR_TRANSPARENT);
         var eab = erholtAb(erh, false);
-        dc.drawText(cx, (h * 0.718).toNumber(), fKlein, eab.equals("ERHOLT") ? eab : "ERH " + eab, Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(cx, (h * 0.772).toNumber(), fKlein, "BB " + (bbn == null ? "-" : bbn.toString()), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, (h * 0.735).toNumber(), fKlein, eab.equals("ERHOLT") ? eab : "ERH " + eab, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, (h * 0.787).toNumber(), fKlein, "BB " + (bbn == null ? "-" : bbn.toString()), Graphics.TEXT_JUSTIFY_CENTER);
 
         var rx = (w * 0.15).toNumber();
         var rr = (w * 0.074).toNumber();
@@ -432,9 +466,11 @@ class KiraZeiger extends WatchUi.WatchFace {
                 }
                 var bh = v > 0 ? ((y1 - y0) * v / mx) : 2;
                 if (bh < 2) { bh = 2; }
-                dc.setColor(lastFarbe(v, l1, h1), Graphics.COLOR_TRANSPARENT);
+                // 23.11.2026: Balken blasser, ATL/CTL liegen darüber
+                dc.setColor(blass(lastFarbe(v, l1, h1), 45), Graphics.COLOR_TRANSPARENT);
                 dc.fillRectangle(x + bw / 4, y1 - bh, bw / 2, bh);
             }
+            kurven(dc, x0, bw, y0, y1, 0, false);
             var g = Gregorian.info(Time.now(), Time.FORMAT_SHORT);
             var kz = ["S", "M", "D", "M", "D", "F", "S"];
             for (var i = 0; i < n; i++) {
@@ -444,40 +480,59 @@ class KiraZeiger extends WatchUi.WatchFace {
             }
         }
 
-        // Diagramm 2: Form 6 Wochen (Komplikation „KIRA FORM“: min,max,ctl,atl;CCC…;AAA…)
+        // FIT / ERM (Stand heute) unter Diagramm 1
         var fk = zerlegen(form, ";");
         var kopf = zerlegen(fk.size() > 0 ? fk[0] : null, ",");
-        var fC = fk.size() > 1 ? fk[1] : "";
-        var fA = fk.size() > 2 ? fk[2] : "";
-        var b0 = (h * 0.545).toNumber();
-        var b1 = (h * 0.645).toNumber();
-        var m = fC.length() < fA.length() ? fC.length() : fA.length();
-        if (m >= 2) {
-            for (var k = 0; k < 2; k++) {
-                var xs = k == 0 ? fA : fC;
-                var pax = -1;
-                var pay = 0;
-                dc.setColor(k == 0 ? 0xE67E22 : 0x2ECC71, Graphics.COLOR_TRANSPARENT);
-                dc.setPenWidth(k == 0 ? 2 : 3);
-                for (var i = 0; i < m; i++) {
-                    var vv = dekod(xs, i);
-                    if (vv == null) { continue; }
-                    var px = x0 + (x1 - x0) * i / (m - 1);
-                    var py = b1 - (b1 - b0) * vv / 61;
-                    if (pax >= 0) { dc.drawLine(pax, pay, px, py); }
-                    pax = px;
-                    pay = py;
-                }
+        var v2 = kopf.size() > 0 && kopf[0].equals("v2");
+        var cTxt = v2 && kopf.size() > 2 && kopf[2].length() > 0 ? kopf[2] : "-";
+        var aTxt = v2 && kopf.size() > 3 && kopf[3].length() > 0 ? kopf[3] : "-";
+        var yt = y1 + dc.getFontHeight(fKlein) - 2;
+        dc.setColor(KiraSkala.GRUEN, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(cx - 6, yt, fKlein, "FIT " + cTxt, Graphics.TEXT_JUSTIFY_RIGHT);
+        dc.setColor(KiraSkala.ORANGE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(cx + 6, yt, fKlein, "ERM " + aTxt, Graphics.TEXT_JUSTIFY_LEFT);
+
+        // Diagramm 2: Plan der nächsten 7 Tage (Umriss-Balken) mit ATL/CTL-Prognose gestrichelt, gleiche Skala wie oben
+        var pP = v2 && fk.size() > 3 ? fk[3] : "";
+        var b0 = (h * 0.535).toNumber();
+        var b1 = (h * 0.63).toNumber();
+        var pn = heute ? pP.length() : 0;
+        if (pn >= 2) {
+            var pmx = 1;
+            for (var i = 0; i < pn; i++) { var q = dekod(pP, i); if (q != null && q * 8 > pmx) { pmx = q * 8; } }
+            var pbw = (x1 - x0) / 7;
+            for (var i = 0; i < pn && i < 7; i++) {
+                var q = dekod(pP, i);
+                var pv = q == null ? 0 : q * 8;
+                var ph = pv > 0 ? ((b1 - b0) * pv / pmx) : 2;
+                if (ph < 2) { ph = 2; }
+                var bx = x0 + i * pbw + pbw / 4;
+                dc.setColor(0x26303B, Graphics.COLOR_TRANSPARENT);
+                dc.fillRectangle(bx, b1 - ph, pbw / 2, ph);
+                dc.setColor(0x7F95AD, Graphics.COLOR_TRANSPARENT);
+                dc.drawRectangle(bx, b1 - ph, pbw / 2, ph);
             }
-            dc.setPenWidth(1);
+            kurven(dc, x0, pbw, b0, b1, 7, true);
+            var gp = Gregorian.info(Time.now(), Time.FORMAT_SHORT);
+            var kp = ["S", "M", "D", "M", "D", "F", "S"];
+            for (var i = 0; i < 7; i++) {
+                var tag = ((gp.day_of_week as Number) + i) % 7;
+                dc.setColor(GRAU, Graphics.COLOR_TRANSPARENT);
+                dc.drawText(x0 + i * pbw + pbw / 2, b1 + 1, fKlein, kp[tag], Graphics.TEXT_JUSTIFY_CENTER);
+            }
+            var am = kopf.size() > 4 && kopf[4].length() > 0 ? kopf[4].toNumber() : null;
+            var ps = kopf.size() > 6 && kopf[6].length() > 0 ? kopf[6] : "-";
+            var yp = b1 + dc.getFontHeight(fKlein) - 2;
+            dc.setColor(0x9FB3C8, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx - 6, yp, fKlein, ps, Graphics.TEXT_JUSTIFY_RIGHT);
+            if (am != null) {
+                dc.setColor(am > 150 ? KiraSkala.ROT : am > 130 ? KiraSkala.ORANGE : am < 80 ? KiraSkala.BLAU : KiraSkala.GRUEN, Graphics.COLOR_TRANSPARENT);
+                dc.drawText(cx + 6, yp, fKlein, "ACWR " + (am / 100).toString() + "," + (am % 100).format("%02d"), Graphics.TEXT_JUSTIFY_LEFT);
+            }
+        } else {
+            dc.setColor(GRAU, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, (b0 + b1) / 2, fKlein, "PLAN 7 T · APP ÖFFNEN", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         }
-        var cTxt = kopf.size() > 2 && kopf[2].length() > 0 ? kopf[2] : "-";
-        var aTxt = kopf.size() > 3 && kopf[3].length() > 0 ? kopf[3] : "-";
-        var yt = b1 + 2;
-        dc.setColor(0x2ECC71, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx - 4, yt, fKlein, "FIT " + cTxt, Graphics.TEXT_JUSTIFY_RIGHT);
-        dc.setColor(0xE67E22, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx + 4, yt, fKlein, "ERM " + aTxt, Graphics.TEXT_JUSTIFY_LEFT);
 
         // Datum
         var gd = Gregorian.info(Time.now(), Time.FORMAT_SHORT);

@@ -195,48 +195,65 @@ function kodiert(xs as Array, teiler as Number) as String {
     return s;
 }
 
-// Form 6 Wochen fürs Zeigerzifferblatt (jeder 2. Tag, heute zuletzt) –
-// Kurve aus der letzten Vollabfrage der App, letzter Punkt immer aus dem aktuellen Stand
+// 23.11.2026: Form fürs Zeigerzifferblatt – 7 Tage zurück + 7 Tage Plan-Prognose (Kiras Formel, vom Server)
+// "v2,max,ctlHeute,atlHeute,acwrMax,acwrTag,planSumme;CCCCCCCccccccc;AAAAAAAaaaaaaa;PPPPPPP"
+// Kurven auf 0..61 zwischen 0 und max skaliert, Plan-ESS / 8; Prognose fehlt = "_"
 (:background :glance)
 function formKurve(d as Dictionary) as String {
     var c = [] as Array;
     var a = [] as Array;
+    var pe = [] as Array;
+    var pa = [] as Array;
+    var pc = [] as Array;
+    var am = 0.0;
+    var at = -1;
     try {
         var u = Storage.getValue("u");
+        var ud = Storage.getValue("uDatum");
+        var vonHeute = ud != null && d.get("datum") != null && ud.toString().equals(d.get("datum").toString());
         var f = u instanceof Dictionary ? u.get("form") : null;
         if (f instanceof Dictionary && f.get("ctl") instanceof Array && f.get("atl") instanceof Array) {
             var xc = f.get("ctl") as Array;
             var xa = f.get("atl") as Array;
             var n = xc.size() < xa.size() ? xc.size() : xa.size();
-            var start = (n - 1) % 2;
-            for (var i = start; i < n; i += 2) { c.add(xc[i]); a.add(xa[i]); }
+            for (var i = (n > 7 ? n - 7 : 0); i < n; i++) { c.add(xc[i]); a.add(xa[i]); }
         }
         var fo = d.get("form");
         if (fo instanceof Dictionary && fo.get("ctl") != null && fo.get("atl") != null) {
             if (c.size() == 0) { c.add(fo.get("ctl")); a.add(fo.get("atl")); }
             else { c[c.size() - 1] = fo.get("ctl"); a[a.size() - 1] = fo.get("atl"); }
         }
-    } catch (e) { }
-    // "min,max,ctlHeute,atlHeute;CCCC…;AAAA…" – Kurven auf 0..61 zwischen min und max skaliert
-    var mn = 99999.0;
-    var mx = 0.0;
-    for (var i = 0; i < c.size(); i++) {
-        var p = [c[i], a[i]];
-        for (var k = 0; k < 2; k++) {
-            var v = p[k];
-            if (v != null && v.toFloat() >= 0) { if (v.toFloat() < mn) { mn = v.toFloat(); } if (v.toFloat() > mx) { mx = v.toFloat(); } }
+        var p7 = u instanceof Dictionary ? u.get("plan7") : null;
+        if (vonHeute && p7 instanceof Dictionary && p7.get("ess") instanceof Array && p7.get("atl") instanceof Array && p7.get("ctl") instanceof Array) {
+            pe = p7.get("ess") as Array;
+            pa = p7.get("atl") as Array;
+            pc = p7.get("ctl") as Array;
+            var ac = p7.get("acwr");
+            if (ac instanceof Array) {
+                for (var i = 0; i < ac.size(); i++) { if (ac[i] != null && ac[i].toFloat() > am) { am = ac[i].toFloat(); at = i; } }
+            }
         }
+    } catch (e) { }
+    var mx = 0.0;
+    var alle = [c, a, pa, pc];
+    for (var k = 0; k < 4; k++) {
+        var xs = alle[k] as Array;
+        for (var i = 0; i < xs.size(); i++) { var v = xs[i]; if (v != null && v.toFloat() > mx) { mx = v.toFloat(); } }
     }
-    if (c.size() == 0 || mx <= mn) { return ""; }
+    if (c.size() == 0 || mx <= 0) { return ""; }
+    mx = mx * 1.08;
     var sc = "";
     var sa = "";
-    for (var i = 0; i < c.size(); i++) {
-        sc += zeichen(c[i], mn, mx);
-        sa += zeichen(a[i], mn, mx);
-    }
+    for (var i = 0; i < c.size(); i++) { sc += zeichen(c[i], 0.0, mx); sa += zeichen(a[i], 0.0, mx); }
+    for (var i = 0; i < pc.size(); i++) { sc += zeichen(pc[i], 0.0, mx); }
+    for (var i = 0; i < pa.size(); i++) { sa += zeichen(pa[i], 0.0, mx); }
+    var sum = 0;
+    for (var i = 0; i < pe.size(); i++) { if (pe[i] != null) { sum += pe[i].toNumber(); } }
     var cl = c[c.size() - 1];
     var al = a[a.size() - 1];
-    return mn.toNumber().toString() + "," + mx.toNumber().toString() + "," + (cl == null ? "" : cl.toNumber().toString()) + "," + (al == null ? "" : al.toNumber().toString()) + ";" + sc + ";" + sa;
+    return "v2," + mx.toNumber().toString() + "," + (cl == null ? "" : cl.toNumber().toString()) + "," + (al == null ? "" : al.toNumber().toString())
+        + "," + (at >= 0 ? (am * 100 + 0.5).toNumber().toString() : "") + "," + (at >= 0 ? at.toString() : "") + "," + (pe.size() > 0 ? sum.toString() : "")
+        + ";" + sc + ";" + sa + ";" + kodiert(pe, 8);
 }
 
 (:background :glance)
