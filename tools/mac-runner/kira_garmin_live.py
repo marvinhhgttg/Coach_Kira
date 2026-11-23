@@ -75,6 +75,11 @@ def abrufen(g, tag: str) -> dict:
     # Trainingsbereitschaft: Liste von Momentaufnahmen → neueste
     try:
         tr = g.get_training_readiness(tag) or []
+        # Diagnose 23.11.: Rohantwort sichern (Zeitpunkte, Kontext, Score je Momentaufnahme)
+        try:
+            (BASE / "garmin_live_roh.json").write_text(json.dumps(tr, ensure_ascii=False)[:20000])
+        except Exception:
+            pass
         if isinstance(tr, dict):
             tr = [tr]
         tr = [x for x in tr if isinstance(x, dict) and x.get("score") is not None]
