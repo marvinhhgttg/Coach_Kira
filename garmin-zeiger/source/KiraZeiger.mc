@@ -273,22 +273,24 @@ class KiraZeiger extends WatchUi.WatchFace {
         var wStd = ((uhr.hour % 12) * 60 + uhr.min) / 720.0 * Math.PI * 2;
         var wMin = (uhr.min * 60 + uhr.sec) / 3600.0 * Math.PI * 2;
 
-        // Stundenstriche
-        for (var i = 0; i < 12; i++) {
-            var a = i * Math.PI / 6;
-            var r1 = cx - 18;
-            var r2 = (i % 3 == 0) ? cx - 40 : cx - 32;
-            dc.setColor(schlaf ? 0x606060 : 0xE0E0E0, Graphics.COLOR_TRANSPARENT);
-            dc.setPenWidth(i % 3 == 0 ? 5 : 3);
-            dc.drawLine(cx + (r1 * Math.sin(a)).toNumber(), cy - (r1 * Math.cos(a)).toNumber(), cx + (r2 * Math.sin(a)).toNumber(), cy - (r2 * Math.cos(a)).toNumber());
-        }
-        dc.setPenWidth(1);
-
+        // Ruhemodus (Always-on, AMOLED): nur die beiden gedimmten Zeiger – keine festen Striche,
+        // damit kein Pixel dauerhaft an derselben Stelle leuchtet (23.11.2026)
         if (schlaf) {
             zeiger(dc, cx, cy, wStd, (w * 0.25).toNumber(), 0, 5, 0x909090);
             zeiger(dc, cx, cy, wMin, (w * 0.38).toNumber(), 0, 3, 0x909090);
             return;
         }
+
+        // Stundenstriche
+        for (var i = 0; i < 12; i++) {
+            var a = i * Math.PI / 6;
+            var r1 = cx - 18;
+            var r2 = (i % 3 == 0) ? cx - 40 : cx - 32;
+            dc.setColor(0xE0E0E0, Graphics.COLOR_TRANSPARENT);
+            dc.setPenWidth(i % 3 == 0 ? 5 : 3);
+            dc.drawLine(cx + (r1 * Math.sin(a)).toNumber(), cy - (r1 * Math.cos(a)).toNumber(), cx + (r2 * Math.sin(a)).toNumber(), cy - (r2 * Math.cos(a)).toNumber());
+        }
+        dc.setPenWidth(1);
 
         if ((kiraId == null || wocheId == null || formId == null) && gesucht != uhr.min) { gesucht = uhr.min; kiraSuchen(); }
         var t = zerlegen(kira, "|");
