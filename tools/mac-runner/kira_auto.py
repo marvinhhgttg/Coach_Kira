@@ -125,13 +125,18 @@ def nachricht(titel: str, text: str, iphone: bool = True) -> None:
         pass
     skript = (
         'tell application "Reminders"\n'
-        '  if not (exists list "Coach Kira") then make new list with properties {name:"Coach Kira"}\n'
-        '  set l to list "Coach Kira"\n'
+        '  if (name of every account) contains "iCloud" then\n'
+        '    if not (exists list "Coach Kira" of account "iCloud") then make new list at account "iCloud" with properties {name:"Coach Kira"}\n'
+        '    set l to list "Coach Kira" of account "iCloud"\n'
+        '  else\n'
+        '    if not (exists list "Coach Kira") then make new list with properties {name:"Coach Kira"}\n'
+        '    set l to list "Coach Kira"\n'
+        '  end if\n'
         '  set alt to (current date) - (6 * hours)\n'
         '  try\n'
         '    delete (every reminder of l whose remind me date < alt)\n'
         '  end try\n'
-        f'  make new reminder at end of l with properties {{name:"{esc(titel)}", body:"{esc(text)}", remind me date:((current date) + 30)}}\n'
+        f'  make new reminder at end of l with properties {{name:"{esc(titel)}", body:"{esc(text)}", remind me date:((current date) + 60)}}\n'
         'end tell'
     )
     try:
