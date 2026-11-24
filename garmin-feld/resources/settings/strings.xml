@@ -1,0 +1,23 @@
+<strings>
+    <string id="spOben">Obere Zeile</string>
+    <string id="lpOben0">Titel (KIRA TAG / Einheit)</string>
+    <string id="lpOben1">Zone jetzt</string>
+    <string id="lpOben2">Soll-Rahmen</string>
+    <string id="lpOben3">Votum</string>
+    <string id="lpOben4">ACWR</string>
+    <string id="lpOben5">Bereitschaft</string>
+    <string id="spMitte">Große Zahl</string>
+    <string id="lpMitte0">ESS Tag (gespeichert + laufend)</string>
+    <string id="lpMitte1">ESS dieser Einheit</string>
+    <string id="lpMitte2">ESS bis Obergrenze</string>
+    <string id="spUnten">Untere Zeile</string>
+    <string id="lpUnten0">Rest + Zeit bis Obergrenze</string>
+    <string id="lpUnten1">Zone jetzt</string>
+    <string id="lpUnten2">Soll-Rahmen</string>
+    <string id="lpUnten3">ESS pro Minute</string>
+    <string id="lpUnten4">ACWR</string>
+    <string id="lpUnten5">Bereitschaft</string>
+    <string id="lpUnten6">ESS dieser Einheit</string>
+    <string id="spVibGrenze">Vibration: Unter-/Obergrenze</string>
+    <string id="spVibZone">Vibration: falsche Zone</string>
+</strings>

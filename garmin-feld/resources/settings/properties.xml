@@ -1,0 +1,7 @@
+<properties>
+    <property id="pOben" type="number">0</property>
+    <property id="pMitte" type="number">0</property>
+    <property id="pUnten" type="number">0</property>
+    <property id="pVibGrenze" type="boolean">true</property>
+    <property id="pVibZone" type="boolean">true</property>
+</properties>

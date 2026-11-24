@@ -1,0 +1,26 @@
+<properties>
+    <property id="pS0" type="boolean">true</property>
+    <property id="pS1" type="boolean">true</property>
+    <property id="pS2" type="boolean">true</property>
+    <property id="pS3" type="boolean">true</property>
+    <property id="pS4" type="boolean">true</property>
+    <property id="pS5" type="boolean">true</property>
+    <property id="pS6" type="boolean">true</property>
+    <property id="pS7" type="boolean">true</property>
+    <property id="pS8" type="boolean">true</property>
+    <property id="pS9" type="boolean">true</property>
+    <property id="pStart" type="number">0</property>
+    <property id="pLast" type="number">14</property>
+    <property id="pMorgen" type="number">7</property>
+    <property id="pForm" type="number">42</property>
+    <property id="pProg" type="boolean">true</property>
+    <property id="pHVotum" type="boolean">true</property>
+    <property id="pHFazit" type="boolean">true</property>
+    <property id="pHBefinden" type="boolean">true</property>
+    <property id="pHLicht" type="boolean">true</property>
+    <property id="pHWarn" type="boolean">true</property>
+    <property id="pHPlan" type="boolean">true</property>
+    <property id="pHErfolg" type="boolean">true</property>
+    <property id="pRuheVon" type="number">23</property>
+    <property id="pRuheBis" type="number">6</property>
+</properties>

@@ -1,0 +1,156 @@
+{
+  "settings" : [ {
+    "key" : "pOben",
+    "valueType" : "number",
+    "defaultValue" : 0,
+    "configTitle" : "spOben",
+    "configPrompt" : null,
+    "configType" : "list",
+    "configError" : null,
+    "configHelpUrl" : null,
+    "configReadonly" : false,
+    "configRequired" : false,
+    "configOptions" : [ {
+      "display" : "lpOben0",
+      "value" : 0
+    }, {
+      "display" : "lpOben1",
+      "value" : 1
+    }, {
+      "display" : "lpOben2",
+      "value" : 2
+    }, {
+      "display" : "lpOben3",
+      "value" : 3
+    }, {
+      "display" : "lpOben4",
+      "value" : 4
+    }, {
+      "display" : "lpOben5",
+      "value" : 5
+    } ],
+    "configMin" : null,
+    "configMax" : null,
+    "configMaxLength" : null
+  }, {
+    "key" : "pMitte",
+    "valueType" : "number",
+    "defaultValue" : 0,
+    "configTitle" : "spMitte",
+    "configPrompt" : null,
+    "configType" : "list",
+    "configError" : null,
+    "configHelpUrl" : null,
+    "configReadonly" : false,
+    "configRequired" : false,
+    "configOptions" : [ {
+      "display" : "lpMitte0",
+      "value" : 0
+    }, {
+      "display" : "lpMitte1",
+      "value" : 1
+    }, {
+      "display" : "lpMitte2",
+      "value" : 2
+    } ],
+    "configMin" : null,
+    "configMax" : null,
+    "configMaxLength" : null
+  }, {
+    "key" : "pUnten",
+    "valueType" : "number",
+    "defaultValue" : 0,
+    "configTitle" : "spUnten",
+    "configPrompt" : null,
+    "configType" : "list",
+    "configError" : null,
+    "configHelpUrl" : null,
+    "configReadonly" : false,
+    "configRequired" : false,
+    "configOptions" : [ {
+      "display" : "lpUnten0",
+      "value" : 0
+    }, {
+      "display" : "lpUnten1",
+      "value" : 1
+    }, {
+      "display" : "lpUnten2",
+      "value" : 2
+    }, {
+      "display" : "lpUnten3",
+      "value" : 3
+    }, {
+      "display" : "lpUnten4",
+      "value" : 4
+    }, {
+      "display" : "lpUnten5",
+      "value" : 5
+    }, {
+      "display" : "lpUnten6",
+      "value" : 6
+    } ],
+    "configMin" : null,
+    "configMax" : null,
+    "configMaxLength" : null
+  }, {
+    "key" : "pVibGrenze",
+    "valueType" : "boolean",
+    "defaultValue" : true,
+    "configTitle" : "spVibGrenze",
+    "configPrompt" : null,
+    "configType" : "boolean",
+    "configError" : null,
+    "configHelpUrl" : null,
+    "configReadonly" : false,
+    "configRequired" : false,
+    "configOptions" : null,
+    "configMin" : null,
+    "configMax" : null,
+    "configMaxLength" : null
+  }, {
+    "key" : "pVibZone",
+    "valueType" : "boolean",
+    "defaultValue" : true,
+    "configTitle" : "spVibZone",
+    "configPrompt" : null,
+    "configType" : "boolean",
+    "configError" : null,
+    "configHelpUrl" : null,
+    "configReadonly" : false,
+    "configRequired" : false,
+    "configOptions" : null,
+    "configMin" : null,
+    "configMax" : null,
+    "configMaxLength" : null
+  } ],
+  "supportsLiveValidation" : false,
+  "languages" : {
+    "valyrian" : {
+      "FitLabel" : "Kira ESS",
+      "AppName" : "Kira ESS",
+      "lpOben5" : "Bereitschaft",
+      "lpOben4" : "ACWR",
+      "lpOben3" : "Votum",
+      "lpOben2" : "Soll-Rahmen",
+      "spMitte" : "Große Zahl",
+      "FitTitel" : "Kira ESS",
+      "lpOben1" : "Zone jetzt",
+      "lpOben0" : "Titel (KIRA TAG / Einheit)",
+      "spVibGrenze" : "Vibration: Unter-/Obergrenze",
+      "FitEinheit" : "ESS",
+      "spUnten" : "Untere Zeile",
+      "spVibZone" : "Vibration: falsche Zone",
+      "lpMitte1" : "ESS dieser Einheit",
+      "lpMitte2" : "ESS bis Obergrenze",
+      "spOben" : "Obere Zeile",
+      "lpMitte0" : "ESS Tag (gespeichert + laufend)",
+      "lpUnten1" : "Zone jetzt",
+      "lpUnten0" : "Rest + Zeit bis Obergrenze",
+      "lpUnten3" : "ESS pro Minute",
+      "lpUnten2" : "Soll-Rahmen",
+      "lpUnten5" : "Bereitschaft",
+      "lpUnten4" : "ACWR",
+      "lpUnten6" : "ESS dieser Einheit"
+    }
+  }
+}

@@ -11,11 +11,19 @@ import Toybox.WatchUi;
 const KIRA_BASIS = "https://coachkira.pplx.app/port/5000";
 
 class KiraFeldApp extends Application.AppBase {
+    var ansicht as KiraFeldView? = null;
     function initialize() {
         AppBase.initialize();
     }
 
     function getInitialView() as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] {
-        return [new KiraFeldView()];
+        ansicht = new KiraFeldView();
+        return [ansicht];
+    }
+
+    // 24.11.2026: Einstellungen sofort übernehmen
+    function onSettingsChanged() as Void {
+        if (ansicht != null) { (ansicht as KiraFeldView).einstLesen(); }
+        WatchUi.requestUpdate();
     }
 }

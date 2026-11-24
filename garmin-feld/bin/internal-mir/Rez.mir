@@ -26,14 +26,56 @@ module Rez {
         [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 12; ]
         <init> {
         }
-        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 13; @position = 27; initialized = true; @symbol_vardef = [FitTitel,13,27,35]; @symbol_type<0> = [ResourceId,13,39,49]; ]
-        var FitTitel as ResourceId;
-        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 14; @position = 27; initialized = true; @symbol_vardef = [FitEinheit,14,27,37]; @symbol_type<0> = [ResourceId,14,41,51]; ]
-        var FitEinheit as ResourceId;
-        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 15; @position = 27; initialized = true; @symbol_vardef = [FitLabel,15,27,35]; @symbol_type<0> = [ResourceId,15,39,49]; ]
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 13; @position = 27; initialized = true; @symbol_vardef = [FitLabel,13,27,35]; @symbol_type<0> = [ResourceId,13,39,49]; ]
         var FitLabel as ResourceId;
-        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 16; @position = 27; initialized = true; @symbol_vardef = [AppName,16,27,34]; @symbol_type<0> = [ResourceId,16,38,48]; ]
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 14; @position = 27; initialized = true; @symbol_vardef = [AppName,14,27,34]; @symbol_type<0> = [ResourceId,14,38,48]; ]
         var AppName as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 15; @position = 27; initialized = true; @symbol_vardef = [lpOben5,15,27,34]; @symbol_type<0> = [ResourceId,15,38,48]; ]
+        var lpOben5 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 16; @position = 27; initialized = true; @symbol_vardef = [lpOben4,16,27,34]; @symbol_type<0> = [ResourceId,16,38,48]; ]
+        var lpOben4 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 17; @position = 27; initialized = true; @symbol_vardef = [lpOben3,17,27,34]; @symbol_type<0> = [ResourceId,17,38,48]; ]
+        var lpOben3 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 18; @position = 27; initialized = true; @symbol_vardef = [lpOben2,18,27,34]; @symbol_type<0> = [ResourceId,18,38,48]; ]
+        var lpOben2 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 19; @position = 27; initialized = true; @symbol_vardef = [spMitte,19,27,34]; @symbol_type<0> = [ResourceId,19,38,48]; ]
+        var spMitte as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 20; @position = 27; initialized = true; @symbol_vardef = [FitTitel,20,27,35]; @symbol_type<0> = [ResourceId,20,39,49]; ]
+        var FitTitel as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 21; @position = 27; initialized = true; @symbol_vardef = [lpOben1,21,27,34]; @symbol_type<0> = [ResourceId,21,38,48]; ]
+        var lpOben1 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 22; @position = 27; initialized = true; @symbol_vardef = [lpOben0,22,27,34]; @symbol_type<0> = [ResourceId,22,38,48]; ]
+        var lpOben0 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 23; @position = 27; initialized = true; @symbol_vardef = [spVibGrenze,23,27,38]; @symbol_type<0> = [ResourceId,23,42,52]; ]
+        var spVibGrenze as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 24; @position = 27; initialized = true; @symbol_vardef = [FitEinheit,24,27,37]; @symbol_type<0> = [ResourceId,24,41,51]; ]
+        var FitEinheit as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 25; @position = 27; initialized = true; @symbol_vardef = [spUnten,25,27,34]; @symbol_type<0> = [ResourceId,25,38,48]; ]
+        var spUnten as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 26; @position = 27; initialized = true; @symbol_vardef = [spVibZone,26,27,36]; @symbol_type<0> = [ResourceId,26,40,50]; ]
+        var spVibZone as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 27; @position = 27; initialized = true; @symbol_vardef = [lpMitte1,27,27,35]; @symbol_type<0> = [ResourceId,27,39,49]; ]
+        var lpMitte1 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 28; @position = 27; initialized = true; @symbol_vardef = [lpMitte2,28,27,35]; @symbol_type<0> = [ResourceId,28,39,49]; ]
+        var lpMitte2 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 29; @position = 27; initialized = true; @symbol_vardef = [spOben,29,27,33]; @symbol_type<0> = [ResourceId,29,37,47]; ]
+        var spOben as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 30; @position = 27; initialized = true; @symbol_vardef = [lpMitte0,30,27,35]; @symbol_type<0> = [ResourceId,30,39,49]; ]
+        var lpMitte0 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 31; @position = 27; initialized = true; @symbol_vardef = [lpUnten1,31,27,35]; @symbol_type<0> = [ResourceId,31,39,49]; ]
+        var lpUnten1 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 32; @position = 27; initialized = true; @symbol_vardef = [lpUnten0,32,27,35]; @symbol_type<0> = [ResourceId,32,39,49]; ]
+        var lpUnten0 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 33; @position = 27; initialized = true; @symbol_vardef = [lpUnten3,33,27,35]; @symbol_type<0> = [ResourceId,33,39,49]; ]
+        var lpUnten3 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 34; @position = 27; initialized = true; @symbol_vardef = [lpUnten2,34,27,35]; @symbol_type<0> = [ResourceId,34,39,49]; ]
+        var lpUnten2 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 35; @position = 27; initialized = true; @symbol_vardef = [lpUnten5,35,27,35]; @symbol_type<0> = [ResourceId,35,39,49]; ]
+        var lpUnten5 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 36; @position = 27; initialized = true; @symbol_vardef = [lpUnten4,36,27,35]; @symbol_type<0> = [ResourceId,36,39,49]; ]
+        var lpUnten4 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 37; @position = 27; initialized = true; @symbol_vardef = [lpUnten6,37,27,35]; @symbol_type<0> = [ResourceId,37,39,49]; ]
+        var lpUnten6 as ResourceId;
     }
 }
 [ @file = "/home/user/workspace/ck-repo/garmin-feld/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 1; ]

@@ -5495,6 +5495,9 @@ async function feldTeil(rahmen, t) {
     max: rahmen ? rahmen.max : null,
     raten,
     // 23.11.2026: ESS heute schon gespeicherter Einheiten – das Datenfeld rechnet Tagesstand = vorher + laufend
+    // 24.11.2026: für die Datenfeld-Einstellungen (Zeile frei wählbar)
+    acwr: t?.acwr != null ? Math.round(t.acwr * 100) / 100 : null,
+    bereit: t?.readiness ?? null,
     vorher: Math.round((g.get(iso())?.akt || []).reduce((a, x) => a + ((x.last || 0) > 0 ? x.last : 0), 0)),
     n: Object.fromEntries(Object.entries(pro).map(([k, v]) => [k, v.length]))
   };
@@ -5507,7 +5510,7 @@ async function uhrTeil(rahmen) {
   const t = days.length && days[days.length - 1].date === heute2 ? days[days.length - 1] : null;
   const b = await baenderLaden();
   const l14 = { von: null, ist: [], lo: [], hi: [] };
-  const ab = Math.max(1, days.length - 14);
+  const ab = Math.max(1, days.length - 28);
   for (let i = ab; i < days.length; i++) {
     const d = days[i];
     const e = lastEmpfehlung(d, days[i - 1], b);
@@ -5516,7 +5519,7 @@ async function uhrTeil(rahmen) {
     l14.lo.push(e ? e.min : -1);
     l14.hi.push(e ? e.max : -1);
   }
-  const m = days.slice(-7);
+  const m = days.slice(-14);
   const m7 = {
     rd: m.map((d) => d.readiness ?? -1),
     hrv: m.map((d) => d.hrv ?? -1),
@@ -5541,7 +5544,7 @@ async function uhrTeil(rahmen) {
       const v = neuWert(x, post, morgen);
       return v == null ? -1 : Math.round(v);
     });
-    form = { ctl: reihe2("fbCTL_obs", "garminCTL", 42), atl: reihe2("fbATL_obs", "garminATL", 42), es };
+    form = { ctl: reihe2("fbCTL_obs", "garminCTL", 90), atl: reihe2("fbATL_obs", "garminATL", 90), es };
   } catch {
   }
   let letzte = null;

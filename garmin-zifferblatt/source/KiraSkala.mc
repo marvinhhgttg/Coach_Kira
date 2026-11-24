@@ -26,6 +26,8 @@ module KiraSkala {
     function tr() as Array { return [[0, 25, 50, 75, 95, 100], [ROT, ORANGE, GRUEN, BLAU, LILA]]; }
     function bb() as Array { return [[0, 26, 51, 76, 100], [ROT, ORANGE, GRUEN, BLAU]]; }
     function schlaf() as Array { return [[0, 60, 80, 90, 100], [ROT, ORANGE, GRUEN, BLAU]]; }
+    // 24.11.2026: ACWR × 100 – unter 0,8 blau · bis 1,3 grün · bis 1,5 orange · darüber rot
+    function acwr() as Array { return [[50, 80, 130, 150, 200], [BLAU, GRUEN, ORANGE, ROT]]; }
     function tourform() as Array { return [[0, 60, 80, 100], [ORANGE, GRUEN, BLAU]]; }
 
     // Tageslast gegen Kiras Soll-Rahmen lo–hi: unter Soll blau · im Rahmen grün · über Soll orange · > +15 % rot

@@ -1,0 +1,11 @@
+<properties>
+    <property id="pOL" type="number">0</property>
+    <property id="pOR" type="number">1</property>
+    <property id="pUL" type="number">2</property>
+    <property id="pUR" type="number">3</property>
+    <property id="pRingL" type="number">0</property>
+    <property id="pRingR" type="number">10</property>
+    <property id="pVotumRing" type="boolean">true</property>
+    <property id="pSek" type="boolean">true</property>
+    <property id="pErhBB" type="boolean">true</property>
+</properties>

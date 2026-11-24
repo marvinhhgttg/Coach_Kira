@@ -34,6 +34,13 @@ class KiraFeldView extends WatchUi.DataField {
     var unterwegs as Boolean = false;
     var naechsterAbruf as Number = 0;
     var seit as Number = 0;
+    // 24.11.2026: Einstellungen (Connect IQ App → Coach Kira Feld → Einstellungen)
+    var zoneJetzt as Number = 0;
+    var eOben as Number = 0;
+    var eMitte as Number = 0;
+    var eUnten as Number = 0;
+    var vibGrenze as Boolean = true;
+    var vibZone as Boolean = true;
 
     function initialize() {
         DataField.initialize();
@@ -44,6 +51,24 @@ class KiraFeldView extends WatchUi.DataField {
                 { :mesgType => FitContributor.MESG_TYPE_SESSION, :units => "ESS" });
         } catch (e) { }
         sportLesen();
+        einstLesen();
+    }
+
+    function einst(k as String, def) {
+        try {
+            var v = Application.Properties.getValue(k);
+            return v == null ? def : v;
+        } catch (e) {
+            return def;
+        }
+    }
+
+    function einstLesen() as Void {
+        var v = einst("pOben", 0); eOben = v instanceof Number ? v : 0;
+        v = einst("pMitte", 0); eMitte = v instanceof Number ? v : 0;
+        v = einst("pUnten", 0); eUnten = v instanceof Number ? v : 0;
+        vibGrenze = einst("pVibGrenze", true) != false;
+        vibZone = einst("pVibZone", true) != false;
     }
 
     function sportLesen() as Void {
@@ -242,6 +267,7 @@ class KiraFeldView extends WatchUi.DataField {
         else if (hr <= z[3]) { k = 2; }
         else if (hr <= z[4]) { k = 3; }
         else { k = 4; }
+        zoneJetzt = k + 1;
         if (k < 0) { return; }
         sek[k] += dt / 1000.0;
         var r = raten();
@@ -273,18 +299,18 @@ class KiraFeldView extends WatchUi.DataField {
             }
             if (!minGemeldet && tag >= ra[0] && ra[0] > 0) {
                 minGemeldet = true;
-                melden("Untergrenze erreicht", [new Attention.VibeProfile(60, 300)]);
+                if (vibGrenze) { melden("Untergrenze erreicht", [new Attention.VibeProfile(60, 300)]); }
             }
             var r = rate();
             if (!warnGemeldet && r != null && tag < ra[1] && (ra[1] - tag) / r <= 5.0) {
                 warnGemeldet = true;
-                melden("Obergrenze in ~5 min", [new Attention.VibeProfile(80, 300), new Attention.VibeProfile(0, 200), new Attention.VibeProfile(80, 300)]);
+                if (vibGrenze) { melden("Obergrenze in ~5 min", [new Attention.VibeProfile(80, 300), new Attention.VibeProfile(0, 200), new Attention.VibeProfile(80, 300)]); }
             }
             if (!maxGemeldet && tag > ra[1]) {
                 maxGemeldet = true;
                 warnGemeldet = true;
-                melden("Obergrenze " + ra[1].toString(), [new Attention.VibeProfile(100, 500), new Attention.VibeProfile(0, 250),
-                    new Attention.VibeProfile(100, 500), new Attention.VibeProfile(0, 250), new Attention.VibeProfile(100, 500)]);
+                if (vibGrenze) { melden("Obergrenze " + ra[1].toString(), [new Attention.VibeProfile(100, 500), new Attention.VibeProfile(0, 250),
+                    new Attention.VibeProfile(100, 500), new Attention.VibeProfile(0, 250), new Attention.VibeProfile(100, 500)]); }
             }
         }
         // Zonenwächter: Easy/Rest → Zeit ab Zone 3, Train → Zeit ab Zone 4; nach 5 min, dann alle 10 min
@@ -293,7 +319,7 @@ class KiraFeldView extends WatchUi.DataField {
             var vote = f.get("vote");
             var easy = "EASY".equals(vote) || "REST".equals(vote);
             var train = "TRAIN".equals(vote);
-            if (easy || train) {
+            if (vibZone && (easy || train)) {
                 var t = easy ? sek[2] + sek[3] + sek[4] : sek[3] + sek[4];
                 var schwelle = train && waechterAb < 600.0 ? 600.0 : waechterAb;
                 if (t > schwelle) {
@@ -319,6 +345,35 @@ class KiraFeldView extends WatchUi.DataField {
         if (ra[1] <= 0) { return Graphics.COLOR_WHITE; }
         // 23.11.2026: Garmin-Farbmuster mit Kiras Soll-Rahmen
         return KiraSkala.farbe(KiraSkala.last(ra[0], ra[1]), e);
+    }
+
+    // Text für frei belegbare Zeilen. Oben: 1 Zone, 2 Soll, 3 Votum, 4 ACWR, 5 Bereitschaft.
+    // Unten: 1 Zone, 2 Soll, 3 ESS/min, 4 ACWR, 5 Bereitschaft, 6 ESS Einheit
+    function zeilenText(art as Number, einheit as Number, e as Number, ra as Array?, istOben as Boolean) as String {
+        var f = feld();
+        if (!istOben && art == 3) {
+            var r = rate();
+            return r != null ? "ESS/min " + r.format("%.1f") : "ESS/min -";
+        }
+        if (!istOben && art == 6) { return "Einheit " + einheit.toString(); }
+        if (istOben && art == 3) {
+            var lb = f != null ? f.get("label") : null;
+            return "KIRA " + (lb != null ? lb.toString().toUpper() : "-");
+        }
+        if (art == 1) {
+            var t3 = (sek[2] + sek[3] + sek[4]) / 60;
+            return "Zone " + (zoneJetzt > 0 ? zoneJetzt.toString() : "-") + " · Z3+ " + t3.toNumber().toString() + "'";
+        }
+        if (art == 2) { return ra != null ? "Soll " + ra[0].toString() + "-" + ra[1].toString() : "Soll -"; }
+        if (art == 4) {
+            var a = f != null ? f.get("acwr") : null;
+            return "ACWR " + (a != null ? a.toFloat().format("%.2f") : "-");
+        }
+        if (art == 5) {
+            var b = f != null ? f.get("bereit") : null;
+            return "Bereit " + (b != null ? b.toNumber().toString() : "-");
+        }
+        return "";
     }
 
     function onUpdate(dc as Graphics.Dc) as Void {
@@ -352,21 +407,30 @@ class KiraFeldView extends WatchUi.DataField {
             var r = rate();
             unten = "noch " + (ra[1] - e).toString() + (r != null ? " · ~" + ((ra[1] - e) / r).toNumber().toString() + "'" : " bis " + ra[1].toString());
         }
+        if (Storage.getValue("tok") != null && ra != null && eUnten > 0) { unten = zeilenText(eUnten, einheit, e, ra, false); }
         if (System.getTimer() < hinweisBis) { unten = hinweis; }
         var c = farbe(e, ra);
         if (c == Graphics.COLOR_WHITE) { c = fg; }
+        // große Zahl nach Einstellung; Farbe bleibt am Tagesstand
+        var gross = e.toString();
+        if (eMitte == 1) { gross = einheit.toString(); }
+        else if (eMitte == 2 && ra != null) { gross = (e > ra[1] ? "+" + (e - ra[1]).toString() : (ra[1] - e).toString()); }
+        var oben = vor > 0 ? "KIRA TAG · EINH. " + einheit.toString() : "KIRA ESS";
+        if (eMitte == 1) { oben = "KIRA EINHEIT · TAG " + e.toString(); }
+        else if (eMitte == 2) { oben = "KIRA BIS OBERGRENZE"; }
+        if (eOben > 0) { oben = zeilenText(eOben, einheit, e, ra, true); }
         if (h < 90) {
             // kleines Feld: Wert + Rahmen nebeneinander
             dc.setColor(c, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, h / 2 - 4, Graphics.FONT_NUMBER_MILD, e.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(cx, h / 2 - 4, Graphics.FONT_NUMBER_MILD, gross, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
             dc.setColor(grau, Graphics.COLOR_TRANSPARENT);
             dc.drawText(cx, h - 2 - dc.getFontHeight(Graphics.FONT_XTINY), Graphics.FONT_XTINY, unten, Graphics.TEXT_JUSTIFY_CENTER);
             return;
         }
         dc.setColor(grau, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, (h * 0.06).toNumber(), Graphics.FONT_XTINY, vor > 0 ? "KIRA TAG · EINH. " + einheit.toString() : "KIRA ESS", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, (h * 0.06).toNumber(), Graphics.FONT_XTINY, oben, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(c, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, h / 2, h > 160 ? Graphics.FONT_NUMBER_HOT : Graphics.FONT_NUMBER_MEDIUM, e.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(cx, h / 2, h > 160 ? Graphics.FONT_NUMBER_HOT : Graphics.FONT_NUMBER_MEDIUM, gross, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         dc.setColor(System.getTimer() < hinweisBis ? c : grau, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, h - (h * 0.06).toNumber() - dc.getFontHeight(Graphics.FONT_TINY), Graphics.FONT_TINY, unten, Graphics.TEXT_JUSTIFY_CENTER);
         // Fortschrittsbalken bis zur Obergrenze

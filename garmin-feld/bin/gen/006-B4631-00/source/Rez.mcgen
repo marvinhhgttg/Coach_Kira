@@ -10,9 +10,30 @@ module Rez {
     } // Drawables
 
     module Strings {
-        (:initialized) var FitTitel as ResourceId;
-        (:initialized) var FitEinheit as ResourceId;
         (:initialized) var FitLabel as ResourceId;
         (:initialized) var AppName as ResourceId;
+        (:initialized) var lpOben5 as ResourceId;
+        (:initialized) var lpOben4 as ResourceId;
+        (:initialized) var lpOben3 as ResourceId;
+        (:initialized) var lpOben2 as ResourceId;
+        (:initialized) var spMitte as ResourceId;
+        (:initialized) var FitTitel as ResourceId;
+        (:initialized) var lpOben1 as ResourceId;
+        (:initialized) var lpOben0 as ResourceId;
+        (:initialized) var spVibGrenze as ResourceId;
+        (:initialized) var FitEinheit as ResourceId;
+        (:initialized) var spUnten as ResourceId;
+        (:initialized) var spVibZone as ResourceId;
+        (:initialized) var lpMitte1 as ResourceId;
+        (:initialized) var lpMitte2 as ResourceId;
+        (:initialized) var spOben as ResourceId;
+        (:initialized) var lpMitte0 as ResourceId;
+        (:initialized) var lpUnten1 as ResourceId;
+        (:initialized) var lpUnten0 as ResourceId;
+        (:initialized) var lpUnten3 as ResourceId;
+        (:initialized) var lpUnten2 as ResourceId;
+        (:initialized) var lpUnten5 as ResourceId;
+        (:initialized) var lpUnten4 as ResourceId;
+        (:initialized) var lpUnten6 as ResourceId;
     } // Strings
 } // Rez

@@ -14,12 +14,20 @@ import Toybox.Weather;
 import Toybox.WatchUi;
 
 class KiraZeigerApp extends Application.AppBase {
+    var ansicht as KiraZeiger? = null;
     function initialize() {
         AppBase.initialize();
     }
 
     function getInitialView() as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] {
-        return [new KiraZeiger()];
+        ansicht = new KiraZeiger();
+        return [ansicht];
+    }
+
+    // 24.11.2026: Einstellungen aus der Connect IQ App sofort übernehmen
+    function onSettingsChanged() as Void {
+        if (ansicht != null) { (ansicht as KiraZeiger).einstLesen(); }
+        WatchUi.requestUpdate();
     }
 }
 
@@ -44,6 +52,15 @@ class KiraZeiger extends WatchUi.WatchFace {
     var fWert as Graphics.FontType = Graphics.FONT_TINY;
     var fRing as Graphics.FontType = Graphics.FONT_TINY;
     var fKlein as Graphics.FontType = Graphics.FONT_XTINY;
+    // 24.11.2026: Einstellungen
+    var eEcken as Array<Number> = [0, 1, 2, 3];
+    var eRingL as Number = 0;
+    var eRingR as Number = 10;
+    var eVotum as Boolean = true;
+    var eSek as Boolean = true;
+    var eErhBB as Boolean = true;
+    var eDiaLast as Boolean = true;
+    var eDiaPlan as Boolean = true;
 
     function initialize() {
         WatchFace.initialize();
@@ -54,6 +71,18 @@ class KiraZeiger extends WatchUi.WatchFace {
         fKlein = schrift(["RobotoCondensedRegular", "RobotoRegular"], 25, Graphics.FONT_XTINY);
         try { Complications.registerComplicationChangeCallback(method(:geaendert)); } catch (e) { }
         kiraSuchen();
+        einstLesen();
+    }
+
+    function einstLesen() as Void {
+        eEcken = [KiraWert.zahlE("pOL", 0), KiraWert.zahlE("pOR", 1), KiraWert.zahlE("pUL", 2), KiraWert.zahlE("pUR", 3)];
+        eRingL = KiraWert.zahlE("pRingL", 0);
+        eRingR = KiraWert.zahlE("pRingR", 10);
+        eVotum = KiraWert.an("pVotumRing");
+        eSek = KiraWert.an("pSek");
+        eErhBB = KiraWert.an("pErhBB");
+        eDiaLast = KiraWert.an("pDiaLast");
+        eDiaPlan = KiraWert.an("pDiaPlan");
     }
 
     function schrift(namen as Array<String>, px as Number, ersatz as Graphics.FontType) as Graphics.FontType {
@@ -361,7 +390,7 @@ class KiraZeiger extends WatchUi.WatchFace {
         var heute = feld(t, 5).equals(heuteIso());
         var vote = feld(t, 0);
 
-        votumRing(dc, cx, cy, feld(t, 1), vote, heute ? zahl(t, 2) : null, heute ? zahl(t, 3) : null, heute ? zahl(t, 4) : null, heute);
+        if (eVotum) { votumRing(dc, cx, cy, feld(t, 1), vote, heute ? zahl(t, 2) : null, heute ? zahl(t, 3) : null, heute ? zahl(t, 4) : null, heute); }
 
         // Kopf: Akku · Votum
         var st = System.getSystemStats();
@@ -372,51 +401,54 @@ class KiraZeiger extends WatchUi.WatchFace {
         dc.setColor(vf, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, (h * 0.135).toNumber(), fKopf, kira == null ? (kiraId == null ? "KIRA · APP ÖFFNEN" : "KIRA · WARTET") : "KIRA · " + (vote.length() > 0 ? vote : "-") + (heute && feld(t, 17).equals("1") ? "*" : "") + (heute ? "" : " (ALT)"), Graphics.TEXT_JUSTIFY_CENTER);
 
-        // Seitenwerte (wie digital)
-        var temp = "-";
-        var wind = "-";
-        try {
-            var wc = Weather.getCurrentConditions();
-            if (wc != null) {
-                if (wc.temperature != null) { temp = wc.temperature.toNumber().toString() + "°"; }
-                if (wc.windSpeed != null) { wind = richtung(wc.windBearing) + " " + (wc.windSpeed * 3.6).toNumber().toString(); }
-            }
-        } catch (e) { }
-        var es = zahl(t, 12);
-        block(dc, (w * 0.22).toNumber(), (h * 0.25).toNumber(), "TEMP", temp);
-        block(dc, (w * 0.78).toNumber(), (h * 0.25).toNumber(), "AUSD.", es == null ? "-" : es.toString());
-        var pl = heute ? zahl(t, 9) : null;
-        var sp = heute ? feld(t, 10) : "";
-        block(dc, (w * 0.22).toNumber(), (h * 0.69).toNumber(), "WIND", wind);
-        block(dc, (w * 0.78).toNumber(), (h * 0.69).toNumber(), "PLAN", pl == null ? "-" : (pl == 0 ? "Ruhe" : (sp.length() > 0 ? sp + " " : "") + pl.toString()));
-        // Live von der Uhr, Mitte unten zwischen WIND und PLAN: Erholungszeit und Body Battery
-        var erh = nativ(Complications.COMPLICATION_TYPE_RECOVERY_TIME);
-        var bbn = nativ(Complications.COMPLICATION_TYPE_BODY_BATTERY);
-        dc.setColor(0xC8C8C8, Graphics.COLOR_TRANSPARENT);
-        var eab = erholtAb(erh, false);
-        dc.drawText(cx, (h * 0.735).toNumber(), fKlein, eab.equals("ERHOLT") ? eab : "ERH " + eab, Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(cx, (h * 0.787).toNumber(), fKlein, "BB " + (bbn == null ? "-" : bbn.toString()), Graphics.TEXT_JUSTIFY_CENTER);
+        // 24.11.2026: vier Ecken frei belegbar (Standard: Temperatur, Ausdauerwert, Wind, Plan)
+        var pos = [[(w * 0.22).toNumber(), (h * 0.25).toNumber()], [(w * 0.78).toNumber(), (h * 0.25).toNumber()],
+                   [(w * 0.22).toNumber(), (h * 0.69).toNumber()], [(w * 0.78).toNumber(), (h * 0.69).toNumber()]];
+        for (var i = 0; i < 4; i++) {
+            var ek = KiraWert.ecke(eEcken[i], t, heute);
+            if ((ek[0] as String).length() == 0) { continue; }
+            block(dc, pos[i][0] as Number, pos[i][1] as Number, ek[0] as String, ek[1] as String);
+        }
+        // Live von der Uhr, Mitte unten zwischen den unteren Ecken: Erholungszeit und Body Battery
+        if (eErhBB) {
+            var erh = nativ(Complications.COMPLICATION_TYPE_RECOVERY_TIME);
+            var bbn = nativ(Complications.COMPLICATION_TYPE_BODY_BATTERY);
+            dc.setColor(0xC8C8C8, Graphics.COLOR_TRANSPARENT);
+            var eab = erholtAb(erh, false);
+            dc.drawText(cx, (h * 0.735).toNumber(), fKlein, eab.equals("ERHOLT") ? eab : "ERH " + eab, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(cx, (h * 0.787).toNumber(), fKlein, "BB " + (bbn == null ? "-" : bbn.toString()), Graphics.TEXT_JUSTIFY_CENTER);
+        }
 
         var rx = (w * 0.15).toNumber();
         var rr = (w * 0.074).toNumber();
-        var rd = heute ? zahl(t, 8) : null;
-        bereitBogen(dc, rx, cy, rr, 6, rd);
+        // 24.11.2026: Ring links frei belegbar (Standard Trainingsbereitschaft)
+        var rgL = KiraWert.ring(eRingL, t, heute);
+        KiraSkala.bogen(dc, rx, cy, rr, 6, rgL[0] as Number?, rgL[1] as Array);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(rx, cy, fRing, rd == null ? "-" : rd.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(rx, cy, fRing, KiraWert.ringText(eRingL, rgL[0] as Number?), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(rx, cy + rr + 7, fLabel, (heute && feld(t, 14).length() > 0 ? "TR " + feld(t, 14) : "BEREIT"), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(rx, cy + rr + 7, fLabel, rgL[2] as String, Graphics.TEXT_JUSTIFY_CENTER);
 
         var lx = w - rx;
         var lo = heute ? zahl(t, 2) : null;
         var hi = heute ? zahl(t, 3) : null;
         var ist = heute ? zahl(t, 4) : null;
         // 23.11.2026: Tageslast als Garmin-Bogen mit Kiras Soll-Rahmen
-        KiraSkala.bogen(dc, lx, cy, rr, 6, ist, (hi != null && hi > 0) ? KiraSkala.last(lo, hi) : [[0, 100], [KiraSkala.GRAU]]);
-        wochenRing(dc, lx, cy, rr + 7, zahl(t, 15), zahl(t, 16));
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(lx, cy, fRing, ist == null ? "-" : ist.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-        dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(lx, cy + rr + (zahl(t, 16) != null ? 13 : 7), fLabel, hi == null ? "SOLL" : (lo != null ? lo.toString() + "-" : "") + hi.toString(), Graphics.TEXT_JUSTIFY_CENTER);
+        if (eRingR == 10) {
+            KiraSkala.bogen(dc, lx, cy, rr, 6, ist, (hi != null && hi > 0) ? KiraSkala.last(lo, hi) : [[0, 100], [KiraSkala.GRAU]]);
+            wochenRing(dc, lx, cy, rr + 7, zahl(t, 15), zahl(t, 16));
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(lx, cy, fRing, ist == null ? "-" : ist.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(lx, cy + rr + (zahl(t, 16) != null ? 13 : 7), fLabel, hi == null ? "SOLL" : (lo != null ? lo.toString() + "-" : "") + hi.toString(), Graphics.TEXT_JUSTIFY_CENTER);
+        } else {
+            var rgR = KiraWert.ring(eRingR, t, heute);
+            KiraSkala.bogen(dc, lx, cy, rr, 6, rgR[0] as Number?, rgR[1] as Array);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(lx, cy, fRing, KiraWert.ringText(eRingR, rgR[0] as Number?), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(lx, cy + rr + 7, fLabel, rgR[2] as String, Graphics.TEXT_JUSTIFY_CENTER);
+        }
 
         // Diagramm 1: Last 7 Tage mit Soll-Band (Komplikation „KIRA WOCHE“: IIIIIII;LLLLLLL;HHHHHHH, ESS / 8)
         var wk = zerlegen(woche, ";");
@@ -428,7 +460,9 @@ class KiraZeiger extends WatchUi.WatchFace {
         var y0 = (h * 0.24).toNumber();
         var y1 = (h * 0.40).toNumber();
         var n = heute ? wI.length() : 0;
-        if (n < 2) {
+        if (!eDiaLast) {
+            // ausgeblendet
+        } else if (n < 2) {
             dc.setColor(GRAU, Graphics.COLOR_TRANSPARENT);
             dc.drawText(cx, (y0 + y1) / 2, fKlein, "LAST 7 T · APP ÖFFNEN", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         } else {
@@ -487,17 +521,21 @@ class KiraZeiger extends WatchUi.WatchFace {
         var cTxt = v2 && kopf.size() > 2 && kopf[2].length() > 0 ? kopf[2] : "-";
         var aTxt = v2 && kopf.size() > 3 && kopf[3].length() > 0 ? kopf[3] : "-";
         var yt = y1 + dc.getFontHeight(fKlein) - 2;
+        if (eDiaLast) {
         dc.setColor(KiraSkala.GRUEN, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx - 6, yt, fKlein, "FIT " + cTxt, Graphics.TEXT_JUSTIFY_RIGHT);
         dc.setColor(KiraSkala.ORANGE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx + 6, yt, fKlein, "ERM " + aTxt, Graphics.TEXT_JUSTIFY_LEFT);
+        }
 
         // Diagramm 2: Plan der nächsten 7 Tage (Umriss-Balken) mit ATL/CTL-Prognose gestrichelt, gleiche Skala wie oben
         var pP = v2 && fk.size() > 3 ? fk[3] : "";
         var b0 = (h * 0.535).toNumber();
         var b1 = (h * 0.63).toNumber();
         var pn = heute ? pP.length() : 0;
-        if (pn >= 2) {
+        if (!eDiaPlan) {
+            // ausgeblendet
+        } else if (pn >= 2) {
             var pmx = 1;
             for (var i = 0; i < pn; i++) { var q = dekod(pP, i); if (q != null && q * 8 > pmx) { pmx = q * 8; } }
             var pbw = (x1 - x0) / 7;
@@ -544,7 +582,7 @@ class KiraZeiger extends WatchUi.WatchFace {
         // Zeiger
         zeiger(dc, cx, cy, wStd, (w * 0.25).toNumber(), 14, 9, 0xEDEDED);
         zeiger(dc, cx, cy, wMin, (w * 0.39).toNumber(), 14, 6, 0xEDEDED);
-        zeiger(dc, cx, cy, uhr.sec / 60.0 * Math.PI * 2, (w * 0.41).toNumber(), 26, 2, ORANGE);
+        if (eSek) { zeiger(dc, cx, cy, uhr.sec / 60.0 * Math.PI * 2, (w * 0.41).toNumber(), 26, 2, ORANGE); }
         dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
         dc.fillCircle(cx, cy, 8);
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);

@@ -36,6 +36,11 @@ class KiraApp extends Application.AppBase {
         return [v, new KiraDelegate(v)];
     }
 
+    // 24.11.2026: Einstellungen aus der Connect IQ App übernommen
+    function onSettingsChanged() as Void {
+        WatchUi.requestUpdate();
+    }
+
     (:glance)
     function getGlanceView() {
         return [new KiraGlance()];
@@ -158,9 +163,14 @@ function kiraKomplikation(d as Dictionary) as Void {
             if (wo.get("ist") != null) { wi = wo.get("ist").toNumber().toString(); }
             if (wo.get("budget") != null) { wb = wo.get("budget").toNumber().toString(); }
         }
+        // 24.11.2026: |18 ACWR × 100 |19 Tourform % (frei belegbare Ringe/Ecken der Zifferblätter)
+        var ac = "", tf = "";
+        if (l instanceof Dictionary && l.get("acwr") != null) { ac = (l.get("acwr").toFloat() * 100 + 0.5).toNumber().toString(); }
+        if (z instanceof Dictionary && z.get("tourform") != null) { tf = z.get("tourform").toNumber().toString(); }
         t = (lab.equals("KIRA") ? "" : lab) + "|" + st + "|" + lo2 + "|" + hi2 + "|" + ist + "|" + (d.get("datum") != null ? d.get("datum").toString() : "") + "|" + zn + "|" + zt + "|" + rd
             + "|" + pl + "|" + sp + "|" + zo + "|" + es + "|" + es28 + "|" + rz + "|" + wi + "|" + wb
-            + "|" + (v instanceof Dictionary && v.get("vorlaeufig") == true ? "1" : "");
+            + "|" + (v instanceof Dictionary && v.get("vorlaeufig") == true ? "1" : "")
+            + "|" + ac + "|" + tf;
         Complications.updateComplication(1, { :value => t });
         // Lange Texte lehnt die Uhr ab – Diagrammdaten daher kompakt und getrennt (je 1 Zeichen pro Wert)
         try { Complications.updateComplication(2, { :value => sieben(d, l) }); } catch (e2) { }
@@ -391,8 +401,7 @@ class KiraHintergrund extends System.ServiceDelegate {
             var alt = Storage.getValue("fazitId");
             if (alt != null && alt.toString().equals(id)) { return; }
             Storage.setValue("fazitId", id);
-            var jetzt = Gregorian.info(Time.now(), Time.FORMAT_SHORT);
-            if (jetzt.hour < 6 || jetzt.hour >= 23) { return; }
+            if (!KiraEinst.an("pHFazit") || KiraEinst.ruhig()) { return; }
             var text = f.get("text") != null ? f.get("text").toString() : "";
             var min = erholMinuten();
             if (min != null) { text += " Erholt ab " + erholtAb(min) + "."; }
@@ -414,6 +423,7 @@ class KiraHintergrund extends System.ServiceDelegate {
         try {
             var xs = d.get("hinweise");
             if (!(xs instanceof Array) || xs.size() == 0) { return; }
+            if (KiraEinst.ruhig()) { return; }   // 24.11.2026: Ruhezeit – später zeigen
             var gesehen = Storage.getValue("hinw");
             var liste = gesehen instanceof Array ? gesehen : [];
             for (var i = 0; i < xs.size(); i++) {
@@ -426,6 +436,7 @@ class KiraHintergrund extends System.ServiceDelegate {
                 liste.add(id);
                 while (liste.size() > 12) { liste = liste.slice(1, null); }
                 Storage.setValue("hinw", liste);
+                if (!KiraEinst.an(KiraEinst.hinweisSchluessel(id))) { continue; }   // Art abgeschaltet
                 var titel = h.get("titel") != null ? h.get("titel").toString() : "Kira";
                 var text = h.get("text") != null ? h.get("text").toString() : "";
                 if (Toybox has :Notifications && Notifications has :showNotification) {
@@ -446,6 +457,7 @@ class KiraHintergrund extends System.ServiceDelegate {
             var v = d.get("votum");
             var m = d.get("morgen");
             if (datum == null || !(v instanceof Dictionary) || v.get("vote") == null) { return; }
+            if (!KiraEinst.an("pHVotum") || KiraEinst.ruhig()) { return; }
             if (m instanceof Dictionary && m.get("eingetragen") == false) { return; }
             var gemeldet = Storage.getValue("gemeldet");
             if (gemeldet != null && gemeldet.toString().equals(datum.toString())) { return; }

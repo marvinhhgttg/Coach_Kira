@@ -1,0 +1,7 @@
+<settings>
+    <setting propertyKey="@Properties.pOben" title="@Strings.spOben"><settingConfig type="list"><listEntry value="0">@Strings.lpOben0</listEntry><listEntry value="1">@Strings.lpOben1</listEntry><listEntry value="2">@Strings.lpOben2</listEntry><listEntry value="3">@Strings.lpOben3</listEntry><listEntry value="4">@Strings.lpOben4</listEntry><listEntry value="5">@Strings.lpOben5</listEntry></settingConfig></setting>
+    <setting propertyKey="@Properties.pMitte" title="@Strings.spMitte"><settingConfig type="list"><listEntry value="0">@Strings.lpMitte0</listEntry><listEntry value="1">@Strings.lpMitte1</listEntry><listEntry value="2">@Strings.lpMitte2</listEntry></settingConfig></setting>
+    <setting propertyKey="@Properties.pUnten" title="@Strings.spUnten"><settingConfig type="list"><listEntry value="0">@Strings.lpUnten0</listEntry><listEntry value="1">@Strings.lpUnten1</listEntry><listEntry value="2">@Strings.lpUnten2</listEntry><listEntry value="3">@Strings.lpUnten3</listEntry><listEntry value="4">@Strings.lpUnten4</listEntry><listEntry value="5">@Strings.lpUnten5</listEntry><listEntry value="6">@Strings.lpUnten6</listEntry></settingConfig></setting>
+    <setting propertyKey="@Properties.pVibGrenze" title="@Strings.spVibGrenze"><settingConfig type="boolean"/></setting>
+    <setting propertyKey="@Properties.pVibZone" title="@Strings.spVibZone"><settingConfig type="boolean"/></setting>
+</settings>

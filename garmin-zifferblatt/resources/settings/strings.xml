@@ -1,0 +1,33 @@
+<strings>
+    <string id="spOL">Ecke oben links</string>
+    <string id="spOR">Ecke oben rechts</string>
+    <string id="spUL">Ecke unten links</string>
+    <string id="spUR">Ecke unten rechts</string>
+    <string id="lE0">Temperatur</string>
+    <string id="lE1">Ausdauerwert</string>
+    <string id="lE2">Wind</string>
+    <string id="lE3">Plan heute</string>
+    <string id="lE4">ACWR</string>
+    <string id="lE5">Tourform</string>
+    <string id="lE6">Body Battery</string>
+    <string id="lE7">Schlafscore</string>
+    <string id="lE8">Herzfrequenz</string>
+    <string id="lE9">Schritte</string>
+    <string id="lE10">Woche (Ist/Budget)</string>
+    <string id="lE11">Erholungszeit</string>
+    <string id="lE12">Stress</string>
+    <string id="lE13">leer</string>
+    <string id="spRingL">Ring links</string>
+    <string id="lpRingL0">Trainingsbereitschaft</string>
+    <string id="lpRingL1">Body Battery</string>
+    <string id="lpRingL2">Schlafscore</string>
+    <string id="lpRingL3">Tourform</string>
+    <string id="spRingR">Ring rechts</string>
+    <string id="lpRingR10">Tageslast + Woche</string>
+    <string id="lpRingR11">Woche gegen Budget</string>
+    <string id="lpRingR12">ACWR</string>
+    <string id="lpRingR13">Tourform</string>
+    <string id="spVotumRing">Votum-Ring am Rand</string>
+    <string id="spSek">Sekunden anzeigen</string>
+    <string id="spErhBB">Mitte unten: Erholung und Body Battery</string>
+</strings>

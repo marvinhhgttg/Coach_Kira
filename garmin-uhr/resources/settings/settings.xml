@@ -1,0 +1,26 @@
+<settings>
+    <setting propertyKey="@Properties.pS0" title="@Strings.sS0"><settingConfig type="boolean"/></setting>
+    <setting propertyKey="@Properties.pS1" title="@Strings.sS1"><settingConfig type="boolean"/></setting>
+    <setting propertyKey="@Properties.pS2" title="@Strings.sS2"><settingConfig type="boolean"/></setting>
+    <setting propertyKey="@Properties.pS3" title="@Strings.sS3"><settingConfig type="boolean"/></setting>
+    <setting propertyKey="@Properties.pS4" title="@Strings.sS4"><settingConfig type="boolean"/></setting>
+    <setting propertyKey="@Properties.pS5" title="@Strings.sS5"><settingConfig type="boolean"/></setting>
+    <setting propertyKey="@Properties.pS6" title="@Strings.sS6"><settingConfig type="boolean"/></setting>
+    <setting propertyKey="@Properties.pS7" title="@Strings.sS7"><settingConfig type="boolean"/></setting>
+    <setting propertyKey="@Properties.pS8" title="@Strings.sS8"><settingConfig type="boolean"/></setting>
+    <setting propertyKey="@Properties.pS9" title="@Strings.sS9"><settingConfig type="boolean"/></setting>
+    <setting propertyKey="@Properties.pStart" title="@Strings.sStart"><settingConfig type="list"><listEntry value="0">@Strings.lS0</listEntry><listEntry value="1">@Strings.lS1</listEntry><listEntry value="2">@Strings.lS2</listEntry><listEntry value="3">@Strings.lS3</listEntry><listEntry value="4">@Strings.lS4</listEntry><listEntry value="5">@Strings.lS5</listEntry><listEntry value="6">@Strings.lS6</listEntry><listEntry value="7">@Strings.lS7</listEntry><listEntry value="8">@Strings.lS8</listEntry><listEntry value="9">@Strings.lS9</listEntry></settingConfig></setting>
+    <setting propertyKey="@Properties.pLast" title="@Strings.spLast"><settingConfig type="list"><listEntry value="7">@Strings.lpLast7</listEntry><listEntry value="14">@Strings.lpLast14</listEntry><listEntry value="28">@Strings.lpLast28</listEntry></settingConfig></setting>
+    <setting propertyKey="@Properties.pMorgen" title="@Strings.spMorgen"><settingConfig type="list"><listEntry value="7">@Strings.lpMorgen7</listEntry><listEntry value="14">@Strings.lpMorgen14</listEntry></settingConfig></setting>
+    <setting propertyKey="@Properties.pForm" title="@Strings.spForm"><settingConfig type="list"><listEntry value="42">@Strings.lpForm42</listEntry><listEntry value="90">@Strings.lpForm90</listEntry></settingConfig></setting>
+    <setting propertyKey="@Properties.pProg" title="@Strings.spProg"><settingConfig type="boolean"/></setting>
+    <setting propertyKey="@Properties.pHVotum" title="@Strings.spHVotum"><settingConfig type="boolean"/></setting>
+    <setting propertyKey="@Properties.pHFazit" title="@Strings.spHFazit"><settingConfig type="boolean"/></setting>
+    <setting propertyKey="@Properties.pHBefinden" title="@Strings.spHBefinden"><settingConfig type="boolean"/></setting>
+    <setting propertyKey="@Properties.pHLicht" title="@Strings.spHLicht"><settingConfig type="boolean"/></setting>
+    <setting propertyKey="@Properties.pHWarn" title="@Strings.spHWarn"><settingConfig type="boolean"/></setting>
+    <setting propertyKey="@Properties.pHPlan" title="@Strings.spHPlan"><settingConfig type="boolean"/></setting>
+    <setting propertyKey="@Properties.pHErfolg" title="@Strings.spHErfolg"><settingConfig type="boolean"/></setting>
+    <setting propertyKey="@Properties.pRuheVon" title="@Strings.spRuheVon"><settingConfig type="numeric" min="0" max="23"/></setting>
+    <setting propertyKey="@Properties.pRuheBis" title="@Strings.spRuheBis"><settingConfig type="numeric" min="0" max="23"/></setting>
+</settings>

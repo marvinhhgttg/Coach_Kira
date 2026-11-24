@@ -205,6 +205,14 @@ class KiraView extends WatchUi.View {
 
     function initialize() {
         View.initialize();
+        startSetzen();
+    }
+
+    // Startseite aus den Einstellungen; deaktivierte Startseite → erste aktive
+    function startSetzen() as Void {
+        var xs = KiraEinst.seiten();
+        var st = KiraEinst.zahl("pStart", 0);
+        seite = xs.indexOf(st) >= 0 ? st : xs[0];
     }
 
     function onShow() as Void {
@@ -214,7 +222,10 @@ class KiraView extends WatchUi.View {
     }
 
     function blaettern(n as Number) as Void {
-        seite = (seite + n + SEITEN) % SEITEN;
+        var xs = KiraEinst.seiten();
+        var i = xs.indexOf(seite);
+        if (i < 0) { i = 0; n = 0; }
+        seite = xs[(i + n + xs.size()) % xs.size()];
         WatchUi.requestUpdate();
     }
 
@@ -249,6 +260,8 @@ class KiraView extends WatchUi.View {
             return;
         }
         var u = Storage.getValue("u");
+        var xs = KiraEinst.seiten();
+        if (xs.indexOf(seite) < 0) { seite = xs[0]; }
         if (seite == 0) { seiteVotum(dc, d, h); }
         else if (seite == 1) { seiteWerte(dc, d, h); }
         else if (seite == 2) { seiteTage(dc, d, h); }
@@ -261,9 +274,12 @@ class KiraView extends WatchUi.View {
         else { seiteForm(dc, d, h); }
         // Seitenanzeige rechts
         var w = dc.getWidth();
-        for (var i = 0; i < SEITEN; i++) {
-            dc.setColor(i == seite ? Graphics.COLOR_WHITE : 0x555555, Graphics.COLOR_TRANSPARENT);
-            dc.fillCircle(w - 14, h / 2 - (SEITEN - 1) * 7 + i * 14, 3);
+        var nS = xs.size();
+        if (nS > 1) {
+            for (var i = 0; i < nS; i++) {
+                dc.setColor(xs[i] == seite ? Graphics.COLOR_WHITE : 0x555555, Graphics.COLOR_TRANSPARENT);
+                dc.fillCircle(w - 14, h / 2 - (nS - 1) * 7 + i * 14, 3);
+            }
         }
     }
 
@@ -472,9 +488,15 @@ class KiraView extends WatchUi.View {
         var ist = arr(u, "l14", "ist");
         var lo = arr(u, "l14", "lo");
         var hi = arr(u, "l14", "hi");
-        if (ist == null || lo == null || hi == null || ist.size() == 0) { ohneDaten(dc, h, "LAST 14 TAGE"); return; }
+        var nT = KiraEinst.zahl("pLast", 14);
+        var titel = "LAST " + nT.toString() + " TAGE";
+        if (ist == null || lo == null || hi == null || ist.size() == 0) { ohneDaten(dc, h, titel); return; }
+        ist = KiraEinst.ende(ist, nT);
+        lo = KiraEinst.ende(lo, nT);
+        hi = KiraEinst.ende(hi, nT);
+        if (ist.size() < nT) { titel = "LAST " + ist.size().toString() + " TAGE"; }
         var w = dc.getWidth();
-        zeile(dc, (h * 0.11).toNumber(), Graphics.FONT_XTINY, "LAST 14 TAGE", 0x9A9A9A);
+        zeile(dc, (h * 0.11).toNumber(), Graphics.FONT_XTINY, titel, 0x9A9A9A);
         var n = ist.size();
         var x0 = (w * 0.18).toNumber();
         var x1 = (w * 0.82).toNumber();
@@ -564,10 +586,13 @@ class KiraView extends WatchUi.View {
 
     // Seite 5: Morgenwerte der letzten 7 Tage
     function seiteMorgen(dc as Graphics.Dc, u, h as Number) as Void {
-        if (!(u instanceof Dictionary) || !(u.get("m7") instanceof Dictionary)) { ohneDaten(dc, h, "MORGEN 7 TAGE"); return; }
+        var nT = KiraEinst.zahl("pMorgen", 7);
+        if (!(u instanceof Dictionary) || !(u.get("m7") instanceof Dictionary)) { ohneDaten(dc, h, "MORGEN " + nT.toString() + " TAGE"); return; }
         var m = u.get("m7") as Dictionary;
         var w = dc.getWidth();
-        zeile(dc, (h * 0.11).toNumber(), Graphics.FONT_XTINY, "MORGEN 7 TAGE", 0x9A9A9A);
+        var rd = m.get("rd");
+        if (rd instanceof Array && rd.size() < nT) { nT = rd.size(); }
+        zeile(dc, (h * 0.11).toNumber(), Graphics.FONT_XTINY, "MORGEN " + nT.toString() + " TAGE", 0x9A9A9A);
         var reihen = [["Ready", "rd", "rdS"], ["HRV", "hrv", "hrvS"], ["Puls", "rhr", "rhrS"], ["Schlaf", "sl", "slS"]];
         var y = (h * 0.22).toNumber();
         var zh = (h * 0.135).toNumber();
@@ -575,6 +600,11 @@ class KiraView extends WatchUi.View {
             var xs = m.get(reihen[i][1]);
             var st = m.get(reihen[i][2]);
             if (!(xs instanceof Array)) { continue; }
+            if (xs.size() > nT) {
+                var weg = xs.size() - nT;
+                xs = xs.slice(weg, null);
+                if (st instanceof String && st.length() > weg) { st = st.substring(weg, st.length()); }
+            }
             dc.setColor(0x9A9A9A, Graphics.COLOR_TRANSPARENT);
             dc.drawText(w * 0.13, y + zh / 2, Graphics.FONT_XTINY, reihen[i][0], Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
             linie(dc, (w * 0.37).toNumber(), (w * 0.70).toNumber(), y + 10, zh - 20, xs, st instanceof String ? st : null, 0x777777);
@@ -592,12 +622,24 @@ class KiraView extends WatchUi.View {
         var atl = arr(u, "form", "atl");
         var es = arr(u, "form", "es");
         if (ctl == null || atl == null) { ohneDaten(dc, h, "FORM-KURVE"); return; }
+        var nT = KiraEinst.zahl("pForm", 42);
+        ctl = KiraEinst.ende(ctl, nT);
+        atl = KiraEinst.ende(atl, nT);
+        // 24.11.2026: optional 7 Tage Plan-Prognose (gestrichelt wirkend: dünn, heller) rechts anhängen
+        var pc = null;
+        var pa = null;
+        var p7 = u instanceof Dictionary ? u.get("plan7") : null;
+        if (KiraEinst.an("pProg") && p7 instanceof Dictionary && p7.get("ctl") instanceof Array && p7.get("atl") instanceof Array) {
+            pc = p7.get("ctl") as Array;
+            pa = p7.get("atl") as Array;
+        }
         var w = dc.getWidth();
-        zeile(dc, (h * 0.11).toNumber(), Graphics.FONT_XTINY, "FORM 6 WOCHEN", 0x9A9A9A);
+        zeile(dc, (h * 0.11).toNumber(), Graphics.FONT_XTINY, (nT == 42 ? "FORM 6 WOCHEN" : "FORM " + nT.toString() + " TAGE") + (pc != null ? " + PLAN" : ""), 0x9A9A9A);
         // gemeinsame Skala für CTL und ATL
         var both = [];
         both.addAll(ctl);
         both.addAll(atl);
+        if (pc != null) { both.addAll(pc); both.addAll(pa); }
         var lo = 99999;
         var hi = -1;
         for (var i = 0; i < both.size(); i++) { if (both[i] >= 0 && both[i] < lo) { lo = both[i]; } if (both[i] > hi) { hi = both[i]; } }
@@ -608,8 +650,26 @@ class KiraView extends WatchUi.View {
         // ATL zuerst (dünn), CTL darüber
         var atlS = skaliert(atl, lo, hi);
         var ctlS = skaliert(ctl, lo, hi);
-        linieFest(dc, x0, x1, y0, hoch, atlS, 0xE67E22, 1);
-        linieFest(dc, x0, x1, y0, hoch, ctlS, 0x2ECC71, 3);
+        if (pc != null) {
+            // Verlauf + Prognose auf gemeinsamer x-Achse; Trennlinie bei heute
+            var nH = ctl.size();
+            var nP = pc.size() < pa.size() ? pc.size() : pa.size();
+            var gesamt = nH + nP;
+            var xh = x0 + ((x1 - x0) * (nH - 1)) / (gesamt - 1);
+            var pcS = [ctlS[nH - 1]];
+            var paS = [atlS[atl.size() - 1]];
+            pcS.addAll(skaliert(pc.slice(0, nP), lo, hi));
+            paS.addAll(skaliert(pa.slice(0, nP), lo, hi));
+            dc.setColor(0x444444, Graphics.COLOR_TRANSPARENT);
+            dc.drawLine(xh, y0 - 2, xh, y0 + hoch + 2);
+            linieFest(dc, x0, xh, y0, hoch, atlS, 0xE67E22, 1);
+            linieFest(dc, x0, xh, y0, hoch, ctlS, 0x2ECC71, 3);
+            linieFest(dc, xh, x1, y0, hoch, paS, 0x8A5A2B, 1);
+            linieFest(dc, xh, x1, y0, hoch, pcS, 0x1E7A45, 2);
+        } else {
+            linieFest(dc, x0, x1, y0, hoch, atlS, 0xE67E22, 1);
+            linieFest(dc, x0, x1, y0, hoch, ctlS, 0x2ECC71, 3);
+        }
         var y = y0 + hoch + 6;
         var c = letzter(ctl);
         var a = letzter(atl);

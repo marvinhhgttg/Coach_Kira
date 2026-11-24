@@ -1,0 +1,367 @@
+{
+  "settings" : [ {
+    "key" : "pOL",
+    "valueType" : "number",
+    "defaultValue" : 0,
+    "configTitle" : "spOL",
+    "configPrompt" : null,
+    "configType" : "list",
+    "configError" : null,
+    "configHelpUrl" : null,
+    "configReadonly" : false,
+    "configRequired" : false,
+    "configOptions" : [ {
+      "display" : "lE0",
+      "value" : 0
+    }, {
+      "display" : "lE1",
+      "value" : 1
+    }, {
+      "display" : "lE2",
+      "value" : 2
+    }, {
+      "display" : "lE3",
+      "value" : 3
+    }, {
+      "display" : "lE4",
+      "value" : 4
+    }, {
+      "display" : "lE5",
+      "value" : 5
+    }, {
+      "display" : "lE6",
+      "value" : 6
+    }, {
+      "display" : "lE7",
+      "value" : 7
+    }, {
+      "display" : "lE8",
+      "value" : 8
+    }, {
+      "display" : "lE9",
+      "value" : 9
+    }, {
+      "display" : "lE10",
+      "value" : 10
+    }, {
+      "display" : "lE11",
+      "value" : 11
+    }, {
+      "display" : "lE12",
+      "value" : 12
+    }, {
+      "display" : "lE13",
+      "value" : 13
+    } ],
+    "configMin" : null,
+    "configMax" : null,
+    "configMaxLength" : null
+  }, {
+    "key" : "pOR",
+    "valueType" : "number",
+    "defaultValue" : 1,
+    "configTitle" : "spOR",
+    "configPrompt" : null,
+    "configType" : "list",
+    "configError" : null,
+    "configHelpUrl" : null,
+    "configReadonly" : false,
+    "configRequired" : false,
+    "configOptions" : [ {
+      "display" : "lE0",
+      "value" : 0
+    }, {
+      "display" : "lE1",
+      "value" : 1
+    }, {
+      "display" : "lE2",
+      "value" : 2
+    }, {
+      "display" : "lE3",
+      "value" : 3
+    }, {
+      "display" : "lE4",
+      "value" : 4
+    }, {
+      "display" : "lE5",
+      "value" : 5
+    }, {
+      "display" : "lE6",
+      "value" : 6
+    }, {
+      "display" : "lE7",
+      "value" : 7
+    }, {
+      "display" : "lE8",
+      "value" : 8
+    }, {
+      "display" : "lE9",
+      "value" : 9
+    }, {
+      "display" : "lE10",
+      "value" : 10
+    }, {
+      "display" : "lE11",
+      "value" : 11
+    }, {
+      "display" : "lE12",
+      "value" : 12
+    }, {
+      "display" : "lE13",
+      "value" : 13
+    } ],
+    "configMin" : null,
+    "configMax" : null,
+    "configMaxLength" : null
+  }, {
+    "key" : "pUL",
+    "valueType" : "number",
+    "defaultValue" : 2,
+    "configTitle" : "spUL",
+    "configPrompt" : null,
+    "configType" : "list",
+    "configError" : null,
+    "configHelpUrl" : null,
+    "configReadonly" : false,
+    "configRequired" : false,
+    "configOptions" : [ {
+      "display" : "lE0",
+      "value" : 0
+    }, {
+      "display" : "lE1",
+      "value" : 1
+    }, {
+      "display" : "lE2",
+      "value" : 2
+    }, {
+      "display" : "lE3",
+      "value" : 3
+    }, {
+      "display" : "lE4",
+      "value" : 4
+    }, {
+      "display" : "lE5",
+      "value" : 5
+    }, {
+      "display" : "lE6",
+      "value" : 6
+    }, {
+      "display" : "lE7",
+      "value" : 7
+    }, {
+      "display" : "lE8",
+      "value" : 8
+    }, {
+      "display" : "lE9",
+      "value" : 9
+    }, {
+      "display" : "lE10",
+      "value" : 10
+    }, {
+      "display" : "lE11",
+      "value" : 11
+    }, {
+      "display" : "lE12",
+      "value" : 12
+    }, {
+      "display" : "lE13",
+      "value" : 13
+    } ],
+    "configMin" : null,
+    "configMax" : null,
+    "configMaxLength" : null
+  }, {
+    "key" : "pUR",
+    "valueType" : "number",
+    "defaultValue" : 3,
+    "configTitle" : "spUR",
+    "configPrompt" : null,
+    "configType" : "list",
+    "configError" : null,
+    "configHelpUrl" : null,
+    "configReadonly" : false,
+    "configRequired" : false,
+    "configOptions" : [ {
+      "display" : "lE0",
+      "value" : 0
+    }, {
+      "display" : "lE1",
+      "value" : 1
+    }, {
+      "display" : "lE2",
+      "value" : 2
+    }, {
+      "display" : "lE3",
+      "value" : 3
+    }, {
+      "display" : "lE4",
+      "value" : 4
+    }, {
+      "display" : "lE5",
+      "value" : 5
+    }, {
+      "display" : "lE6",
+      "value" : 6
+    }, {
+      "display" : "lE7",
+      "value" : 7
+    }, {
+      "display" : "lE8",
+      "value" : 8
+    }, {
+      "display" : "lE9",
+      "value" : 9
+    }, {
+      "display" : "lE10",
+      "value" : 10
+    }, {
+      "display" : "lE11",
+      "value" : 11
+    }, {
+      "display" : "lE12",
+      "value" : 12
+    }, {
+      "display" : "lE13",
+      "value" : 13
+    } ],
+    "configMin" : null,
+    "configMax" : null,
+    "configMaxLength" : null
+  }, {
+    "key" : "pRingL",
+    "valueType" : "number",
+    "defaultValue" : 0,
+    "configTitle" : "spRingL",
+    "configPrompt" : null,
+    "configType" : "list",
+    "configError" : null,
+    "configHelpUrl" : null,
+    "configReadonly" : false,
+    "configRequired" : false,
+    "configOptions" : [ {
+      "display" : "lpRingL0",
+      "value" : 0
+    }, {
+      "display" : "lpRingL1",
+      "value" : 1
+    }, {
+      "display" : "lpRingL2",
+      "value" : 2
+    }, {
+      "display" : "lpRingL3",
+      "value" : 3
+    } ],
+    "configMin" : null,
+    "configMax" : null,
+    "configMaxLength" : null
+  }, {
+    "key" : "pRingR",
+    "valueType" : "number",
+    "defaultValue" : 10,
+    "configTitle" : "spRingR",
+    "configPrompt" : null,
+    "configType" : "list",
+    "configError" : null,
+    "configHelpUrl" : null,
+    "configReadonly" : false,
+    "configRequired" : false,
+    "configOptions" : [ {
+      "display" : "lpRingR10",
+      "value" : 10
+    }, {
+      "display" : "lpRingR11",
+      "value" : 11
+    }, {
+      "display" : "lpRingR12",
+      "value" : 12
+    }, {
+      "display" : "lpRingR13",
+      "value" : 13
+    } ],
+    "configMin" : null,
+    "configMax" : null,
+    "configMaxLength" : null
+  }, {
+    "key" : "pVotumRing",
+    "valueType" : "boolean",
+    "defaultValue" : true,
+    "configTitle" : "spVotumRing",
+    "configPrompt" : null,
+    "configType" : "boolean",
+    "configError" : null,
+    "configHelpUrl" : null,
+    "configReadonly" : false,
+    "configRequired" : false,
+    "configOptions" : null,
+    "configMin" : null,
+    "configMax" : null,
+    "configMaxLength" : null
+  }, {
+    "key" : "pSek",
+    "valueType" : "boolean",
+    "defaultValue" : true,
+    "configTitle" : "spSek",
+    "configPrompt" : null,
+    "configType" : "boolean",
+    "configError" : null,
+    "configHelpUrl" : null,
+    "configReadonly" : false,
+    "configRequired" : false,
+    "configOptions" : null,
+    "configMin" : null,
+    "configMax" : null,
+    "configMaxLength" : null
+  }, {
+    "key" : "pErhBB",
+    "valueType" : "boolean",
+    "defaultValue" : true,
+    "configTitle" : "spErhBB",
+    "configPrompt" : null,
+    "configType" : "boolean",
+    "configError" : null,
+    "configHelpUrl" : null,
+    "configReadonly" : false,
+    "configRequired" : false,
+    "configOptions" : null,
+    "configMin" : null,
+    "configMax" : null,
+    "configMaxLength" : null
+  } ],
+  "supportsLiveValidation" : false,
+  "languages" : {
+    "valyrian" : {
+      "spUL" : "Ecke unten links",
+      "lE9" : "Schritte",
+      "spRingR" : "Ring rechts",
+      "lE12" : "Stress",
+      "lE13" : "leer",
+      "lE10" : "Woche (Ist/Budget)",
+      "lE11" : "Erholungszeit",
+      "AppName" : "Coach Kira",
+      "spOL" : "Ecke oben links",
+      "spUR" : "Ecke unten rechts",
+      "lpRingR10" : "Tageslast + Woche",
+      "lpRingR11" : "Woche gegen Budget",
+      "lpRingR12" : "ACWR",
+      "lpRingL1" : "Body Battery",
+      "lpRingL0" : "Trainingsbereitschaft",
+      "lpRingL3" : "Tourform",
+      "lpRingL2" : "Schlafscore",
+      "lpRingR13" : "Tourform",
+      "spErhBB" : "Mitte unten: Erholung und Body Battery",
+      "spSek" : "Sekunden anzeigen",
+      "spOR" : "Ecke oben rechts",
+      "lE0" : "Temperatur",
+      "lE2" : "Wind",
+      "spVotumRing" : "Votum-Ring am Rand",
+      "lE1" : "Ausdauerwert",
+      "lE4" : "ACWR",
+      "lE3" : "Plan heute",
+      "lE6" : "Body Battery",
+      "lE5" : "Tourform",
+      "lE8" : "Herzfrequenz",
+      "lE7" : "Schlafscore",
+      "spRingL" : "Ring links"
+    }
+  }
+}

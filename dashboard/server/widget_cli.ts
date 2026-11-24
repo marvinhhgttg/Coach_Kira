@@ -337,6 +337,8 @@ async function feldTeil(rahmen: any, t: RecoveryDay | null) {
     datum: iso(), vote: t?.vote ?? null, label: t?.vote ? VOTE_LABEL[t.vote] : '–',
     min: rahmen ? rahmen.min : null, max: rahmen ? rahmen.max : null, raten,
     // 23.11.2026: ESS heute schon gespeicherter Einheiten – das Datenfeld rechnet Tagesstand = vorher + laufend
+    // 24.11.2026: für die Datenfeld-Einstellungen (Zeile frei wählbar)
+    acwr: (t as any)?.acwr != null ? Math.round((t as any).acwr * 100) / 100 : null, bereit: (t as any)?.readiness ?? null,
     vorher: Math.round(((g.get(iso())?.akt || []) as any[]).reduce((a: number, x: any) => a + ((x.last || 0) > 0 ? x.last : 0), 0)),
     n: Object.fromEntries(Object.entries(pro).map(([k, v]) => [k, v.length])),
   };
@@ -352,7 +354,7 @@ async function uhrTeil(rahmen: any) {
   const b = await baenderLaden();
   // Last 14 Tage mit Rahmen je Tag
   const l14: any = { von: null as string | null, ist: [] as number[], lo: [] as number[], hi: [] as number[] };
-  const ab = Math.max(1, days.length - 14);
+  const ab = Math.max(1, days.length - 28);   // 24.11.2026: 28 Tage, Uhr kürzt nach Einstellung
   for (let i = ab; i < days.length; i++) {
     const d = days[i];
     const e = lastEmpfehlung(d, days[i - 1], b);
@@ -362,7 +364,7 @@ async function uhrTeil(rahmen: any) {
     l14.hi.push(e ? e.max : -1);
   }
   // Morgenwerte 7 Tage
-  const m = days.slice(-7);
+  const m = days.slice(-14);   // 24.11.2026: 14 Tage, Uhr kürzt nach Einstellung
   const m7 = {
     rd: m.map((d) => d.readiness ?? -1), hrv: m.map((d) => d.hrv ?? -1), rhr: m.map((d) => d.rhr ?? -1), sl: m.map((d) => d.sleepScore ?? -1),
     // 23.11.2026: Bereitschaft im Garmin-Muster (R <25 · O <50 · G <75 · b <95 · v Optimal)
@@ -377,7 +379,7 @@ async function uhrTeil(rahmen: any) {
     const reihe = (k: string, n: number) => rows.slice(-n).map((x: any) => { const v = num(x[k]); return v == null || v <= 0 ? -1 : Math.round(v); });
     const es = reihe('garminEnduranceScore', 90).filter((_: number, i: number, a: number[]) => (a.length - 1 - i) % 3 === 0);
     const reihe2 = (post: string, morgen: string, n: number) => rows.slice(-n).map((x: any) => { const v = neuWert(x, post, morgen); return v == null ? -1 : Math.round(v); });
-    form = { ctl: reihe2('fbCTL_obs', 'garminCTL', 42), atl: reihe2('fbATL_obs', 'garminATL', 42), es };
+    form = { ctl: reihe2('fbCTL_obs', 'garminCTL', 90), atl: reihe2('fbATL_obs', 'garminATL', 90), es };   // 24.11.2026: 90 Tage
   } catch {}
   // Letzte Einheit
   let letzte: any = null;
