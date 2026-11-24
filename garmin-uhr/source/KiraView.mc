@@ -242,6 +242,12 @@ class KiraView extends WatchUi.View {
         var label = KiraHilfen.feld(d, "votum", "label");
         y = zeile(dc, y, Graphics.FONT_LARGE, label == null ? "-" : label.toString().toUpper(), farbe);
         var txt = KiraHilfen.feld(d, "votum", "text");
+        // 24.11.2026: vorläufiges Votum aus Garmin-Livewerten (Sheet-Morgenwerte fehlen noch)
+        var vl = KiraHilfen.feld(d, "votum", "vorlaeufig");
+        if (vl == true) {
+            y = zeile(dc, y, Graphics.FONT_XTINY, "VORLÄUFIG · GARMIN LIVE", 0xE5822F);
+            if (txt != null) { var tt = txt.toString(); var k = tt.find(": "); if (k != null) { txt = tt.substring(k + 2, tt.length()); } }
+        }
         if (txt != null) { y = zeile(dc, y, Graphics.FONT_SMALL, txt.toString(), Graphics.COLOR_WHITE); }
         var gr = KiraHilfen.feld(d, "votum", "gruende");
         if (gr instanceof Array && gr.size() > 0) {

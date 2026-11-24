@@ -370,7 +370,7 @@ class KiraZeiger extends WatchUi.WatchFace {
         dc.drawText(cx, (h * 0.072).toNumber(), fKopf, st.battery.toNumber().toString() + "%" + (tage != null ? " · " + tage.toString() + "T" : ""), Graphics.TEXT_JUSTIFY_CENTER);
         var vf = heute && VOTE_FARBE.hasKey(vote) ? VOTE_FARBE.get(vote) as Number : GRAU;
         dc.setColor(vf, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, (h * 0.135).toNumber(), fKopf, kira == null ? (kiraId == null ? "KIRA · APP ÖFFNEN" : "KIRA · WARTET") : "KIRA · " + (vote.length() > 0 ? vote : "-") + (heute ? "" : " (ALT)"), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, (h * 0.135).toNumber(), fKopf, kira == null ? (kiraId == null ? "KIRA · APP ÖFFNEN" : "KIRA · WARTET") : "KIRA · " + (vote.length() > 0 ? vote : "-") + (heute && feld(t, 17).equals("1") ? "*" : "") + (heute ? "" : " (ALT)"), Graphics.TEXT_JUSTIFY_CENTER);
 
         // Seitenwerte (wie digital)
         var temp = "-";

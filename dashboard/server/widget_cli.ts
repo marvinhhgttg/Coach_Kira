@@ -35,6 +35,37 @@ const num = (v: unknown) => {
 const STATUS_TEXT: Record<string, string> = { QUALITY: 'Qualität möglich', TRAIN: 'normal trainieren', EASY: 'locker trainieren', REST: 'Erholung priorisieren' };
 
 let tageMerk: RecoveryDay[] = [];
+// 24.11.2026: Garmin-Livewerte vom Mac (vom Server per Umgebung übergeben, nur heute und höchstens 3 h alt)
+const LIVE: any = (() => {
+  try {
+    const w = JSON.parse(process.env.CK_LIVE || 'null');
+    if (!w || w.datum !== iso() || Date.now() - Number(w.at) > 3 * 3600 * 1000) return null;
+    return w;
+  } catch { return null; }
+})();
+const liveSumme = (): number => (LIVE && Array.isArray(LIVE.akt) ? Math.round(LIVE.akt.reduce((s: number, x: any) => s + (Number(x.last) > 0 ? Number(x.last) : 0), 0)) : 0);
+let vorlaeufig = false;
+/** Stufe 1: fehlen die Morgenwerte im Sheet, setzt Kira die Garmin-Livewerte für heute ein (vorläufig, Sheet hat Vorrang). */
+function mitLiveMorgen(rows: any[], heute: string): any[] {
+  if (!LIVE) return rows;
+  if (process.env.CK_TEST_OHNE_MORGEN === '1') rows = rows.map((r: any) => (String(r?.date || '').slice(0, 10) === heute ? { ...r, Garmin_Training_Readiness: null, rhr_bpm: null, sleep_hours: null, sleep_score_0_100: null, hrv_status: null, hrv_threshholds: null } : r));
+  const hatMorgen = (r: any) => r && [r.Garmin_Training_Readiness, r.rhr_bpm, r.sleep_hours].some((v) => num(v) != null && (num(v) as number) > 0);
+  const i = rows.findIndex((r: any) => String(r?.date || '').slice(0, 10) === heute);
+  if (i >= 0 && hatMorgen(rows[i])) return rows;
+  const liveMorgen = [LIVE.tr, LIVE.rhr, LIVE.schlafH].some((v: any) => v != null);
+  if (!liveMorgen) return rows;
+  const z: any = { ...(i >= 0 ? rows[i] : { date: heute }) };
+  if (LIVE.tr != null) z.Garmin_Training_Readiness = LIVE.tr;
+  if (LIVE.rhr != null) z.rhr_bpm = LIVE.rhr;
+  if (LIVE.schlafH != null) z.sleep_hours = LIVE.schlafH;
+  if (LIVE.schlafScore != null) z.sleep_score_0_100 = LIVE.schlafScore;
+  if (LIVE.hrv != null) z.hrv_status = LIVE.hrv;
+  if (LIVE.hrvLo != null && LIVE.hrvHi != null) z.hrv_threshholds = `${LIVE.hrvLo};${LIVE.hrvHi}`;
+  vorlaeufig = true;
+  const out = rows.slice();
+  if (i >= 0) out[i] = z; else out.push(z);
+  return out;
+}
 let plan7Merk: { start: string; ess: number[]; atl: number[]; ctl: number[]; acwr: number[] } | null = null;
 // 23.11.2026: neuester Garmin-Wert eines Tages: nach Aktivität (fb…_obs) vor Morgenwert (garmin…)
 const neuWert = (r: any, post: string, morgen: string): number | null => {
@@ -49,7 +80,7 @@ async function heuteTeil() {
   // wie Heute-Seite: Span 14 Tage + 28 Tage Vorlauf, mindestens 90 Tage
   // fb_TR_obs = laufend synchronisierte Trainingsbereitschaft (nach Aktivität), Garmin_Training_Readiness = Morgenwert
   const res: any = await fetchChartData(rangeFor(14, 28, 90), [...RECOVERY_FETCH_METRICS, 'fb_TR_obs', 'fbACWR_obs', 'garminACWR'] as any);
-  const days: RecoveryDay[] = buildDays(res.data || []).filter((d) => d.date <= heute);
+  const days: RecoveryDay[] = buildDays(mitLiveMorgen(res.data || [], heute)).filter((d) => d.date <= heute);
   const acwrJetzt = (() => { const r = (res.data || []).find((x: any) => String(x.date).slice(0, 10) === heute); return neuWert(r, 'fbACWR_obs', 'garminACWR'); })();
   const trJetzt = (() => { const r = (res.data || []).find((x: any) => String(x.date).slice(0, 10) === heute); const v = r ? num(r.fb_TR_obs) : null; return v != null && v > 0 ? v : null; })();
   tageMerk = days;
@@ -71,6 +102,12 @@ async function heuteTeil() {
     if (t && t.atlPost != null && t.ctlPost != null && naechste.length) {
       let atl = t.atlPost, ctl = t.ctlPost;
       const loads = days.map((d) => d.essDay ?? 0);
+      // Stufe 2: heute schon trainiert → Start bei Garmins Live-ATL/CTL nach der Einheit, heutige Last aus den Live-Einheiten
+      const ls = liveSumme();
+      if (LIVE && ls > 0 && LIVE.atl != null && LIVE.ctl != null) {
+        atl = Number(LIVE.atl); ctl = Number(LIVE.ctl);
+        if (loads.length) loads[loads.length - 1] = Math.max(loads[loads.length - 1], ls);
+      }
       const p7 = { start: naechste[0].d, ess: [] as number[], atl: [] as number[], ctl: [] as number[], acwr: [] as number[] };
       for (const x of naechste.slice(0, 7)) {
         const l = x.ess ?? 0;
@@ -99,11 +136,12 @@ async function heuteTeil() {
     datum: heute,
     woche: wocheTeil,
     votum: t?.vote
-      ? { stufe: VOTE_LEVEL[t.vote], vote: t.vote, label: VOTE_LABEL[t.vote], text: STATUS_TEXT[t.vote], gruende: t.reasons.slice(0, 3) }
+      ? { stufe: VOTE_LEVEL[t.vote], vote: t.vote, label: VOTE_LABEL[t.vote], text: (vorlaeufig ? 'Vorläufig (Garmin live): ' : '') + STATUS_TEXT[t.vote], gruende: t.reasons.slice(0, 3), vorlaeufig, quelle: vorlaeufig ? 'garmin live' : 'sheet' }
       : { stufe: 'grau', vote: null, label: '–', text: t ? 'Morgenwerte fehlen' : 'noch keine Daten für heute', gruende: t?.reasons?.slice(0, 1) || [] },
     morgen: t
       ? {
           eingetragen: !!t.hasMorningData,
+          vorlaeufig,
           // 22.11.2026: Anzeige immer der neueste Wert (nach Aktivität), Votum bleibt beim Morgenwert
           readiness: trJetzt ?? t.readiness,
           readinessMorgen: t.readiness,

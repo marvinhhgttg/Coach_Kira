@@ -53,11 +53,34 @@ class KiraApp extends Application.AppBase {
                 Storage.setValue("at", Time.now().value());
                 Storage.deleteValue("fehler");
                 kiraKomplikation(data);
+                takt(data);
             } else if (data.hasKey("fehler")) {
                 Storage.setValue("fehler", data.get("fehler"));
             }
         }
         WatchUi.requestUpdate();
+    }
+
+    // 24.11.2026: Stufe 3 – morgens (5–10 Uhr), bei vorläufigem Votum und bis 2 h nach einer neuen Einheit alle 5 min, sonst alle 15 min
+    function takt(d as Dictionary) as Void {
+        try {
+            var schnell = false;
+            var h = Gregorian.info(Time.now(), Time.FORMAT_SHORT).hour;
+            if (h >= 5 && h < 10) { schnell = true; }
+            var v = d.get("votum");
+            if (v instanceof Dictionary && v.get("vorlaeufig") == true) { schnell = true; }
+            var l = d.get("last");
+            var ist = l instanceof Dictionary && l.get("istHeute") != null ? l.get("istHeute").toNumber() : 0;
+            var alt = Storage.getValue("istAlt");
+            if (alt == null || ist != alt) { Storage.setValue("istAlt", ist); if (alt != null && ist > alt) { Storage.setValue("istNeuAt", Time.now().value()); } }
+            var neu = Storage.getValue("istNeuAt");
+            if (neu != null && Time.now().value() - neu < 2 * 3600) { schnell = true; }
+            var soll = schnell ? 5 * 60 : 15 * 60;
+            if (Storage.getValue("takt") != soll) {
+                Background.registerForTemporalEvent(new Time.Duration(soll));
+                Storage.setValue("takt", soll);
+            }
+        } catch (e) { }
     }
 
     function hintergrundAn() as Void {
@@ -136,7 +159,8 @@ function kiraKomplikation(d as Dictionary) as Void {
             if (wo.get("budget") != null) { wb = wo.get("budget").toNumber().toString(); }
         }
         t = (lab.equals("KIRA") ? "" : lab) + "|" + st + "|" + lo2 + "|" + hi2 + "|" + ist + "|" + (d.get("datum") != null ? d.get("datum").toString() : "") + "|" + zn + "|" + zt + "|" + rd
-            + "|" + pl + "|" + sp + "|" + zo + "|" + es + "|" + es28 + "|" + rz + "|" + wi + "|" + wb;
+            + "|" + pl + "|" + sp + "|" + zo + "|" + es + "|" + es28 + "|" + rz + "|" + wi + "|" + wb
+            + "|" + (v instanceof Dictionary && v.get("vorlaeufig") == true ? "1" : "");
         Complications.updateComplication(1, { :value => t });
         // Lange Texte lehnt die Uhr ab – Diagrammdaten daher kompakt und getrennt (je 1 Zeichen pro Wert)
         try { Complications.updateComplication(2, { :value => sieben(d, l) }); } catch (e2) { }

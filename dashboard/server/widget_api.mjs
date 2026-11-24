@@ -50,7 +50,7 @@ export function setupWidget(app, { getSetting, setSetting, originOk, texte, apps
   function rechnen() {
     if (laufend) return laufend;
     laufend = new Promise((resolve, reject) => {
-      const p = spawn(process.execPath, [KERN], { stdio: ['ignore', 'pipe', 'pipe'] });
+      const p = spawn(process.execPath, [KERN], { stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, CK_LIVE: getSetting('garmin_live') || '' } });
       let out = '';
       let err = '';
       const to = setTimeout(() => p.kill('SIGKILL'), 120000);
@@ -139,6 +139,8 @@ export function setupWidget(app, { getSetting, setSetting, originOk, texte, apps
       return o;
     }
   }
+  // 24.11.2026: Stufe 3 – neue Livewerte vom Mac → sofort neu rechnen (Uhr und Widgets bekommen den Stand beim nächsten Abruf)
+  globalThis.ckWidgetNeu = () => { rechnen().catch(() => {}); };
   async function antwort(frisch = false) {
     return fazit(woche(live(await antwortRoh(frisch))));
   }

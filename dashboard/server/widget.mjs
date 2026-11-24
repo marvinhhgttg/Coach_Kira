@@ -5052,6 +5052,38 @@ var num = (v) => {
 };
 var STATUS_TEXT = { QUALITY: "Qualit\xE4t m\xF6glich", TRAIN: "normal trainieren", EASY: "locker trainieren", REST: "Erholung priorisieren" };
 var tageMerk = [];
+var LIVE = (() => {
+  try {
+    const w = JSON.parse(process.env.CK_LIVE || "null");
+    if (!w || w.datum !== iso() || Date.now() - Number(w.at) > 3 * 3600 * 1e3) return null;
+    return w;
+  } catch {
+    return null;
+  }
+})();
+var liveSumme = () => LIVE && Array.isArray(LIVE.akt) ? Math.round(LIVE.akt.reduce((s, x) => s + (Number(x.last) > 0 ? Number(x.last) : 0), 0)) : 0;
+var vorlaeufig = false;
+function mitLiveMorgen(rows, heute2) {
+  if (!LIVE) return rows;
+  if (process.env.CK_TEST_OHNE_MORGEN === "1") rows = rows.map((r) => String(r?.date || "").slice(0, 10) === heute2 ? { ...r, Garmin_Training_Readiness: null, rhr_bpm: null, sleep_hours: null, sleep_score_0_100: null, hrv_status: null, hrv_threshholds: null } : r);
+  const hatMorgen = (r) => r && [r.Garmin_Training_Readiness, r.rhr_bpm, r.sleep_hours].some((v) => num(v) != null && num(v) > 0);
+  const i = rows.findIndex((r) => String(r?.date || "").slice(0, 10) === heute2);
+  if (i >= 0 && hatMorgen(rows[i])) return rows;
+  const liveMorgen = [LIVE.tr, LIVE.rhr, LIVE.schlafH].some((v) => v != null);
+  if (!liveMorgen) return rows;
+  const z2 = { ...i >= 0 ? rows[i] : { date: heute2 } };
+  if (LIVE.tr != null) z2.Garmin_Training_Readiness = LIVE.tr;
+  if (LIVE.rhr != null) z2.rhr_bpm = LIVE.rhr;
+  if (LIVE.schlafH != null) z2.sleep_hours = LIVE.schlafH;
+  if (LIVE.schlafScore != null) z2.sleep_score_0_100 = LIVE.schlafScore;
+  if (LIVE.hrv != null) z2.hrv_status = LIVE.hrv;
+  if (LIVE.hrvLo != null && LIVE.hrvHi != null) z2.hrv_threshholds = `${LIVE.hrvLo};${LIVE.hrvHi}`;
+  vorlaeufig = true;
+  const out = rows.slice();
+  if (i >= 0) out[i] = z2;
+  else out.push(z2);
+  return out;
+}
 var plan7Merk = null;
 var neuWert = (r, post, morgen) => {
   const p = r ? num(r[post]) : null;
@@ -5062,7 +5094,7 @@ var neuWert = (r, post, morgen) => {
 async function heuteTeil() {
   const heute2 = iso();
   const res = await fetchChartData(rangeFor(14, 28, 90), [...RECOVERY_FETCH_METRICS, "fb_TR_obs", "fbACWR_obs", "garminACWR"]);
-  const days = buildDays(res.data || []).filter((d) => d.date <= heute2);
+  const days = buildDays(mitLiveMorgen(res.data || [], heute2)).filter((d) => d.date <= heute2);
   const acwrJetzt = (() => {
     const r = (res.data || []).find((x) => String(x.date).slice(0, 10) === heute2);
     return neuWert(r, "fbACWR_obs", "garminACWR");
@@ -5087,6 +5119,12 @@ async function heuteTeil() {
     if (t && t.atlPost != null && t.ctlPost != null && naechste.length) {
       let atl = t.atlPost, ctl = t.ctlPost;
       const loads = days.map((d) => d.essDay ?? 0);
+      const ls = liveSumme();
+      if (LIVE && ls > 0 && LIVE.atl != null && LIVE.ctl != null) {
+        atl = Number(LIVE.atl);
+        ctl = Number(LIVE.ctl);
+        if (loads.length) loads[loads.length - 1] = Math.max(loads[loads.length - 1], ls);
+      }
       const p7 = { start: naechste[0].d, ess: [], atl: [], ctl: [], acwr: [] };
       for (const x of naechste.slice(0, 7)) {
         const l = x.ess ?? 0;
@@ -5125,9 +5163,10 @@ async function heuteTeil() {
   return {
     datum: heute2,
     woche: wocheTeil,
-    votum: t?.vote ? { stufe: VOTE_LEVEL[t.vote], vote: t.vote, label: VOTE_LABEL[t.vote], text: STATUS_TEXT[t.vote], gruende: t.reasons.slice(0, 3) } : { stufe: "grau", vote: null, label: "\u2013", text: t ? "Morgenwerte fehlen" : "noch keine Daten f\xFCr heute", gruende: t?.reasons?.slice(0, 1) || [] },
+    votum: t?.vote ? { stufe: VOTE_LEVEL[t.vote], vote: t.vote, label: VOTE_LABEL[t.vote], text: (vorlaeufig ? "Vorl\xE4ufig (Garmin live): " : "") + STATUS_TEXT[t.vote], gruende: t.reasons.slice(0, 3), vorlaeufig, quelle: vorlaeufig ? "garmin live" : "sheet" } : { stufe: "grau", vote: null, label: "\u2013", text: t ? "Morgenwerte fehlen" : "noch keine Daten f\xFCr heute", gruende: t?.reasons?.slice(0, 1) || [] },
     morgen: t ? {
       eingetragen: !!t.hasMorningData,
+      vorlaeufig,
       // 22.11.2026: Anzeige immer der neueste Wert (nach Aktivität), Votum bleibt beim Morgenwert
       readiness: trJetzt ?? t.readiness,
       readinessMorgen: t.readiness,

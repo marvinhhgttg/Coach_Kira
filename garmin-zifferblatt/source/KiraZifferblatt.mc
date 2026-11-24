@@ -325,7 +325,7 @@ class KiraZifferblatt extends WatchUi.WatchFace {
         // Kira-Votum statt Markenname
         var vf = heute && VOTE_FARBE.hasKey(vote) ? VOTE_FARBE.get(vote) as Number : GRAU;
         dc.setColor(vf, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, (h * 0.145).toNumber(), fKopf, kira == null ? (kiraId == null ? "KIRA · APP ÖFFNEN" : "KIRA · WARTET") : "KIRA · " + (vote.length() > 0 ? vote : "-") + (heute ? "" : " (ALT)"), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, (h * 0.145).toNumber(), fKopf, kira == null ? (kiraId == null ? "KIRA · APP ÖFFNEN" : "KIRA · WARTET") : "KIRA · " + (vote.length() > 0 ? vote : "-") + (heute && feld(t, 17).equals("1") ? "*" : "") + (heute ? "" : " (ALT)"), Graphics.TEXT_JUSTIFY_CENTER);
 
         // Uhrzeit: Stunden weiß, Minuten orange (wie fēnix)
         dc.setColor(0xE8E8E8, Graphics.COLOR_TRANSPARENT);

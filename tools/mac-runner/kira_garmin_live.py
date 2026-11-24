@@ -8,6 +8,9 @@ Garmin-Werte und meldet sie an das Cockpit (POST /api/garmin/live, Mac-Schlüsse
   status  Trainingszustand (Garmin-Kürzel)
   es      Ausdauerwert
   erholH  Erholungszeit in Stunden, vo2 VO2max
+  hrv     Herzratenvariabilität (Nachtschnitt), hrvLo/Hi Unter-/Obergrenze, Status
+  schlafScore   Schlafqualität-Score, schlafH Schlafdauer (Stunden)
+  rhr     Ruhepuls, bbAufwachen    Body Battery beim Aufwachen
 
 Nur Anzeige: Uhr, Zifferblätter, iPhone-Widget und Heute-Seite. Die Timeline (Wahrheit) und die
 Garmin-Skills bleiben unverändert; das Votum rechnet weiter mit den Morgenwerten.
@@ -110,6 +113,53 @@ def abrufen(g, tag: str) -> dict:
             w["vo2"] = vo2
     except Exception as e:
         log(f"Trainingszustand: {type(e).__name__}: {str(e)[:120]}")
+        if "429" in str(e):
+            raise
+    # HRV (Herzfrequenzvariabilität)
+    try:
+        h = g.get_hrv_data(tag) or {}
+        w["hrv"] = suche(h, "lastNightAvg")
+        if isinstance(h.get("hrvSummary"), dict):
+            bas = h["hrvSummary"].get("baseline") or {}
+            bl = bas.get("balancedLow")
+            bu = bas.get("balancedUpper")
+        else:
+            bl = bu = None
+        w["hrvLo"] = suche(h, "balancedLow") if bl is None else bl
+        w["hrvHi"] = suche(h, "balancedUpper") if bu is None else bu
+        w["hrvStatus"] = h.get("hrvSummary", {}).get("status") if isinstance(h.get("hrvSummary"), dict) else None
+        w["hrv"] = w.get("hrv") if w.get("hrv") is not None else None
+    except Exception as e:
+        log(f"HRV: {type(e).__name__}: {str(e)[:120]}")
+        if "429" in str(e):
+            raise
+    # Schlaf
+    try:
+        s = g.get_sleep_data(tag) or {}
+        d = s.get("dailySleepDTO") or {}
+        ss = d.get("sleepScores") or {}
+        ov = ss.get("overall") or {}
+        v = ov.get("value")
+        if v is not None:
+            w["schlafScore"] = v
+        st = d.get("sleepTimeSeconds")
+        if st is not None:
+            w["schlafH"] = round(st / 3600, 2)
+    except Exception as e:
+        log(f"Schlaf: {type(e).__name__}: {str(e)[:120]}")
+        if "429" in str(e):
+            raise
+    # Ruhepuls
+    try:
+        u = g.get_user_summary(tag) or {}
+        rhr = u.get("restingHeartRate")
+        if rhr is not None:
+            w["rhr"] = rhr
+        bb = u.get("bodyBatteryAtWakeTime")
+        if bb is not None:
+            w["bbAufwachen"] = bb
+    except Exception as e:
+        log(f"Ruhepuls: {type(e).__name__}: {str(e)[:120]}")
         if "429" in str(e):
             raise
     # Einheiten von heute (für Kiras Fazit nach dem Speichern und den Tagesstand im Datenfeld)

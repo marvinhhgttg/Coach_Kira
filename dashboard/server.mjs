@@ -372,7 +372,7 @@ app.post('/api/garmin/anfrage/status', (req, res) => {
 // Trainingsbereitschaft, akute/chronische Last, ACWR, Trainingszustand und Ausdauerwert und meldet sie hier.
 // Nur für die Anzeige (Uhr, Zifferblätter, Widget, Heute-Seite). Die Timeline bleibt die Wahrheit, das Votum
 // rechnet weiter mit den Morgenwerten.
-const LIVE_FELDER = { tr: [0, 100], atl: [0, 5000], ctl: [0, 5000], acwr: [0, 10], es: [0, 15000], erholH: [0, 200], vo2: [10, 100] };
+const LIVE_FELDER = { tr: [0, 100], atl: [0, 5000], ctl: [0, 5000], acwr: [0, 10], es: [0, 15000], erholH: [0, 200], vo2: [10, 100], hrv: [5, 250], hrvLo: [5, 250], hrvHi: [5, 250], rhr: [25, 120], schlafScore: [0, 100], schlafH: [0, 16], bbAufwachen: [0, 100] };
 app.post('/api/garmin/live', (req, res) => {
   const b = req.body || {};
   const datum = String(b.datum || '');
@@ -382,7 +382,7 @@ app.post('/api/garmin/live', (req, res) => {
     const v = Number(b[k]);
     if (b[k] != null && b[k] !== '' && Number.isFinite(v) && v >= lo && v <= hi) w[k] = Math.round(v * 100) / 100;
   }
-  for (const k of ['trZeit', 'status', 'trStufe']) if (b[k] != null) w[k] = String(b[k]).slice(0, 40);
+  for (const k of ['trZeit', 'status', 'trStufe', 'hrvStatus']) if (b[k] != null) w[k] = String(b[k]).slice(0, 40);
   // Einheiten von heute (Garmin-Liste): id, Start, Name, Minuten, Last
   if (Array.isArray(b.akt)) {
     w.akt = b.akt.slice(0, 8).map((x) => ({
@@ -391,6 +391,7 @@ app.post('/api/garmin/live', (req, res) => {
     })).sort((p, q) => p.start.localeCompare(q.start));
   }
   setSetting('garmin_live', JSON.stringify(w));
+  try { globalThis.ckWidgetNeu?.(); } catch {}
   res.json({ ok: true, gespeichert: Object.keys(w).length - 3 });
 });
 app.get('/api/garmin/live', (req, res) => {
