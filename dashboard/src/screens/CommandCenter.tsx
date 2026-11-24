@@ -8,6 +8,7 @@ import { IST_V2 } from '../lib/v2guard';
 import { GarminNachtTile } from '../components/GarminNachtTile';
 import { GarminGesternTile } from '../components/GarminGesternTile';
 import { SchlafkontoTile } from '../components/SchlafkontoTile';
+import { AutoBanner, AutomatikTile } from '../components/AutomatikTile';
 import { VorausblickTile } from '../components/VorausblickTile';
 import { ErholungsuhrTile } from '../components/ErholungsuhrTile';
 import {
@@ -515,6 +516,7 @@ export function CommandCenter({
 
   return (
     <div>
+      <AutoBanner />
       <RecoveryPanel
         token={token}
         toast={toast}
@@ -659,6 +661,7 @@ export function CommandCenter({
       </StorySection>
 
       <StorySection id="technik" titel="Technik" unter="Letzter Lauf der Auswertung">
+      <div className="mb-4"><AutomatikTile /></div>
       <div className="mb-4"><AppKopplungTile /></div>
       <div className="mb-4"><RechenkernTile /></div>
       <div className="mb-4"><VotumAbgleichTile /></div>

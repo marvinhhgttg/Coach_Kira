@@ -1382,7 +1382,7 @@ def _live_abruf() -> None:
     if not GARMIN_VENV_PY.exists() or not skript.exists():
         return
     try:
-        subprocess.run([str(GARMIN_VENV_PY), str(skript)], timeout=120, capture_output=True)
+        subprocess.run([str(GARMIN_VENV_PY), str(skript)], timeout=270, capture_output=True)  # 24.11.: + Automatik
     except Exception as e:
         log(f"[garmin] live: {type(e).__name__}: {str(e)[:120]}")
 

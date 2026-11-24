@@ -11,6 +11,7 @@ import { setupEinstellungen } from './server/einstellungen.mjs';
 import { setupWochenplan } from './server/wochenplan.mjs';
 import { setupZugang } from './server/zugang.mjs';
 import { setupRechenkern } from './server/rechenkern_api.mjs';
+import { setupAuto } from './server/auto.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 5000);
@@ -149,6 +150,7 @@ async function callAppsScript(params) {
 }
 
 const app = express();
+globalThis.ckStart = Date.now();
 app.set('trust proxy', 1);
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
@@ -466,6 +468,17 @@ const texte = setupTexte(app, { getSetting, setSetting, cloudChat: cloudChatServ
 app.get('/api/instanz', (_req, res) => res.json({ instanz: INSTANZ }));
 setupRechenkern(app, { getSetting, setSetting, aktiv: INSTANZ !== 'live' });
 setupWidget(app, { getSetting, setSetting, originOk: browserOk, texte, appsScript: callAppsScript });
+setupAuto(app, {
+  getSetting, setSetting, macOk: zugang.macOk, callAppsScript, scriptUrl: APPS_SCRIPT_URL, aktiv: !INSTANZ_V2,
+  workouts: garminWorkouts,
+  workoutEinreihen: (datum, workout) => {
+    const xs = garminWorkouts().filter((q) => !(q.datum === datum && !q.doneAt));
+    const a = { id: crypto.randomUUID(), datum, workout, requestedAt: now(), pickedAt: null, doneAt: null, ok: null, result: '', auto: true };
+    xs.push(a);
+    garminWorkoutsSpeichern(xs);
+    return a;
+  },
+});
 setupEinstellungen(app, { getSetting, setSetting });
 setupWochenplan(app, { getSetting, setSetting });
 setupLokalRelay(app, {

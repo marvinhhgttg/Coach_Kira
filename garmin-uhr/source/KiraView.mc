@@ -50,11 +50,20 @@ class KiraNetz {
                 if (u instanceof Dictionary) { Storage.setValue("u", u); Storage.setValue("uDatum", data.get("datum")); data.remove("uhr"); }
                 Storage.setValue("d", data);
                 Storage.setValue("at", Time.now().value());
+                Storage.deleteValue("t401");
                 kiraKomplikation(data);
                 status = null;
             } else if (rc == 401) {
-                Storage.deleteValue("tok");
-                status = "Kopplung widerrufen";
+                // 24.11.2026: nach einem Server-Neustart stellt der Mac die Kopplung wieder her – Schlüssel erst nach 48 h verwerfen
+                var erst = Storage.getValue("t401");
+                if (erst == null) { Storage.setValue("t401", Time.now().value()); erst = Time.now().value(); }
+                if (Time.now().value() - (erst as Number) > 48 * 3600) {
+                    Storage.deleteValue("tok");
+                    Storage.deleteValue("t401");
+                    status = "Kopplung widerrufen";
+                } else {
+                    status = "Server neu - Kopplung kommt zurück";
+                }
             } else {
                 status = rc < 0 ? "Kein Netz (" + rc.toString() + ")" : "Server " + rc.toString();
             }
@@ -148,6 +157,35 @@ class KiraNetz {
             laden();   // Votum mit Befinden neu holen
         } else {
             status = rc < 0 ? "Kein Netz (" + rc.toString() + ")" : "Befinden: Server " + rc.toString();
+        }
+        WatchUi.requestUpdate();
+    }
+
+    // 24.11.2026: Plan-Vorschlag auf der Uhr übernehmen oder verwerfen
+    function vorschlag(annehmen as Boolean) as Void {
+        var tok = Storage.getValue("tok");
+        var d = Storage.getValue("d");
+        if (tok == null || !(d instanceof Dictionary)) { return; }
+        var v = d.get("vorschlag");
+        if (!(v instanceof Dictionary)) { return; }
+        status = annehmen ? "Plan wird angepasst ..." : "verwirft ...";
+        WatchUi.requestUpdate();
+        Communications.makeWebRequest(KIRA_BASIS + "/api/widget/aktion", { "aktion" => annehmen ? "plan_annehmen" : "plan_verwerfen", "id" => v.get("id") },
+            {
+                :method => Communications.HTTP_REQUEST_METHOD_POST,
+                :headers => { "Authorization" => "Bearer " + tok, "Content-Type" => Communications.REQUEST_CONTENT_TYPE_JSON },
+                :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
+            },
+            method(:vorschlagFertig));
+    }
+
+    function vorschlagFertig(rc as Number, data as Null or ByteArray or Dictionary or String or PersistedContent.Iterator) as Void {
+        if (rc == 200) {
+            status = data instanceof Dictionary && data.get("text") != null ? data.get("text").toString() : null;
+            laden();
+        } else {
+            var t = data instanceof Dictionary && data.get("error") != null ? data.get("error").toString() : "Server " + rc.toString();
+            status = rc < 0 ? "Kein Netz (" + rc.toString() + ")" : t;
         }
         WatchUi.requestUpdate();
     }

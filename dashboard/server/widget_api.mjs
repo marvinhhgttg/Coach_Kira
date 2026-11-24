@@ -141,6 +141,8 @@ export function setupWidget(app, { getSetting, setSetting, originOk, texte, apps
   }
   // 24.11.2026: Stufe 3 – neue Livewerte vom Mac → sofort neu rechnen (Uhr und Widgets bekommen den Stand beim nächsten Abruf)
   globalThis.ckWidgetNeu = () => { rechnen().catch(() => {}); };
+  // 24.11.2026: Automatik (server/auto.mjs) liest denselben Stand wie Uhr und Widgets
+  globalThis.ckWidgetAntwort = (frisch = false) => antwort(frisch);
   async function antwort(frisch = false) {
     return fazit(woche(live(await antwortRoh(frisch))));
   }
@@ -171,7 +173,13 @@ export function setupWidget(app, { getSetting, setSetting, originOk, texte, apps
         const naechste = (a.naechste || []).map((x) => (lang.has(x.d) ? { ...x, langH: lang.get(x.d) } : x));
         // 22.11.2026: Diagramme nur im Vordergrund (?mehr=1) – der Hintergrunddienst bleibt unter 8 KB
         const mehr = req.query.mehr === '1' && u ? { uhr: { l14: u.l14, m7: u.m7, form: u.form, letzte: u.letzte, plan7: u.plan7 || null } } : {};
-        return res.json({ ...rest, naechste: req.query.mehr === '1' ? naechste : naechste.slice(0, 4), votum: a.votum ? { ...a.votum, gruende: (a.votum.gruende || []).slice(0, 2) } : null, ...mehr });
+        // 24.11.2026: Hinweise (einmal je id auf der Uhr) und Plan-Vorschlag (Uhr-Menü: übernehmen/verwerfen)
+        let hinw = [];
+        try { hinw = (globalThis.ckHinweise?.(a, 'uhr') || []).slice(0, 3).map(({ id, titel, text }) => ({ id, titel, text })); } catch {}
+        const st = globalThis.ckVorschlag?.status?.() || {};
+        const pv = a.planVorschlag && st.id !== a.planVorschlag.id ? { id: a.planVorschlag.id, text: a.planVorschlag.aenderungen.map((x) => `${x.d.slice(8, 10)}.${x.d.slice(5, 7)}. ${x.alt}>${x.neu}`).join(' · '), max: a.planVorschlag.maxNeu } : null;
+        const { planVorschlag: _pv, schlaf: _sl, ...rest2 } = rest;
+        return res.json({ ...rest2, naechste: req.query.mehr === '1' ? naechste : naechste.slice(0, 4), votum: a.votum ? { ...a.votum, gruende: (a.votum.gruende || []).slice(0, 2) } : null, hinweise: hinw, vorschlag: pv, ...mehr });
       }
       const { uhr: _u, ...ohneUhr } = a;
       res.json(ohneUhr);
@@ -308,6 +316,14 @@ export function setupWidget(app, { getSetting, setSetting, originOk, texte, apps
         schreiben('garmin_anfrage', a);
       }
       return res.json({ ok: true, text: 'Garmin-Abruf an den Mac gegeben.' });
+    }
+    if (aktion === 'plan_annehmen' || aktion === 'plan_verwerfen') {
+      const id = String((req.body || {}).id || '');
+      const v = globalThis.ckVorschlag;
+      if (!v) return res.status(503).json({ ok: false, error: 'Automatik nicht aktiv.' });
+      return Promise.resolve(aktion === 'plan_annehmen' ? v.annehmen(id) : v.verwerfen(id))
+        .then((r) => res.status(r.ok ? 200 : 409).json(r))
+        .catch((e) => res.status(502).json({ ok: false, error: String(e.message || e) }));
     }
     if (aktion === 'briefing_lokal') {
       const [code, body] = texte.auftragStarten({ art: 'status', engine: 'local' });

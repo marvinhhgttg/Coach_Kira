@@ -16,7 +16,7 @@ Nur Anzeige: Uhr, Zifferblätter, iPhone-Widget und Heute-Seite. Die Timeline (W
 Garmin-Skills bleiben unverändert; das Votum rechnet weiter mit den Morgenwerten.
 Ausnahme von der Projektregel „kein Ersatz-Workflow liest Garmin Connect“ – von Marc am 23.11.2026 freigegeben.
 
-  kira_garmin_live.py          Abruf + Meldung (nachts 00:00–04:29 still)
+  kira_garmin_live.py          Abruf + Meldung (nachts 00:00–04:29 still), danach kira_auto.lauf (Automatik)
   kira_garmin_live.py --test   nur anzeigen, nichts melden
 """
 from __future__ import annotations
@@ -87,6 +87,10 @@ def abrufen(g, tag: str) -> dict:
             tr = [tr]
         tr = [x for x in tr if isinstance(x, dict) and x.get("score") is not None]
         if tr:
+            # 24.11.2026: Morgenwert (erste Momentaufnahme des Tages) für den automatischen Morgeneintrag
+            m0 = min(tr, key=lambda x: str(x.get("timestampLocal") or x.get("timestamp") or ""))
+            w["trMorgen"] = m0.get("score")
+            w["trMorgenZeit"] = str(m0.get("timestampLocal") or m0.get("timestamp") or "")[11:16]
             x = max(tr, key=lambda x: str(x.get("timestampLocal") or x.get("timestamp") or ""))
             w["tr"] = x.get("score")
             w["trZeit"] = str(x.get("timestampLocal") or x.get("timestamp") or "")[11:16]
@@ -128,6 +132,8 @@ def abrufen(g, tag: str) -> dict:
         w["hrvLo"] = suche(h, "balancedLow") if bl is None else bl
         w["hrvHi"] = suche(h, "balancedUpper") if bu is None else bu
         w["hrvStatus"] = h.get("hrvSummary", {}).get("status") if isinstance(h.get("hrvSummary"), dict) else None
+        # 24.11.2026: 7-Tage-Schnitt (Formularspalte hrv_status laut Skill)
+        w["hrv7"] = h.get("hrvSummary", {}).get("weeklyAvg") if isinstance(h.get("hrvSummary"), dict) else None
         w["hrv"] = w.get("hrv") if w.get("hrv") is not None else None
     except Exception as e:
         log(f"HRV: {type(e).__name__}: {str(e)[:120]}")
@@ -169,6 +175,7 @@ def abrufen(g, tag: str) -> dict:
             "id": x.get("activityId"), "start": str(x.get("startTimeLocal") or "")[:19],
             "name": x.get("activityName") or "", "typ": (x.get("activityType") or {}).get("typeKey") or "",
             "min": round(float(x.get("duration") or 0) / 60.0), "last": round(float(x.get("activityTrainingLoad") or 0)),
+            "teAe": x.get("aerobicTrainingEffect"), "teAn": x.get("anaerobicTrainingEffect"),
         } for x in akt[:8] if isinstance(x, dict)]
     except Exception as e:
         log(f"Einheiten: {type(e).__name__}: {str(e)[:120]}")
@@ -204,11 +211,17 @@ def main() -> None:
             return
         if s.get("pause_bis") and time.time() < float(s["pause_bis"]):
             return
+        # 24.11.2026: Takt 5 min (LaunchAgent 300 s) nur morgens 5–10 Uhr, bis 2 h nach einer neuen Einheit und 21–22 Uhr,
+        # sonst höchstens alle 10 min – schont Garmins Abrufgrenzen
+        schnell = 5 <= jetzt.hour < 10 or 21 <= jetzt.hour < 22 or time.time() - float(s.get("akt_neu_at") or 0) < 2 * 3600
+        if not schnell and time.time() - float(s.get("abruf_at") or 0) < 9.5 * 60:
+            return
     from garminconnect import Garmin
 
     g = Garmin()
     g.login(str(TOKENS))
     tag = jetzt.date().isoformat()
+    s["abruf_at"] = time.time()
     try:
         w = abrufen(g, tag)
     except Exception as e:
@@ -227,6 +240,23 @@ def main() -> None:
         log("gemeldet " + " ".join(f"{k}={w[k]}" for k in ("tr", "trZeit", "atl", "ctl", "acwr", "es", "status") if k in w) + f" akt={len(w.get('akt') or [])}")
     except Exception as e:
         log(f"Meldung fehlgeschlagen: {type(e).__name__}: {str(e)[:150]}")
+    # neue Einheit → 2 h schneller Takt
+    ids = ",".join(sorted(str(a.get("id")) for a in (w.get("akt") or [])))
+    if ids and ids != s.get("akt_ids"):
+        s["akt_neu_at"] = time.time()
+    s["akt_ids"] = ids
+    try:
+        STATE.write_text(json.dumps(s, ensure_ascii=False))
+    except Exception:
+        pass
+    # 24.11.2026: Automatik (Formular, Sicherung, Hinweise, Workout, Wächter) – darf den Live-Abruf nie stören
+    try:
+        sys.path.insert(0, str(BASE))
+        import kira_auto
+
+        kira_auto.lauf(g, tag, w)
+    except Exception as e:
+        log(f"Automatik: {type(e).__name__}: {str(e)[:150]}")
 
 
 if __name__ == "__main__":

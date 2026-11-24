@@ -15,6 +15,7 @@ import { fetchGarminTage } from '../src/lib/garmin';
 import { lerneModelle } from '../src/lib/essRechner';
 import { atlStep, ctlStep, windowMean } from '../src/kern/formeln';
 import { eigeneBergtouren, eigeneSkitouren, setzeGarminTage, tourLastPersoenlich } from '../src/lib/tourEss';
+import { ladeP3, schlafKonto } from '../src/lib/paket3';
 
 // 22.11.2026: persönliche Soll-Obergrenzen aus der ganzen Historie (wie Cockpit)
 let baenderJetzt: Baender | null = null;
@@ -67,6 +68,9 @@ function mitLiveMorgen(rows: any[], heute: string): any[] {
   return out;
 }
 let plan7Merk: { start: string; ess: number[]; atl: number[]; ctl: number[]; acwr: number[] } | null = null;
+// 24.11.2026: Auto-Plancheck – verlässt die ACWR-Prognose den Korridor (> 1,50), schlägt Kira kleinere Lasten vor
+let vorschlagMerk: any = null;
+const ACWR_GRENZE = 1.5;
 // 23.11.2026: neuester Garmin-Wert eines Tages: nach Aktivität (fb…_obs) vor Morgenwert (garmin…)
 const neuWert = (r: any, post: string, morgen: string): number | null => {
   const p = r ? num(r[post]) : null;
@@ -74,6 +78,24 @@ const neuWert = (r: any, post: string, morgen: string): number | null => {
   const m = r ? num(r[morgen]) : null;
   return m != null && m > 0 ? m : null;
 };
+
+/** 24.11.2026: „Licht aus“ wie Schlafkonto-Kachel (Aufstehzeit − Bedarf − 15 min) – nur abends gerechnet. */
+async function lichtAus(): Promise<{ lichtAus: string; bedarfH: number; aufstehen: string } | null> {
+  try {
+    const h = Number(new Date().toLocaleString('en-GB', { timeZone: 'Europe/Berlin', hour: '2-digit', hour12: false }));
+    if (!(h >= 17) && process.env.CK_TEST_ABEND !== '1') return null;
+    const t = await ladeP3();
+    const k = schlafKonto(t, t.length ? t[t.length - 1].load ?? null : null);
+    const morgen = new Date(Date.now() + 86400000);
+    const wd = new Date(morgen.toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' }) + 'T12:00:00Z').getUTCDay();
+    const auf = /^\d{2}:\d{2}$/.test(process.env.CK_AUFSTEHEN || '') ? String(process.env.CK_AUFSTEHEN) : wd === 0 || wd === 6 ? '07:30' : '06:15';
+    const [ah, am] = auf.split(':').map(Number);
+    const m = ((Math.round(ah * 60 + am - k.bedarfH * 60 - 15) % 1440) + 1440) % 1440;
+    return { lichtAus: `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`, bedarfH: Math.round(k.bedarfH * 100) / 100, aufstehen: auf };
+  } catch {
+    return null;
+  }
+}
 
 async function heuteTeil() {
   const heute = iso();
@@ -87,6 +109,7 @@ async function heuteTeil() {
   const t = days.length && days[days.length - 1].date === heute ? days[days.length - 1] : null;
   let plan: any = null;
   let naechste: { d: string; ess: number | null; sport: string; zone: string }[] = [];
+  let sperre: boolean[] = [];
   try {
     const sim: any = await fetchPlanSimulationWithTimeout(45000);
     plan = sim?.ok ? (sim.days || []).find((x: any) => String(x.date).slice(0, 10) === heute) || null : null;
@@ -96,6 +119,7 @@ async function heuteTeil() {
         .filter((x: any) => String(x.date).slice(0, 10) > heute)
         .slice(0, 7)
         .map((x: any) => ({ d: String(x.date).slice(0, 10), ess: num(x.sim_load ?? x.load), sport: String(x.sport || ''), zone: String(x.zone || '') }));
+    if (sim?.ok) sperre = (sim.days || []).filter((x: any) => String(x.date).slice(0, 10) > heute).slice(0, 7).map((x: any) => !!x.locked);
   } catch {}
   // 23.11.2026: Plan der nächsten 7 Tage mit ATL/CTL-Prognose (Kiras Formel ab Stand Ende heute, wie Ausblick im Cockpit)
   try {
@@ -108,15 +132,47 @@ async function heuteTeil() {
         atl = Number(LIVE.atl); ctl = Number(LIVE.ctl);
         if (loads.length) loads[loads.length - 1] = Math.max(loads[loads.length - 1], ls);
       }
-      const p7 = { start: naechste[0].d, ess: [] as number[], atl: [] as number[], ctl: [] as number[], acwr: [] as number[] };
-      for (const x of naechste.slice(0, 7)) {
-        const l = x.ess ?? 0;
-        loads.push(l);
-        atl = atlStep(atl, l);
-        ctl = ctlStep(ctl, l, windowMean(loads));
-        p7.ess.push(Math.round(l)); p7.atl.push(Math.round(atl)); p7.ctl.push(Math.round(ctl)); p7.acwr.push(ctl > 0 ? Math.round((atl / ctl) * 100) / 100 : 0);
-      }
+      const sim7 = (ess: number[]) => {
+        let a = atl, c = ctl;
+        const ls = loads.slice();
+        const o = { atl: [] as number[], ctl: [] as number[], acwr: [] as number[] };
+        for (const l of ess) {
+          ls.push(l);
+          a = atlStep(a, l);
+          c = ctlStep(c, l, windowMean(ls));
+          o.atl.push(Math.round(a)); o.ctl.push(Math.round(c)); o.acwr.push(c > 0 ? Math.round((a / c) * 100) / 100 : 0);
+        }
+        return o;
+      };
+      const ess7 = naechste.slice(0, 7).map((x) => Math.round(x.ess ?? 0));
+      const r7 = sim7(ess7);
+      const p7 = { start: naechste[0].d, ess: ess7, atl: r7.atl, ctl: r7.ctl, acwr: r7.acwr };
       plan7Merk = p7;
+      try {
+        const maxAlt = Math.max(...r7.acwr);
+        if (maxAlt > ACWR_GRENZE) {
+          const neu = ess7.slice();
+          let r = r7, n = 0;
+          while (Math.max(...r.acwr) > ACWR_GRENZE && n < 80) {
+            const k = r.acwr.findIndex((a) => a > ACWR_GRENZE);
+            let best = -1;
+            for (let i = 0; i <= k; i++) if (!sperre[i] && neu[i] > 0 && (best < 0 || neu[i] > neu[best])) best = i;
+            if (best < 0) break;
+            neu[best] = Math.max(0, neu[best] - 10);
+            r = sim7(neu);
+            n++;
+          }
+          const aenderungen = neu.map((v, i) => ({ d: naechste[i].d, sport: naechste[i].sport, zone: naechste[i].zone, alt: ess7[i], neu: v })).filter((x) => x.neu !== x.alt);
+          if (aenderungen.length) {
+            const kAlt = r7.acwr.indexOf(maxAlt);
+            vorschlagMerk = {
+              id: aenderungen.map((x) => `${x.d}:${x.alt}>${x.neu}`).join(','),
+              grenze: ACWR_GRENZE, maxAlt, tagAlt: naechste[kAlt].d, maxNeu: Math.max(...r.acwr), erreicht: Math.max(...r.acwr) <= ACWR_GRENZE,
+              aenderungen, essNeu: neu, acwrNeu: r.acwr,
+            };
+          }
+        }
+      } catch {}
     }
   } catch {}
   // 22.11.2026: Soll = Soll-Rahmen des Kerns (wie „Empfehlung heute“ im Cockpit), Plan getrennt
@@ -176,6 +232,8 @@ async function heuteTeil() {
       woche,
     },
     naechste,
+    planVorschlag: vorschlagMerk,
+    schlaf: await lichtAus(),
     _rahmen: rahmen,
   };
 }

@@ -24,9 +24,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// ../node_modules/react/cjs/react.production.min.js
+// node_modules/react/cjs/react.production.min.js
 var require_react_production_min = __commonJS({
-  "../node_modules/react/cjs/react.production.min.js"(exports) {
+  "node_modules/react/cjs/react.production.min.js"(exports) {
     "use strict";
     var l = Symbol.for("react.element");
     var n = Symbol.for("react.portal");
@@ -297,9 +297,9 @@ var require_react_production_min = __commonJS({
   }
 });
 
-// ../node_modules/react/cjs/react.development.js
+// node_modules/react/cjs/react.development.js
 var require_react_development = __commonJS({
-  "../node_modules/react/cjs/react.development.js"(exports, module) {
+  "node_modules/react/cjs/react.development.js"(exports, module) {
     "use strict";
     if (process.env.NODE_ENV !== "production") {
       (function() {
@@ -2171,9 +2171,9 @@ var require_react_development = __commonJS({
   }
 });
 
-// ../node_modules/react/index.js
+// node_modules/react/index.js
 var require_react = __commonJS({
-  "../node_modules/react/index.js"(exports, module) {
+  "node_modules/react/index.js"(exports, module) {
     "use strict";
     if (process.env.NODE_ENV === "production") {
       module.exports = require_react_production_min();
@@ -2183,9 +2183,9 @@ var require_react = __commonJS({
   }
 });
 
-// ../node_modules/react/cjs/react-jsx-runtime.production.min.js
+// node_modules/react/cjs/react-jsx-runtime.production.min.js
 var require_react_jsx_runtime_production_min = __commonJS({
-  "../node_modules/react/cjs/react-jsx-runtime.production.min.js"(exports) {
+  "node_modules/react/cjs/react-jsx-runtime.production.min.js"(exports) {
     "use strict";
     var f3 = require_react();
     var k = Symbol.for("react.element");
@@ -2208,9 +2208,9 @@ var require_react_jsx_runtime_production_min = __commonJS({
   }
 });
 
-// ../node_modules/react/cjs/react-jsx-runtime.development.js
+// node_modules/react/cjs/react-jsx-runtime.development.js
 var require_react_jsx_runtime_development = __commonJS({
-  "../node_modules/react/cjs/react-jsx-runtime.development.js"(exports) {
+  "node_modules/react/cjs/react-jsx-runtime.development.js"(exports) {
     "use strict";
     if (process.env.NODE_ENV !== "production") {
       (function() {
@@ -3101,9 +3101,9 @@ var require_react_jsx_runtime_development = __commonJS({
   }
 });
 
-// ../node_modules/react/jsx-runtime.js
+// node_modules/react/jsx-runtime.js
 var require_jsx_runtime = __commonJS({
-  "../node_modules/react/jsx-runtime.js"(exports, module) {
+  "node_modules/react/jsx-runtime.js"(exports, module) {
     "use strict";
     if (process.env.NODE_ENV === "production") {
       module.exports = require_react_jsx_runtime_production_min();
@@ -3113,13 +3113,13 @@ var require_jsx_runtime = __commonJS({
   }
 });
 
-// ../src/lib/engine.ts
+// src/lib/engine.ts
 var import_react8 = __toESM(require_react(), 1);
 
-// ../src/lib/garmin.ts
+// src/lib/garmin.ts
 var import_react = __toESM(require_react(), 1);
 
-// ../src/lib/extras.ts
+// src/lib/extras.ts
 async function getJson(url) {
   const res = await fetch(url, { redirect: "follow", cache: "no-store" });
   const t = await res.text();
@@ -3136,7 +3136,7 @@ async function fetchExtras(typ, n = 30) {
   return j.items || [];
 }
 
-// ../src/lib/garmin.ts
+// src/lib/garmin.ts
 var cache = null;
 var CACHE_MS = 10 * 60 * 1e3;
 function fetchGarminTage() {
@@ -3150,7 +3150,7 @@ function fetchGarminTage() {
   return p;
 }
 
-// ../src/kern/formeln.ts
+// src/kern/formeln.ts
 var ATL_MODEL = { a: -8.819849, b: 0.83645661, c: 1.24059231 };
 var CTL_MODEL = { a: -3.95042, b: 0.97283824, c: 0.2336734, g: 0.7, k: 7.1, win: 28 };
 function atlStep(atl, last) {
@@ -3165,13 +3165,13 @@ function windowMean(reihe, win = CTL_MODEL.win) {
   return w.length ? w.reduce((a, b) => a + b, 0) / w.length : 0;
 }
 
-// ../src/screens/RecoveryPanel.tsx
+// src/screens/RecoveryPanel.tsx
 var import_react7 = __toESM(require_react(), 1);
 
-// ../src/components/ZeitraumWahl.tsx
+// src/components/ZeitraumWahl.tsx
 var import_react2 = __toESM(require_react(), 1);
 
-// ../src/lib/windows.ts
+// src/lib/windows.ts
 var ALL_RANGE = "9999d";
 var isCustom = (w) => typeof w === "object" && w !== null;
 var heute = () => (/* @__PURE__ */ new Date()).toLocaleDateString("sv-SE");
@@ -3194,17 +3194,17 @@ function rangeFor(w, lead = 0, min = 0) {
   return ALL_RANGE;
 }
 
-// ../src/components/ZeitraumWahl.tsx
+// src/components/ZeitraumWahl.tsx
 var import_jsx_runtime = __toESM(require_jsx_runtime(), 1);
 
-// ../src/components/BefindenHinweis.tsx
+// src/components/BefindenHinweis.tsx
 var import_react3 = __toESM(require_react(), 1);
 var import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
 
-// ../src/lib/useErfahrung.ts
+// src/lib/useErfahrung.ts
 var import_react4 = __toESM(require_react(), 1);
 
-// ../src/kern/soll.ts
+// src/kern/soll.ts
 var BAND = { REST: [0, 0.25], EASY: [0.3, 0.8], TRAIN: [0.7, 1.25], QUALITY: [1, 1.7] };
 var BAND_MIN_N = 8;
 var BAND_FENSTER = 0.4;
@@ -3272,11 +3272,11 @@ function lastEmpfehlung(today, yesterday, baender) {
   return { min: lo, max: hi, halte: r5(halte), acwrGrenze: acwrGrenze != null ? r5(acwrGrenze) : null, gedeckelt, persoenlich };
 }
 
-// ../src/lib/cloudLLM.ts
+// src/lib/cloudLLM.ts
 var SENTINEL = "__PORT_5000__";
 var SERVER_BASE = SENTINEL.startsWith("__PORT") ? "" : "/" + SENTINEL.replace(/^\/+/, "");
 
-// ../src/lib/format.ts
+// src/lib/format.ts
 function fmtNum(v, digits = 0) {
   if (v === null || v === void 0 || !Number.isFinite(v)) return "\u2014";
   return v.toLocaleString("de-DE", {
@@ -3285,10 +3285,10 @@ function fmtNum(v, digits = 0) {
   });
 }
 
-// ../src/components/UI.tsx
+// src/components/UI.tsx
 var import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
 
-// ../src/screens/CorrelationPanel.tsx
+// src/screens/CorrelationPanel.tsx
 var import_react5 = __toESM(require_react(), 1);
 var import_jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
 var VARS = [
@@ -3301,7 +3301,7 @@ var VARS = [
 ];
 var VAR = Object.fromEntries(VARS.map((v) => [v.key, v]));
 
-// ../src/lib/trFarbe.ts
+// src/lib/trFarbe.ts
 var TR_BAENDER = [
   { von: 0, bis: 25, farbe: "#D9433A", name: "Schlecht" },
   { von: 25, bis: 50, farbe: "#E5822F", name: "Niedrig" },
@@ -3310,7 +3310,7 @@ var TR_BAENDER = [
   { von: 95, bis: 101, farbe: "#6E45E9", name: "Optimal" }
 ];
 
-// ../src/lib/garminSkala.ts
+// src/lib/garminSkala.ts
 var G = { rot: "#D9433A", orange: "#E5822F", gruen: "#5DB75B", blau: "#3A78CF", lila: "#6E45E9", grau: "#9aa5b1" };
 var TR_SKALA = { min: 0, max: 100, baender: TR_BAENDER.map((b) => ({ ...b })) };
 var BB_SKALA = {
@@ -3374,11 +3374,11 @@ var TOURFORM_SKALA = {
   ]
 };
 
-// ../src/components/GarminSportProfilTile.tsx
+// src/components/GarminSportProfilTile.tsx
 var import_react6 = __toESM(require_react(), 1);
 var import_jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
 
-// ../src/lib/monotony.ts
+// src/lib/monotony.ts
 var MONO = { GUT: 1.5, NORMAL: 2, UNGUENSTIG: 2.5, WARNUNG: 3 };
 function monoStufe(v) {
   if (v == null || !Number.isFinite(v)) return null;
@@ -3459,10 +3459,10 @@ var MONOTONIE_REGEL_TEXT = [
   "Entscheidend ist die Kombination mit der Gesamtlast (Strain = Wochenlast \xD7 Monotonie). Monotonie senkst du durch klaren Rhythmus: harte Reize klar hart, lockere Tage wirklich locker, mindestens ein echter Erholungstag bei hoher Gesamtlast \u2013 nicht durch weniger Gesamtlast."
 ].join("\n");
 
-// ../src/screens/RecoveryPanel.tsx
+// src/screens/RecoveryPanel.tsx
 var import_jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
 
-// ../src/lib/chatContext.ts
+// src/lib/chatContext.ts
 var OLLAMA_HTTP = "http://localhost:11434";
 var OLLAMA_HTTPS = "https://localhost:11435";
 var IST_MAC_APP = typeof window !== "undefined" && !!window.webkit?.messageHandlers?.kiraMac;
@@ -3481,7 +3481,7 @@ var KIRA_SYSTEM = [
   "Bei Schmerzen, Krankheit oder medizinischen Fragen: auf Arzt bzw. Physiotherapie verweisen."
 ].join("\n");
 
-// ../src/lib/engine.ts
+// src/lib/engine.ts
 var KEY = "ck_kira_engine_v2";
 function read() {
   try {
@@ -3493,7 +3493,7 @@ function read() {
 }
 var store = read();
 
-// ../src/lib/api.ts
+// src/lib/api.ts
 var BASE_URL = "https://script.google.com/macros/s/AKfycbxCEN11KRlFaLL7uVJyeBLCrRJVmfBWagSmqvyJ8Ci7nwxi8HbolzTy23Z-G2mivC2h/exec";
 function cb() {
   return Date.now().toString();
@@ -3615,7 +3615,7 @@ function toNum(v) {
   return Number.isFinite(n) ? n : null;
 }
 
-// ../src/kern/votumRegeln.ts
+// src/kern/votumRegeln.ts
 var SLEEP_GOAL_H = 7.5;
 var RHR_BASELINE_DAYS = 28;
 var RHR_BASELINE_MIN_VALUES = 7;
@@ -3840,7 +3840,7 @@ function buildDays(raw) {
   });
 }
 
-// ../src/lib/planning.ts
+// src/lib/planning.ts
 function zielArt(z2) {
   if (z2.art === "sonstiges" && /marsch|wander|walk|hike|trekking|pilger/i.test(`${z2.name} ${z2.notiz || ""}`)) return "marsch";
   return z2.art;
@@ -3857,7 +3857,7 @@ function tourLast(z2, faktoren) {
   return Math.round(base + z2.hm / 100 * per100);
 }
 
-// ../src/lib/paket4.ts
+// src/lib/paket4.ts
 function toNum2(v) {
   if (v === null || v === void 0 || v === "" || String(v).trim() === "") return null;
   const s = String(v).trim();
@@ -4008,7 +4008,7 @@ function tourform(t, z2, persTourLast) {
   };
 }
 
-// ../src/lib/essRechner.ts
+// src/lib/essRechner.ts
 var PROFILE = [
   { id: "run", label: "Laufen", sport: "Run", typen: ["running", "treadmill_running", "trail_running"], tempo: "pace" },
   { id: "bike_road", label: "Rennrad", sport: "Bike", typen: ["road_biking", "cycling"], tempo: "kmh" },
@@ -4259,7 +4259,7 @@ function vorwaerts(m, ein) {
   return { ess, lo: ess * (1 - fehler), hi: ess * (1 + fehler), werte: w, geschaetzt: g, modell: typ, hinweise };
 }
 
-// ../src/data/skitouren_garmin.json
+// src/data/skitouren_garmin.json
 var skitouren_garmin_default = {
   quelle: "Garmin Connect API (activitylist-service), abgerufen 29.10.2026",
   hinweis: "12/2022\u201312/2023: Garmin-Last etwa doppelt so hoch wie davor und mit der aktuellen Uhr \u2013 nicht vergleichbar",
@@ -4707,7 +4707,7 @@ var skitouren_garmin_default = {
   ]
 };
 
-// ../src/data/lange_maersche_garmin.json
+// src/data/lange_maersche_garmin.json
 var lange_maersche_garmin_default = {
   quelle: "Garmin Connect API, abgerufen 29.10.2026",
   auswahl: "Gehen/Wandern \u2265 4 h, h\xF6chstens 40 Hm/km",
@@ -4886,7 +4886,7 @@ var lange_maersche_garmin_default = {
   ]
 };
 
-// ../src/lib/tourEss.ts
+// src/lib/tourEss.ts
 var MIN_N = 8;
 function eigeneSkitouren(tage) {
   const m = /* @__PURE__ */ new Map();
@@ -5033,7 +5033,129 @@ function tourLastPersoenlich(z2, modelle, skitouren = [], bergtouren = []) {
   return { ess: sum("ess"), lo: sum("lo"), hi: sum("hi"), teile, hinweise };
 }
 
-// widget_cli.ts
+// src/lib/paket3.ts
+function parseNum(v) {
+  if (v === "" || v == null) return null;
+  const s = String(v).trim();
+  if (s === "" || s.toLowerCase() === "nan") return null;
+  const n = Number(s.replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+}
+var p3Cache = null;
+var p3Promise = null;
+async function ladeP3() {
+  if (p3Cache) return p3Cache;
+  if (!p3Promise) {
+    p3Promise = (async () => {
+      const r = await fetchChartData("9999d", [
+        "load_fb_day",
+        "sleep_hours",
+        "sleep_score_0_100",
+        "Garmin_Training_Readiness",
+        "hrv_status",
+        "fbATL_obs",
+        "fbCTL_obs",
+        "garminEnduranceScore",
+        "Zone",
+        "Sport_x"
+      ]);
+      const rows = r && r.data || [];
+      const todayStr = (/* @__PURE__ */ new Date()).toLocaleDateString("sv-SE");
+      const seen = /* @__PURE__ */ new Map();
+      for (const row of rows) {
+        const d = String(row.date || "").split("T")[0];
+        if (d === "" || d > todayStr) continue;
+        if (seen.has(d)) continue;
+        seen.set(d, {
+          date: d,
+          load: parseNum(row.load_fb_day),
+          sleep: parseNum(row.sleep_hours),
+          sleepScore: parseNum(row.sleep_score_0_100),
+          readiness: parseNum(row.Garmin_Training_Readiness),
+          hrv: parseNum(row.hrv_status),
+          atl: parseNum(row.fbATL_obs),
+          ctl: parseNum(row.fbCTL_obs),
+          es: parseNum(row.garminEnduranceScore),
+          zone: String(row.Zone || ""),
+          sport: String(row.Sport_x || "")
+        });
+      }
+      const result = Array.from(seen.values()).sort((a, b) => a.date.localeCompare(b.date));
+      p3Cache = result;
+      return result;
+    })();
+  }
+  return p3Promise;
+}
+function schlafKonto(t, loadHeute) {
+  const eintraege = [];
+  for (let i = 6; i < t.length; i++) {
+    let sum = 0, cnt = 0;
+    for (let j = i - 6; j <= i; j++) {
+      const s = t[j].sleep;
+      if (s === null) continue;
+      sum += 7.5 - s;
+      cnt++;
+    }
+    const schuld = cnt >= 5 ? sum : null;
+    eintraege.push({ index: i, schuld });
+  }
+  const letzerSchuld = eintraege.length > 0 ? eintraege[eintraege.length - 1].schuld : null;
+  const qDaten = [];
+  for (const e of eintraege) {
+    if (e.schuld === null) continue;
+    const r = t[e.index].readiness;
+    if (r === null) continue;
+    qDaten.push({ Schuld: e.schuld, readiness: r });
+  }
+  const schuldWerte = qDaten.map((d) => d.Schuld).sort((a, b) => a - b);
+  function quartilGrenze(sorted, q) {
+    if (sorted.length === 0) return 0;
+    const idx = q * (sorted.length - 1);
+    const lo = Math.floor(idx);
+    const hi = Math.ceil(idx);
+    if (lo === hi) return sorted[lo];
+    return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo);
+  }
+  const q1 = quartilGrenze(schuldWerte, 0.25);
+  const q2 = quartilGrenze(schuldWerte, 0.5);
+  const q3 = quartilGrenze(schuldWerte, 0.75);
+  const maxSchuld = schuldWerte.length > 0 ? schuldWerte[schuldWerte.length - 1] : 0;
+  const grenzen = [q1, q2, q3, maxSchuld];
+  function quartilName(val) {
+    if (val <= q1) return 0;
+    if (val <= q2) return 1;
+    if (val <= q3) return 2;
+    return 3;
+  }
+  const quartile = [];
+  for (let q = 0; q < 4; q++) {
+    const loLimit = q === 0 ? -Infinity : grenzen[q - 1];
+    const hiLimit = grenzen[q];
+    const passthrough = [];
+    for (const d of qDaten) {
+      if (q < 3 && d.Schuld >= loLimit && d.Schuld <= hiLimit) passthrough.push(d);
+      else if (q === 3 && d.Schuld >= loLimit) passthrough.push(d);
+    }
+    const avgReadiness = passthrough.length > 0 ? passthrough.reduce((a, d) => a + d.readiness, 0) / passthrough.length : 0;
+    quartile.push({ bis: hiLimit, readiness: avgReadiness, n: passthrough.length });
+  }
+  const jetzterWert = letzerSchuld;
+  const jetztQuartil = jetzterWert === null ? null : quartilName(jetzterWert);
+  const zuschlagLast = Math.max(0, (loadHeute ?? 0) - 100) / 100 * 0.5;
+  const schuldBetrag = Math.min(Math.max(jetzterWert ?? 0, 0), 4) / 4 * 0.5;
+  const bedarfH = Math.min(7.5 + zuschlagLast + schuldBetrag, 9.5);
+  return {
+    schuld: letzerSchuld,
+    quartile,
+    jetztQuartil,
+    bedarfH,
+    zuschlagLast,
+    zuschlagSchuld: schuldBetrag
+  };
+}
+
+// server/widget_cli.ts
 var baenderJetzt = null;
 async function baenderLaden() {
   if (baenderJetzt) return baenderJetzt;
@@ -5085,12 +5207,30 @@ function mitLiveMorgen(rows, heute2) {
   return out;
 }
 var plan7Merk = null;
+var vorschlagMerk = null;
+var ACWR_GRENZE = 1.5;
 var neuWert = (r, post, morgen) => {
   const p = r ? num(r[post]) : null;
   if (p != null && p > 0) return p;
   const m = r ? num(r[morgen]) : null;
   return m != null && m > 0 ? m : null;
 };
+async function lichtAus() {
+  try {
+    const h2 = Number((/* @__PURE__ */ new Date()).toLocaleString("en-GB", { timeZone: "Europe/Berlin", hour: "2-digit", hour12: false }));
+    if (!(h2 >= 17) && process.env.CK_TEST_ABEND !== "1") return null;
+    const t = await ladeP3();
+    const k = schlafKonto(t, t.length ? t[t.length - 1].load ?? null : null);
+    const morgen = new Date(Date.now() + 864e5);
+    const wd = (/* @__PURE__ */ new Date(morgen.toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }) + "T12:00:00Z")).getUTCDay();
+    const auf = /^\d{2}:\d{2}$/.test(process.env.CK_AUFSTEHEN || "") ? String(process.env.CK_AUFSTEHEN) : wd === 0 || wd === 6 ? "07:30" : "06:15";
+    const [ah, am] = auf.split(":").map(Number);
+    const m = (Math.round(ah * 60 + am - k.bedarfH * 60 - 15) % 1440 + 1440) % 1440;
+    return { lichtAus: `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`, bedarfH: Math.round(k.bedarfH * 100) / 100, aufstehen: auf };
+  } catch {
+    return null;
+  }
+}
 async function heuteTeil() {
   const heute2 = iso();
   const res = await fetchChartData(rangeFor(14, 28, 90), [...RECOVERY_FETCH_METRICS, "fb_TR_obs", "fbACWR_obs", "garminACWR"]);
@@ -5108,11 +5248,13 @@ async function heuteTeil() {
   const t = days.length && days[days.length - 1].date === heute2 ? days[days.length - 1] : null;
   let plan = null;
   let naechste = [];
+  let sperre = [];
   try {
     const sim = await fetchPlanSimulationWithTimeout(45e3);
     plan = sim?.ok ? (sim.days || []).find((x) => String(x.date).slice(0, 10) === heute2) || null : null;
     if (sim?.ok)
       naechste = (sim.days || []).filter((x) => String(x.date).slice(0, 10) > heute2).slice(0, 7).map((x) => ({ d: String(x.date).slice(0, 10), ess: num(x.sim_load ?? x.load), sport: String(x.sport || ""), zone: String(x.zone || "") }));
+    if (sim?.ok) sperre = (sim.days || []).filter((x) => String(x.date).slice(0, 10) > heute2).slice(0, 7).map((x) => !!x.locked);
   } catch {
   }
   try {
@@ -5125,18 +5267,56 @@ async function heuteTeil() {
         ctl = Number(LIVE.ctl);
         if (loads.length) loads[loads.length - 1] = Math.max(loads[loads.length - 1], ls);
       }
-      const p7 = { start: naechste[0].d, ess: [], atl: [], ctl: [], acwr: [] };
-      for (const x of naechste.slice(0, 7)) {
-        const l = x.ess ?? 0;
-        loads.push(l);
-        atl = atlStep(atl, l);
-        ctl = ctlStep(ctl, l, windowMean(loads));
-        p7.ess.push(Math.round(l));
-        p7.atl.push(Math.round(atl));
-        p7.ctl.push(Math.round(ctl));
-        p7.acwr.push(ctl > 0 ? Math.round(atl / ctl * 100) / 100 : 0);
-      }
+      const sim7 = (ess) => {
+        let a = atl, c = ctl;
+        const ls2 = loads.slice();
+        const o = { atl: [], ctl: [], acwr: [] };
+        for (const l of ess) {
+          ls2.push(l);
+          a = atlStep(a, l);
+          c = ctlStep(c, l, windowMean(ls2));
+          o.atl.push(Math.round(a));
+          o.ctl.push(Math.round(c));
+          o.acwr.push(c > 0 ? Math.round(a / c * 100) / 100 : 0);
+        }
+        return o;
+      };
+      const ess7 = naechste.slice(0, 7).map((x) => Math.round(x.ess ?? 0));
+      const r7 = sim7(ess7);
+      const p7 = { start: naechste[0].d, ess: ess7, atl: r7.atl, ctl: r7.ctl, acwr: r7.acwr };
       plan7Merk = p7;
+      try {
+        const maxAlt = Math.max(...r7.acwr);
+        if (maxAlt > ACWR_GRENZE) {
+          const neu = ess7.slice();
+          let r = r7, n = 0;
+          while (Math.max(...r.acwr) > ACWR_GRENZE && n < 80) {
+            const k = r.acwr.findIndex((a) => a > ACWR_GRENZE);
+            let best = -1;
+            for (let i = 0; i <= k; i++) if (!sperre[i] && neu[i] > 0 && (best < 0 || neu[i] > neu[best])) best = i;
+            if (best < 0) break;
+            neu[best] = Math.max(0, neu[best] - 10);
+            r = sim7(neu);
+            n++;
+          }
+          const aenderungen = neu.map((v, i) => ({ d: naechste[i].d, sport: naechste[i].sport, zone: naechste[i].zone, alt: ess7[i], neu: v })).filter((x) => x.neu !== x.alt);
+          if (aenderungen.length) {
+            const kAlt = r7.acwr.indexOf(maxAlt);
+            vorschlagMerk = {
+              id: aenderungen.map((x) => `${x.d}:${x.alt}>${x.neu}`).join(","),
+              grenze: ACWR_GRENZE,
+              maxAlt,
+              tagAlt: naechste[kAlt].d,
+              maxNeu: Math.max(...r.acwr),
+              erreicht: Math.max(...r.acwr) <= ACWR_GRENZE,
+              aenderungen,
+              essNeu: neu,
+              acwrNeu: r.acwr
+            };
+          }
+        }
+      } catch {
+      }
     }
   } catch {
   }
@@ -5203,6 +5383,8 @@ async function heuteTeil() {
       woche
     },
     naechste,
+    planVorschlag: vorschlagMerk,
+    schlaf: await lichtAus(),
     _rahmen: rahmen
   };
 }

@@ -375,6 +375,7 @@ class KiraHintergrund extends System.ServiceDelegate {
             kiraKomplikation(data);
             melden(data);
             fazitMelden(data);
+            hinweiseMelden(data);
             Background.exit(data);
         } else {
             Background.exit({ "fehler" => code });
@@ -403,6 +404,36 @@ class KiraHintergrund extends System.ServiceDelegate {
                 Notifications.showNotification(titel, unter, { :body => text, :dismissPrevious => false });
             } else if (Background has :requestApplicationWake) {
                 Background.requestApplicationWake(titel + " · " + unter);
+            }
+        } catch (e) {
+        }
+    }
+
+    // 24.11.2026: Hinweise vom Server (Befinden, Licht aus, ACWR/Ruhepuls, Plan-Vorschlag, vorläufiges Votum) – je id einmal
+    function hinweiseMelden(d as Dictionary) as Void {
+        try {
+            var xs = d.get("hinweise");
+            if (!(xs instanceof Array) || xs.size() == 0) { return; }
+            var gesehen = Storage.getValue("hinw");
+            var liste = gesehen instanceof Array ? gesehen : [];
+            for (var i = 0; i < xs.size(); i++) {
+                var h = xs[i];
+                if (!(h instanceof Dictionary) || h.get("id") == null) { continue; }
+                var id = h.get("id").toString();
+                var neu = true;
+                for (var k = 0; k < liste.size(); k++) { if (liste[k].toString().equals(id)) { neu = false; break; } }
+                if (!neu) { continue; }
+                liste.add(id);
+                while (liste.size() > 12) { liste = liste.slice(1, null); }
+                Storage.setValue("hinw", liste);
+                var titel = h.get("titel") != null ? h.get("titel").toString() : "Kira";
+                var text = h.get("text") != null ? h.get("text").toString() : "";
+                if (Toybox has :Notifications && Notifications has :showNotification) {
+                    Notifications.showNotification(titel, "", { :body => text, :dismissPrevious => false });
+                } else if (Background has :requestApplicationWake) {
+                    Background.requestApplicationWake(titel);
+                }
+                return;   // höchstens ein Hinweis je Abruf
             }
         } catch (e) {
         }

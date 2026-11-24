@@ -41,6 +41,10 @@ const REGELN = [
   ['GET', /^\/api\/lokal\/naechster$/, 'mac'],
   ['POST', /^\/api\/lokal\/ergebnis$/, 'mac'],
   ['POST', /^\/api\/action\//, 'cockpit'],
+  // 24.11.2026: Automatik – Mac trägt ein, sichert/stellt wieder her, holt Hinweise, legt Workouts an; Cockpit schaltet
+  ['POST', /^\/api\/auto\/(eintrag|wiederherstellen|workout-morgen)$/, 'mac'],
+  ['GET', /^\/api\/auto\/(sicherung|hinweise)$/, 'mac'],
+  ['*', /^\/api\/auto\/(status|einstellung|vorschlag)$/, 'cockpit'],
   ['*', /^\/api\/gs$/, 'cockpit'],
   ['GET', /^\/api\/zugang\/status$/, 'cockpit'],
   ['*', /^\/api\/einstellungen$/, 'cockpit'],
