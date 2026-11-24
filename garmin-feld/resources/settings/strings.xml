@@ -20,4 +20,13 @@
     <string id="lpUnten6">ESS dieser Einheit</string>
     <string id="spVibGrenze">Vibration: Unter-/Obergrenze</string>
     <string id="spVibZone">Vibration: falsche Zone</string>
+    <string id="lpOben6">Timer</string>
+    <string id="lpOben7">Distanz</string>
+    <string id="lpOben8">Uhrzeit</string>
+    <string id="lpMitte3">Timer</string>
+    <string id="lpMitte4">Distanz</string>
+    <string id="lpMitte5">Uhrzeit</string>
+    <string id="lpUnten7">Timer</string>
+    <string id="lpUnten8">Distanz</string>
+    <string id="lpUnten9">Uhrzeit</string>
 </strings>

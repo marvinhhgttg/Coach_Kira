@@ -36,6 +36,8 @@ class KiraFeldView extends WatchUi.DataField {
     var seit as Number = 0;
     // 24.11.2026: Einstellungen (Connect IQ App → Coach Kira Feld → Einstellungen)
     var zoneJetzt as Number = 0;
+    var timerMs as Number = 0;
+    var distM as Float = 0.0;
     var eOben as Number = 0;
     var eMitte as Number = 0;
     var eUnten as Number = 0;
@@ -253,6 +255,9 @@ class KiraFeldView extends WatchUi.DataField {
 
     function compute(info as Activity.Info) as Void {
         abrufFaellig();
+        // 24.11.2026: Aktivitätswerte für frei belegbare Zeilen
+        timerMs = info.timerTime != null ? info.timerTime as Number : 0;
+        distM = info.elapsedDistance != null ? (info.elapsedDistance as Float).toFloat() : 0.0;
         var jetzt = System.getTimer();
         var dt = zuletzt == null ? 0 : jetzt - zuletzt;
         zuletzt = jetzt;
@@ -349,7 +354,29 @@ class KiraFeldView extends WatchUi.DataField {
 
     // Text für frei belegbare Zeilen. Oben: 1 Zone, 2 Soll, 3 Votum, 4 ACWR, 5 Bereitschaft.
     // Unten: 1 Zone, 2 Soll, 3 ESS/min, 4 ACWR, 5 Bereitschaft, 6 ESS Einheit
+    // Aktivität: 100 Timer, 101 Distanz, 102 Uhrzeit
+    function aktText(art as Number, mitBez as Boolean) as String {
+        if (art == 100) {
+            var sk = timerMs / 1000;
+            var hh = sk / 3600;
+            var t = hh > 0 ? hh.toString() + ":" + ((sk / 60) % 60).format("%02d") + ":" + (sk % 60).format("%02d")
+                           : (sk / 60).toString() + ":" + (sk % 60).format("%02d");
+            return mitBez ? "Zeit " + t : t;
+        }
+        if (art == 101) {
+            var km = distM / 1000.0;
+            var t = km < 10.0 ? km.format("%.2f") : km.format("%.1f");
+            var i = t.find(".");
+            if (i != null && mitBez) { t = t.substring(0, i) + "," + t.substring(i + 1, t.length()); }   // Zahlenschrift ohne Komma
+            return mitBez ? t + " km" : t;
+        }
+        var c = System.getClockTime();
+        return c.hour.format("%02d") + ":" + c.min.format("%02d");
+    }
+
     function zeilenText(art as Number, einheit as Number, e as Number, ra as Array?, istOben as Boolean) as String {
+        if (istOben && art >= 6 && art <= 8) { return aktText(art + 94, true); }
+        if (!istOben && art >= 7 && art <= 9) { return aktText(art + 93, true); }
         var f = feld();
         if (!istOben && art == 3) {
             var r = rate();
@@ -415,9 +442,13 @@ class KiraFeldView extends WatchUi.DataField {
         var gross = e.toString();
         if (eMitte == 1) { gross = einheit.toString(); }
         else if (eMitte == 2 && ra != null) { gross = (e > ra[1] ? "+" + (e - ra[1]).toString() : (ra[1] - e).toString()); }
+        else if (eMitte >= 3 && eMitte <= 5) { gross = aktText(eMitte + 97, false); c = fg; }
         var oben = vor > 0 ? "KIRA TAG · EINH. " + einheit.toString() : "KIRA ESS";
         if (eMitte == 1) { oben = "KIRA EINHEIT · TAG " + e.toString(); }
         else if (eMitte == 2) { oben = "KIRA BIS OBERGRENZE"; }
+        else if (eMitte == 3) { oben = "TIMER · KIRA " + e.toString(); }
+        else if (eMitte == 4) { oben = "DISTANZ KM · KIRA " + e.toString(); }
+        else if (eMitte == 5) { oben = "UHRZEIT · KIRA " + e.toString(); }
         if (eOben > 0) { oben = zeilenText(eOben, einheit, e, ra, true); }
         if (h < 90) {
             // kleines Feld: Wert + Rahmen nebeneinander

@@ -28,6 +28,15 @@
     }, {
       "display" : "lpOben5",
       "value" : 5
+    }, {
+      "display" : "lpOben6",
+      "value" : 6
+    }, {
+      "display" : "lpOben7",
+      "value" : 7
+    }, {
+      "display" : "lpOben8",
+      "value" : 8
     } ],
     "configMin" : null,
     "configMax" : null,
@@ -52,6 +61,15 @@
     }, {
       "display" : "lpMitte2",
       "value" : 2
+    }, {
+      "display" : "lpMitte3",
+      "value" : 3
+    }, {
+      "display" : "lpMitte4",
+      "value" : 4
+    }, {
+      "display" : "lpMitte5",
+      "value" : 5
     } ],
     "configMin" : null,
     "configMax" : null,
@@ -88,6 +106,15 @@
     }, {
       "display" : "lpUnten6",
       "value" : 6
+    }, {
+      "display" : "lpUnten7",
+      "value" : 7
+    }, {
+      "display" : "lpUnten8",
+      "value" : 8
+    }, {
+      "display" : "lpUnten9",
+      "value" : 9
     } ],
     "configMin" : null,
     "configMax" : null,
@@ -128,6 +155,8 @@
     "valyrian" : {
       "FitLabel" : "Kira ESS",
       "AppName" : "Kira ESS",
+      "lpOben7" : "Distanz",
+      "lpOben6" : "Timer",
       "lpOben5" : "Bereitschaft",
       "lpOben4" : "ACWR",
       "lpOben3" : "Votum",
@@ -136,12 +165,18 @@
       "FitTitel" : "Kira ESS",
       "lpOben1" : "Zone jetzt",
       "lpOben0" : "Titel (KIRA TAG / Einheit)",
+      "lpOben8" : "Uhrzeit",
       "spVibGrenze" : "Vibration: Unter-/Obergrenze",
       "FitEinheit" : "ESS",
       "spUnten" : "Untere Zeile",
       "spVibZone" : "Vibration: falsche Zone",
+      "lpMitte5" : "Uhrzeit",
       "lpMitte1" : "ESS dieser Einheit",
+      "lpUnten9" : "Uhrzeit",
       "lpMitte2" : "ESS bis Obergrenze",
+      "lpUnten8" : "Distanz",
+      "lpMitte3" : "Timer",
+      "lpMitte4" : "Distanz",
       "spOben" : "Obere Zeile",
       "lpMitte0" : "ESS Tag (gespeichert + laufend)",
       "lpUnten1" : "Zone jetzt",
@@ -150,6 +185,7 @@
       "lpUnten2" : "Soll-Rahmen",
       "lpUnten5" : "Bereitschaft",
       "lpUnten4" : "ACWR",
+      "lpUnten7" : "Timer",
       "lpUnten6" : "ESS dieser Einheit"
     }
   }
