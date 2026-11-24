@@ -56,6 +56,8 @@ interface Fruehwarnung {
   stufe: 'gruen' | 'gelb' | 'orange' | 'rot';
   signale: Signal[];
   prognose: string;
+  // 24.11.2026: Vergleich mit dem letzten Vorausblick (vom Mac)
+  verlauf?: { text?: string; tage_gleich?: number; stufe_alt?: string; neu?: string[]; weg?: string[] };
 }
 
 interface VbWoche {
@@ -229,6 +231,9 @@ export function VorausblickTile({ compact = false }: { compact?: boolean }) {
         </div>
 
         <p className="mt-2 text-sm text-ink">{d.text}</p>
+        {d.fruehwarnung?.verlauf?.text && (
+          <p className="mt-1 text-2xs text-ink-dim">Seit dem letzten Vorausblick: {d.fruehwarnung.verlauf.text}</p>
+        )}
 
         <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
           {/* Qualitätstag */}
@@ -302,6 +307,9 @@ export function VorausblickTile({ compact = false }: { compact?: boolean }) {
 
       {/* Text */}
       <p className="mt-2 text-sm text-ink">{d.text}</p>
+        {d.fruehwarnung?.verlauf?.text && (
+          <p className="mt-1 text-2xs text-ink-dim">Seit dem letzten Vorausblick: {d.fruehwarnung.verlauf.text}</p>
+        )}
 
       {/* Raster */}
       <div className="grid gap-3 md:grid-cols-3 mt-3">

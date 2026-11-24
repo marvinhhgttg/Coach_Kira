@@ -2275,7 +2275,9 @@ def vorausblick_rechnen() -> dict:
         if unter_folge >= 7 and neu[0] < neu[1] - 3:
             add("HRV", "orange", f"HRV seit {unter_folge} Tagen unter deinem Garmin-Normalband ({_de(neu[1])}–{_de(neu[2])} ms), heute {_de(neu[0])} ms", "koerper")
         elif unter_folge >= 4 or unter_7 >= 6:
-            add("HRV", "gelb", f"HRV an {max(unter_folge, unter_7)} der letzten 7 Tage unter deinem Garmin-Normalband ({_de(neu[1])}–{_de(neu[2])} ms)", "koerper")
+            # 24.11.2026: Text passend zur Zählung (vorher „11 der letzten 7 Tage“)
+            _ht = f"HRV seit {unter_folge} Tagen" if unter_folge >= 7 else f"HRV an {min(7, max(unter_folge, unter_7))} der letzten 7 Tage"
+            add("HRV", "gelb", f"{_ht} unter deinem Garmin-Normalband ({_de(neu[1])}–{_de(neu[2])} ms)", "koerper")
         elif len(hrv_bands) >= 10:
             sl = _slope_per_week([e[1] for e in hrv_bands])
             if sl is not None and sl <= -1.0:
@@ -2325,11 +2327,13 @@ def vorausblick_rechnen() -> dict:
     elif ueber2 >= 3:
         add("Monotonie", "gelb", f"Monotonie seit {ueber2} Tagen über 2,0", "last")
     # Geplante Wochenlast (nächste 7 Tage) vs. Schnitt der letzten 4 Wochen – Monotonie zählt separat
+    wo_info = None
     if len(hist_loads) >= 28 and len(plan) >= 8:
         wo_schnitt = sum(hist_loads[-28:]) / 4
         wo_plan = sum(t["last"] for t in tage[1:8])
         if wo_schnitt > 0:
             plus = (wo_plan / wo_schnitt - 1) * 100
+            wo_info = (wo_plan, wo_schnitt, plus)
             if plus >= 45:
                 add("Wochenlast geplant", "orange", f"Nächste 7 Tage {_de(wo_plan)} ESS – {_de(plus)} % über deinem 4-Wochen-Schnitt", "last")
             elif plus >= 25:
@@ -2352,12 +2356,30 @@ def vorausblick_rechnen() -> dict:
         stufe = "gelb"
     else:
         stufe = "gruen"
+    # 24.11.2026: Prognose konkret statt Textbaustein – Treiber, Termin und Stellschraube aus den heutigen Zahlen
+    def _treiber(xs: list) -> str:
+        xs = sorted(xs, key=lambda x: 0 if x["schwere"] == "orange" else 1)
+        return ", ".join(x["name"] for x in xs[:2])
+    termin = ""
+    if amax and amax["acwr"] > 1.3:
+        termin = f"ACWR-Spitze {_de(amax['acwr'], 2)} am {_dm(amax['datum'])}"
+    schraube = ""
+    if wo_info and wo_info[2] >= 25:
+        weg = wo_info[0] - 1.25 * wo_info[1]
+        if weg > 20:
+            schraube = f"rund {_de(round(weg / 10) * 10)} ESS weniger in den nächsten 7 Tagen bringen die Woche auf +25 % zum 4-Wochen-Schnitt"
+    if amax and amax["acwr"] > 1.3 and not schraube:
+        schraube = f"den {_dm(amax['datum'])} deutlich leichter planen"
     if kor and las:
-        prog = "Körperwerte und Last zeigen in dieselbe Richtung: Bleibt der Plan so, droht in 5–7 Tagen Überlastung – Entlastungstag früh einplanen."
+        prog = f"Körper ({_treiber(kor)}) und Last ({_treiber(las)}) zeigen in dieselbe Richtung" + (f" – {termin}" if termin else "")
+        prog = prog.rstrip(".") + "."
+        prog += f" Stellschraube: {schraube}." if schraube else " Einen Entlastungstag früh einplanen."
     elif kor:
-        prog = "Der Körper zeigt erste Ermüdung, die Last ist moderat – Qualität nur bei guten Morgenwerten, sonst locker."
+        prog = f"Der Körper zeigt Ermüdung ({_treiber(kor)}), die Last ist moderat – Qualität nur bei guten Morgenwerten, sonst locker."
     elif las:
-        prog = "Der Plan braucht mehr Entlastung, die Körperwerte sind noch stabil – Entlastungstag einplanen."
+        prog = (f"Der Plan braucht mehr Entlastung ({_treiber(las)}), die Körperwerte sind stabil" + (f" – {termin}" if termin else "")).rstrip(".") + "."
+        if schraube:
+            prog += f" Stellschraube: {schraube}."
     else:
         prog = "Keine Frühwarnzeichen in den letzten Wochen."
 
@@ -2482,6 +2504,9 @@ def _vorausblick_block(d: dict) -> str:
         z.append("- Tourfenster: in den nächsten 9 Tagen kein gutes Fenster (Wetter/Kalender/Bereitschaft).")
     if v["mono_hinweise"]:
         z.append("- Monotonie-Regel im Plan: " + "; ".join(_mono_txt(x) for x in v["mono_hinweise"][:3]) + ".")
+    vl = fw.get("verlauf") or {}
+    if vl.get("text"):
+        z.append(f"- Seit dem letzten Vorausblick: {vl['text']}")
     z.append(f"- Frühwarnung: {fw['stufe'].upper()}" + (" – " + "; ".join(s["text"] for s in fw["signale"][:4]) if fw["signale"] else "") + f". {fw['prognose']}")
     if d.get("garmin_lage"):
         gl = _garmin_lage_txt(d["garmin_lage"])
@@ -2489,6 +2514,46 @@ def _vorausblick_block(d: dict) -> str:
             z.append(f"- Garmin-Lage: {gl}.")
     z.append("Nutze diese Zukunftssicht: Nenne kurz die nächste Chance (Qualitätstag oder Tourfenster) und reagiere auf die Frühwarnung, ohne die Monotonie- und ACWR-Regeln zu verletzen.")
     return "\n".join(z)
+
+
+def _fw_verlauf(d: dict) -> dict:
+    """24.11.2026: Vergleich mit dem letzten gespeicherten Vorausblick (Basis = Vergangenheit im Sheet)."""
+    fw = d["fruehwarnung"]
+    out: dict = {}
+    try:
+        items = http_get_json(SCRIPT_URL + "?mode=extras&typ=prognose&n=20").get("items") or []
+    except Exception:
+        items = []
+    alt = [x for x in items if isinstance(x.get("data"), dict) and x["data"].get("fruehwarnung")]
+    alt.sort(key=lambda x: str(x["data"].get("erstellt") or x.get("datum")), reverse=True)
+    if not alt:
+        return out
+    a = alt[0]["data"]
+    afw = a["fruehwarnung"]
+    # wie lange schon dieselbe Stufe (Kalendertage, inklusive heute)
+    tage = {today()}
+    for x in alt:
+        if x["data"]["fruehwarnung"].get("stufe") != fw["stufe"]:
+            break
+        tage.add(str(x.get("datum"))[:10])
+    rang = {"gruen": 0, "gelb": 1, "orange": 2, "rot": 3}
+    teile = []
+    if afw.get("stufe") != fw["stufe"]:
+        teile.append(f"Frühwarnung {'besser' if rang.get(fw['stufe'], 0) < rang.get(afw.get('stufe'), 0) else 'schlechter'}: {afw.get('stufe')} → {fw['stufe']}")
+    else:
+        teile.append(f"Frühwarnung seit {len(tage)} Tagen {fw['stufe']}")
+    neu_n = {x["name"] for x in fw["signale"]}
+    alt_n = {x["name"] for x in afw.get("signale") or []}
+    if neu_n - alt_n:
+        teile.append("neu: " + ", ".join(sorted(neu_n - alt_n)))
+    if alt_n - neu_n:
+        teile.append("weggefallen: " + ", ".join(sorted(alt_n - neu_n)))
+    am, aa = (d["vorausblick"].get("acwr_max") or {}), ((a.get("vorausblick") or {}).get("acwr_max") or {})
+    if am.get("wert") is not None and aa.get("wert") is not None and abs(am["wert"] - aa["wert"]) >= 0.03:
+        teile.append(f"ACWR-Spitze im Plan {_de(aa['wert'], 2)} → {_de(am['wert'], 2)}")
+    out = {"stufe_alt": afw.get("stufe"), "tage_gleich": len(tage), "neu": sorted(neu_n - alt_n), "weg": sorted(alt_n - neu_n),
+           "seit": a.get("erstellt"), "text": "; ".join(teile) + ".", "text_alt": str(a.get("text") or "")[:600]}
+    return out
 
 
 def cmd_vorausblick(force: bool = False) -> None:
@@ -2505,13 +2570,15 @@ def cmd_vorausblick(force: bool = False) -> None:
             return  # Morgenwerte noch nicht da
     t0 = time.time()
     d = vorausblick_rechnen()
+    d["fruehwarnung"]["verlauf"] = _fw_verlauf(d)
     block = _vorausblick_block(d)
     text = ""
+    vl_alt = (d["fruehwarnung"].get("verlauf") or {}).get("text_alt") or ""
     if ollama_ready():
         try:
             msgs = [
                 {"role": "system", "content": "Du bist Coach Kira, Marcs Trainingscoach. Deutsch, du-Form, keine Emojis, keine Überschriften."},
-                {"role": "user", "content": block + "\n\nFasse das in 3–5 Sätzen für Marc zusammen: zuerst die Frühwarnung (nur wenn nicht grün), dann die nächste Chance (Qualitätstag, Tourfenster) und der Fitnesstrend – sag dabei, ob ein Rückgang aus dem Plan (Woche unter Fitness halten) oder aus einer geplanten Entlastungswoche kommt. Konkrete Tage nennen, keine neuen Zahlen erfinden."},
+                {"role": "user", "content": block + (f"\n\nLETZTER TEXT (nicht wiederholen, andere Formulierung): {vl_alt}" if vl_alt else "") + "\n\nFasse das in 3–5 Sätzen für Marc zusammen: beginne mit dem, was sich seit dem letzten Vorausblick geändert hat (besser/schlechter, neue oder weggefallene Signale), dann die Frühwarnung (nur wenn nicht grün) mit der Stellschraube, dann die nächste Chance (Qualitätstag, Tourfenster) und der Fitnesstrend – sag dabei, ob ein Rückgang aus dem Plan (Woche unter Fitness halten) oder aus einer geplanten Entlastungswoche kommt. Konkrete Tage nennen, keine neuen Zahlen erfinden."},
             ]
             text, _ = ollama_chat(MODEL, msgs, num_ctx=8192, timeout=600)
             text = text.strip().strip('"')
@@ -2520,6 +2587,8 @@ def cmd_vorausblick(force: bool = False) -> None:
     if not text:
         fw = d["fruehwarnung"]
         teile = []
+        if (fw.get("verlauf") or {}).get("text"):
+            teile.append(fw["verlauf"]["text"])
         if fw["stufe"] != "gruen":
             teile.append(f"Frühwarnung {fw['stufe']}: {fw['prognose']}")
         if d["vorausblick"].get("qualitaetstag"):
