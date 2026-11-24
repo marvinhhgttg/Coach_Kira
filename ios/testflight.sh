@@ -13,6 +13,8 @@ fi
 cd ~/coach-kira-ios
 BUILD=$(date +%Y%m%d%H%M)
 mkdir -p build
+# Build-Nummer steht fest in den Info.plist (App + Widgets) → vor jedem Upload hochzählen, sonst lehnt Apple doppelte Nummern ab
+for pl in App/Info.plist Widgets/Info.plist; do /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD" "$pl"; done
 echo "Team $TEAM · Build $BUILD"
 xcodebuild -project CoachKira.xcodeproj -scheme CoachKira -configuration Release \
   -destination 'generic/platform=iOS' -archivePath build/CoachKira.xcarchive \
