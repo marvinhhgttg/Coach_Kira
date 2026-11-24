@@ -4,7 +4,12 @@
 # App in App Store Connect angelegt (Bundle-ID de.reichpietsch.coachkira).
 # Aufruf:  zsh ~/coach-kira-ios/testflight.sh [TEAM-ID]
 set -euo pipefail
-TEAM="${1:-8Z2DKM5LZ9}"
+TEAM="${1:-}"
+if [[ ! "$TEAM" =~ ^[A-Z0-9]{10}$ ]]; then
+  echo "Bitte die echte Team-ID angeben (10 Zeichen, developer.apple.com → Membership), z. B.: zsh ~/coach-kira-ios/testflight.sh AB12CD34EF"
+  echo "Hinweis: TestFlight geht nur mit bezahlter Mitgliedschaft im Apple Developer Program."
+  exit 1
+fi
 cd ~/coach-kira-ios
 BUILD=$(date +%Y%m%d%H%M)
 mkdir -p build
