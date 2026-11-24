@@ -117,6 +117,12 @@ def nachricht(titel: str, text: str, iphone: bool = True) -> None:
         pass
     if not iphone:
         return
+    pause = BASE / "erinnerung_pause"
+    try:
+        if pause.exists() and time.time() < float(pause.read_text() or 0):
+            return
+    except Exception:
+        pass
     skript = (
         'tell application "Reminders"\n'
         '  if not (exists list "Coach Kira") then make new list with properties {name:"Coach Kira"}\n'
@@ -132,8 +138,10 @@ def nachricht(titel: str, text: str, iphone: bool = True) -> None:
         r = subprocess.run(["osascript", "-e", skript], capture_output=True, text=True, timeout=25)
         if r.returncode != 0:
             log(f"Erinnerung fehlgeschlagen: {r.stderr.strip()[:160]}")
+            pause.write_text(str(time.time() + 3600))
     except Exception as e:
-        log(f"Erinnerung fehlgeschlagen: {e}")
+        log(f"Erinnerung fehlgeschlagen (Freigabe für Erinnerungen fehlt?): {str(e)[:80]}")
+        pause.write_text(str(time.time() + 3600))
 
 
 # ---------------------------------------------------------------- Formular
@@ -269,7 +277,9 @@ def ernaehrung(g, tag: str) -> dict | None:
         (BASE / "garmin_ernaehrung_roh.json").write_text(json.dumps(roh, ensure_ascii=False)[:60000])
     except Exception:
         pass
-    s = _suche_summen(roh.get("get_nutrition_daily_food_log")) or _suche_summen(roh.get("get_nutrition_daily_meals"))
+    fl = roh.get("get_nutrition_daily_food_log")
+    s = fl.get("dailyNutritionContent") if isinstance(fl, dict) and isinstance(fl.get("dailyNutritionContent"), dict) else None
+    s = s or _suche_summen(fl) or _suche_summen(roh.get("get_nutrition_daily_meals"))
     if not s:
         return None
     lk = {k.lower(): v for k, v in s.items()}
