@@ -95,7 +95,7 @@ export function AutoBanner() {
 }
 
 const SCHALTER: { k: keyof Status['einstellung']; label: string; unter: string }[] = [
-  { k: 'formular', label: 'Formular automatisch', unter: 'Morgens, nach jeder Einheit und abends um 21:30 vom Mac eintragen' },
+  { k: 'formular', label: 'Formular automatisch', unter: 'Morgens, nach jeder Einheit und abends um 23:30 vom Mac eintragen – manuelle Einträge haben Vorrang' },
   { k: 'hinweise', label: 'Hinweise an Uhr und iPhone', unter: 'Morgenvotum, Befinden, Licht aus, ACWR/Ruhepuls, Plan-Vorschlag' },
   { k: 'plancheck', label: 'Plancheck', unter: 'ACWR-Prognose über 1,50 → Vorschlag mit kleineren Lasten' },
   { k: 'workout', label: 'Workout für morgen', unter: 'Abends ab 20 Uhr in den Garmin-Kalender, wenn noch keins da ist' },

@@ -2,7 +2,7 @@
 """Coach Kira – Automatik auf dem Mac (24.11.2026, von Marc freigegeben: „Formular-Regel wird gelockert“).
 
 Wird von kira_garmin_live.py nach jeder Live-Meldung aufgerufen (gleicher Garmin-Login, eigene venv):
-  formular     Morgens (≥ 15 min nach Garmins Aufwachwert), nach jeder gespeicherten Einheit, abends ab 21:30
+  formular     Morgens (≥ 15 min nach Garmins Aufwachwert), nach jeder gespeicherten Einheit, abends ab 23:30 (bis 24.11. 21:30)
                → POST /api/auto/eintrag (Server prüft gegen die Timeline, trägt über onFormSubmit ein)
   sicherung    Server-Zustand (Kopplungen, Token, Einstellungen) lokal sichern; nach einem Neustart wiederherstellen
   hinweise     fällige Hinweise ans iPhone (Erinnerungen-App, iCloud) und als Mac-Mitteilung
@@ -295,11 +295,11 @@ def ernaehrung(g, tag: str) -> dict | None:
 
 def abends(g, tag: str, st: dict, jetzt: datetime.datetime, test: bool) -> None:
     ziel = None
-    if (jetzt.hour, jetzt.minute) >= (21, 30) and st.get("abends") != tag:
+    if (jetzt.hour, jetzt.minute) >= (23, 30) and st.get("abends") != tag:   # 24.11.2026: Marc – abends 23:30
         ziel = tag
     gestern = (jetzt.date() - datetime.timedelta(days=1)).isoformat()
     if 5 <= jetzt.hour < 12 and st.get("abends") != gestern and st.get("abends_nachtrag") != gestern:
-        ziel = gestern  # Nachtrag für gestern, falls 21:30 verpasst (Mac schlief)
+        ziel = gestern  # Nachtrag für gestern, falls 23:30 verpasst (Mac schlief)
     if not ziel:
         return
     e = ernaehrung(g, ziel)

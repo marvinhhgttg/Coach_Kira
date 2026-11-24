@@ -211,9 +211,9 @@ def main() -> None:
             return
         if s.get("pause_bis") and time.time() < float(s["pause_bis"]):
             return
-        # 24.11.2026: Takt 5 min (LaunchAgent 300 s) nur morgens 5–10 Uhr, bis 2 h nach einer neuen Einheit und 21–22 Uhr,
+        # 24.11.2026: Takt 5 min (LaunchAgent 300 s) nur morgens 5–10 Uhr, bis 2 h nach einer neuen Einheit und ab 23:25 (Abendeintrag 23:30),
         # sonst höchstens alle 10 min – schont Garmins Abrufgrenzen
-        schnell = 5 <= jetzt.hour < 10 or 21 <= jetzt.hour < 22 or time.time() - float(s.get("akt_neu_at") or 0) < 2 * 3600
+        schnell = 5 <= jetzt.hour < 10 or (jetzt.hour, jetzt.minute) >= (23, 25) or time.time() - float(s.get("akt_neu_at") or 0) < 2 * 3600
         if not schnell and time.time() - float(s.get("abruf_at") or 0) < 9.5 * 60:
             return
     from garminconnect import Garmin
