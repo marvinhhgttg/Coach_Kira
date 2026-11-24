@@ -12,7 +12,7 @@ type Vorschlag = { id: string; grenze: number; maxAlt: number; tagAlt: string; m
 type LogEintrag = { at: number; art: string; typ?: string; datum?: string; ok: boolean; uebersprungen?: string; fehler?: string; werte?: Record<string, string>; name?: string; schluessel?: string[]; verworfen?: boolean };
 type Status = {
   ok: boolean; error?: string;
-  einstellung: { formular: boolean; hinweise: boolean; plancheck: boolean; workout: boolean };
+  einstellung: { formular: boolean; hinweise: boolean; plancheck: boolean; workout: boolean; erfolg: boolean };
   log: LogEintrag[]; puls: { at: number } | null;
   vorschlag: Vorschlag | null; vorschlagStatus: { id?: string; status?: string };
   hinweise: { id: string; titel: string; text: string }[];
@@ -99,6 +99,7 @@ const SCHALTER: { k: keyof Status['einstellung']; label: string; unter: string }
   { k: 'hinweise', label: 'Hinweise an Uhr und iPhone', unter: 'Morgenvotum, Befinden, Licht aus, ACWR/Ruhepuls, Plan-Vorschlag' },
   { k: 'plancheck', label: 'Plancheck', unter: 'ACWR-Prognose über 1,50 → Vorschlag mit kleineren Lasten' },
   { k: 'workout', label: 'Workout für morgen', unter: 'Abends ab 20 Uhr in den Garmin-Kalender, wenn noch keins da ist' },
+  { k: 'erfolg', label: 'Erfolgsmeldungen', unter: 'Uhr und iPhone melden eingetragene Werte, Workout im Kalender, Plan angepasst' },
 ];
 
 function zeile(e: LogEintrag) {

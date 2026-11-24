@@ -175,7 +175,7 @@ export function setupWidget(app, { getSetting, setSetting, originOk, texte, apps
         const mehr = req.query.mehr === '1' && u ? { uhr: { l14: u.l14, m7: u.m7, form: u.form, letzte: u.letzte, plan7: u.plan7 || null } } : {};
         // 24.11.2026: Hinweise (einmal je id auf der Uhr) und Plan-Vorschlag (Uhr-Menü: übernehmen/verwerfen)
         let hinw = [];
-        try { hinw = (globalThis.ckHinweise?.(a, 'uhr') || []).slice(0, 3).map(({ id, titel, text }) => ({ id, titel, text })); } catch {}
+        try { hinw = (globalThis.ckHinweise?.(a, 'uhr') || []).slice(0, 6).map(({ id, titel, text }) => ({ id, titel, text })); } catch {}
         const st = globalThis.ckVorschlag?.status?.() || {};
         const pv = a.planVorschlag && st.id !== a.planVorschlag.id ? { id: a.planVorschlag.id, text: a.planVorschlag.aenderungen.map((x) => `${x.d.slice(8, 10)}.${x.d.slice(5, 7)}. ${x.alt}>${x.neu}`).join(' · '), max: a.planVorschlag.maxNeu } : null;
         const { planVorschlag: _pv, schlaf: _sl, ...rest2 } = rest;

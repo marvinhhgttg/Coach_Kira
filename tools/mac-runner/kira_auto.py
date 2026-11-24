@@ -364,8 +364,7 @@ def hinweise(st: dict, test: bool) -> None:
     r = api("GET", "/api/auto/hinweise", timeout=120)
     if not r.get("ok"):
         return
-    heute = datetime.date.today().isoformat()
-    gesendet = [x for x in (st.get("hinweise") or []) if str(x).startswith(heute) or str(x).startswith("plan-")][-40:]
+    gesendet = list(st.get("hinweise") or [])[-80:]  # ids: Datum-…, plan-…, ok-…, wo-…
     for h in r.get("hinweise") or []:
         if h["id"] in gesendet:
             continue

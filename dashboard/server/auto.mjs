@@ -25,7 +25,7 @@ const TEXT = new Set(['hrv_threshholds', 'Trainingszustand', 'Sport_x', 'Zone'])
 const SPORT_OK = new Set(['Run', 'Bike', 'Hike', 'Row', 'Swim', 'Skike', 'Ski']);
 const ZUSTAND_OK = new Set(['Formaufbau', 'Formerhalt', 'Höchstform', 'Höchstleistung', 'Erholung', 'Unproduktiv', 'Formverlust', 'Überlastung', 'Ermüdet']);
 const SICHERN = ['widget_geraete', 'dashboard_token', 'pin_hash', 'pin_salt', 'wochenplan', 'wochen_budget', 'geraete_einstellungen', 'texte_einstellung', 'auto_einstellung', 'auto_vorschlag', 'garmin_workouts'];
-const STANDARD = { formular: true, hinweise: true, plancheck: true, workout: true };
+const STANDARD = { formular: true, hinweise: true, plancheck: true, workout: true, erfolg: true };
 
 const heute = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
 const gestern = () => new Date(Date.now() - 86400000).toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
@@ -37,6 +37,7 @@ const WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 const tagKurz = (d) => { const x = new Date(d + 'T12:00:00Z'); return `${WT[x.getUTCDay()]} ${d.slice(8, 10)}.${d.slice(5, 7)}.`; };
 
 export function setupAuto(app, { getSetting, setSetting, macOk, callAppsScript, scriptUrl, aktiv, workoutEinreihen, workouts }) {
+  const workoutsLesen = () => { try { return workouts ? workouts() : []; } catch { return []; } };
   const lesen = (k, def) => { try { const v = getSetting(k); return v ? JSON.parse(v) : def; } catch { return def; } };
   const schreiben = (k, v) => setSetting(k, JSON.stringify(v));
   const einstellung = () => ({ ...STANDARD, ...lesen('auto_einstellung', {}) });
@@ -121,6 +122,26 @@ export function setupAuto(app, { getSetting, setSetting, macOk, callAppsScript, 
     if (e.plancheck && pv && st.id !== pv.id && h >= 7 && h < 22) {
       const t = pv.aenderungen.map((x) => `${tagKurz(x.d)} ${x.alt}→${x.neu}`).join(', ');
       xs.push({ id: `plan-${pv.id}`.slice(0, 60), kanal: 'beide', titel: `Plan: ACWR ${komma(pv.maxAlt, 2)} ${tagKurz(pv.tagAlt)}`, text: `Vorschlag ${t} ESS → max ${komma(pv.maxNeu, 2)}. Bestätigen: Uhr-Menü oder Cockpit.` });
+    }
+    // 24.11.2026: Erfolgsmeldungen der Automatik (je Schritt einmal, höchstens 12 h alt)
+    if (e.erfolg && h >= 6 && h < 23) {
+      const seit = Date.now() - 12 * 3600 * 1000;
+      const NAME = { Morgens: 'Morgenwerte', 'Nach Aktivität': 'Aktivität', Abends: 'Abendwerte' };
+      for (const x of lesen('auto_log', []).filter((x) => x.at >= seit && x.ok && !x.uebersprungen)) {
+        if (x.art === 'eintrag') {
+          const w = x.werte || {};
+          const kurz = x.typ === 'Morgens' ? [w.Garmin_Training_Readiness && `Bereitschaft ${w.Garmin_Training_Readiness}`, w.sleep_hours && `Schlaf ${w.sleep_hours} h`, w.hrv_status && `HRV ${w.hrv_status}`].filter(Boolean).join(' · ')
+            : x.typ === 'Abends' ? [w.kcal_in && `${w.kcal_in} kcal`, w.deficit && `Defizit ${w.deficit}`, w.protein_g && `Eiweiß ${w.protein_g} g`].filter(Boolean).join(' · ')
+            : [w.load_fb_day && `${w.load_fb_day} ESS`, w.Sport_x, w.Zone, w.fbACWR_obs && `ACWR ${w.fbACWR_obs}`].filter(Boolean).join(' · ');
+          xs.push({ id: `ok-${x.at}`, kanal: 'beide', titel: `Kira: ${NAME[x.typ] || x.typ} eingetragen`, text: `${x.datum === a.datum ? '' : x.datum + ': '}${kurz || 'ins Sheet übernommen'}.` });
+        } else if (x.art === 'plan' && !x.verworfen) xs.push({ id: `ok-${x.at}`, kanal: 'beide', titel: 'Kira: Plan angepasst', text: 'Der Plan-Vorschlag ist in der Timeline gespeichert.' });
+        else if (x.art === 'wiederherstellung') xs.push({ id: `ok-${x.at}`, kanal: 'beide', titel: 'Kira: Kopplung wiederhergestellt', text: `Nach dem Server-Neustart zurückgeholt: ${(x.schluessel || []).join(', ')}.` });
+      }
+      for (const q of (workoutsLesen() || []).filter((q) => q.auto && q.doneAt && q.doneAt >= seit)) {
+        xs.push(q.ok
+          ? { id: `wo-${q.id}`.slice(0, 60), kanal: 'beide', titel: 'Kira: Workout im Garmin-Kalender', text: `${tagKurz(q.datum)} ${q.workout?.name || ''} – auf der Uhr unter Training → Workouts.` }
+          : { id: `wo-${q.id}`.slice(0, 60), kanal: 'beide', titel: 'Kira: Workout fehlgeschlagen', text: `${tagKurz(q.datum)}: ${String(q.result || 'unbekannter Fehler').slice(0, 100)}` });
+      }
     }
     return xs.filter((x) => kanal === 'mac' || x.kanal !== 'iphone').map((x) => ({ ...x, text: x.text.slice(0, 160) }));
   }
