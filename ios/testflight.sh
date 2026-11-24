@@ -5,8 +5,8 @@
 # Aufruf:  zsh ~/coach-kira-ios/testflight.sh [TEAM-ID]
 set -euo pipefail
 TEAM="${1:-}"
-if [[ ! "$TEAM" =~ ^[A-Z0-9]{10}$ ]]; then
-  echo "Bitte die echte Team-ID angeben (10 Zeichen, developer.apple.com → Membership), z. B.: zsh ~/coach-kira-ios/testflight.sh AB12CD34EF"
+if [[ ! "$TEAM" =~ ^[A-Z0-9]{10}$ || "$TEAM" == "AB12CD34EF" ]]; then
+  echo "Bitte die echte Team-ID angeben (10 Zeichen, developer.apple.com → Membership), also: zsh ~/coach-kira-ios/testflight.sh <DEINE-TEAM-ID>"
   echo "Hinweis: TestFlight geht nur mit bezahlter Mitgliedschaft im Apple Developer Program."
   exit 1
 fi
