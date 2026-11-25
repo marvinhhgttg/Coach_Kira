@@ -123,7 +123,7 @@ export function App() {
       <header className="border-b border-border bg-bg-raised/70 backdrop-blur-sm sticky top-0 z-30">
         <div className="max-w-[1400px] mx-auto px-5 py-3 flex items-center gap-5">
           <div className="flex items-center gap-2.5 text-ink">
-            <Logo size={22} />
+            <Logo size={30} />
             <div className="leading-tight">
               <div className="text-sm font-semibold tracking-tight">Coach Kira</div>
               <div className="text-2xs text-ink-dim tnum">Trainingscockpit</div>

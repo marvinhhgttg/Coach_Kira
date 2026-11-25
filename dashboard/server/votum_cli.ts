@@ -3,6 +3,7 @@
  * Bau: npx esbuild server/votum_cli.ts --bundle --platform=node --format=esm --outfile=server/votum.mjs
  * Aufruf: node server/votum.mjs → JSON auf stdout
  */
+import './gsFetch.mjs'; // Restrisiko 3: Token für Lesezugriffe
 import { buildDays, RECOVERY_FETCH_METRICS, STUFE_COCKPIT, stufeSupervisor, vergleiche, type RecoveryDay } from '../src/kern/votum';
 import { fetchChartData, fetchPlanSimulationWithTimeout } from '../src/lib/api';
 import { lastEmpfehlung, lageImRahmen, persoenlicheBaender, type Baender } from '../src/kern/soll';

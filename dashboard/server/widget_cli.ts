@@ -4,6 +4,7 @@
  * Gebaut zu server/widget.mjs:  npx esbuild server/widget_cli.ts --bundle --platform=node --format=esm --outfile=server/widget.mjs
  * Aufruf: node server/widget.mjs  → JSON auf stdout
  */
+import './gsFetch.mjs'; // Restrisiko 3: Token für Lesezugriffe
 import { buildDays, RECOVERY_FETCH_METRICS, VOTE_LABEL, VOTE_LEVEL, type RecoveryDay } from '../src/kern/votum';
 import { lastEmpfehlung, persoenlicheBaender, type Baender } from '../src/kern/soll';
 import { fetchChartData, fetchPlanSimulationWithTimeout } from '../src/lib/api';

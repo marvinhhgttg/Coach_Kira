@@ -1,4 +1,5 @@
 // Abgleich Rechenkern ↔ Sheet (Etappe 1, Schattenbetrieb, nur lesend)
+import './gsFetch.mjs'; // Restrisiko 3: Token für Lesezugriffe
 import { rechneZeile, KERN_SPALTEN, type Zeile, type Zelle } from './rechenkern';
 import { rechnePrognose, PROGNOSE_SPALTEN, simuliere } from './prognose';
 export { simuliere };

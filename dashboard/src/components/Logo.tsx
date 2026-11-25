@@ -1,20 +1,6 @@
-export function Logo({ size = 22 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 32 32"
-      fill="none"
-      aria-label="Coach Kira"
-      className="shrink-0"
-    >
-      <rect x="0.5" y="0.5" width="31" height="31" rx="6" stroke="currentColor" strokeOpacity="0.25" />
-      <path
-        d="M8 22 L8 10 M8 16 L18 10 M8 16 L18 22 M22 10 L22 22"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="square"
-      />
-    </svg>
-  );
+// 25.11.2026: App-Symbol (Bogen mit Berg und Herzschlag) statt "KI" – gleich wie iPhone-/Mac-App
+import logo from '../assets/kira-logo.png';
+
+export function Logo({ size = 28 }: { size?: number }) {
+  return <img src={logo} width={size} height={size} alt="Coach Kira" className="shrink-0 rounded-[22%]" draggable={false} />;
 }

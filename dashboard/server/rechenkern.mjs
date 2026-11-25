@@ -1,3 +1,27 @@
+// server/gsFetch.mjs
+var RE = /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec/;
+if (!globalThis.__ckGsFetch && typeof globalThis.fetch === "function") {
+  globalThis.__ckGsFetch = true;
+  const orig = globalThis.fetch;
+  globalThis.fetch = (input, init) => {
+    try {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.href : input && input.url;
+      if (url && RE.test(url)) {
+        const t = typeof globalThis.__ckGsToken === "function" ? globalThis.__ckGsToken() : process.env.CK_GS_TOKEN || "";
+        if (t) {
+          const u = new URL(url);
+          if (!u.searchParams.has("token")) {
+            u.searchParams.set("token", t);
+            return orig(u.toString(), init);
+          }
+        }
+      }
+    } catch {
+    }
+    return orig(input, init);
+  };
+}
+
 // src/kern/formeln.ts
 var ATL_MODEL = { a: -8.819849, b: 0.83645661, c: 1.24059231 };
 var CTL_MODEL = { a: -3.95042, b: 0.97283824, c: 0.2336734, g: 0.7, k: 7.1, win: 28 };

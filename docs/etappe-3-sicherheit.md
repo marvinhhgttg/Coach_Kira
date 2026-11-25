@@ -67,3 +67,11 @@ Reihenfolge wie entschieden: 1 → 2 → 3.
 
 - Die vorige `server.mjs` liegt im Git-Verlauf (Commit vor Etappe 3), `package-lock.json` ebenso.
 - Danach erneut veröffentlichen.
+
+
+## Restrisiken abgearbeitet (25.11.2026)
+
+- Telegram: Es gibt keinen Telegram-Eingang (kein Webhook, kein getUpdates). Die `update_id`-Ausnahme von der Token-Pflicht gilt nur noch mit gültigem `tg_key` (TELEGRAM_WEBHOOK_KEY, nicht gesetzt → Ausnahme zu). Gefälschte Telegram-POSTs werden mit `token_required` abgewiesen. Ausgang (sendMessage) unverändert, Test `ckSec_telegramTest()` erfolgreich.
+- Alte HTML-Seiten (page=chat/plan/…, Standardseite WebApp_V2): abgeschaltet, Antwort ist ein kurzer Text. Rückweg `ckSec_seitenAn()`. Zähler: `?mode=sicherheitLesen`.
+- Lesen: Schalter CK_LESE_PFLICHT (aus | protokoll | an), Stand `protokoll` (nur zählen). Server und Rechner-Kindprozesse hängen den Token an (server/gsFetch.mjs). Browser liest über /api/gs, ohne Sitzung fällt er auf den direkten Weg zurück (wird gezählt). Scharf schalten mit `ckSec_leseAn()` erst, wenn der Zähler nur noch erwartete Quellen zeigt; Rückweg `ckSec_leseAus()`.
+- Beide Bereitstellungen (live und v2) auf Version 983. Sicherungen: apps-script-backup/2026-11-25-vor-restrisiken und -nach-restrisiken.

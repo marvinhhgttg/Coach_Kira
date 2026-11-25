@@ -3113,6 +3113,30 @@ var require_jsx_runtime = __commonJS({
   }
 });
 
+// server/gsFetch.mjs
+var RE = /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec/;
+if (!globalThis.__ckGsFetch && typeof globalThis.fetch === "function") {
+  globalThis.__ckGsFetch = true;
+  const orig = globalThis.fetch;
+  globalThis.fetch = (input, init) => {
+    try {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.href : input && input.url;
+      if (url && RE.test(url)) {
+        const t = typeof globalThis.__ckGsToken === "function" ? globalThis.__ckGsToken() : process.env.CK_GS_TOKEN || "";
+        if (t) {
+          const u = new URL(url);
+          if (!u.searchParams.has("token")) {
+            u.searchParams.set("token", t);
+            return orig(u.toString(), init);
+          }
+        }
+      }
+    } catch {
+    }
+    return orig(input, init);
+  };
+}
+
 // src/lib/engine.ts
 var import_react8 = __toESM(require_react(), 1);
 

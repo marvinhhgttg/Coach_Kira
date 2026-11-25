@@ -1,3 +1,4 @@
+import './server/gsFetch.mjs'; // Restrisiko 3: Token für Lesezugriffe aufs Apps Script
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import Database from 'better-sqlite3';
@@ -44,6 +45,15 @@ function now() {
 function getSetting(key) {
   return db.prepare('SELECT value FROM settings WHERE key=?').get(key)?.value || null;
 }
+
+// Restrisiko 3 (25.11.2026): Token für Lesezugriffe – Server und Rechner-Kindprozesse (über CK_GS_TOKEN)
+globalThis.__ckGsToken = () => {
+  const t = getSetting('dashboard_token') || '';
+  if (process.env.CK_GS_TOKEN !== t) process.env.CK_GS_TOKEN = t;
+  return t;
+};
+setTimeout(() => { try { globalThis.__ckGsToken(); } catch {} }, 0);
+setInterval(() => { try { globalThis.__ckGsToken(); } catch {} }, 15000).unref();
 
 function setSetting(key, value) {
   db.prepare('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value')

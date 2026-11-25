@@ -9,6 +9,7 @@
  * berechnet aus der ganzen Timeline (chartData). Ist die Timeline nicht erreichbar, bleibt der Prompt wie bisher.
  * Quelle der Texte: dashboard/src/lib/kiraPrompts.ts (gleich wie im Cockpit).
  */
+import './gsFetch.mjs'; // Restrisiko 3: Token für Lesezugriffe
 import { supervisorPrompt, briefingMessages, telegramMessages } from '../src/lib/kiraPrompts';
 import { erfahrungAusRohdaten, erfahrungText } from '../src/lib/votumErfahrung';
 import { RECOVERY_FETCH_METRICS } from '../src/screens/RecoveryPanel';

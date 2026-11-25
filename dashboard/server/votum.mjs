@@ -70,14 +70,14 @@ var require_react_production_min = __commonJS({
     function F() {
     }
     F.prototype = E.prototype;
-    function G(a, b, e) {
+    function G2(a, b, e) {
       this.props = a;
       this.context = b;
       this.refs = D;
       this.updater = e || B;
     }
-    var H = G.prototype = new F();
-    H.constructor = G;
+    var H = G2.prototype = new F();
+    H.constructor = G2;
     C(H, E.prototype);
     H.isPureReactComponent = true;
     var I = Array.isArray;
@@ -192,7 +192,7 @@ var require_react_production_min = __commonJS({
     exports.Component = E;
     exports.Fragment = p;
     exports.Profiler = r;
-    exports.PureComponent = G;
+    exports.PureComponent = G2;
     exports.StrictMode = q;
     exports.Suspense = w;
     exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = W;
@@ -3113,6 +3113,30 @@ var require_jsx_runtime = __commonJS({
   }
 });
 
+// server/gsFetch.mjs
+var RE = /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec/;
+if (!globalThis.__ckGsFetch && typeof globalThis.fetch === "function") {
+  globalThis.__ckGsFetch = true;
+  const orig = globalThis.fetch;
+  globalThis.fetch = (input, init) => {
+    try {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.href : input && input.url;
+      if (url && RE.test(url)) {
+        const t2 = typeof globalThis.__ckGsToken === "function" ? globalThis.__ckGsToken() : process.env.CK_GS_TOKEN || "";
+        if (t2) {
+          const u = new URL(url);
+          if (!u.searchParams.has("token")) {
+            u.searchParams.set("token", t2);
+            return orig(u.toString(), init);
+          }
+        }
+      }
+    } catch {
+    }
+    return orig(input, init);
+  };
+}
+
 // src/lib/engine.ts
 var import_react8 = __toESM(require_react(), 1);
 
@@ -3270,6 +3294,79 @@ var VARS = [
   { key: "essDay", label: "Last", short: "Last", unit: "ESS" }
 ];
 var VAR = Object.fromEntries(VARS.map((v) => [v.key, v]));
+
+// src/lib/trFarbe.ts
+var TR_BAENDER = [
+  { von: 0, bis: 25, farbe: "#D9433A", name: "Schlecht" },
+  { von: 25, bis: 50, farbe: "#E5822F", name: "Niedrig" },
+  { von: 50, bis: 75, farbe: "#5DB75B", name: "M\xE4\xDFig" },
+  { von: 75, bis: 95, farbe: "#3A78CF", name: "Hoch" },
+  { von: 95, bis: 101, farbe: "#6E45E9", name: "Optimal" }
+];
+
+// src/lib/garminSkala.ts
+var G = { rot: "#D9433A", orange: "#E5822F", gruen: "#5DB75B", blau: "#3A78CF", lila: "#6E45E9", grau: "#9aa5b1" };
+var TR_SKALA = { min: 0, max: 100, baender: TR_BAENDER.map((b) => ({ ...b })) };
+var BB_SKALA = {
+  min: 0,
+  max: 100,
+  baender: [
+    { von: 0, bis: 26, farbe: G.rot, name: "Sehr niedrig" },
+    { von: 26, bis: 51, farbe: G.orange, name: "Niedrig" },
+    { von: 51, bis: 76, farbe: G.gruen, name: "Mittel" },
+    { von: 76, bis: 101, farbe: G.blau, name: "Hoch" }
+  ]
+};
+var SCHLAF_SCORE_SKALA = {
+  min: 0,
+  max: 100,
+  baender: [
+    { von: 0, bis: 60, farbe: G.rot, name: "Schlecht" },
+    { von: 60, bis: 80, farbe: G.orange, name: "Ordentlich" },
+    { von: 80, bis: 90, farbe: G.gruen, name: "Gut" },
+    { von: 90, bis: 101, farbe: G.blau, name: "Ausgezeichnet" }
+  ]
+};
+var SCORE_SKALA = {
+  min: 0,
+  max: 100,
+  baender: [
+    { von: 0, bis: 30, farbe: G.rot, name: "Schlecht" },
+    { von: 30, bis: 50, farbe: G.orange, name: "Niedrig" },
+    { von: 50, bis: 70, farbe: G.gruen, name: "M\xE4\xDFig" },
+    { von: 70, bis: 101, farbe: G.blau, name: "Gut" }
+  ]
+};
+var RHR_DELTA_SKALA = {
+  min: -8,
+  max: 8,
+  baender: [
+    { von: -99, bis: -5, farbe: G.lila, name: "Auff\xE4llig niedrig" },
+    { von: -5, bis: 1, farbe: G.blau, name: "Normal" },
+    { von: 1, bis: 3, farbe: G.gruen, name: "Leicht erh\xF6ht" },
+    { von: 3, bis: 5, farbe: G.orange, name: "Erh\xF6ht" },
+    { von: 5, bis: 99, farbe: G.rot, name: "Deutlich erh\xF6ht" }
+  ]
+};
+var BEFINDEN_SKALA = {
+  min: 1,
+  max: 5,
+  baender: [
+    { von: 0, bis: 2, farbe: G.rot, name: "Schlecht" },
+    { von: 2, bis: 3, farbe: G.orange, name: "M\xE4\xDFig" },
+    { von: 3, bis: 4, farbe: G.gruen, name: "Ok" },
+    { von: 4, bis: 9, farbe: G.blau, name: "Gut" }
+  ]
+};
+var TOURFORM_SKALA = {
+  min: 0,
+  max: 100,
+  baender: [
+    { von: 0, bis: 60, farbe: G.orange, name: "Aufbau" },
+    { von: 60, bis: 80, farbe: G.gruen, name: "Auf Kurs" },
+    { von: 80, bis: 101, farbe: G.blau, name: "Bereit" }
+  ]
+};
 
 // src/components/GarminSportProfilTile.tsx
 var import_react6 = __toESM(require_react(), 1);
