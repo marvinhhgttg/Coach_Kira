@@ -312,7 +312,8 @@ export function setupAuto(app, { getSetting, setSetting, macOk, callAppsScript, 
     if (!streng(req)) return res.status(403).json({ ok: false, error: 'mac_key_required' });
     try {
       const a = await globalThis.ckWidgetAntwort?.(false);
-      res.json({ ok: true, hinweise: hinweise(a, 'mac'), votum: a?.votum ? { vote: a.votum.vote, vorlaeufig: !!a.votum.vorlaeufig } : null });
+      const push = lesen('widget_geraete', []).filter((g) => g?.push?.token).map((g) => ({ token: g.push.token, umgebung: g.push.umgebung, name: g.name || g.geraet || '' }));
+      res.json({ ok: true, push, hinweise: hinweise(a, 'mac'), votum: a?.votum ? { vote: a.votum.vote, vorlaeufig: !!a.votum.vorlaeufig } : null });
     } catch (e) {
       res.status(502).json({ ok: false, error: String(e.message || e) });
     }

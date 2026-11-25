@@ -172,6 +172,20 @@ enum KiraAPI {
         KiraStore.token = t
     }
 
+    /// 25.11.2026: Push-Gerätekennung beim Cockpit anmelden (Mac verschickt darüber Kiras Hinweise)
+    static func pushMelden(geraeteToken: String, umgebung: String) async throws {
+        guard let t = KiraStore.token, !t.isEmpty else { throw KiraFehler.nichtGekoppelt }
+        var r = URLRequest(url: KiraConfig.server.appendingPathComponent("api/widget/push"), timeoutInterval: 30)
+        r.httpMethod = "POST"
+        r.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        r.setValue("Bearer \(t)", forHTTPHeaderField: "Authorization")
+        r.httpBody = try JSONSerialization.data(withJSONObject: ["token": geraeteToken, "umgebung": umgebung])
+        let (data, resp) = try await URLSession.shared.data(for: r)
+        if (resp as? HTTPURLResponse)?.statusCode == 401 { throw KiraFehler.nichtGekoppelt }
+        let a = try JSONDecoder().decode(ServerAntwort.self, from: data)
+        guard a.ok else { throw KiraFehler.server(a.error ?? "Push-Anmeldung fehlgeschlagen.") }
+    }
+
     @discardableResult
     static func aktion(_ name: String) async throws -> String {
         guard let t = KiraStore.token, !t.isEmpty else { throw KiraFehler.nichtGekoppelt }

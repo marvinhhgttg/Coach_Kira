@@ -43,6 +43,7 @@ targets:
       path: App/CoachKira.entitlements
       properties:
         com.apple.security.application-groups: [group.de.reichpietsch.coachkira]
+        aps-environment: development  # 25.11.2026: Push; Xcode setzt beim TestFlight-Export production
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: de.reichpietsch.coachkira

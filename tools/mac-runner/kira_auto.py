@@ -108,6 +108,20 @@ def zone_von(sek: dict[int, float]) -> str | None:
     return f"Z{z1}"
 
 
+PUSH_ZIELE: list[dict] = []   # 25.11.2026: iPhone/iPad-Kennungen vom Server (über /api/auto/hinweise)
+
+
+def push(titel: str, text: str, kennung: str = "") -> None:
+    try:
+        import kira_push
+        weg = kira_push.senden(PUSH_ZIELE, titel, text, kennung)
+        if weg:
+            PUSH_ZIELE[:] = [z for z in PUSH_ZIELE if z.get("token") not in weg]
+            log(f"Push: {len(weg)} Gerät(e) bei Apple abgemeldet")
+    except Exception as e:
+        log(f"Push fehlgeschlagen: {str(e)[:160]}")
+
+
 def nachricht(titel: str, text: str, iphone: bool = True) -> None:
     """Mac-Mitteilung und (für iPhone/Uhr) eine Erinnerung in der Liste „Coach Kira“ (iCloud)."""
     esc = lambda s: s.replace("\\", "\\\\").replace('"', '\\"')
@@ -117,6 +131,7 @@ def nachricht(titel: str, text: str, iphone: bool = True) -> None:
         pass
     if not iphone:
         return
+    push(titel, text)
     pause = BASE / "erinnerung_pause"
     try:
         if pause.exists() and time.time() < float(pause.read_text() or 0):
@@ -370,6 +385,11 @@ def hinweise(st: dict, test: bool) -> None:
     r = api("GET", "/api/auto/hinweise", timeout=120)
     if not r.get("ok"):
         return
+    # Push-Ziele: Server-Liste, sonst die zuletzt bekannten (Server-Neustart/Publish)
+    ziele = [z for z in (r.get("push") or []) if z.get("token")]
+    if ziele:
+        st["push"] = ziele
+    PUSH_ZIELE[:] = ziele or list(st.get("push") or [])
     gesendet = list(st.get("hinweise") or [])[-80:]  # ids: Datum-…, plan-…, ok-…, wo-…
     for h in r.get("hinweise") or []:
         if h["id"] in gesendet:

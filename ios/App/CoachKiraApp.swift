@@ -6,6 +6,8 @@ import WidgetKit
 
 @main
 struct CoachKiraApp: App {
+    @UIApplicationDelegateAdaptor(KiraAppDelegate.self) private var appDelegate
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -309,6 +311,7 @@ struct KopplungView: View {
         defer { laeuft = false }
         do {
             try await KiraAPI.verbinden(code: code.trimmingCharacters(in: .whitespaces), geraet: UIDevice.current.name)
+            KiraPush.nachKopplung()
             gekoppelt = true
             meldung = "Verbunden. Die Widgets holen jetzt den Tagesstand."
             stand = try? await KiraAPI.laden(frisch: true)

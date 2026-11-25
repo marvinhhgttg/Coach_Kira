@@ -200,6 +200,21 @@ export function setupWidget(app, { getSetting, setSetting, originOk, texte, apps
     }
   });
   // 22.11.2026: Befinden 1–5 von der Uhr (gleicher Weg wie im Cockpit: Apps Script saveWellbeing)
+  // 25.11.2026: Push-Gerätekennung der iPhone-/iPad-App; der Mac verschickt darüber Kiras Hinweise (APNs)
+  app.post('/api/widget/push', (req, res) => {
+    const g = geraetZu(req);
+    if (!g) return res.status(401).json({ ok: false, error: 'App nicht gekoppelt.' });
+    const token = String(req.body?.token || '').toLowerCase();
+    if (!/^[0-9a-f]{64,200}$/.test(token)) return res.status(400).json({ ok: false, error: 'Ungültige Gerätekennung.' });
+    const umgebung = req.body?.umgebung === 'development' ? 'development' : 'production';
+    const xs = geraete();
+    for (const x of xs) if (x.push?.token === token && x.id !== g.id) delete x.push;
+    const ich = xs.find((x) => x.id === g.id);
+    if (ich) ich.push = { token, umgebung, at: Date.now() };
+    schreiben('widget_geraete', xs);
+    res.json({ ok: true });
+  });
+
   app.post('/api/widget/befinden', async (req, res) => {
     if (!geraetZu(req)) return res.status(401).json({ ok: false, error: 'nicht gekoppelt' });
     const v = Number(req.body?.value);
