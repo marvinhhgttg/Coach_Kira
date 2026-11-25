@@ -563,10 +563,12 @@ class KiraZeiger extends WatchUi.WatchFace {
             var ps = kopf.size() > 6 && kopf[6].length() > 0 ? kopf[6] : "-";
             var yp = b1 + dc.getFontHeight(fKlein) - 2;
             dc.setColor(0x9FB3C8, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx - 6, yp, fKlein, ps, Graphics.TEXT_JUSTIFY_RIGHT);
+            // 25.11.2026: linksbündig mit dem ersten Planbalken, ACWR direkt dahinter
+            var xl = x0 + pbw / 4;
+            dc.drawText(xl, yp, fKlein, ps, Graphics.TEXT_JUSTIFY_LEFT);
             if (am != null) {
                 dc.setColor(KiraSkala.punkt(am > 150 ? KiraSkala.ROT : am > 130 ? KiraSkala.ORANGE : am < 80 ? KiraSkala.BLAU : KiraSkala.GRUEN), Graphics.COLOR_TRANSPARENT);
-                dc.drawText(cx + 6, yp, fKlein, "ACWR " + (am / 100).toString() + "," + (am % 100).format("%02d"), Graphics.TEXT_JUSTIFY_LEFT);
+                dc.drawText(xl + dc.getTextWidthInPixels(ps, fKlein) + 12, yp, fKlein, "ACWR " + (am / 100).toString() + "," + (am % 100).format("%02d"), Graphics.TEXT_JUSTIFY_LEFT);
             }
         } else {
             dc.setColor(GRAU, Graphics.COLOR_TRANSPARENT);

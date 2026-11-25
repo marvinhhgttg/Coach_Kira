@@ -655,25 +655,26 @@
         <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="563" parent="globals/KiraZeiger" pc="268448178" symbol="onUpdate"/>
         <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="564" parent="globals/KiraZeiger" pc="268448222" symbol="onUpdate"/>
         <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="565" parent="globals/KiraZeiger" pc="268448244" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="566" parent="globals/KiraZeiger" pc="268448261" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="567" parent="globals/KiraZeiger" pc="268448286" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="568" parent="globals/KiraZeiger" pc="268448292" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="569" parent="globals/KiraZeiger" pc="268448369" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="572" parent="globals/KiraZeiger" pc="268448441" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="573" parent="globals/KiraZeiger" pc="268448458" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="577" parent="globals/KiraZeiger" pc="268448490" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="578" parent="globals/KiraZeiger" pc="268448515" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="579" parent="globals/KiraZeiger" pc="268448522" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="580" parent="globals/KiraZeiger" pc="268448529" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="581" parent="globals/KiraZeiger" pc="268448546" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="584" parent="globals/KiraZeiger" pc="268448623" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="585" parent="globals/KiraZeiger" pc="268448663" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="586" parent="globals/KiraZeiger" pc="268448703" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="586" parent="globals/KiraZeiger" pc="268448711" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="587" parent="globals/KiraZeiger" pc="268448778" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="588" parent="globals/KiraZeiger" pc="268448800" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="589" parent="globals/KiraZeiger" pc="268448816" symbol="onUpdate"/>
-        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="590" parent="globals/KiraZeiger" pc="268448829" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="567" parent="globals/KiraZeiger" pc="268448261" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="568" parent="globals/KiraZeiger" pc="268448271" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="569" parent="globals/KiraZeiger" pc="268448294" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="570" parent="globals/KiraZeiger" pc="268448300" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="571" parent="globals/KiraZeiger" pc="268448377" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="574" parent="globals/KiraZeiger" pc="268448466" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="575" parent="globals/KiraZeiger" pc="268448483" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="579" parent="globals/KiraZeiger" pc="268448515" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="580" parent="globals/KiraZeiger" pc="268448540" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="581" parent="globals/KiraZeiger" pc="268448547" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="582" parent="globals/KiraZeiger" pc="268448554" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="583" parent="globals/KiraZeiger" pc="268448571" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="586" parent="globals/KiraZeiger" pc="268448648" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="587" parent="globals/KiraZeiger" pc="268448688" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="588" parent="globals/KiraZeiger" pc="268448728" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="588" parent="globals/KiraZeiger" pc="268448736" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="589" parent="globals/KiraZeiger" pc="268448803" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="590" parent="globals/KiraZeiger" pc="268448825" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="591" parent="globals/KiraZeiger" pc="268448841" symbol="onUpdate"/>
+        <entry filename="/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" id="73" lineNum="592" parent="globals/KiraZeiger" pc="268448854" symbol="onUpdate"/>
     </pcToLineNum>
     <symbolTable>
         <entry id="8388639" module="true" symbol="Graphics"/>
@@ -1064,47 +1065,47 @@
         <entry arg="true" endPc="268443739" name="i" stackId="2" startPc="268443663"/>
         <entry endPc="268443739" name="z" stackId="3" startPc="268443666"/>
         <entry endPc="268443914" name="e" stackId="1" startPc="268443904"/>
-        <entry arg="true" endPc="268448845" name="dc" stackId="1" startPc="268443935"/>
-        <entry endPc="268448844" name="w" stackId="2" startPc="268443938"/>
-        <entry endPc="268448844" name="h" stackId="3" startPc="268443938"/>
-        <entry endPc="268448844" name="cx" stackId="4" startPc="268443938"/>
-        <entry endPc="268448844" name="cy" stackId="5" startPc="268443938"/>
-        <entry endPc="268448844" name="uhr" stackId="6" startPc="268443938"/>
-        <entry endPc="268448844" name="wStd" stackId="7" startPc="268443938"/>
-        <entry endPc="268448844" name="wMin" stackId="8" startPc="268443938"/>
+        <entry arg="true" endPc="268448870" name="dc" stackId="1" startPc="268443935"/>
+        <entry endPc="268448869" name="w" stackId="2" startPc="268443938"/>
+        <entry endPc="268448869" name="h" stackId="3" startPc="268443938"/>
+        <entry endPc="268448869" name="cx" stackId="4" startPc="268443938"/>
+        <entry endPc="268448869" name="cy" stackId="5" startPc="268443938"/>
+        <entry endPc="268448869" name="uhr" stackId="6" startPc="268443938"/>
+        <entry endPc="268448869" name="wStd" stackId="7" startPc="268443938"/>
+        <entry endPc="268448869" name="wMin" stackId="8" startPc="268443938"/>
         <entry endPc="268444406" name="i" stackId="9" startPc="268444172"/>
         <entry endPc="268444396" name="a" stackId="10" startPc="268444172"/>
         <entry endPc="268444396" name="r1" stackId="11" startPc="268444172"/>
         <entry endPc="268444396" name="r2" stackId="12" startPc="268444172"/>
-        <entry endPc="268448844" name="t" stackId="13" startPc="268443938"/>
-        <entry endPc="268448844" name="heute" stackId="14" startPc="268443938"/>
-        <entry endPc="268448844" name="vote" stackId="15" startPc="268443938"/>
-        <entry endPc="268448844" name="st" stackId="16" startPc="268443938"/>
-        <entry endPc="268448844" name="tage" stackId="17" startPc="268443938"/>
-        <entry endPc="268448844" name="vf" stackId="18" startPc="268443938"/>
-        <entry endPc="268448844" name="pos" stackId="19" startPc="268443938"/>
+        <entry endPc="268448869" name="t" stackId="13" startPc="268443938"/>
+        <entry endPc="268448869" name="heute" stackId="14" startPc="268443938"/>
+        <entry endPc="268448869" name="vote" stackId="15" startPc="268443938"/>
+        <entry endPc="268448869" name="st" stackId="16" startPc="268443938"/>
+        <entry endPc="268448869" name="tage" stackId="17" startPc="268443938"/>
+        <entry endPc="268448869" name="vf" stackId="18" startPc="268443938"/>
+        <entry endPc="268448869" name="pos" stackId="19" startPc="268443938"/>
         <entry endPc="268445324" name="i" stackId="20" startPc="268445233"/>
         <entry endPc="268445314" name="ek" stackId="21" startPc="268445233"/>
         <entry endPc="268445510" name="erh" stackId="22" startPc="268445333"/>
         <entry endPc="268445510" name="bbn" stackId="23" startPc="268445333"/>
         <entry endPc="268445510" name="eab" stackId="24" startPc="268445333"/>
-        <entry endPc="268448844" name="rx" stackId="25" startPc="268443938"/>
-        <entry endPc="268448844" name="rr" stackId="26" startPc="268443938"/>
-        <entry endPc="268448844" name="rgL" stackId="27" startPc="268443938"/>
-        <entry endPc="268448844" name="lx" stackId="28" startPc="268443938"/>
-        <entry endPc="268448844" name="lo" stackId="29" startPc="268443938"/>
-        <entry endPc="268448844" name="hi" stackId="30" startPc="268443938"/>
-        <entry endPc="268448844" name="ist" stackId="31" startPc="268443938"/>
+        <entry endPc="268448869" name="rx" stackId="25" startPc="268443938"/>
+        <entry endPc="268448869" name="rr" stackId="26" startPc="268443938"/>
+        <entry endPc="268448869" name="rgL" stackId="27" startPc="268443938"/>
+        <entry endPc="268448869" name="lx" stackId="28" startPc="268443938"/>
+        <entry endPc="268448869" name="lo" stackId="29" startPc="268443938"/>
+        <entry endPc="268448869" name="hi" stackId="30" startPc="268443938"/>
+        <entry endPc="268448869" name="ist" stackId="31" startPc="268443938"/>
         <entry endPc="268446273" name="rgR" stackId="32" startPc="268446106"/>
-        <entry endPc="268448844" name="wk" stackId="33" startPc="268443938"/>
-        <entry endPc="268448844" name="wI" stackId="34" startPc="268443938"/>
-        <entry endPc="268448844" name="wL" stackId="35" startPc="268443938"/>
-        <entry endPc="268448844" name="wH" stackId="36" startPc="268443938"/>
-        <entry endPc="268448844" name="x0" stackId="37" startPc="268443938"/>
-        <entry endPc="268448844" name="x1" stackId="38" startPc="268443938"/>
-        <entry endPc="268448844" name="y0" stackId="39" startPc="268443938"/>
-        <entry endPc="268448844" name="y1" stackId="40" startPc="268443938"/>
-        <entry endPc="268448844" name="n" stackId="41" startPc="268443938"/>
+        <entry endPc="268448869" name="wk" stackId="33" startPc="268443938"/>
+        <entry endPc="268448869" name="wI" stackId="34" startPc="268443938"/>
+        <entry endPc="268448869" name="wL" stackId="35" startPc="268443938"/>
+        <entry endPc="268448869" name="wH" stackId="36" startPc="268443938"/>
+        <entry endPc="268448869" name="x0" stackId="37" startPc="268443938"/>
+        <entry endPc="268448869" name="x1" stackId="38" startPc="268443938"/>
+        <entry endPc="268448869" name="y0" stackId="39" startPc="268443938"/>
+        <entry endPc="268448869" name="y1" stackId="40" startPc="268443938"/>
+        <entry endPc="268448869" name="n" stackId="41" startPc="268443938"/>
         <entry endPc="268447266" name="vs" stackId="42" startPc="268446530"/>
         <entry endPc="268447266" name="los" stackId="43" startPc="268446530"/>
         <entry endPc="268447266" name="his" stackId="44" startPc="268446530"/>
@@ -1128,35 +1129,36 @@
         <entry endPc="268447266" name="kz" stackId="62" startPc="268446530"/>
         <entry endPc="268447266" name="i" stackId="63" startPc="268447154"/>
         <entry endPc="268447256" name="tag" stackId="64" startPc="268447154"/>
-        <entry endPc="268448844" name="fk" stackId="65" startPc="268443938"/>
-        <entry endPc="268448844" name="kopf" stackId="66" startPc="268443938"/>
-        <entry endPc="268448844" name="v2" stackId="67" startPc="268443938"/>
-        <entry endPc="268448844" name="cTxt" stackId="68" startPc="268443938"/>
-        <entry endPc="268448844" name="aTxt" stackId="69" startPc="268443938"/>
-        <entry endPc="268448844" name="yt" stackId="70" startPc="268443938"/>
-        <entry endPc="268448844" name="pP" stackId="71" startPc="268443938"/>
-        <entry endPc="268448844" name="b0" stackId="72" startPc="268443938"/>
-        <entry endPc="268448844" name="b1" stackId="73" startPc="268443938"/>
-        <entry endPc="268448844" name="pn" stackId="74" startPc="268443938"/>
-        <entry endPc="268448437" name="pmx" stackId="75" startPc="268447710"/>
+        <entry endPc="268448869" name="fk" stackId="65" startPc="268443938"/>
+        <entry endPc="268448869" name="kopf" stackId="66" startPc="268443938"/>
+        <entry endPc="268448869" name="v2" stackId="67" startPc="268443938"/>
+        <entry endPc="268448869" name="cTxt" stackId="68" startPc="268443938"/>
+        <entry endPc="268448869" name="aTxt" stackId="69" startPc="268443938"/>
+        <entry endPc="268448869" name="yt" stackId="70" startPc="268443938"/>
+        <entry endPc="268448869" name="pP" stackId="71" startPc="268443938"/>
+        <entry endPc="268448869" name="b0" stackId="72" startPc="268443938"/>
+        <entry endPc="268448869" name="b1" stackId="73" startPc="268443938"/>
+        <entry endPc="268448869" name="pn" stackId="74" startPc="268443938"/>
+        <entry endPc="268448462" name="pmx" stackId="75" startPc="268447710"/>
         <entry endPc="268447775" name="i" stackId="76" startPc="268447725"/>
         <entry endPc="268447765" name="q" stackId="77" startPc="268447725"/>
-        <entry endPc="268448437" name="pbw" stackId="78" startPc="268447710"/>
+        <entry endPc="268448462" name="pbw" stackId="78" startPc="268447710"/>
         <entry endPc="268447984" name="i" stackId="79" startPc="268447808"/>
         <entry endPc="268447974" name="q" stackId="80" startPc="268447808"/>
         <entry endPc="268447974" name="pv" stackId="81" startPc="268447808"/>
         <entry endPc="268447974" name="ph" stackId="82" startPc="268447808"/>
         <entry endPc="268447974" name="bx" stackId="83" startPc="268447808"/>
-        <entry endPc="268448437" name="gp" stackId="84" startPc="268447710"/>
-        <entry endPc="268448437" name="kp" stackId="85" startPc="268447710"/>
+        <entry endPc="268448462" name="gp" stackId="84" startPc="268447710"/>
+        <entry endPc="268448462" name="kp" stackId="85" startPc="268447710"/>
         <entry endPc="268448131" name="i" stackId="86" startPc="268448050"/>
         <entry endPc="268448121" name="tag" stackId="87" startPc="268448050"/>
-        <entry endPc="268448437" name="am" stackId="88" startPc="268447710"/>
-        <entry endPc="268448437" name="ps" stackId="89" startPc="268447710"/>
-        <entry endPc="268448437" name="yp" stackId="90" startPc="268447710"/>
-        <entry endPc="268448844" name="gd" stackId="91" startPc="268443938"/>
-        <entry endPc="268448844" name="wt" stackId="92" startPc="268443938"/>
-        <entry endPc="268448844" name="mo" stackId="93" startPc="268443938"/>
+        <entry endPc="268448462" name="am" stackId="88" startPc="268447710"/>
+        <entry endPc="268448462" name="ps" stackId="89" startPc="268447710"/>
+        <entry endPc="268448462" name="yp" stackId="90" startPc="268447710"/>
+        <entry endPc="268448462" name="xl" stackId="91" startPc="268447710"/>
+        <entry endPc="268448869" name="gd" stackId="92" startPc="268443938"/>
+        <entry endPc="268448869" name="wt" stackId="93" startPc="268443938"/>
+        <entry endPc="268448869" name="mo" stackId="94" startPc="268443938"/>
     </localVars>
     <deviceInfo deviceVersion="69f9c27a08d175c50b86464a70c24d15718945cb" partNumber="006-B4631-00"/>
     <annotations>
@@ -1567,7 +1569,7 @@
         <functionEntry accessMode="public" endPc="268443934" name="initialize" parent="KiraZeiger" startPc="268443740">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268448845" name="onUpdate" parent="KiraZeiger" startPc="268443935">
+        <functionEntry accessMode="public" endPc="268448870" name="onUpdate" parent="KiraZeiger" startPc="268443935">
             <param id="dc"/>
             <documentation/>
         </functionEntry>

@@ -3652,9 +3652,9 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_347_65_356_4_sto
     }
     [ @file = "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc"; @line = 358; @symbol_functiondef = [onUpdate,358,13,21]; @symbol_param<0> = [dc,358,22,24]; @symbol_param<0>_type<0> = [Graphics,358,28,36]; @symbol_param<0>_type<1> = [Dc,358,37,39]; ]
     function onUpdate(dc as Graphics.Dc) as Void {
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start:
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start:
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 359 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %w.1 = local;
         symbol [ w %w.1 359 12 13 ];
         %tmp.1 = lgetv %dc;
@@ -3665,7 +3665,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_sta
         lputv %w.1 %tmp.3;
         symbol [ w %w.1 359 12 13 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 360 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %h.2 = local;
         symbol [ h %h.2 360 12 13 ];
         %tmp.4 = lgetv %dc;
@@ -3676,7 +3676,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_sta
         lputv %h.2 %tmp.6;
         symbol [ h %h.2 360 12 13 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 361 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %cx.3 = local;
         symbol [ cx %cx.3 361 12 14 ];
         %tmp.7 = lgetv %w.1;
@@ -3686,7 +3686,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_sta
         lputv %cx.3 %tmp.9;
         symbol [ cx %cx.3 361 12 14 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 362 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %cy.4 = local;
         symbol [ cy %cy.4 362 12 14 ];
         %tmp.10 = lgetv %h.2;
@@ -3716,7 +3716,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_sta
         %tmp.20 = getv function %tmp.19 :clear;
         invoke %tmp.19 %tmp.20();
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 365 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %uhr.5 = local;
         symbol [ uhr %uhr.5 365 12 15 ];
         symbol [ System %tmp.21 365 18 24 ];
@@ -3727,7 +3727,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_sta
         lputv %uhr.5 %tmp.23;
         symbol [ uhr %uhr.5 365 12 15 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 366 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %wStd.6 = local;
         symbol [ wStd %wStd.6 366 12 16 ];
         %tmp.24 = lgetv %uhr.5;
@@ -3755,7 +3755,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_sta
         lputv %wStd.6 %tmp.39;
         symbol [ wStd %wStd.6 366 12 16 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 367 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %wMin.7 = local;
         symbol [ wMin %wMin.7 367 12 16 ];
         %tmp.40 = lgetv %uhr.5;
@@ -4112,7 +4112,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_389_89_389_124_s
         goto @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_389_8_389_124_if_end;
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_389_8_389_124_if_end:
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 390 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %t.12 = local;
         symbol [ t %t.12 390 12 13 ];
         %tmp.204 = self;
@@ -4125,7 +4125,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_389_8_389_124_if
         lputv %t.12 %tmp.209;
         symbol [ t %t.12 390 12 13 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 391 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %heute.13 = local;
         symbol [ heute %heute.13 391 12 17 ];
         %tmp.210 = self;
@@ -4145,7 +4145,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_389_8_389_124_if
         lputv %heute.13 %tmp.219;
         symbol [ heute %heute.13 391 12 17 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 392 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %vote.14 = local;
         symbol [ vote %vote.14 392 12 16 ];
         %tmp.220 = self;
@@ -4247,7 +4247,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_394_20_394_151_s
         goto @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_394_8_394_151_if_end;
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_394_8_394_151_if_end:
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 397 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %st.15 = local;
         symbol [ st %st.15 397 12 14 ];
         symbol [ System %tmp.263 397 17 23 ];
@@ -4258,7 +4258,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_394_8_394_151_if
         lputv %st.15 %tmp.265;
         symbol [ st %st.15 397 12 14 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 398 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %tage.16 = local;
         symbol [ tage %tage.16 398 12 16 ];
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_398_19_398_103_begin:
@@ -4373,7 +4373,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_400_97_400_144_e
         %tmp.324 = getv %tmp.323 :TEXT_JUSTIFY_CENTER;
         invoke %tmp.291 %tmp.292(%tmp.293, %tmp.298, %tmp.300, %tmp.322, %tmp.324);
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 401 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %vf.17 = local;
         symbol [ vf %vf.17 401 12 14 ];
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_401_17_401_85_begin:
@@ -4546,7 +4546,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_403_55_403_246_e
         %tmp.402 = getv %tmp.401 :TEXT_JUSTIFY_CENTER;
         invoke %tmp.350 %tmp.351(%tmp.352, %tmp.357, %tmp.359, %tmp.400, %tmp.402);
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 406 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %pos.18 = local;
         symbol [ pos %pos.18 406 12 15 ];
         %tmp.403 = newa 4;
@@ -4889,7 +4889,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_414_20_421_8_sto
         goto @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_414_8_421_8_if_end;
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_414_8_421_8_if_end:
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 423 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %rx.24 = local;
         symbol [ rx %rx.24 423 12 14 ];
         %tmp.587 = lgetv %w.1;
@@ -4902,7 +4902,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_414_8_421_8_if_e
         lputv %rx.24 %tmp.591;
         symbol [ rx %rx.24 423 12 14 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 424 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %rr.25 = local;
         symbol [ rr %rr.25 424 12 14 ];
         %tmp.592 = lgetv %w.1;
@@ -4915,7 +4915,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_414_8_421_8_if_e
         lputv %rr.25 %tmp.596;
         symbol [ rr %rr.25 424 12 14 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 426 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %rgL.26 = local;
         symbol [ rgL %rgL.26 426 12 15 ];
         symbol [ KiraWert %tmp.598 426 18 26 ];
@@ -5049,7 +5049,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_414_8_421_8_if_e
         %tmp.671 = getv %tmp.670 :TEXT_JUSTIFY_CENTER;
         invoke %tmp.656 %tmp.657(%tmp.658, %tmp.663, %tmp.665, %tmp.669, %tmp.671);
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 433 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %lx.27 = local;
         symbol [ lx %lx.27 433 12 14 ];
         %tmp.672 = lgetv %w.1;
@@ -5060,7 +5060,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_414_8_421_8_if_e
         lputv %lx.27 %tmp.674;
         symbol [ lx %lx.27 433 12 14 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 434 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %lo.28 = local;
         symbol [ lo %lo.28 434 12 14 ];
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_434_17_434_38_begin:
@@ -5085,7 +5085,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_434_17_434_38_en
         lputv %lo.28 %tmp.682;
         symbol [ lo %lo.28 434 12 14 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 435 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %hi.29 = local;
         symbol [ hi %hi.29 435 12 14 ];
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_435_17_435_38_begin:
@@ -5110,7 +5110,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_435_17_435_38_en
         lputv %hi.29 %tmp.690;
         symbol [ hi %hi.29 435 12 14 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 436 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %ist.30 = local;
         symbol [ ist %ist.30 436 12 15 ];
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_436_18_436_39_begin:
@@ -5536,7 +5536,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_445_15_452_8_sta
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_445_15_452_8_stop:
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_438_8_452_8_if_end:
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 455 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %wk.32 = local;
         symbol [ wk %wk.32 455 12 14 ];
         %tmp.915 = self;
@@ -5549,7 +5549,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_438_8_452_8_if_e
         lputv %wk.32 %tmp.920;
         symbol [ wk %wk.32 455 12 14 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 456 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %wI.33 = local;
         symbol [ wI %wI.33 456 12 14 ];
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_456_17_456_41_begin:
@@ -5576,7 +5576,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_456_17_456_41_en
         lputv %wI.33 %tmp.930;
         symbol [ wI %wI.33 456 12 14 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 457 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %wL.34 = local;
         symbol [ wL %wL.34 457 12 14 ];
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_457_17_457_41_begin:
@@ -5603,7 +5603,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_457_17_457_41_en
         lputv %wL.34 %tmp.940;
         symbol [ wL %wL.34 457 12 14 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 458 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %wH.35 = local;
         symbol [ wH %wH.35 458 12 14 ];
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_458_17_458_41_begin:
@@ -5630,7 +5630,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_458_17_458_41_en
         lputv %wH.35 %tmp.950;
         symbol [ wH %wH.35 458 12 14 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 459 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %x0.36 = local;
         symbol [ x0 %x0.36 459 12 14 ];
         %tmp.951 = lgetv %w.1;
@@ -5643,7 +5643,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_458_17_458_41_en
         lputv %x0.36 %tmp.955;
         symbol [ x0 %x0.36 459 12 14 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 460 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %x1.37 = local;
         symbol [ x1 %x1.37 460 12 14 ];
         %tmp.956 = lgetv %w.1;
@@ -5656,7 +5656,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_458_17_458_41_en
         lputv %x1.37 %tmp.960;
         symbol [ x1 %x1.37 460 12 14 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 461 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %y0.38 = local;
         symbol [ y0 %y0.38 461 12 14 ];
         %tmp.961 = lgetv %h.2;
@@ -5669,7 +5669,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_458_17_458_41_en
         lputv %y0.38 %tmp.965;
         symbol [ y0 %y0.38 461 12 14 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 462 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %y1.39 = local;
         symbol [ y1 %y1.39 462 12 14 ];
         %tmp.966 = lgetv %h.2;
@@ -5682,7 +5682,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_458_17_458_41_en
         lputv %y1.39 %tmp.970;
         symbol [ y1 %y1.39 462 12 14 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 463 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %n.40 = local;
         symbol [ n %n.40 463 12 13 ];
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_463_16_463_38_begin:
@@ -6587,7 +6587,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_469_15_516_8_sto
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_466_15_516_8_if_end:
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_464_8_516_8_if_end:
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 519 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %fk.64 = local;
         symbol [ fk %fk.64 519 12 14 ];
         %tmp.1342 = self;
@@ -6600,7 +6600,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_464_8_516_8_if_e
         lputv %fk.64 %tmp.1347;
         symbol [ fk %fk.64 519 12 14 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 520 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %kopf.65 = local;
         symbol [ kopf %kopf.65 520 12 16 ];
         %tmp.1348 = self;
@@ -6632,7 +6632,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_520_28_520_52_en
         lputv %kopf.65 %tmp.1361;
         symbol [ kopf %kopf.65 520 12 16 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 521 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %v2.66 = local;
         symbol [ v2 %v2.66 521 12 14 ];
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_521_17_521_55_begin:
@@ -6661,7 +6661,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_521_36_521_55_en
         lputv %v2.66 %tmp.1375;
         symbol [ v2 %v2.66 521 12 14 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 522 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %cTxt.67 = local;
         symbol [ cTxt %cTxt.67 522 12 16 ];
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_522_19_522_77_begin:
@@ -6711,7 +6711,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_522_19_522_77_en
         lputv %cTxt.67 %tmp.1395;
         symbol [ cTxt %cTxt.67 522 12 16 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 523 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %aTxt.68 = local;
         symbol [ aTxt %aTxt.68 523 12 16 ];
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_523_19_523_77_begin:
@@ -6761,7 +6761,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_523_19_523_77_en
         lputv %aTxt.68 %tmp.1415;
         symbol [ aTxt %aTxt.68 523 12 16 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 524 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %yt.69 = local;
         symbol [ yt %yt.69 524 12 14 ];
         %tmp.1416 = lgetv %y1.39;
@@ -6871,7 +6871,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_525_22_530_8_sto
         goto @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_525_8_530_8_if_end;
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_525_8_530_8_if_end:
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 533 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %pP.70 = local;
         symbol [ pP %pP.70 533 12 14 ];
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_533_17_533_47_begin:
@@ -6906,7 +6906,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_533_17_533_47_en
         lputv %pP.70 %tmp.1486;
         symbol [ pP %pP.70 533 12 14 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 534 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %b0.71 = local;
         symbol [ b0 %b0.71 534 12 14 ];
         %tmp.1487 = lgetv %h.2;
@@ -6919,7 +6919,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_533_17_533_47_en
         lputv %b0.71 %tmp.1491;
         symbol [ b0 %b0.71 534 12 14 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 535 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %b1.72 = local;
         symbol [ b1 %b1.72 535 12 14 ];
         %tmp.1492 = lgetv %h.2;
@@ -6932,7 +6932,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_533_17_533_47_en
         lputv %b1.72 %tmp.1496;
         symbol [ b1 %b1.72 535 12 14 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 536 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
         %pn.73 = local;
         symbol [ pn %pn.73 536 12 14 ];
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_536_17_536_39_begin:
@@ -6955,25 +6955,25 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_536_17_536_39_en
         lputv %pn.73 %tmp.1502;
         symbol [ pn %pn.73 536 12 14 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 537 8 ]
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_537_8_574_8_if_stmt:
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_537_8_576_8_if_stmt:
         symbol [ eDiaPlan %tmp.1504 537 13 21 ];
         %tmp.1504 = getv ? :eDiaPlan;
         %tmp.1505 = not %tmp.1504;
-        bf %tmp.1505 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_537_8_574_8_if_false;
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_537_8_574_8_if_true:
-        goto @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_537_8_574_8_if_end;
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_537_8_574_8_if_false:
+        bf %tmp.1505 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_537_8_576_8_if_false;
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_537_8_576_8_if_true:
+        goto @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_537_8_576_8_if_end;
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_537_8_576_8_if_false:
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 539 15 ]
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_15_574_8_if_stmt:
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_15_576_8_if_stmt:
         %tmp.1506 = lgetv %pn.73;
         symbol [ pn %tmp.1506 539 19 21 ];
         %tmp.1507 = 2;
         %tmp.1508 = gte %tmp.1506 %tmp.1507;
-        bf %tmp.1508 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_15_574_8_if_else_false;
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_15_574_8_if_true:
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_571_8_start:
+        bf %tmp.1508 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_15_576_8_if_else_false;
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_15_576_8_if_true:
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_573_8_start:
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 540 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_571_8_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_571_8_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_573_8_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_573_8_stop" ]
         %pmx.74 = local;
         symbol [ pmx %pmx.74 540 16 19 ];
         %tmp.1509 = 1;
@@ -7056,7 +7056,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_541_12_541_112_f
         goto @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_541_12_541_112_for_test;
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_541_12_541_112_for_end:
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 542 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_571_8_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_571_8_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_573_8_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_573_8_stop" ]
         %pbw.77 = local;
         symbol [ pbw %pbw.77 542 16 19 ];
         %tmp.1537 = lgetv %x1.37;
@@ -7291,7 +7291,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_543_12_553_12_fo
         %tmp.1633 = true;
         invoke %tmp.1625 %tmp.1626(%tmp.1627, %tmp.1628, %tmp.1629, %tmp.1630, %tmp.1631, %tmp.1632, %tmp.1633);
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 555 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_571_8_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_571_8_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_573_8_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_573_8_stop" ]
         %gp.83 = local;
         symbol [ gp %gp.83 555 16 18 ];
         symbol [ Gregorian %tmp.1634 555 21 30 ];
@@ -7311,7 +7311,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_543_12_553_12_fo
         lputv %gp.83 %tmp.1641;
         symbol [ gp %gp.83 555 16 18 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 556 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_571_8_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_571_8_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_573_8_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_573_8_stop" ]
         %kp.84 = local;
         symbol [ kp %kp.84 556 16 18 ];
         %tmp.1642 = newa 7;
@@ -7429,7 +7429,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_557_12_561_12_fo
         goto @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_557_12_561_12_for_test;
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_557_12_561_12_for_end:
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 562 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_571_8_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_571_8_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_573_8_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_573_8_stop" ]
         %am.87 = local;
         symbol [ am %am.87 562 16 18 ];
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_562_21_562_84_begin:
@@ -7474,7 +7474,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_562_21_562_84_en
         lputv %am.87 %tmp.1725;
         symbol [ am %am.87 562 16 18 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 563 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_571_8_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_571_8_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_573_8_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_573_8_stop" ]
         %ps.88 = local;
         symbol [ ps %ps.88 563 16 18 ];
 _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_563_21_563_73_begin:
@@ -7516,7 +7516,7 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_563_21_563_73_en
         lputv %ps.88 %tmp.1743;
         symbol [ ps %ps.88 563 16 18 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 564 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_571_8_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_571_8_stop" ]
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_573_8_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_573_8_stop" ]
         %yp.89 = local;
         symbol [ yp %yp.89 564 16 18 ];
         %tmp.1744 = lgetv %b1.72;
@@ -7544,528 +7544,549 @@ _home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_563_21_563_73_en
         symbol [ COLOR_TRANSPARENT %tmp.1757 565 43 60 ];
         %tmp.1757 = getv %tmp.1756 :COLOR_TRANSPARENT;
         invoke %tmp.1753 %tmp.1754(%tmp.1755, %tmp.1757);
-[ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 566 12 ]
-        %tmp.1758 = lgetv %dc;
-        symbol [ dc %tmp.1758 566 12 14 ];
-        symbol [ drawText %tmp.1759 566 15 23 ];
-        %tmp.1759 = getv function %tmp.1758 :drawText;
-        %tmp.1760 = lgetv %cx.3;
-        symbol [ cx %tmp.1760 566 24 26 ];
-        %tmp.1761 = 6;
-        %tmp.1762 = sub %tmp.1760 %tmp.1761;
-        %tmp.1763 = lgetv %yp.89;
-        symbol [ yp %tmp.1763 566 32 34 ];
-        symbol [ fKlein %tmp.1765 566 36 42 ];
-        %tmp.1765 = getv ? :fKlein;
-        %tmp.1766 = lgetv %ps.88;
-        symbol [ ps %tmp.1766 566 44 46 ];
-        symbol [ Graphics %tmp.1767 566 48 56 ];
-        %tmp.1767 = getm $.Toybox.Graphics;
-        symbol [ TEXT_JUSTIFY_RIGHT %tmp.1768 566 57 75 ];
-        %tmp.1768 = getv %tmp.1767 :TEXT_JUSTIFY_RIGHT;
-        invoke %tmp.1758 %tmp.1759(%tmp.1762, %tmp.1763, %tmp.1765, %tmp.1766, %tmp.1768);
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 567 12 ]
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_567_12_570_12_if_stmt:
-        %tmp.1769 = lgetv %am.87;
-        symbol [ am %tmp.1769 567 16 18 ];
-        %tmp.1770 = null;
-        %tmp.1771 = ne %tmp.1769 %tmp.1770;
-        bf %tmp.1771 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_567_12_570_12_if_end;
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_567_12_570_12_if_true:
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_567_28_570_12_start:
-[ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 568 16 ]
-        %tmp.1772 = lgetv %dc;
-        symbol [ dc %tmp.1772 568 16 18 ];
-        symbol [ setColor %tmp.1773 568 19 27 ];
-        %tmp.1773 = getv function %tmp.1772 :setColor;
-        symbol [ KiraSkala %tmp.1775 568 28 37 ];
-        %tmp.1775 = getv ? :KiraSkala;
-        symbol [ punkt %tmp.1776 568 38 43 ];
-        %tmp.1776 = getv function %tmp.1775 :punkt;
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_44_568_138_begin:
-        %tmp.1777 = lgetv %am.87;
-        symbol [ am %tmp.1777 568 44 46 ];
-        %tmp.1778 = as %tmp.1777 { (!Null) };
-        %tmp.1779 = 150;
-        %tmp.1780 = gt %tmp.1778 %tmp.1779;
-        bf %tmp.1780 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_44_568_138_else_false;
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_44_568_138_true:
-        symbol [ KiraSkala %tmp.1782 568 55 64 ];
-        %tmp.1782 = getv ? :KiraSkala;
-        symbol [ ROT %tmp.1783 568 65 68 ];
-        %tmp.1783 = getv %tmp.1782 :ROT;
-        push %tmp.1783;
-        goto @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_44_568_138_end;
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_44_568_138_else_false:
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_71_568_138_begin:
-        %tmp.1784 = lgetv %am.87;
-        symbol [ am %tmp.1784 568 71 73 ];
-        %tmp.1785 = as %tmp.1784 { (!Null) };
-        %tmp.1786 = 130;
-        %tmp.1787 = gt %tmp.1785 %tmp.1786;
-        bf %tmp.1787 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_71_568_138_else_false;
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_71_568_138_true:
-        symbol [ KiraSkala %tmp.1789 568 82 91 ];
-        %tmp.1789 = getv ? :KiraSkala;
-        symbol [ ORANGE %tmp.1790 568 92 98 ];
-        %tmp.1790 = getv %tmp.1789 :ORANGE;
-        push %tmp.1790;
-        goto @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_71_568_138_end;
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_71_568_138_else_false:
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_101_568_138_begin:
-        %tmp.1791 = lgetv %am.87;
-        symbol [ am %tmp.1791 568 101 103 ];
-        %tmp.1792 = as %tmp.1791 { (!Null) };
-        %tmp.1793 = 80;
-        %tmp.1794 = lt %tmp.1792 %tmp.1793;
-        bf %tmp.1794 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_101_568_138_else_false;
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_101_568_138_true:
-        symbol [ KiraSkala %tmp.1796 568 111 120 ];
-        %tmp.1796 = getv ? :KiraSkala;
-        symbol [ BLAU %tmp.1797 568 121 125 ];
-        %tmp.1797 = getv %tmp.1796 :BLAU;
-        push %tmp.1797;
-        goto @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_101_568_138_end;
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_101_568_138_else_false:
-        symbol [ KiraSkala %tmp.1799 568 128 137 ];
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_573_8_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_573_8_stop" ]
+        %xl.90 = local;
+        symbol [ xl %xl.90 567 16 18 ];
+        %tmp.1758 = lgetv %x0.36;
+        symbol [ x0 %tmp.1758 567 21 23 ];
+        %tmp.1759 = lgetv %pbw.77;
+        symbol [ pbw %tmp.1759 567 26 29 ];
+        %tmp.1760 = 4;
+        %tmp.1761 = div %tmp.1759 %tmp.1760;
+        %tmp.1762 = add %tmp.1758 %tmp.1761;
+        lputv %xl.90 %tmp.1762;
+        symbol [ xl %xl.90 567 16 18 ];
+[ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 568 12 ]
+        %tmp.1763 = lgetv %dc;
+        symbol [ dc %tmp.1763 568 12 14 ];
+        symbol [ drawText %tmp.1764 568 15 23 ];
+        %tmp.1764 = getv function %tmp.1763 :drawText;
+        %tmp.1765 = lgetv %xl.90;
+        symbol [ xl %tmp.1765 568 24 26 ];
+        %tmp.1766 = lgetv %yp.89;
+        symbol [ yp %tmp.1766 568 28 30 ];
+        symbol [ fKlein %tmp.1768 568 32 38 ];
+        %tmp.1768 = getv ? :fKlein;
+        %tmp.1769 = lgetv %ps.88;
+        symbol [ ps %tmp.1769 568 40 42 ];
+        symbol [ Graphics %tmp.1770 568 44 52 ];
+        %tmp.1770 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_LEFT %tmp.1771 568 53 70 ];
+        %tmp.1771 = getv %tmp.1770 :TEXT_JUSTIFY_LEFT;
+        invoke %tmp.1763 %tmp.1764(%tmp.1765, %tmp.1766, %tmp.1768, %tmp.1769, %tmp.1771);
+[ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 569 12 ]
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_569_12_572_12_if_stmt:
+        %tmp.1772 = lgetv %am.87;
+        symbol [ am %tmp.1772 569 16 18 ];
+        %tmp.1773 = null;
+        %tmp.1774 = ne %tmp.1772 %tmp.1773;
+        bf %tmp.1774 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_569_12_572_12_if_end;
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_569_12_572_12_if_true:
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_569_28_572_12_start:
+[ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 570 16 ]
+        %tmp.1775 = lgetv %dc;
+        symbol [ dc %tmp.1775 570 16 18 ];
+        symbol [ setColor %tmp.1776 570 19 27 ];
+        %tmp.1776 = getv function %tmp.1775 :setColor;
+        symbol [ KiraSkala %tmp.1778 570 28 37 ];
+        %tmp.1778 = getv ? :KiraSkala;
+        symbol [ punkt %tmp.1779 570 38 43 ];
+        %tmp.1779 = getv function %tmp.1778 :punkt;
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_44_570_138_begin:
+        %tmp.1780 = lgetv %am.87;
+        symbol [ am %tmp.1780 570 44 46 ];
+        %tmp.1781 = as %tmp.1780 { (!Null) };
+        %tmp.1782 = 150;
+        %tmp.1783 = gt %tmp.1781 %tmp.1782;
+        bf %tmp.1783 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_44_570_138_else_false;
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_44_570_138_true:
+        symbol [ KiraSkala %tmp.1785 570 55 64 ];
+        %tmp.1785 = getv ? :KiraSkala;
+        symbol [ ROT %tmp.1786 570 65 68 ];
+        %tmp.1786 = getv %tmp.1785 :ROT;
+        push %tmp.1786;
+        goto @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_44_570_138_end;
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_44_570_138_else_false:
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_71_570_138_begin:
+        %tmp.1787 = lgetv %am.87;
+        symbol [ am %tmp.1787 570 71 73 ];
+        %tmp.1788 = as %tmp.1787 { (!Null) };
+        %tmp.1789 = 130;
+        %tmp.1790 = gt %tmp.1788 %tmp.1789;
+        bf %tmp.1790 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_71_570_138_else_false;
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_71_570_138_true:
+        symbol [ KiraSkala %tmp.1792 570 82 91 ];
+        %tmp.1792 = getv ? :KiraSkala;
+        symbol [ ORANGE %tmp.1793 570 92 98 ];
+        %tmp.1793 = getv %tmp.1792 :ORANGE;
+        push %tmp.1793;
+        goto @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_71_570_138_end;
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_71_570_138_else_false:
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_101_570_138_begin:
+        %tmp.1794 = lgetv %am.87;
+        symbol [ am %tmp.1794 570 101 103 ];
+        %tmp.1795 = as %tmp.1794 { (!Null) };
+        %tmp.1796 = 80;
+        %tmp.1797 = lt %tmp.1795 %tmp.1796;
+        bf %tmp.1797 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_101_570_138_else_false;
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_101_570_138_true:
+        symbol [ KiraSkala %tmp.1799 570 111 120 ];
         %tmp.1799 = getv ? :KiraSkala;
-        symbol [ GRUEN %tmp.1800 568 138 143 ];
-        %tmp.1800 = getv %tmp.1799 :GRUEN;
+        symbol [ BLAU %tmp.1800 570 121 125 ];
+        %tmp.1800 = getv %tmp.1799 :BLAU;
         push %tmp.1800;
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_101_568_138_end:
-        %tmp.1801 = phi [%tmp.1794 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_101_568_138_begin] [%tmp.1797 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_101_568_138_true] [%tmp.1800 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_101_568_138_else_false] [%tmp.1801 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_101_568_138_end];
-        push %tmp.1801;
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_71_568_138_end:
-        %tmp.1802 = phi [%tmp.1787 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_71_568_138_begin] [%tmp.1790 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_71_568_138_true] [%tmp.1801 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_71_568_138_else_false] [%tmp.1802 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_71_568_138_end];
-        push %tmp.1802;
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_44_568_138_end:
-        %tmp.1803 = phi [%tmp.1780 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_44_568_138_begin] [%tmp.1783 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_44_568_138_true] [%tmp.1802 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_44_568_138_else_false] [%tmp.1803 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_568_44_568_138_end];
-        %tmp.1804 = invoke %tmp.1775 %tmp.1776(%tmp.1803);
-        symbol [ Graphics %tmp.1805 568 146 154 ];
-        %tmp.1805 = getm $.Toybox.Graphics;
-        symbol [ COLOR_TRANSPARENT %tmp.1806 568 155 172 ];
-        %tmp.1806 = getv %tmp.1805 :COLOR_TRANSPARENT;
-        invoke %tmp.1772 %tmp.1773(%tmp.1804, %tmp.1806);
-[ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 569 16 ]
-        %tmp.1807 = lgetv %dc;
-        symbol [ dc %tmp.1807 569 16 18 ];
-        symbol [ drawText %tmp.1808 569 19 27 ];
-        %tmp.1808 = getv function %tmp.1807 :drawText;
-        %tmp.1809 = lgetv %cx.3;
-        symbol [ cx %tmp.1809 569 28 30 ];
-        %tmp.1810 = 6;
-        %tmp.1811 = add %tmp.1809 %tmp.1810;
-        %tmp.1812 = lgetv %yp.89;
-        symbol [ yp %tmp.1812 569 36 38 ];
-        symbol [ fKlein %tmp.1814 569 40 46 ];
-        %tmp.1814 = getv ? :fKlein;
-        %tmp.1815 = "ACWR ";
-        %tmp.1816 = lgetv %am.87;
-        symbol [ am %tmp.1816 569 59 61 ];
-        %tmp.1817 = as %tmp.1816 { (!Null) };
-        %tmp.1818 = 100;
-        %tmp.1819 = div %tmp.1817 %tmp.1818;
-        symbol [ toString %tmp.1820 569 69 77 ];
-        %tmp.1820 = getv function %tmp.1819 :toString;
-        %tmp.1821 = invoke %tmp.1819 %tmp.1820();
-        %tmp.1822 = add %tmp.1815 %tmp.1821;
-        %tmp.1823 = ",";
-        %tmp.1824 = add %tmp.1822 %tmp.1823;
-        %tmp.1825 = lgetv %am.87;
-        symbol [ am %tmp.1825 569 89 91 ];
-        %tmp.1826 = as %tmp.1825 { (!Null) };
-        %tmp.1827 = 100;
-        %tmp.1828 = mod %tmp.1826 %tmp.1827;
-        symbol [ format %tmp.1829 569 99 105 ];
-        %tmp.1829 = getv function %tmp.1828 :format;
-        %tmp.1830 = "%02d";
-        %tmp.1831 = invoke %tmp.1828 %tmp.1829(%tmp.1830);
-        %tmp.1832 = add %tmp.1824 %tmp.1831;
-        symbol [ Graphics %tmp.1833 569 115 123 ];
-        %tmp.1833 = getm $.Toybox.Graphics;
-        symbol [ TEXT_JUSTIFY_LEFT %tmp.1834 569 124 141 ];
-        %tmp.1834 = getv %tmp.1833 :TEXT_JUSTIFY_LEFT;
-        invoke %tmp.1807 %tmp.1808(%tmp.1811, %tmp.1812, %tmp.1814, %tmp.1832, %tmp.1834);
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_567_28_570_12_stop:
-        goto @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_567_12_570_12_if_end;
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_567_12_570_12_if_end:
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_571_8_stop:
-        goto @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_15_574_8_if_end;
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_15_574_8_if_else_false:
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_571_15_574_8_start:
-[ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 572 12 ]
-        %tmp.1835 = lgetv %dc;
-        symbol [ dc %tmp.1835 572 12 14 ];
-        symbol [ setColor %tmp.1836 572 15 23 ];
-        %tmp.1836 = getv function %tmp.1835 :setColor;
-        symbol [ GRAU %tmp.1838 572 24 28 ];
-        %tmp.1838 = getv ? :GRAU;
-        symbol [ Graphics %tmp.1839 572 30 38 ];
-        %tmp.1839 = getm $.Toybox.Graphics;
-        symbol [ COLOR_TRANSPARENT %tmp.1840 572 39 56 ];
-        %tmp.1840 = getv %tmp.1839 :COLOR_TRANSPARENT;
-        invoke %tmp.1835 %tmp.1836(%tmp.1838, %tmp.1840);
-[ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 573 12 ]
-        %tmp.1841 = lgetv %dc;
-        symbol [ dc %tmp.1841 573 12 14 ];
-        symbol [ drawText %tmp.1842 573 15 23 ];
-        %tmp.1842 = getv function %tmp.1841 :drawText;
-        %tmp.1843 = lgetv %cx.3;
-        symbol [ cx %tmp.1843 573 24 26 ];
-        %tmp.1844 = lgetv %b0.71;
-        symbol [ b0 %tmp.1844 573 29 31 ];
-        %tmp.1845 = lgetv %b1.72;
-        symbol [ b1 %tmp.1845 573 34 36 ];
-        %tmp.1846 = add %tmp.1844 %tmp.1845;
-        %tmp.1847 = 2;
-        %tmp.1848 = div %tmp.1846 %tmp.1847;
-        symbol [ fKlein %tmp.1850 573 43 49 ];
-        %tmp.1850 = getv ? :fKlein;
-        %tmp.1851 = "PLAN 7 T · APP ÖFFNEN";
-        symbol [ Graphics %tmp.1852 573 76 84 ];
-        %tmp.1852 = getm $.Toybox.Graphics;
-        symbol [ TEXT_JUSTIFY_CENTER %tmp.1853 573 85 104 ];
-        %tmp.1853 = getv %tmp.1852 :TEXT_JUSTIFY_CENTER;
-        symbol [ Graphics %tmp.1854 573 107 115 ];
-        %tmp.1854 = getm $.Toybox.Graphics;
-        symbol [ TEXT_JUSTIFY_VCENTER %tmp.1855 573 116 136 ];
-        %tmp.1855 = getv %tmp.1854 :TEXT_JUSTIFY_VCENTER;
-        %tmp.1856 = bitor %tmp.1853 %tmp.1855;
-        invoke %tmp.1841 %tmp.1842(%tmp.1843, %tmp.1848, %tmp.1850, %tmp.1851, %tmp.1856);
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_571_15_574_8_stop:
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_15_574_8_if_end:
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_537_8_574_8_if_end:
-[ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 577 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
-        %gd.90 = local;
-        symbol [ gd %gd.90 577 12 14 ];
-        symbol [ Gregorian %tmp.1857 577 17 26 ];
-        %tmp.1857 = getm $.Toybox.Time.Gregorian;
-        symbol [ info %tmp.1858 577 27 31 ];
-        %tmp.1858 = getv function %tmp.1857 :info;
-        symbol [ Time %tmp.1859 577 32 36 ];
-        %tmp.1859 = getm $.Toybox.Time;
-        symbol [ now %tmp.1860 577 37 40 ];
-        %tmp.1860 = getv function %tmp.1859 :now;
-        %tmp.1861 = invoke %tmp.1859 %tmp.1860();
-        symbol [ Time %tmp.1862 577 44 48 ];
-        %tmp.1862 = getm $.Toybox.Time;
-        symbol [ FORMAT_SHORT %tmp.1863 577 49 61 ];
-        %tmp.1863 = getv %tmp.1862 :FORMAT_SHORT;
-        %tmp.1864 = invoke %tmp.1857 %tmp.1858(%tmp.1861, %tmp.1863);
-        lputv %gd.90 %tmp.1864;
-        symbol [ gd %gd.90 577 12 14 ];
-[ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 578 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
-        %wt.91 = local;
-        symbol [ wt %wt.91 578 12 14 ];
-        %tmp.1865 = newa 8;
-        %tmp.1866 = "";
-        %tmp.1867 = dup %tmp.1865;
-        %tmp.1868 = aputv %tmp.1867 0 %tmp.1866;
-        %tmp.1869 = "SO";
-        %tmp.1870 = dup %tmp.1868;
-        %tmp.1871 = aputv %tmp.1870 1 %tmp.1869;
-        %tmp.1872 = "MO";
-        %tmp.1873 = dup %tmp.1871;
-        %tmp.1874 = aputv %tmp.1873 2 %tmp.1872;
-        %tmp.1875 = "DI";
-        %tmp.1876 = dup %tmp.1874;
-        %tmp.1877 = aputv %tmp.1876 3 %tmp.1875;
-        %tmp.1878 = "MI";
-        %tmp.1879 = dup %tmp.1877;
-        %tmp.1880 = aputv %tmp.1879 4 %tmp.1878;
-        %tmp.1881 = "DO";
-        %tmp.1882 = dup %tmp.1880;
-        %tmp.1883 = aputv %tmp.1882 5 %tmp.1881;
-        %tmp.1884 = "FR";
-        %tmp.1885 = dup %tmp.1883;
-        %tmp.1886 = aputv %tmp.1885 6 %tmp.1884;
-        %tmp.1887 = "SA";
-        %tmp.1888 = dup %tmp.1886;
-        %tmp.1889 = aputv %tmp.1888 7 %tmp.1887;
-        lputv %wt.91 %tmp.1889;
-        symbol [ wt %wt.91 578 12 14 ];
+        goto @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_101_570_138_end;
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_101_570_138_else_false:
+        symbol [ KiraSkala %tmp.1802 570 128 137 ];
+        %tmp.1802 = getv ? :KiraSkala;
+        symbol [ GRUEN %tmp.1803 570 138 143 ];
+        %tmp.1803 = getv %tmp.1802 :GRUEN;
+        push %tmp.1803;
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_101_570_138_end:
+        %tmp.1804 = phi [%tmp.1797 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_101_570_138_begin] [%tmp.1800 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_101_570_138_true] [%tmp.1803 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_101_570_138_else_false] [%tmp.1804 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_101_570_138_end];
+        push %tmp.1804;
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_71_570_138_end:
+        %tmp.1805 = phi [%tmp.1790 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_71_570_138_begin] [%tmp.1793 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_71_570_138_true] [%tmp.1804 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_71_570_138_else_false] [%tmp.1805 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_71_570_138_end];
+        push %tmp.1805;
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_44_570_138_end:
+        %tmp.1806 = phi [%tmp.1783 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_44_570_138_begin] [%tmp.1786 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_44_570_138_true] [%tmp.1805 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_44_570_138_else_false] [%tmp.1806 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_570_44_570_138_end];
+        %tmp.1807 = invoke %tmp.1778 %tmp.1779(%tmp.1806);
+        symbol [ Graphics %tmp.1808 570 146 154 ];
+        %tmp.1808 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.1809 570 155 172 ];
+        %tmp.1809 = getv %tmp.1808 :COLOR_TRANSPARENT;
+        invoke %tmp.1775 %tmp.1776(%tmp.1807, %tmp.1809);
+[ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 571 16 ]
+        %tmp.1810 = lgetv %dc;
+        symbol [ dc %tmp.1810 571 16 18 ];
+        symbol [ drawText %tmp.1811 571 19 27 ];
+        %tmp.1811 = getv function %tmp.1810 :drawText;
+        %tmp.1812 = lgetv %xl.90;
+        symbol [ xl %tmp.1812 571 28 30 ];
+        %tmp.1813 = lgetv %dc;
+        symbol [ dc %tmp.1813 571 33 35 ];
+        symbol [ getTextWidthInPixels %tmp.1814 571 36 56 ];
+        %tmp.1814 = getv function %tmp.1813 :getTextWidthInPixels;
+        %tmp.1815 = lgetv %ps.88;
+        symbol [ ps %tmp.1815 571 57 59 ];
+        symbol [ fKlein %tmp.1817 571 61 67 ];
+        %tmp.1817 = getv ? :fKlein;
+        %tmp.1818 = invoke %tmp.1813 %tmp.1814(%tmp.1815, %tmp.1817);
+        %tmp.1819 = add %tmp.1812 %tmp.1818;
+        %tmp.1820 = 12;
+        %tmp.1821 = add %tmp.1819 %tmp.1820;
+        %tmp.1822 = lgetv %yp.89;
+        symbol [ yp %tmp.1822 571 75 77 ];
+        symbol [ fKlein %tmp.1824 571 79 85 ];
+        %tmp.1824 = getv ? :fKlein;
+        %tmp.1825 = "ACWR ";
+        %tmp.1826 = lgetv %am.87;
+        symbol [ am %tmp.1826 571 98 100 ];
+        %tmp.1827 = as %tmp.1826 { (!Null) };
+        %tmp.1828 = 100;
+        %tmp.1829 = div %tmp.1827 %tmp.1828;
+        symbol [ toString %tmp.1830 571 108 116 ];
+        %tmp.1830 = getv function %tmp.1829 :toString;
+        %tmp.1831 = invoke %tmp.1829 %tmp.1830();
+        %tmp.1832 = add %tmp.1825 %tmp.1831;
+        %tmp.1833 = ",";
+        %tmp.1834 = add %tmp.1832 %tmp.1833;
+        %tmp.1835 = lgetv %am.87;
+        symbol [ am %tmp.1835 571 128 130 ];
+        %tmp.1836 = as %tmp.1835 { (!Null) };
+        %tmp.1837 = 100;
+        %tmp.1838 = mod %tmp.1836 %tmp.1837;
+        symbol [ format %tmp.1839 571 138 144 ];
+        %tmp.1839 = getv function %tmp.1838 :format;
+        %tmp.1840 = "%02d";
+        %tmp.1841 = invoke %tmp.1838 %tmp.1839(%tmp.1840);
+        %tmp.1842 = add %tmp.1834 %tmp.1841;
+        symbol [ Graphics %tmp.1843 571 154 162 ];
+        %tmp.1843 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_LEFT %tmp.1844 571 163 180 ];
+        %tmp.1844 = getv %tmp.1843 :TEXT_JUSTIFY_LEFT;
+        invoke %tmp.1810 %tmp.1811(%tmp.1821, %tmp.1822, %tmp.1824, %tmp.1842, %tmp.1844);
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_569_28_572_12_stop:
+        goto @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_569_12_572_12_if_end;
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_569_12_572_12_if_end:
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_28_573_8_stop:
+        goto @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_15_576_8_if_end;
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_15_576_8_if_else_false:
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_573_15_576_8_start:
+[ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 574 12 ]
+        %tmp.1845 = lgetv %dc;
+        symbol [ dc %tmp.1845 574 12 14 ];
+        symbol [ setColor %tmp.1846 574 15 23 ];
+        %tmp.1846 = getv function %tmp.1845 :setColor;
+        symbol [ GRAU %tmp.1848 574 24 28 ];
+        %tmp.1848 = getv ? :GRAU;
+        symbol [ Graphics %tmp.1849 574 30 38 ];
+        %tmp.1849 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.1850 574 39 56 ];
+        %tmp.1850 = getv %tmp.1849 :COLOR_TRANSPARENT;
+        invoke %tmp.1845 %tmp.1846(%tmp.1848, %tmp.1850);
+[ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 575 12 ]
+        %tmp.1851 = lgetv %dc;
+        symbol [ dc %tmp.1851 575 12 14 ];
+        symbol [ drawText %tmp.1852 575 15 23 ];
+        %tmp.1852 = getv function %tmp.1851 :drawText;
+        %tmp.1853 = lgetv %cx.3;
+        symbol [ cx %tmp.1853 575 24 26 ];
+        %tmp.1854 = lgetv %b0.71;
+        symbol [ b0 %tmp.1854 575 29 31 ];
+        %tmp.1855 = lgetv %b1.72;
+        symbol [ b1 %tmp.1855 575 34 36 ];
+        %tmp.1856 = add %tmp.1854 %tmp.1855;
+        %tmp.1857 = 2;
+        %tmp.1858 = div %tmp.1856 %tmp.1857;
+        symbol [ fKlein %tmp.1860 575 43 49 ];
+        %tmp.1860 = getv ? :fKlein;
+        %tmp.1861 = "PLAN 7 T · APP ÖFFNEN";
+        symbol [ Graphics %tmp.1862 575 76 84 ];
+        %tmp.1862 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.1863 575 85 104 ];
+        %tmp.1863 = getv %tmp.1862 :TEXT_JUSTIFY_CENTER;
+        symbol [ Graphics %tmp.1864 575 107 115 ];
+        %tmp.1864 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_VCENTER %tmp.1865 575 116 136 ];
+        %tmp.1865 = getv %tmp.1864 :TEXT_JUSTIFY_VCENTER;
+        %tmp.1866 = bitor %tmp.1863 %tmp.1865;
+        invoke %tmp.1851 %tmp.1852(%tmp.1853, %tmp.1858, %tmp.1860, %tmp.1861, %tmp.1866);
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_573_15_576_8_stop:
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_539_15_576_8_if_end:
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_537_8_576_8_if_end:
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 579 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop" ]
-        %mo.92 = local;
-        symbol [ mo %mo.92 579 12 14 ];
-        %tmp.1890 = newa 13;
-        %tmp.1891 = "";
-        %tmp.1892 = dup %tmp.1890;
-        %tmp.1893 = aputv %tmp.1892 0 %tmp.1891;
-        %tmp.1894 = "JAN";
-        %tmp.1895 = dup %tmp.1893;
-        %tmp.1896 = aputv %tmp.1895 1 %tmp.1894;
-        %tmp.1897 = "FEB";
-        %tmp.1898 = dup %tmp.1896;
-        %tmp.1899 = aputv %tmp.1898 2 %tmp.1897;
-        %tmp.1900 = "MÄR";
-        %tmp.1901 = dup %tmp.1899;
-        %tmp.1902 = aputv %tmp.1901 3 %tmp.1900;
-        %tmp.1903 = "APR";
-        %tmp.1904 = dup %tmp.1902;
-        %tmp.1905 = aputv %tmp.1904 4 %tmp.1903;
-        %tmp.1906 = "MAI";
-        %tmp.1907 = dup %tmp.1905;
-        %tmp.1908 = aputv %tmp.1907 5 %tmp.1906;
-        %tmp.1909 = "JUN";
-        %tmp.1910 = dup %tmp.1908;
-        %tmp.1911 = aputv %tmp.1910 6 %tmp.1909;
-        %tmp.1912 = "JUL";
-        %tmp.1913 = dup %tmp.1911;
-        %tmp.1914 = aputv %tmp.1913 7 %tmp.1912;
-        %tmp.1915 = "AUG";
-        %tmp.1916 = dup %tmp.1914;
-        %tmp.1917 = aputv %tmp.1916 8 %tmp.1915;
-        %tmp.1918 = "SEP";
-        %tmp.1919 = dup %tmp.1917;
-        %tmp.1920 = aputv %tmp.1919 9 %tmp.1918;
-        %tmp.1921 = "OKT";
-        %tmp.1922 = dup %tmp.1920;
-        %tmp.1923 = aputv %tmp.1922 10 %tmp.1921;
-        %tmp.1924 = "NOV";
-        %tmp.1925 = dup %tmp.1923;
-        %tmp.1926 = aputv %tmp.1925 11 %tmp.1924;
-        %tmp.1927 = "DEZ";
-        %tmp.1928 = dup %tmp.1926;
-        %tmp.1929 = aputv %tmp.1928 12 %tmp.1927;
-        lputv %mo.92 %tmp.1929;
-        symbol [ mo %mo.92 579 12 14 ];
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
+        %gd.91 = local;
+        symbol [ gd %gd.91 579 12 14 ];
+        symbol [ Gregorian %tmp.1867 579 17 26 ];
+        %tmp.1867 = getm $.Toybox.Time.Gregorian;
+        symbol [ info %tmp.1868 579 27 31 ];
+        %tmp.1868 = getv function %tmp.1867 :info;
+        symbol [ Time %tmp.1869 579 32 36 ];
+        %tmp.1869 = getm $.Toybox.Time;
+        symbol [ now %tmp.1870 579 37 40 ];
+        %tmp.1870 = getv function %tmp.1869 :now;
+        %tmp.1871 = invoke %tmp.1869 %tmp.1870();
+        symbol [ Time %tmp.1872 579 44 48 ];
+        %tmp.1872 = getm $.Toybox.Time;
+        symbol [ FORMAT_SHORT %tmp.1873 579 49 61 ];
+        %tmp.1873 = getv %tmp.1872 :FORMAT_SHORT;
+        %tmp.1874 = invoke %tmp.1867 %tmp.1868(%tmp.1871, %tmp.1873);
+        lputv %gd.91 %tmp.1874;
+        symbol [ gd %gd.91 579 12 14 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 580 8 ]
-        %tmp.1930 = lgetv %dc;
-        symbol [ dc %tmp.1930 580 8 10 ];
-        symbol [ setColor %tmp.1931 580 11 19 ];
-        %tmp.1931 = getv function %tmp.1930 :setColor;
-        %tmp.1932 = 0xD0D0D0;
-        symbol [ Graphics %tmp.1933 580 30 38 ];
-        %tmp.1933 = getm $.Toybox.Graphics;
-        symbol [ COLOR_TRANSPARENT %tmp.1934 580 39 56 ];
-        %tmp.1934 = getv %tmp.1933 :COLOR_TRANSPARENT;
-        invoke %tmp.1930 %tmp.1931(%tmp.1932, %tmp.1934);
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
+        %wt.92 = local;
+        symbol [ wt %wt.92 580 12 14 ];
+        %tmp.1875 = newa 8;
+        %tmp.1876 = "";
+        %tmp.1877 = dup %tmp.1875;
+        %tmp.1878 = aputv %tmp.1877 0 %tmp.1876;
+        %tmp.1879 = "SO";
+        %tmp.1880 = dup %tmp.1878;
+        %tmp.1881 = aputv %tmp.1880 1 %tmp.1879;
+        %tmp.1882 = "MO";
+        %tmp.1883 = dup %tmp.1881;
+        %tmp.1884 = aputv %tmp.1883 2 %tmp.1882;
+        %tmp.1885 = "DI";
+        %tmp.1886 = dup %tmp.1884;
+        %tmp.1887 = aputv %tmp.1886 3 %tmp.1885;
+        %tmp.1888 = "MI";
+        %tmp.1889 = dup %tmp.1887;
+        %tmp.1890 = aputv %tmp.1889 4 %tmp.1888;
+        %tmp.1891 = "DO";
+        %tmp.1892 = dup %tmp.1890;
+        %tmp.1893 = aputv %tmp.1892 5 %tmp.1891;
+        %tmp.1894 = "FR";
+        %tmp.1895 = dup %tmp.1893;
+        %tmp.1896 = aputv %tmp.1895 6 %tmp.1894;
+        %tmp.1897 = "SA";
+        %tmp.1898 = dup %tmp.1896;
+        %tmp.1899 = aputv %tmp.1898 7 %tmp.1897;
+        lputv %wt.92 %tmp.1899;
+        symbol [ wt %wt.92 580 12 14 ];
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 581 8 ]
-        %tmp.1935 = lgetv %dc;
-        symbol [ dc %tmp.1935 581 8 10 ];
-        symbol [ drawText %tmp.1936 581 11 19 ];
-        %tmp.1936 = getv function %tmp.1935 :drawText;
-        %tmp.1937 = lgetv %cx.3;
-        symbol [ cx %tmp.1937 581 20 22 ];
-        %tmp.1938 = lgetv %h.2;
-        symbol [ h %tmp.1938 581 25 26 ];
-        %tmp.1939 = 0.855;
-        %tmp.1940 = mul %tmp.1938 %tmp.1939;
-        symbol [ toNumber %tmp.1941 581 36 44 ];
-        %tmp.1941 = getv function %tmp.1940 :toNumber;
-        %tmp.1942 = invoke %tmp.1940 %tmp.1941();
-        symbol [ fKopf %tmp.1944 581 48 53 ];
-        %tmp.1944 = getv ? :fKopf;
-        %tmp.1945 = lgetv %wt.91;
-        symbol [ wt %tmp.1945 581 55 57 ];
-        %tmp.1946 = lgetv %gd.90;
-        symbol [ gd %tmp.1946 581 58 60 ];
-        symbol [ day_of_week %tmp.1947 581 61 72 ];
-        %tmp.1947 = getv %tmp.1946 :day_of_week;
-        %tmp.1948 = as %tmp.1947 Number;
-        symbol [ Number %tmp.1948 581 76 82 ];
-        %tmp.1949 = agetv %tmp.1945 %tmp.1948;
-        %tmp.1950 = " ";
-        %tmp.1951 = add %tmp.1949 %tmp.1950;
-        %tmp.1952 = lgetv %gd.90;
-        symbol [ gd %tmp.1952 581 92 94 ];
-        symbol [ day %tmp.1953 581 95 98 ];
-        %tmp.1953 = getv %tmp.1952 :day;
-        symbol [ toString %tmp.1954 581 99 107 ];
-        %tmp.1954 = getv function %tmp.1953 :toString;
-        %tmp.1955 = invoke %tmp.1953 %tmp.1954();
-        %tmp.1956 = add %tmp.1951 %tmp.1955;
-        %tmp.1957 = ". ";
-        %tmp.1958 = add %tmp.1956 %tmp.1957;
-        %tmp.1959 = lgetv %mo.92;
-        symbol [ mo %tmp.1959 581 119 121 ];
-        %tmp.1960 = lgetv %gd.90;
-        symbol [ gd %tmp.1960 581 122 124 ];
-        symbol [ month %tmp.1961 581 125 130 ];
-        %tmp.1961 = getv %tmp.1960 :month;
-        %tmp.1962 = as %tmp.1961 Number;
-        symbol [ Number %tmp.1962 581 134 140 ];
-        %tmp.1963 = agetv %tmp.1959 %tmp.1962;
-        %tmp.1964 = add %tmp.1958 %tmp.1963;
-        symbol [ Graphics %tmp.1965 581 143 151 ];
-        %tmp.1965 = getm $.Toybox.Graphics;
-        symbol [ TEXT_JUSTIFY_CENTER %tmp.1966 581 152 171 ];
-        %tmp.1966 = getv %tmp.1965 :TEXT_JUSTIFY_CENTER;
-        invoke %tmp.1935 %tmp.1936(%tmp.1937, %tmp.1942, %tmp.1944, %tmp.1964, %tmp.1966);
-[ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 584 8 ]
-        %tmp.1967 = self;
-        symbol [ zeiger %tmp.1968 584 8 14 ];
-        %tmp.1968 = getv function %tmp.1967 :zeiger;
-        %tmp.1969 = lgetv %dc;
-        symbol [ dc %tmp.1969 584 15 17 ];
-        %tmp.1970 = lgetv %cx.3;
-        symbol [ cx %tmp.1970 584 19 21 ];
-        %tmp.1971 = lgetv %cy.4;
-        symbol [ cy %tmp.1971 584 23 25 ];
-        %tmp.1972 = lgetv %wStd.6;
-        symbol [ wStd %tmp.1972 584 27 31 ];
-        %tmp.1973 = lgetv %w.1;
-        symbol [ w %tmp.1973 584 34 35 ];
-        %tmp.1974 = 0.25;
-        %tmp.1975 = mul %tmp.1973 %tmp.1974;
-        symbol [ toNumber %tmp.1976 584 44 52 ];
-        %tmp.1976 = getv function %tmp.1975 :toNumber;
-        %tmp.1977 = invoke %tmp.1975 %tmp.1976();
-        %tmp.1978 = 14;
-        %tmp.1979 = 9;
-        %tmp.1980 = 0xEDEDED;
-        invoke %tmp.1967 %tmp.1968(%tmp.1969, %tmp.1970, %tmp.1971, %tmp.1972, %tmp.1977, %tmp.1978, %tmp.1979, %tmp.1980);
-[ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 585 8 ]
-        %tmp.1981 = self;
-        symbol [ zeiger %tmp.1982 585 8 14 ];
-        %tmp.1982 = getv function %tmp.1981 :zeiger;
-        %tmp.1983 = lgetv %dc;
-        symbol [ dc %tmp.1983 585 15 17 ];
-        %tmp.1984 = lgetv %cx.3;
-        symbol [ cx %tmp.1984 585 19 21 ];
-        %tmp.1985 = lgetv %cy.4;
-        symbol [ cy %tmp.1985 585 23 25 ];
-        %tmp.1986 = lgetv %wMin.7;
-        symbol [ wMin %tmp.1986 585 27 31 ];
-        %tmp.1987 = lgetv %w.1;
-        symbol [ w %tmp.1987 585 34 35 ];
-        %tmp.1988 = 0.39;
-        %tmp.1989 = mul %tmp.1987 %tmp.1988;
-        symbol [ toNumber %tmp.1990 585 44 52 ];
-        %tmp.1990 = getv function %tmp.1989 :toNumber;
-        %tmp.1991 = invoke %tmp.1989 %tmp.1990();
-        %tmp.1992 = 14;
-        %tmp.1993 = 6;
-        %tmp.1994 = 0xEDEDED;
-        invoke %tmp.1981 %tmp.1982(%tmp.1983, %tmp.1984, %tmp.1985, %tmp.1986, %tmp.1991, %tmp.1992, %tmp.1993, %tmp.1994);
+        [ "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_start" "_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop" ]
+        %mo.93 = local;
+        symbol [ mo %mo.93 581 12 14 ];
+        %tmp.1900 = newa 13;
+        %tmp.1901 = "";
+        %tmp.1902 = dup %tmp.1900;
+        %tmp.1903 = aputv %tmp.1902 0 %tmp.1901;
+        %tmp.1904 = "JAN";
+        %tmp.1905 = dup %tmp.1903;
+        %tmp.1906 = aputv %tmp.1905 1 %tmp.1904;
+        %tmp.1907 = "FEB";
+        %tmp.1908 = dup %tmp.1906;
+        %tmp.1909 = aputv %tmp.1908 2 %tmp.1907;
+        %tmp.1910 = "MÄR";
+        %tmp.1911 = dup %tmp.1909;
+        %tmp.1912 = aputv %tmp.1911 3 %tmp.1910;
+        %tmp.1913 = "APR";
+        %tmp.1914 = dup %tmp.1912;
+        %tmp.1915 = aputv %tmp.1914 4 %tmp.1913;
+        %tmp.1916 = "MAI";
+        %tmp.1917 = dup %tmp.1915;
+        %tmp.1918 = aputv %tmp.1917 5 %tmp.1916;
+        %tmp.1919 = "JUN";
+        %tmp.1920 = dup %tmp.1918;
+        %tmp.1921 = aputv %tmp.1920 6 %tmp.1919;
+        %tmp.1922 = "JUL";
+        %tmp.1923 = dup %tmp.1921;
+        %tmp.1924 = aputv %tmp.1923 7 %tmp.1922;
+        %tmp.1925 = "AUG";
+        %tmp.1926 = dup %tmp.1924;
+        %tmp.1927 = aputv %tmp.1926 8 %tmp.1925;
+        %tmp.1928 = "SEP";
+        %tmp.1929 = dup %tmp.1927;
+        %tmp.1930 = aputv %tmp.1929 9 %tmp.1928;
+        %tmp.1931 = "OKT";
+        %tmp.1932 = dup %tmp.1930;
+        %tmp.1933 = aputv %tmp.1932 10 %tmp.1931;
+        %tmp.1934 = "NOV";
+        %tmp.1935 = dup %tmp.1933;
+        %tmp.1936 = aputv %tmp.1935 11 %tmp.1934;
+        %tmp.1937 = "DEZ";
+        %tmp.1938 = dup %tmp.1936;
+        %tmp.1939 = aputv %tmp.1938 12 %tmp.1937;
+        lputv %mo.93 %tmp.1939;
+        symbol [ mo %mo.93 581 12 14 ];
+[ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 582 8 ]
+        %tmp.1940 = lgetv %dc;
+        symbol [ dc %tmp.1940 582 8 10 ];
+        symbol [ setColor %tmp.1941 582 11 19 ];
+        %tmp.1941 = getv function %tmp.1940 :setColor;
+        %tmp.1942 = 0xD0D0D0;
+        symbol [ Graphics %tmp.1943 582 30 38 ];
+        %tmp.1943 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.1944 582 39 56 ];
+        %tmp.1944 = getv %tmp.1943 :COLOR_TRANSPARENT;
+        invoke %tmp.1940 %tmp.1941(%tmp.1942, %tmp.1944);
+[ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 583 8 ]
+        %tmp.1945 = lgetv %dc;
+        symbol [ dc %tmp.1945 583 8 10 ];
+        symbol [ drawText %tmp.1946 583 11 19 ];
+        %tmp.1946 = getv function %tmp.1945 :drawText;
+        %tmp.1947 = lgetv %cx.3;
+        symbol [ cx %tmp.1947 583 20 22 ];
+        %tmp.1948 = lgetv %h.2;
+        symbol [ h %tmp.1948 583 25 26 ];
+        %tmp.1949 = 0.855;
+        %tmp.1950 = mul %tmp.1948 %tmp.1949;
+        symbol [ toNumber %tmp.1951 583 36 44 ];
+        %tmp.1951 = getv function %tmp.1950 :toNumber;
+        %tmp.1952 = invoke %tmp.1950 %tmp.1951();
+        symbol [ fKopf %tmp.1954 583 48 53 ];
+        %tmp.1954 = getv ? :fKopf;
+        %tmp.1955 = lgetv %wt.92;
+        symbol [ wt %tmp.1955 583 55 57 ];
+        %tmp.1956 = lgetv %gd.91;
+        symbol [ gd %tmp.1956 583 58 60 ];
+        symbol [ day_of_week %tmp.1957 583 61 72 ];
+        %tmp.1957 = getv %tmp.1956 :day_of_week;
+        %tmp.1958 = as %tmp.1957 Number;
+        symbol [ Number %tmp.1958 583 76 82 ];
+        %tmp.1959 = agetv %tmp.1955 %tmp.1958;
+        %tmp.1960 = " ";
+        %tmp.1961 = add %tmp.1959 %tmp.1960;
+        %tmp.1962 = lgetv %gd.91;
+        symbol [ gd %tmp.1962 583 92 94 ];
+        symbol [ day %tmp.1963 583 95 98 ];
+        %tmp.1963 = getv %tmp.1962 :day;
+        symbol [ toString %tmp.1964 583 99 107 ];
+        %tmp.1964 = getv function %tmp.1963 :toString;
+        %tmp.1965 = invoke %tmp.1963 %tmp.1964();
+        %tmp.1966 = add %tmp.1961 %tmp.1965;
+        %tmp.1967 = ". ";
+        %tmp.1968 = add %tmp.1966 %tmp.1967;
+        %tmp.1969 = lgetv %mo.93;
+        symbol [ mo %tmp.1969 583 119 121 ];
+        %tmp.1970 = lgetv %gd.91;
+        symbol [ gd %tmp.1970 583 122 124 ];
+        symbol [ month %tmp.1971 583 125 130 ];
+        %tmp.1971 = getv %tmp.1970 :month;
+        %tmp.1972 = as %tmp.1971 Number;
+        symbol [ Number %tmp.1972 583 134 140 ];
+        %tmp.1973 = agetv %tmp.1969 %tmp.1972;
+        %tmp.1974 = add %tmp.1968 %tmp.1973;
+        symbol [ Graphics %tmp.1975 583 143 151 ];
+        %tmp.1975 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.1976 583 152 171 ];
+        %tmp.1976 = getv %tmp.1975 :TEXT_JUSTIFY_CENTER;
+        invoke %tmp.1945 %tmp.1946(%tmp.1947, %tmp.1952, %tmp.1954, %tmp.1974, %tmp.1976);
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 586 8 ]
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_586_8_586_117_if_stmt:
-        symbol [ eSek %tmp.1996 586 12 16 ];
-        %tmp.1996 = getv ? :eSek;
-        bf %tmp.1996 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_586_8_586_117_if_end;
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_586_8_586_117_if_true:
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_586_18_586_117_start:
-[ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 586 20 ]
-        %tmp.1997 = self;
-        symbol [ zeiger %tmp.1998 586 20 26 ];
-        %tmp.1998 = getv function %tmp.1997 :zeiger;
-        %tmp.1999 = lgetv %dc;
-        symbol [ dc %tmp.1999 586 27 29 ];
-        %tmp.2000 = lgetv %cx.3;
-        symbol [ cx %tmp.2000 586 31 33 ];
-        %tmp.2001 = lgetv %cy.4;
-        symbol [ cy %tmp.2001 586 35 37 ];
-        %tmp.2002 = lgetv %uhr.5;
-        symbol [ uhr %tmp.2002 586 39 42 ];
-        symbol [ sec %tmp.2003 586 43 46 ];
-        %tmp.2003 = getv %tmp.2002 :sec;
-        %tmp.2004 = 60.0;
-        %tmp.2005 = div %tmp.2003 %tmp.2004;
-        symbol [ Math %tmp.2006 586 56 60 ];
-        %tmp.2006 = getm $.Toybox.Math;
-        symbol [ PI %tmp.2007 586 61 63 ];
-        %tmp.2007 = getv %tmp.2006 :PI;
-        %tmp.2008 = mul %tmp.2005 %tmp.2007;
-        %tmp.2009 = 2;
-        %tmp.2010 = mul %tmp.2008 %tmp.2009;
-        %tmp.2011 = lgetv %w.1;
-        symbol [ w %tmp.2011 586 70 71 ];
-        %tmp.2012 = 0.41;
-        %tmp.2013 = mul %tmp.2011 %tmp.2012;
-        symbol [ toNumber %tmp.2014 586 80 88 ];
-        %tmp.2014 = getv function %tmp.2013 :toNumber;
-        %tmp.2015 = invoke %tmp.2013 %tmp.2014();
-        %tmp.2016 = 26;
-        %tmp.2017 = 2;
-        symbol [ KiraSkala %tmp.2019 586 99 108 ];
-        %tmp.2019 = getv ? :KiraSkala;
-        symbol [ sek %tmp.2020 586 109 112 ];
-        %tmp.2020 = getv function %tmp.2019 :sek;
-        %tmp.2021 = invoke %tmp.2019 %tmp.2020();
-        invoke %tmp.1997 %tmp.1998(%tmp.1999, %tmp.2000, %tmp.2001, %tmp.2010, %tmp.2015, %tmp.2016, %tmp.2017, %tmp.2021);
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_586_18_586_117_stop:
-        goto @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_586_8_586_117_if_end;
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_586_8_586_117_if_end:
+        %tmp.1977 = self;
+        symbol [ zeiger %tmp.1978 586 8 14 ];
+        %tmp.1978 = getv function %tmp.1977 :zeiger;
+        %tmp.1979 = lgetv %dc;
+        symbol [ dc %tmp.1979 586 15 17 ];
+        %tmp.1980 = lgetv %cx.3;
+        symbol [ cx %tmp.1980 586 19 21 ];
+        %tmp.1981 = lgetv %cy.4;
+        symbol [ cy %tmp.1981 586 23 25 ];
+        %tmp.1982 = lgetv %wStd.6;
+        symbol [ wStd %tmp.1982 586 27 31 ];
+        %tmp.1983 = lgetv %w.1;
+        symbol [ w %tmp.1983 586 34 35 ];
+        %tmp.1984 = 0.25;
+        %tmp.1985 = mul %tmp.1983 %tmp.1984;
+        symbol [ toNumber %tmp.1986 586 44 52 ];
+        %tmp.1986 = getv function %tmp.1985 :toNumber;
+        %tmp.1987 = invoke %tmp.1985 %tmp.1986();
+        %tmp.1988 = 14;
+        %tmp.1989 = 9;
+        %tmp.1990 = 0xEDEDED;
+        invoke %tmp.1977 %tmp.1978(%tmp.1979, %tmp.1980, %tmp.1981, %tmp.1982, %tmp.1987, %tmp.1988, %tmp.1989, %tmp.1990);
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 587 8 ]
-        %tmp.2022 = lgetv %dc;
-        symbol [ dc %tmp.2022 587 8 10 ];
-        symbol [ setColor %tmp.2023 587 11 19 ];
-        %tmp.2023 = getv function %tmp.2022 :setColor;
-        symbol [ KiraSkala %tmp.2025 587 20 29 ];
-        %tmp.2025 = getv ? :KiraSkala;
-        symbol [ mitte %tmp.2026 587 30 35 ];
-        %tmp.2026 = getv function %tmp.2025 :mitte;
-        %tmp.2027 = invoke %tmp.2025 %tmp.2026();
-        symbol [ Graphics %tmp.2028 587 39 47 ];
-        %tmp.2028 = getm $.Toybox.Graphics;
-        symbol [ COLOR_TRANSPARENT %tmp.2029 587 48 65 ];
-        %tmp.2029 = getv %tmp.2028 :COLOR_TRANSPARENT;
-        invoke %tmp.2022 %tmp.2023(%tmp.2027, %tmp.2029);
+        %tmp.1991 = self;
+        symbol [ zeiger %tmp.1992 587 8 14 ];
+        %tmp.1992 = getv function %tmp.1991 :zeiger;
+        %tmp.1993 = lgetv %dc;
+        symbol [ dc %tmp.1993 587 15 17 ];
+        %tmp.1994 = lgetv %cx.3;
+        symbol [ cx %tmp.1994 587 19 21 ];
+        %tmp.1995 = lgetv %cy.4;
+        symbol [ cy %tmp.1995 587 23 25 ];
+        %tmp.1996 = lgetv %wMin.7;
+        symbol [ wMin %tmp.1996 587 27 31 ];
+        %tmp.1997 = lgetv %w.1;
+        symbol [ w %tmp.1997 587 34 35 ];
+        %tmp.1998 = 0.39;
+        %tmp.1999 = mul %tmp.1997 %tmp.1998;
+        symbol [ toNumber %tmp.2000 587 44 52 ];
+        %tmp.2000 = getv function %tmp.1999 :toNumber;
+        %tmp.2001 = invoke %tmp.1999 %tmp.2000();
+        %tmp.2002 = 14;
+        %tmp.2003 = 6;
+        %tmp.2004 = 0xEDEDED;
+        invoke %tmp.1991 %tmp.1992(%tmp.1993, %tmp.1994, %tmp.1995, %tmp.1996, %tmp.2001, %tmp.2002, %tmp.2003, %tmp.2004);
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 588 8 ]
-        %tmp.2030 = lgetv %dc;
-        symbol [ dc %tmp.2030 588 8 10 ];
-        symbol [ fillCircle %tmp.2031 588 11 21 ];
-        %tmp.2031 = getv function %tmp.2030 :fillCircle;
-        %tmp.2032 = lgetv %cx.3;
-        symbol [ cx %tmp.2032 588 22 24 ];
-        %tmp.2033 = lgetv %cy.4;
-        symbol [ cy %tmp.2033 588 26 28 ];
-        %tmp.2034 = 8;
-        invoke %tmp.2030 %tmp.2031(%tmp.2032, %tmp.2033, %tmp.2034);
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_588_8_588_117_if_stmt:
+        symbol [ eSek %tmp.2006 588 12 16 ];
+        %tmp.2006 = getv ? :eSek;
+        bf %tmp.2006 @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_588_8_588_117_if_end;
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_588_8_588_117_if_true:
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_588_18_588_117_start:
+[ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 588 20 ]
+        %tmp.2007 = self;
+        symbol [ zeiger %tmp.2008 588 20 26 ];
+        %tmp.2008 = getv function %tmp.2007 :zeiger;
+        %tmp.2009 = lgetv %dc;
+        symbol [ dc %tmp.2009 588 27 29 ];
+        %tmp.2010 = lgetv %cx.3;
+        symbol [ cx %tmp.2010 588 31 33 ];
+        %tmp.2011 = lgetv %cy.4;
+        symbol [ cy %tmp.2011 588 35 37 ];
+        %tmp.2012 = lgetv %uhr.5;
+        symbol [ uhr %tmp.2012 588 39 42 ];
+        symbol [ sec %tmp.2013 588 43 46 ];
+        %tmp.2013 = getv %tmp.2012 :sec;
+        %tmp.2014 = 60.0;
+        %tmp.2015 = div %tmp.2013 %tmp.2014;
+        symbol [ Math %tmp.2016 588 56 60 ];
+        %tmp.2016 = getm $.Toybox.Math;
+        symbol [ PI %tmp.2017 588 61 63 ];
+        %tmp.2017 = getv %tmp.2016 :PI;
+        %tmp.2018 = mul %tmp.2015 %tmp.2017;
+        %tmp.2019 = 2;
+        %tmp.2020 = mul %tmp.2018 %tmp.2019;
+        %tmp.2021 = lgetv %w.1;
+        symbol [ w %tmp.2021 588 70 71 ];
+        %tmp.2022 = 0.41;
+        %tmp.2023 = mul %tmp.2021 %tmp.2022;
+        symbol [ toNumber %tmp.2024 588 80 88 ];
+        %tmp.2024 = getv function %tmp.2023 :toNumber;
+        %tmp.2025 = invoke %tmp.2023 %tmp.2024();
+        %tmp.2026 = 26;
+        %tmp.2027 = 2;
+        symbol [ KiraSkala %tmp.2029 588 99 108 ];
+        %tmp.2029 = getv ? :KiraSkala;
+        symbol [ sek %tmp.2030 588 109 112 ];
+        %tmp.2030 = getv function %tmp.2029 :sek;
+        %tmp.2031 = invoke %tmp.2029 %tmp.2030();
+        invoke %tmp.2007 %tmp.2008(%tmp.2009, %tmp.2010, %tmp.2011, %tmp.2020, %tmp.2025, %tmp.2026, %tmp.2027, %tmp.2031);
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_588_18_588_117_stop:
+        goto @_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_588_8_588_117_if_end;
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_588_8_588_117_if_end:
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 589 8 ]
-        %tmp.2035 = lgetv %dc;
-        symbol [ dc %tmp.2035 589 8 10 ];
-        symbol [ setColor %tmp.2036 589 11 19 ];
-        %tmp.2036 = getv function %tmp.2035 :setColor;
-        symbol [ Graphics %tmp.2037 589 20 28 ];
-        %tmp.2037 = getm $.Toybox.Graphics;
-        symbol [ COLOR_BLACK %tmp.2038 589 29 40 ];
-        %tmp.2038 = getv %tmp.2037 :COLOR_BLACK;
-        symbol [ Graphics %tmp.2039 589 42 50 ];
-        %tmp.2039 = getm $.Toybox.Graphics;
-        symbol [ COLOR_TRANSPARENT %tmp.2040 589 51 68 ];
-        %tmp.2040 = getv %tmp.2039 :COLOR_TRANSPARENT;
-        invoke %tmp.2035 %tmp.2036(%tmp.2038, %tmp.2040);
+        %tmp.2032 = lgetv %dc;
+        symbol [ dc %tmp.2032 589 8 10 ];
+        symbol [ setColor %tmp.2033 589 11 19 ];
+        %tmp.2033 = getv function %tmp.2032 :setColor;
+        symbol [ KiraSkala %tmp.2035 589 20 29 ];
+        %tmp.2035 = getv ? :KiraSkala;
+        symbol [ mitte %tmp.2036 589 30 35 ];
+        %tmp.2036 = getv function %tmp.2035 :mitte;
+        %tmp.2037 = invoke %tmp.2035 %tmp.2036();
+        symbol [ Graphics %tmp.2038 589 39 47 ];
+        %tmp.2038 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.2039 589 48 65 ];
+        %tmp.2039 = getv %tmp.2038 :COLOR_TRANSPARENT;
+        invoke %tmp.2032 %tmp.2033(%tmp.2037, %tmp.2039);
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 590 8 ]
-        %tmp.2041 = lgetv %dc;
-        symbol [ dc %tmp.2041 590 8 10 ];
-        symbol [ fillCircle %tmp.2042 590 11 21 ];
-        %tmp.2042 = getv function %tmp.2041 :fillCircle;
-        %tmp.2043 = lgetv %cx.3;
-        symbol [ cx %tmp.2043 590 22 24 ];
-        %tmp.2044 = lgetv %cy.4;
-        symbol [ cy %tmp.2044 590 26 28 ];
-        %tmp.2045 = 3;
-        invoke %tmp.2041 %tmp.2042(%tmp.2043, %tmp.2044, %tmp.2045);
-_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_591_4_stop:
+        %tmp.2040 = lgetv %dc;
+        symbol [ dc %tmp.2040 590 8 10 ];
+        symbol [ fillCircle %tmp.2041 590 11 21 ];
+        %tmp.2041 = getv function %tmp.2040 :fillCircle;
+        %tmp.2042 = lgetv %cx.3;
+        symbol [ cx %tmp.2042 590 22 24 ];
+        %tmp.2043 = lgetv %cy.4;
+        symbol [ cy %tmp.2043 590 26 28 ];
+        %tmp.2044 = 8;
+        invoke %tmp.2040 %tmp.2041(%tmp.2042, %tmp.2043, %tmp.2044);
+[ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 591 8 ]
+        %tmp.2045 = lgetv %dc;
+        symbol [ dc %tmp.2045 591 8 10 ];
+        symbol [ setColor %tmp.2046 591 11 19 ];
+        %tmp.2046 = getv function %tmp.2045 :setColor;
+        symbol [ Graphics %tmp.2047 591 20 28 ];
+        %tmp.2047 = getm $.Toybox.Graphics;
+        symbol [ COLOR_BLACK %tmp.2048 591 29 40 ];
+        %tmp.2048 = getv %tmp.2047 :COLOR_BLACK;
+        symbol [ Graphics %tmp.2049 591 42 50 ];
+        %tmp.2049 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.2050 591 51 68 ];
+        %tmp.2050 = getv %tmp.2049 :COLOR_TRANSPARENT;
+        invoke %tmp.2045 %tmp.2046(%tmp.2048, %tmp.2050);
+[ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 592 8 ]
+        %tmp.2051 = lgetv %dc;
+        symbol [ dc %tmp.2051 592 8 10 ];
+        symbol [ fillCircle %tmp.2052 592 11 21 ];
+        %tmp.2052 = getv function %tmp.2051 :fillCircle;
+        %tmp.2053 = lgetv %cx.3;
+        symbol [ cx %tmp.2053 592 22 24 ];
+        %tmp.2054 = lgetv %cy.4;
+        symbol [ cy %tmp.2054 592 26 28 ];
+        %tmp.2055 = 3;
+        invoke %tmp.2051 %tmp.2052(%tmp.2053, %tmp.2054, %tmp.2055);
+_home_user_workspace_ck_repo_garmin_zeiger_source_KiraZeiger_mc_358_49_593_4_stop:
     }
 }
 [ @file = "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc"; @line = 5; ]
 <init> {
 [ "/home/user/workspace/ck-repo/garmin-zeiger/source/KiraZeiger.mc" 37 6 ]
-    %tmp.2046 = newd 5;
-    %tmp.2047 = "PUSH";
-    %tmp.2048 = 0x2ECC71;
-    %tmp.2049 = dup %tmp.2046;
-    %tmp.2050 = aputv %tmp.2049 %tmp.2047 %tmp.2048;
-    %tmp.2051 = "TRAIN";
-    %tmp.2052 = 0x2ECC71;
-    %tmp.2053 = dup %tmp.2050;
-    %tmp.2054 = aputv %tmp.2053 %tmp.2051 %tmp.2052;
-    %tmp.2055 = "QUAL";
-    %tmp.2056 = 0x2ECC71;
-    %tmp.2057 = dup %tmp.2054;
-    %tmp.2058 = aputv %tmp.2057 %tmp.2055 %tmp.2056;
-    %tmp.2059 = "EASY";
-    %tmp.2060 = 0xF1C40F;
-    %tmp.2061 = dup %tmp.2058;
-    %tmp.2062 = aputv %tmp.2061 %tmp.2059 %tmp.2060;
-    %tmp.2063 = "REST";
-    %tmp.2064 = 0xE74C3C;
-    %tmp.2065 = dup %tmp.2062;
-    %tmp.2066 = aputv %tmp.2065 %tmp.2063 %tmp.2064;
-    putv self :VOTE_FARBE %tmp.2066;
+    %tmp.2056 = newd 5;
+    %tmp.2057 = "PUSH";
+    %tmp.2058 = 0x2ECC71;
+    %tmp.2059 = dup %tmp.2056;
+    %tmp.2060 = aputv %tmp.2059 %tmp.2057 %tmp.2058;
+    %tmp.2061 = "TRAIN";
+    %tmp.2062 = 0x2ECC71;
+    %tmp.2063 = dup %tmp.2060;
+    %tmp.2064 = aputv %tmp.2063 %tmp.2061 %tmp.2062;
+    %tmp.2065 = "QUAL";
+    %tmp.2066 = 0x2ECC71;
+    %tmp.2067 = dup %tmp.2064;
+    %tmp.2068 = aputv %tmp.2067 %tmp.2065 %tmp.2066;
+    %tmp.2069 = "EASY";
+    %tmp.2070 = 0xF1C40F;
+    %tmp.2071 = dup %tmp.2068;
+    %tmp.2072 = aputv %tmp.2071 %tmp.2069 %tmp.2070;
+    %tmp.2073 = "REST";
+    %tmp.2074 = 0xE74C3C;
+    %tmp.2075 = dup %tmp.2072;
+    %tmp.2076 = aputv %tmp.2075 %tmp.2073 %tmp.2074;
+    putv self :VOTE_FARBE %tmp.2076;
 }
