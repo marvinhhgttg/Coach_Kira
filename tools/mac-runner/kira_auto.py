@@ -123,6 +123,7 @@ def nachricht(titel: str, text: str, iphone: bool = True) -> None:
             return
     except Exception:
         pass
+    # 25.11.2026: Aufgaben nur mit Datum (ganztägig), ohne Uhrzeit
     skript = (
         'tell application "Reminders"\n'
         '  if (name of every account) contains "iCloud" then\n'
@@ -134,9 +135,9 @@ def nachricht(titel: str, text: str, iphone: bool = True) -> None:
         '  end if\n'
         '  set alt to (current date) - (6 * hours)\n'
         '  try\n'
-        '    delete (every reminder of l whose remind me date < alt)\n'
+        '    delete (every reminder of l whose creation date < alt)\n'
         '  end try\n'
-        f'  make new reminder at end of l with properties {{name:"{esc(titel)}", body:"{esc(text)}", remind me date:((current date) + 60)}}\n'
+        f'  make new reminder at end of l with properties {{name:"{esc(titel)}", body:"{esc(text)}", allday due date:(current date)}}\n'
         'end tell'
     )
     try:
