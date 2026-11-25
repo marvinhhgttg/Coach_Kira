@@ -9,4 +9,5 @@
     <property id="pSek" type="boolean">true</property>
     <property id="pErhBB" type="boolean">true</property>
     <property id="pStil" type="number">0</property>
+    <property id="pLangDruck" type="boolean">true</property>
 </properties>

@@ -11,4 +11,5 @@
     <setting propertyKey="@Properties.pErhBB" title="@Strings.spErhBB"><settingConfig type="boolean"/></setting>
     <setting propertyKey="@Properties.pDiaLast" title="@Strings.spDiaLast"><settingConfig type="boolean"/></setting>
     <setting propertyKey="@Properties.pDiaPlan" title="@Strings.spDiaPlan"><settingConfig type="boolean"/></setting>
+    <setting propertyKey="@Properties.pLangDruck" title="@Strings.spLangDruck"><settingConfig type="boolean"/></setting>
 </settings>

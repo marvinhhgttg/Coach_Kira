@@ -22,7 +22,8 @@ class KiraZifferblattApp extends Application.AppBase {
 
     function getInitialView() as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] {
         ansicht = new KiraZifferblatt();
-        return [ansicht];
+        // 25.11.2026: langer Druck öffnet die Coach-Kira-App (über deren Komplikation)
+        return [ansicht, new KiraFaceDelegate(ansicht)];
     }
 
     // 24.11.2026: Einstellungen aus der Connect IQ App sofort übernehmen
@@ -432,5 +433,28 @@ class KiraZifferblatt extends WatchUi.WatchFace {
         var mo = ["", "JAN", "FEB", "MÄR", "APR", "MAI", "JUN", "JUL", "AUG", "SEP", "OKT", "NOV", "DEZ"];
         dc.setColor(0xD0D0D0, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, (h * 0.875).toNumber(), fDatum, wt[g.day_of_week as Number] + " " + g.day.toString() + ". " + mo[g.month as Number], Graphics.TEXT_JUSTIFY_CENTER);
+    }
+}
+
+// 25.11.2026: Touch-and-hold auf dem Zifferblatt → Coach-Kira-App öffnen (Einstellung „Langer Druck öffnet die App“)
+class KiraFaceDelegate extends WatchUi.WatchFaceDelegate {
+    var ansicht as KiraZifferblatt;
+
+    function initialize(v as KiraZifferblatt) {
+        WatchFaceDelegate.initialize();
+        ansicht = v;
+    }
+
+    function onPress(clickEvent as WatchUi.ClickEvent) as Boolean {
+        if (!KiraWert.an("pLangDruck")) { return false; }
+        var id = ansicht.kiraId;
+        if (id == null) { ansicht.kiraSuchen(); id = ansicht.kiraId; }
+        if (id == null) { return false; }
+        try {
+            Complications.exitTo(id);
+            return true;
+        } catch (e) {
+            return false;
+        }
     }
 }

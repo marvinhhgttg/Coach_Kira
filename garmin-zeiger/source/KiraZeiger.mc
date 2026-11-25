@@ -21,7 +21,8 @@ class KiraZeigerApp extends Application.AppBase {
 
     function getInitialView() as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] {
         ansicht = new KiraZeiger();
-        return [ansicht];
+        // 25.11.2026: langer Druck öffnet die Coach-Kira-App (über deren Komplikation)
+        return [ansicht, new KiraFaceDelegate(ansicht)];
     }
 
     // 24.11.2026: Einstellungen aus der Connect IQ App sofort übernehmen
@@ -590,5 +591,28 @@ class KiraZeiger extends WatchUi.WatchFace {
         dc.fillCircle(cx, cy, 8);
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
         dc.fillCircle(cx, cy, 3);
+    }
+}
+
+// 25.11.2026: Touch-and-hold auf dem Zifferblatt → Coach-Kira-App öffnen (Einstellung „Langer Druck öffnet die App“)
+class KiraFaceDelegate extends WatchUi.WatchFaceDelegate {
+    var ansicht as KiraZeiger;
+
+    function initialize(v as KiraZeiger) {
+        WatchFaceDelegate.initialize();
+        ansicht = v;
+    }
+
+    function onPress(clickEvent as WatchUi.ClickEvent) as Boolean {
+        if (!KiraWert.an("pLangDruck")) { return false; }
+        var id = ansicht.kiraId;
+        if (id == null) { ansicht.kiraSuchen(); id = ansicht.kiraId; }
+        if (id == null) { return false; }
+        try {
+            Complications.exitTo(id);
+            return true;
+        } catch (e) {
+            return false;
+        }
     }
 }

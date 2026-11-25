@@ -9,4 +9,5 @@
     <setting propertyKey="@Properties.pVotumRing" title="@Strings.spVotumRing"><settingConfig type="boolean"/></setting>
     <setting propertyKey="@Properties.pSek" title="@Strings.spSek"><settingConfig type="boolean"/></setting>
     <setting propertyKey="@Properties.pErhBB" title="@Strings.spErhBB"><settingConfig type="boolean"/></setting>
+    <setting propertyKey="@Properties.pLangDruck" title="@Strings.spLangDruck"><settingConfig type="boolean"/></setting>
 </settings>

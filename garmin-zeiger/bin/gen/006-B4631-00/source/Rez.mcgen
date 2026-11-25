@@ -12,6 +12,7 @@ module Rez {
     module Strings {
         (:initialized) var spUL as ResourceId;
         (:initialized) var lE9 as ResourceId;
+        (:initialized) var spLangDruck as ResourceId;
         (:initialized) var spDiaLast as ResourceId;
         (:initialized) var spRingR as ResourceId;
         (:initialized) var lE12 as ResourceId;
