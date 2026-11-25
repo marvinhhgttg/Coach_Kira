@@ -29,4 +29,8 @@
     <string id="lpUnten7">Timer</string>
     <string id="lpUnten8">Distanz</string>
     <string id="lpUnten9">Uhrzeit</string>
+    <string id="lpOben9">Puls</string>
+    <string id="lpMitte6">Puls</string>
+    <string id="lpUnten10">Puls</string>
+    <string id="spAktiv">Uhrzeit, Strecke, Dauer, Puls anzeigen</string>
 </strings>

@@ -38,6 +38,8 @@ class KiraFeldView extends WatchUi.DataField {
     var zoneJetzt as Number = 0;
     var timerMs as Number = 0;
     var distM as Float = 0.0;
+    var hrJetzt as Number = 0;
+    var eAktiv as Boolean = true;
     var eOben as Number = 0;
     var eMitte as Number = 0;
     var eUnten as Number = 0;
@@ -71,6 +73,7 @@ class KiraFeldView extends WatchUi.DataField {
         v = einst("pUnten", 0); eUnten = v instanceof Number ? v : 0;
         vibGrenze = einst("pVibGrenze", true) != false;
         vibZone = einst("pVibZone", true) != false;
+        eAktiv = einst("pAktiv", true) != false;
     }
 
     function sportLesen() as Void {
@@ -263,6 +266,7 @@ class KiraFeldView extends WatchUi.DataField {
         zuletzt = jetzt;
         if (dt < 0 || dt > 5000) { dt = 1000; }
         var hr = info.currentHeartRate;
+        hrJetzt = hr != null ? hr as Number : 0;
         if (info.timerState != Activity.TIMER_STATE_ON || hr == null || zonen == null) { return; }
         var z = zonen as Array<Number>;
         var k = -1;
@@ -354,7 +358,7 @@ class KiraFeldView extends WatchUi.DataField {
 
     // Text für frei belegbare Zeilen. Oben: 1 Zone, 2 Soll, 3 Votum, 4 ACWR, 5 Bereitschaft.
     // Unten: 1 Zone, 2 Soll, 3 ESS/min, 4 ACWR, 5 Bereitschaft, 6 ESS Einheit
-    // Aktivität: 100 Timer, 101 Distanz, 102 Uhrzeit
+    // Aktivität: 100 Timer, 101 Distanz, 102 Uhrzeit, 103 Puls
     function aktText(art as Number, mitBez as Boolean) as String {
         if (art == 100) {
             var sk = timerMs / 1000;
@@ -370,12 +374,18 @@ class KiraFeldView extends WatchUi.DataField {
             if (i != null && mitBez) { t = t.substring(0, i) + "," + t.substring(i + 1, t.length()); }   // Zahlenschrift ohne Komma
             return mitBez ? t + " km" : t;
         }
+        if (art == 103) {
+            var t = hrJetzt > 0 ? hrJetzt.toString() : "-";
+            return mitBez ? "HF " + t : t;
+        }
         var c = System.getClockTime();
         return c.hour.format("%02d") + ":" + c.min.format("%02d");
     }
 
     function zeilenText(art as Number, einheit as Number, e as Number, ra as Array?, istOben as Boolean) as String {
         if (istOben && art >= 6 && art <= 8) { return aktText(art + 94, true); }
+        if (istOben && art == 9) { return aktText(103, true); }
+        if (!istOben && art == 10) { return aktText(103, true); }
         if (!istOben && art >= 7 && art <= 9) { return aktText(art + 93, true); }
         var f = feld();
         if (!istOben && art == 3) {
@@ -443,12 +453,14 @@ class KiraFeldView extends WatchUi.DataField {
         if (eMitte == 1) { gross = einheit.toString(); }
         else if (eMitte == 2 && ra != null) { gross = (e > ra[1] ? "+" + (e - ra[1]).toString() : (ra[1] - e).toString()); }
         else if (eMitte >= 3 && eMitte <= 5) { gross = aktText(eMitte + 97, false); c = fg; }
+        else if (eMitte == 6) { gross = aktText(103, false); c = fg; }
         var oben = vor > 0 ? "KIRA TAG · EINH. " + einheit.toString() : "KIRA ESS";
         if (eMitte == 1) { oben = "KIRA EINHEIT · TAG " + e.toString(); }
         else if (eMitte == 2) { oben = "KIRA BIS OBERGRENZE"; }
         else if (eMitte == 3) { oben = "TIMER · KIRA " + e.toString(); }
         else if (eMitte == 4) { oben = "DISTANZ KM · KIRA " + e.toString(); }
         else if (eMitte == 5) { oben = "UHRZEIT · KIRA " + e.toString(); }
+        else if (eMitte == 6) { oben = "PULS · KIRA " + e.toString(); }
         if (eOben > 0) { oben = zeilenText(eOben, einheit, e, ra, true); }
         if (h < 90) {
             // kleines Feld: Wert + Rahmen nebeneinander
@@ -458,10 +470,35 @@ class KiraFeldView extends WatchUi.DataField {
             dc.drawText(cx, h - 2 - dc.getFontHeight(Graphics.FONT_XTINY), Graphics.FONT_XTINY, unten, Graphics.TEXT_JUSTIFY_CENTER);
             return;
         }
+        // 25.11.2026: Aktivitätswerte Uhrzeit, Strecke, Dauer, Puls
+        if (eAktiv && h <= 160 && eOben == 0) {
+            oben = aktText(102, false) + " · " + aktText(101, true) + " · " + aktText(100, false) + " · HF " + aktText(103, false);
+            if (dc.getTextWidthInPixels(oben, Graphics.FONT_XTINY) > w * 0.92) {
+                oben = aktText(102, false) + "  " + aktText(101, true) + "  " + aktText(100, false) + "  " + aktText(103, false);
+            }
+        }
         dc.setColor(grau, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, (h * 0.06).toNumber(), Graphics.FONT_XTINY, oben, Graphics.TEXT_JUSTIFY_CENTER);
+        if (eAktiv && h > 160) {
+            var fh = dc.getFontHeight(Graphics.FONT_TINY);
+            var yA = (h * 0.19).toNumber();
+            var yB = (h * 0.63).toNumber();
+            var xl = (w * 0.30).toNumber();
+            var xr = (w * 0.70).toNumber();
+            dc.setColor(fg, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(xl, yA, Graphics.FONT_TINY, aktText(102, false), Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(xr, yA, Graphics.FONT_TINY, aktText(103, false), Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(xl, yB, Graphics.FONT_TINY, aktText(100, false), Graphics.TEXT_JUSTIFY_CENTER);
+            var km = aktText(101, true);
+            dc.drawText(xr, yB, Graphics.FONT_TINY, km.substring(0, km.length() - 3), Graphics.TEXT_JUSTIFY_CENTER);
+            dc.setColor(grau, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(xl, yA + fh - 4, Graphics.FONT_XTINY, "UHRZEIT", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(xr, yA + fh - 4, Graphics.FONT_XTINY, "PULS", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(xl, yB + fh - 4, Graphics.FONT_XTINY, "DAUER", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(xr, yB + fh - 4, Graphics.FONT_XTINY, "KM", Graphics.TEXT_JUSTIFY_CENTER);
+        }
         dc.setColor(c, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, h / 2, h > 160 ? Graphics.FONT_NUMBER_HOT : Graphics.FONT_NUMBER_MEDIUM, gross, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(cx, h / 2, h > 160 ? (eAktiv ? Graphics.FONT_NUMBER_MEDIUM : Graphics.FONT_NUMBER_HOT) : Graphics.FONT_NUMBER_MEDIUM, gross, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         dc.setColor(System.getTimer() < hinweisBis ? c : grau, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, h - (h * 0.06).toNumber() - dc.getFontHeight(Graphics.FONT_TINY), Graphics.FONT_TINY, unten, Graphics.TEXT_JUSTIFY_CENTER);
         // Fortschrittsbalken bis zur Obergrenze
