@@ -319,7 +319,11 @@ class KiraView extends WatchUi.View {
             var sz = (plan != null ? "Plan " + KiraHilfen.zahl(plan, 0) : "") + (sp != null && sp.toString().length() > 0 ? " " + sp.toString() : "") + (zo != null && zo.toString().length() > 0 ? " " + zo.toString() : "");
             var lage = l.get("planLage");
             if (lage != null && lage.toString().equals("darueber") && l.get("erledigt") != true) { sz += " zu viel"; }
-            if (l.get("erledigt") == true) { sz += (sz.length() > 0 ? " · " : "") + "erledigt"; }
+            // 25.11.2026: nach dem Training „Ist“ statt „Plan“ – Tagessumme aller gespeicherten Einheiten
+            if (l.get("erledigt") == true) {
+                var ist = l.get("istHeute");
+                sz = "Ist " + (ist != null ? KiraHilfen.zahl(ist, 0) + " ESS" : "erledigt") + (sp != null && sp.toString().length() > 0 ? " " + sp.toString() : "");
+            }
             if (sz.length() > 0) { zeile(dc, y, Graphics.FONT_XTINY, sz, 0xBBBBBB); }
         }
         unten(dc, h, d);

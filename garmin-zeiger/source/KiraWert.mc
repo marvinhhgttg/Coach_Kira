@@ -80,6 +80,9 @@ module KiraWert {
         if (art == 3) {
             var pl = heute ? zahl(t, 9) : null;
             var sp = heute ? feld(t, 10) : "";
+            // 25.11.2026: nach dem Training „IST“ mit der Tagessumme statt „PLAN“
+            var ist = heute ? zahl(t, 4) : null;
+            if (ist != null && ist > 0) { return ["IST", (sp.length() > 0 ? sp + " " : "") + ist.toString()]; }
             return ["PLAN", pl == null ? "-" : (pl == 0 ? "Ruhe" : (sp.length() > 0 ? sp + " " : "") + pl.toString())];
         }
         if (art == 4) { return ["ACWR", acwrText(heute ? zahl(t, 18) : null)]; }

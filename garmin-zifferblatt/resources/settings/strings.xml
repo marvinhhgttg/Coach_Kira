@@ -30,4 +30,9 @@
     <string id="spVotumRing">Votum-Ring am Rand</string>
     <string id="spSek">Sekunden anzeigen</string>
     <string id="spErhBB">Mitte unten: Erholung und Body Battery</string>
+    <string id="spStil">Farbstil</string>
+    <string id="lpStil0">Bunt (bisher)</string>
+    <string id="lpStil1">Dezent: Beschriftung grau</string>
+    <string id="lpStil2">Grau mit Akzent</string>
+    <string id="lpStil3">Monochrom</string>
 </strings>

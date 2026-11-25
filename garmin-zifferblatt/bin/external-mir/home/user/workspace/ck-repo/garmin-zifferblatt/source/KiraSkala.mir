@@ -21,120 +21,504 @@ module KiraSkala {
     const LILA = 0x6E45E9;
     [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 13; @position = 10; @symbol_constdef = [GRAU,13,10,14]; ]
     const GRAU = 0x3A3A3A;
-    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 16; @symbol_functiondef = [farbe,16,13,18]; @symbol_param<0> = [sk,16,19,21]; @symbol_param<0>_type<0> = [Array,16,25,30]; @symbol_param<1> = [v,16,32,33]; @symbol_param<1>_type<0> = [Numeric,16,37,44]; @symbol_return<0> = [Number,16,50,56]; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 16; @position = 8; @symbol_vardef = [stil,16,8,12]; @symbol_type<0> = [Number,16,16,22]; ]
+    var stil as Number = 0;
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 18; @symbol_functiondef = [dim,18,13,16]; @symbol_param<0> = [f,18,17,18]; @symbol_param<0>_type<0> = [Number,18,22,28]; @symbol_param<1> = [p,18,30,31]; @symbol_param<1>_type<0> = [Number,18,35,41]; @symbol_return<0> = [Number,18,46,52]; ]
+    function dim(f as Number, p as Number) as Number {
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_18_53_20_4_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 19 8 ]
+        %tmp.1 = lgetv %f;
+        symbol [ f %tmp.1 19 19 20 ];
+        %tmp.2 = 16;
+        %tmp.3 = shr %tmp.1 %tmp.2;
+        %tmp.4 = 0xFF;
+        %tmp.5 = bitand %tmp.3 %tmp.4;
+        %tmp.6 = lgetv %p;
+        symbol [ p %tmp.6 19 38 39 ];
+        %tmp.7 = mul %tmp.5 %tmp.6;
+        %tmp.8 = 100;
+        %tmp.9 = div %tmp.7 %tmp.8;
+        %tmp.10 = 16;
+        %tmp.11 = shl %tmp.9 %tmp.10;
+        %tmp.12 = lgetv %f;
+        symbol [ f %tmp.12 19 60 61 ];
+        %tmp.13 = 8;
+        %tmp.14 = shr %tmp.12 %tmp.13;
+        %tmp.15 = 0xFF;
+        %tmp.16 = bitand %tmp.14 %tmp.15;
+        %tmp.17 = lgetv %p;
+        symbol [ p %tmp.17 19 78 79 ];
+        %tmp.18 = mul %tmp.16 %tmp.17;
+        %tmp.19 = 100;
+        %tmp.20 = div %tmp.18 %tmp.19;
+        %tmp.21 = 8;
+        %tmp.22 = shl %tmp.20 %tmp.21;
+        %tmp.23 = bitor %tmp.11 %tmp.22;
+        %tmp.24 = lgetv %f;
+        symbol [ f %tmp.24 19 97 98 ];
+        %tmp.25 = 0xFF;
+        %tmp.26 = bitand %tmp.24 %tmp.25;
+        %tmp.27 = lgetv %p;
+        symbol [ p %tmp.27 19 109 110 ];
+        %tmp.28 = mul %tmp.26 %tmp.27;
+        %tmp.29 = 100;
+        %tmp.30 = div %tmp.28 %tmp.29;
+        %tmp.31 = bitor %tmp.23 %tmp.30;
+        ret %tmp.31;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_18_53_20_4_stop:
+    }
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 22; @symbol_functiondef = [wahl,22,13,17]; @symbol_param<0> = [xs,22,18,20]; @symbol_param<0>_type<0> = [Array,22,24,29]; @symbol_param<0>_type<1> = [Number,22,30,36]; @symbol_return<0> = [Number,22,42,48]; ]
+    function wahl(xs as Array<Number>) as Number {
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_22_49_22_95_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 22 51 ]
+        %tmp.1 = lgetv %xs;
+        symbol [ xs %tmp.1 22 58 60 ];
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_22_61_22_88_begin:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_22_61_22_80_begin:
+        symbol [ stil %tmp.3 22 61 65 ];
+        %tmp.3 = getv ? :stil;
+        %tmp.4 = 0;
+        %tmp.5 = lt %tmp.3 %tmp.4;
+        bt %tmp.5 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_22_61_22_88_true;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_22_73_22_80_false:
+        symbol [ stil %tmp.7 22 73 77 ];
+        %tmp.7 = getv ? :stil;
+        %tmp.8 = 3;
+        %tmp.9 = gt %tmp.7 %tmp.8;
+        push %tmp.9;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_22_73_22_80_end:
+        %tmp.10 = phi [%tmp.5 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_22_61_22_80_begin] [%tmp.9 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_22_73_22_80_false] [%tmp.10 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_22_73_22_80_end];
+        bf %tmp.10 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_22_61_22_88_else_false;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_22_61_22_88_true:
+        %tmp.11 = 0;
+        push %tmp.11;
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_22_61_22_88_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_22_61_22_88_else_false:
+        symbol [ stil %tmp.13 22 88 92 ];
+        %tmp.13 = getv ? :stil;
+        push %tmp.13;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_22_61_22_88_end:
+        %tmp.14 = phi [%tmp.10 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_22_61_22_88_begin] [%tmp.11 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_22_61_22_88_true] [%tmp.13 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_22_61_22_88_else_false] [%tmp.14 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_22_61_22_88_end];
+        %tmp.15 = agetv %tmp.1 %tmp.14;
+        ret %tmp.15;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_22_49_22_95_stop:
+    }
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 24; @symbol_functiondef = [lab,24,13,16]; @symbol_return<0> = [Number,24,22,28]; ]
+    function lab() as Number {
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_24_29_24_86_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 24 31 ]
+        %tmp.1 = self;
+        symbol [ wahl %tmp.2 24 38 42 ];
+        %tmp.2 = getv function %tmp.1 :wahl;
+        %tmp.3 = newa 4;
+        %tmp.4 = 0xFF9A1F;
+        %tmp.5 = dup %tmp.3;
+        %tmp.6 = aputv %tmp.5 0 %tmp.4;
+        %tmp.7 = 0xA6A6A6;
+        %tmp.8 = dup %tmp.6;
+        %tmp.9 = aputv %tmp.8 1 %tmp.7;
+        %tmp.10 = 0x9A9A9A;
+        %tmp.11 = dup %tmp.9;
+        %tmp.12 = aputv %tmp.11 2 %tmp.10;
+        %tmp.13 = 0x8C8C8C;
+        %tmp.14 = dup %tmp.12;
+        %tmp.15 = aputv %tmp.14 3 %tmp.13;
+        %tmp.16 = invoke %tmp.1 %tmp.2(%tmp.15);
+        ret %tmp.16;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_24_29_24_86_stop:
+    }
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 25; @symbol_functiondef = [akku,25,13,17]; @symbol_return<0> = [Number,25,23,29]; ]
+    function akku() as Number {
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_25_30_25_87_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 25 32 ]
+        %tmp.1 = self;
+        symbol [ wahl %tmp.2 25 39 43 ];
+        %tmp.2 = getv function %tmp.1 :wahl;
+        %tmp.3 = newa 4;
+        %tmp.4 = 0xFF9A1F;
+        %tmp.5 = dup %tmp.3;
+        %tmp.6 = aputv %tmp.5 0 %tmp.4;
+        %tmp.7 = 0x8A8A8A;
+        %tmp.8 = dup %tmp.6;
+        %tmp.9 = aputv %tmp.8 1 %tmp.7;
+        %tmp.10 = 0x8A8A8A;
+        %tmp.11 = dup %tmp.9;
+        %tmp.12 = aputv %tmp.11 2 %tmp.10;
+        %tmp.13 = 0x6E6E6E;
+        %tmp.14 = dup %tmp.12;
+        %tmp.15 = aputv %tmp.14 3 %tmp.13;
+        %tmp.16 = invoke %tmp.1 %tmp.2(%tmp.15);
+        ret %tmp.16;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_25_30_25_87_stop:
+    }
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 26; @symbol_functiondef = [minuten,26,13,20]; @symbol_return<0> = [Number,26,26,32]; ]
+    function minuten() as Number {
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_26_33_26_90_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 26 35 ]
+        %tmp.1 = self;
+        symbol [ wahl %tmp.2 26 42 46 ];
+        %tmp.2 = getv function %tmp.1 :wahl;
+        %tmp.3 = newa 4;
+        %tmp.4 = 0xFF9A1F;
+        %tmp.5 = dup %tmp.3;
+        %tmp.6 = aputv %tmp.5 0 %tmp.4;
+        %tmp.7 = 0xFF9A1F;
+        %tmp.8 = dup %tmp.6;
+        %tmp.9 = aputv %tmp.8 1 %tmp.7;
+        %tmp.10 = 0xBDBDBD;
+        %tmp.11 = dup %tmp.9;
+        %tmp.12 = aputv %tmp.11 2 %tmp.10;
+        %tmp.13 = 0xE8E8E8;
+        %tmp.14 = dup %tmp.12;
+        %tmp.15 = aputv %tmp.14 3 %tmp.13;
+        %tmp.16 = invoke %tmp.1 %tmp.2(%tmp.15);
+        ret %tmp.16;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_26_33_26_90_stop:
+    }
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 27; @symbol_functiondef = [sek,27,13,16]; @symbol_return<0> = [Number,27,22,28]; ]
+    function sek() as Number {
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_27_29_27_86_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 27 31 ]
+        %tmp.1 = self;
+        symbol [ wahl %tmp.2 27 38 42 ];
+        %tmp.2 = getv function %tmp.1 :wahl;
+        %tmp.3 = newa 4;
+        %tmp.4 = 0xFF9A1F;
+        %tmp.5 = dup %tmp.3;
+        %tmp.6 = aputv %tmp.5 0 %tmp.4;
+        %tmp.7 = 0xB0B0B0;
+        %tmp.8 = dup %tmp.6;
+        %tmp.9 = aputv %tmp.8 1 %tmp.7;
+        %tmp.10 = 0xB0B0B0;
+        %tmp.11 = dup %tmp.9;
+        %tmp.12 = aputv %tmp.11 2 %tmp.10;
+        %tmp.13 = 0x8C8C8C;
+        %tmp.14 = dup %tmp.12;
+        %tmp.15 = aputv %tmp.14 3 %tmp.13;
+        %tmp.16 = invoke %tmp.1 %tmp.2(%tmp.15);
+        ret %tmp.16;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_27_29_27_86_stop:
+    }
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 28; @symbol_functiondef = [mitte,28,13,18]; @symbol_return<0> = [Number,28,24,30]; ]
+    function mitte() as Number {
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_28_31_28_88_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 28 33 ]
+        %tmp.1 = self;
+        symbol [ wahl %tmp.2 28 40 44 ];
+        %tmp.2 = getv function %tmp.1 :wahl;
+        %tmp.3 = newa 4;
+        %tmp.4 = 0xFF9A1F;
+        %tmp.5 = dup %tmp.3;
+        %tmp.6 = aputv %tmp.5 0 %tmp.4;
+        %tmp.7 = 0xFF9A1F;
+        %tmp.8 = dup %tmp.6;
+        %tmp.9 = aputv %tmp.8 1 %tmp.7;
+        %tmp.10 = 0xB0B0B0;
+        %tmp.11 = dup %tmp.9;
+        %tmp.12 = aputv %tmp.11 2 %tmp.10;
+        %tmp.13 = 0xB0B0B0;
+        %tmp.14 = dup %tmp.12;
+        %tmp.15 = aputv %tmp.14 3 %tmp.13;
+        %tmp.16 = invoke %tmp.1 %tmp.2(%tmp.15);
+        ret %tmp.16;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_28_31_28_88_stop:
+    }
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 29; @symbol_functiondef = [votText,29,13,20]; @symbol_param<0> = [f,29,21,22]; @symbol_param<0>_type<0> = [Number,29,26,32]; @symbol_return<0> = [Number,29,37,43]; ]
+    function votText(f as Number) as Number {
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_29_44_29_79_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 29 46 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_29_53_29_76_begin:
+        symbol [ stil %tmp.2 29 53 57 ];
+        %tmp.2 = getv ? :stil;
+        %tmp.3 = 3;
+        %tmp.4 = eq %tmp.2 %tmp.3;
+        bf %tmp.4 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_29_53_29_76_else_false;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_29_53_29_76_true:
+        %tmp.5 = 0xB0B0B0;
+        push %tmp.5;
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_29_53_29_76_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_29_53_29_76_else_false:
+        %tmp.6 = lgetv %f;
+        symbol [ f %tmp.6 29 76 77 ];
+        push %tmp.6;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_29_53_29_76_end:
+        %tmp.7 = phi [%tmp.4 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_29_53_29_76_begin] [%tmp.5 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_29_53_29_76_true] [%tmp.6 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_29_53_29_76_else_false] [%tmp.7 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_29_53_29_76_end];
+        ret %tmp.7;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_29_44_29_79_stop:
+    }
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 31; @symbol_functiondef = [seg,31,13,16]; @symbol_param<0> = [f,31,17,18]; @symbol_param<0>_type<0> = [Number,31,22,28]; @symbol_return<0> = [Number,31,33,39]; ]
+    function seg(f as Number) as Number {
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_40_31_102_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 31 42 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_49_31_99_begin:
+        symbol [ stil %tmp.2 31 49 53 ];
+        %tmp.2 = getv ? :stil;
+        %tmp.3 = 2;
+        %tmp.4 = eq %tmp.2 %tmp.3;
+        bf %tmp.4 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_49_31_99_else_false;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_49_31_99_true:
+        %tmp.5 = self;
+        symbol [ dim %tmp.6 31 61 64 ];
+        %tmp.6 = getv function %tmp.5 :dim;
+        %tmp.7 = lgetv %f;
+        symbol [ f %tmp.7 31 65 66 ];
+        %tmp.8 = 45;
+        %tmp.9 = invoke %tmp.5 %tmp.6(%tmp.7, %tmp.8);
+        push %tmp.9;
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_49_31_99_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_49_31_99_else_false:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_75_31_98_begin:
+        symbol [ stil %tmp.11 31 75 79 ];
+        %tmp.11 = getv ? :stil;
+        %tmp.12 = 3;
+        %tmp.13 = eq %tmp.11 %tmp.12;
+        bf %tmp.13 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_75_31_98_else_false;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_75_31_98_true:
+        %tmp.14 = 0x484848;
+        push %tmp.14;
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_75_31_98_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_75_31_98_else_false:
+        %tmp.15 = lgetv %f;
+        symbol [ f %tmp.15 31 98 99 ];
+        push %tmp.15;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_75_31_98_end:
+        %tmp.16 = phi [%tmp.13 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_75_31_98_begin] [%tmp.14 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_75_31_98_true] [%tmp.15 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_75_31_98_else_false] [%tmp.16 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_75_31_98_end];
+        push %tmp.16;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_49_31_99_end:
+        %tmp.17 = phi [%tmp.4 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_49_31_99_begin] [%tmp.9 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_49_31_99_true] [%tmp.16 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_49_31_99_else_false] [%tmp.17 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_49_31_99_end];
+        ret %tmp.17;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_40_31_102_stop:
+    }
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 33; @symbol_functiondef = [punkt,33,13,18]; @symbol_param<0> = [f,33,19,20]; @symbol_param<0>_type<0> = [Number,33,24,30]; @symbol_return<0> = [Number,33,35,41]; ]
+    function punkt(f as Number) as Number {
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_42_33_104_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 33 44 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_51_33_101_begin:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_51_33_81_begin:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_51_33_69_begin:
+        symbol [ stil %tmp.2 33 51 55 ];
+        %tmp.2 = getv ? :stil;
+        %tmp.3 = 3;
+        %tmp.4 = eq %tmp.2 %tmp.3;
+        bf %tmp.4 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_51_33_101_else_false;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_64_33_69_true:
+        %tmp.5 = lgetv %f;
+        symbol [ f %tmp.5 33 64 65 ];
+        symbol [ ROT %tmp.7 33 69 72 ];
+        %tmp.7 = getv ? :ROT;
+        %tmp.8 = ne %tmp.5 %tmp.7;
+        push %tmp.8;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_64_33_69_end:
+        %tmp.9 = phi [%tmp.4 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_51_33_69_begin] [%tmp.8 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_64_33_69_true] [%tmp.9 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_64_33_69_end];
+        bf %tmp.9 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_51_33_101_else_false;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_76_33_81_true:
+        %tmp.10 = lgetv %f;
+        symbol [ f %tmp.10 33 76 77 ];
+        symbol [ ORANGE %tmp.12 33 81 87 ];
+        %tmp.12 = getv ? :ORANGE;
+        %tmp.13 = ne %tmp.10 %tmp.12;
+        push %tmp.13;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_76_33_81_end:
+        %tmp.14 = phi [%tmp.9 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_51_33_81_begin] [%tmp.13 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_76_33_81_true] [%tmp.14 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_76_33_81_end];
+        bf %tmp.14 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_51_33_101_else_false;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_51_33_101_true:
+        %tmp.15 = 0xE6E6E6;
+        push %tmp.15;
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_51_33_101_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_51_33_101_else_false:
+        %tmp.16 = lgetv %f;
+        symbol [ f %tmp.16 33 101 102 ];
+        push %tmp.16;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_51_33_101_end:
+        %tmp.17 = phi [%tmp.14 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_51_33_101_begin] [%tmp.15 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_51_33_101_true] [%tmp.16 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_51_33_101_else_false] [%tmp.17 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_51_33_101_end];
+        ret %tmp.17;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_33_42_33_104_stop:
+    }
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 35; @symbol_functiondef = [votFill,35,13,20]; @symbol_param<0> = [f,35,21,22]; @symbol_param<0>_type<0> = [Number,35,26,32]; @symbol_return<0> = [Number,35,37,43]; ]
+    function votFill(f as Number) as Number {
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_35_44_35_106_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 35 46 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_35_53_35_103_begin:
+        symbol [ stil %tmp.2 35 53 57 ];
+        %tmp.2 = getv ? :stil;
+        %tmp.3 = 2;
+        %tmp.4 = eq %tmp.2 %tmp.3;
+        bf %tmp.4 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_35_53_35_103_else_false;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_35_53_35_103_true:
+        %tmp.5 = self;
+        symbol [ dim %tmp.6 35 65 68 ];
+        %tmp.6 = getv function %tmp.5 :dim;
+        %tmp.7 = lgetv %f;
+        symbol [ f %tmp.7 35 69 70 ];
+        %tmp.8 = 70;
+        %tmp.9 = invoke %tmp.5 %tmp.6(%tmp.7, %tmp.8);
+        push %tmp.9;
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_35_53_35_103_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_35_53_35_103_else_false:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_35_79_35_102_begin:
+        symbol [ stil %tmp.11 35 79 83 ];
+        %tmp.11 = getv ? :stil;
+        %tmp.12 = 3;
+        %tmp.13 = eq %tmp.11 %tmp.12;
+        bf %tmp.13 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_35_79_35_102_else_false;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_35_79_35_102_true:
+        %tmp.14 = 0x9A9A9A;
+        push %tmp.14;
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_35_79_35_102_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_35_79_35_102_else_false:
+        %tmp.15 = lgetv %f;
+        symbol [ f %tmp.15 35 102 103 ];
+        push %tmp.15;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_35_79_35_102_end:
+        %tmp.16 = phi [%tmp.13 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_35_79_35_102_begin] [%tmp.14 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_35_79_35_102_true] [%tmp.15 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_35_79_35_102_else_false] [%tmp.16 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_35_79_35_102_end];
+        push %tmp.16;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_35_53_35_103_end:
+        %tmp.17 = phi [%tmp.4 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_35_53_35_103_begin] [%tmp.9 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_35_53_35_103_true] [%tmp.16 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_35_53_35_103_else_false] [%tmp.17 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_35_53_35_103_end];
+        ret %tmp.17;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_35_44_35_106_stop:
+    }
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 36; @symbol_functiondef = [votSpur,36,13,20]; @symbol_param<0> = [f,36,21,22]; @symbol_param<0>_type<0> = [Number,36,26,32]; @symbol_return<0> = [Number,36,37,43]; ]
+    function votSpur(f as Number) as Number {
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_36_44_36_88_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 36 46 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_36_53_36_85_begin:
+        symbol [ stil %tmp.2 36 53 57 ];
+        %tmp.2 = getv ? :stil;
+        %tmp.3 = 3;
+        %tmp.4 = eq %tmp.2 %tmp.3;
+        bf %tmp.4 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_36_53_36_85_else_false;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_36_53_36_85_true:
+        %tmp.5 = 0x2E2E2E;
+        push %tmp.5;
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_36_53_36_85_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_36_53_36_85_else_false:
+        %tmp.6 = self;
+        symbol [ dim %tmp.7 36 76 79 ];
+        %tmp.7 = getv function %tmp.6 :dim;
+        %tmp.8 = lgetv %f;
+        symbol [ f %tmp.8 36 80 81 ];
+        %tmp.9 = 42;
+        %tmp.10 = invoke %tmp.6 %tmp.7(%tmp.8, %tmp.9);
+        push %tmp.10;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_36_53_36_85_end:
+        %tmp.11 = phi [%tmp.4 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_36_53_36_85_begin] [%tmp.5 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_36_53_36_85_true] [%tmp.10 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_36_53_36_85_else_false] [%tmp.11 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_36_53_36_85_end];
+        ret %tmp.11;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_36_44_36_88_stop:
+    }
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 39; @symbol_functiondef = [farbe,39,13,18]; @symbol_param<0> = [sk,39,19,21]; @symbol_param<0>_type<0> = [Array,39,25,30]; @symbol_param<1> = [v,39,32,33]; @symbol_param<1>_type<0> = [Numeric,39,37,44]; @symbol_return<0> = [Number,39,50,56]; ]
     function farbe(sk as Array, v as Numeric or Null) as Number {
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_16_57_24_4_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 17 8 ]
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_17_8_17_42_if_stmt:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_57_47_4_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 40 8 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_40_8_40_42_if_stmt:
         %tmp.1 = lgetv %v;
-        symbol [ v %tmp.1 17 12 13 ];
+        symbol [ v %tmp.1 40 12 13 ];
         %tmp.2 = null;
         %tmp.3 = eq %tmp.1 %tmp.2;
-        bf %tmp.3 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_17_8_17_42_if_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_17_8_17_42_if_true:
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_17_23_17_42_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 17 25 ]
+        bf %tmp.3 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_40_8_40_42_if_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_40_8_40_42_if_true:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_40_23_40_42_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 40 25 ]
         %tmp.4 = 0x888888;
         ret %tmp.4;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_17_23_17_42_stop:
-        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_17_8_17_42_if_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_17_8_17_42_if_end:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 18 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_16_57_24_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_16_57_24_4_stop" ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_40_23_40_42_stop:
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_40_8_40_42_if_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_40_8_40_42_if_end:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 41 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_57_47_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_57_47_4_stop" ]
         %g.1 = local;
-        symbol [ g %g.1 18 12 13 ];
+        symbol [ g %g.1 41 12 13 ];
         %tmp.5 = lgetv %sk;
-        symbol [ sk %tmp.5 18 16 18 ];
+        symbol [ sk %tmp.5 41 16 18 ];
         %tmp.6 = 0;
         %tmp.7 = agetv %tmp.5 %tmp.6;
         %tmp.8 = as %tmp.7 Array;
-        symbol [ Array %tmp.8 18 25 30 ];
+        symbol [ Array %tmp.8 41 25 30 ];
         lputv %g.1 %tmp.8;
-        symbol [ g %g.1 18 12 13 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 19 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_16_57_24_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_16_57_24_4_stop" ]
+        symbol [ g %g.1 41 12 13 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 42 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_57_47_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_57_47_4_stop" ]
         %f.2 = local;
-        symbol [ f %f.2 19 12 13 ];
+        symbol [ f %f.2 42 12 13 ];
         %tmp.9 = lgetv %sk;
-        symbol [ sk %tmp.9 19 16 18 ];
+        symbol [ sk %tmp.9 42 16 18 ];
         %tmp.10 = 1;
         %tmp.11 = agetv %tmp.9 %tmp.10;
         %tmp.12 = as %tmp.11 Array;
-        symbol [ Array %tmp.12 19 25 30 ];
+        symbol [ Array %tmp.12 42 25 30 ];
         lputv %f.2 %tmp.12;
-        symbol [ f %f.2 19 12 13 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 20 8 ]
-        for @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_20_8_22_8_for_test @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_20_8_22_8_for_incr @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_20_8_22_8_for_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_20_8_22_8_for_init:
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_20_8_22_8_for_begin" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_20_8_22_8_for_end" ]
+        symbol [ f %f.2 42 12 13 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 43 8 ]
+        for @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_43_8_45_8_for_test @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_43_8_45_8_for_incr @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_43_8_45_8_for_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_43_8_45_8_for_init:
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_43_8_45_8_for_begin" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_43_8_45_8_for_end" ]
         %i.3 = local;
-        symbol [ i %i.3 20 17 18 ];
+        symbol [ i %i.3 43 17 18 ];
         %tmp.13 = lgetv %f.2;
-        symbol [ f %tmp.13 20 21 22 ];
-        symbol [ size %tmp.14 20 23 27 ];
+        symbol [ f %tmp.13 43 21 22 ];
+        symbol [ size %tmp.14 43 23 27 ];
         %tmp.14 = getv function %tmp.13 :size;
         %tmp.15 = invoke %tmp.13 %tmp.14();
         %tmp.16 = 1;
         %tmp.17 = sub %tmp.15 %tmp.16;
         lputv %i.3 %tmp.17;
-        symbol [ i %i.3 20 17 18 ];
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_20_8_22_8_for_test:
+        symbol [ i %i.3 43 17 18 ];
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_43_8_45_8_for_test:
         %tmp.18 = lgetv %i.3;
-        symbol [ i %tmp.18 20 35 36 ];
+        symbol [ i %tmp.18 43 35 36 ];
         %tmp.19 = 0;
         %tmp.20 = gte %tmp.18 %tmp.19;
-        bf %tmp.20 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_20_8_22_8_for_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_20_8_22_8_for_begin:
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_20_48_22_8_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 21 12 ]
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_21_12_21_52_if_stmt:
+        bf %tmp.20 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_43_8_45_8_for_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_43_8_45_8_for_begin:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_43_48_45_8_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 44 12 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_44_12_44_52_if_stmt:
         %tmp.21 = lgetv %v;
-        symbol [ v %tmp.21 21 16 17 ];
+        symbol [ v %tmp.21 44 16 17 ];
         %tmp.22 = lgetv %g.1;
-        symbol [ g %tmp.22 21 21 22 ];
+        symbol [ g %tmp.22 44 21 22 ];
         %tmp.23 = lgetv %i.3;
-        symbol [ i %tmp.23 21 23 24 ];
+        symbol [ i %tmp.23 44 23 24 ];
         %tmp.24 = agetv %tmp.22 %tmp.23;
         %tmp.25 = gte %tmp.21 %tmp.24;
-        bf %tmp.25 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_21_12_21_52_if_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_21_12_21_52_if_true:
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_21_27_21_52_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 21 29 ]
+        bf %tmp.25 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_44_12_44_52_if_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_44_12_44_52_if_true:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_44_27_44_52_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 44 29 ]
         %tmp.26 = lgetv %f.2;
-        symbol [ f %tmp.26 21 36 37 ];
+        symbol [ f %tmp.26 44 36 37 ];
         %tmp.27 = lgetv %i.3;
-        symbol [ i %tmp.27 21 38 39 ];
+        symbol [ i %tmp.27 44 38 39 ];
         %tmp.28 = agetv %tmp.26 %tmp.27;
         %tmp.29 = as %tmp.28 Number;
-        symbol [ Number %tmp.29 21 44 50 ];
+        symbol [ Number %tmp.29 44 44 50 ];
         ret %tmp.29;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_21_27_21_52_stop:
-        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_21_12_21_52_if_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_21_12_21_52_if_end:
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_20_48_22_8_stop:
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_20_8_22_8_for_incr:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 20 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_44_27_44_52_stop:
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_44_12_44_52_if_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_44_12_44_52_if_end:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_43_48_45_8_stop:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_43_8_45_8_for_incr:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 43 ]
         %tmp.32 = lgetv %i.3;
-        symbol [ i %tmp.32 20 43 44 ];
+        symbol [ i %tmp.32 43 43 44 ];
         %tmp.33 = sub %tmp.32 1;
         lputv %i.3 %tmp.33;
-        symbol [ i %i.3 20 43 44 ];
-        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_20_8_22_8_for_test;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_20_8_22_8_for_end:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 23 8 ]
+        symbol [ i %i.3 43 43 44 ];
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_43_8_45_8_for_test;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_43_8_45_8_for_end:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 46 8 ]
         %tmp.34 = lgetv %f.2;
-        symbol [ f %tmp.34 23 15 16 ];
+        symbol [ f %tmp.34 46 15 16 ];
         %tmp.35 = 0;
         %tmp.36 = agetv %tmp.34 %tmp.35;
         %tmp.37 = as %tmp.36 Number;
-        symbol [ Number %tmp.37 23 23 29 ];
+        symbol [ Number %tmp.37 46 23 29 ];
         ret %tmp.37;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_16_57_24_4_stop:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_57_47_4_stop:
     }
-    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 26; @symbol_functiondef = [tr,26,13,15]; @symbol_return<0> = [Array,26,21,26]; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 49; @symbol_functiondef = [tr,49,13,15]; @symbol_return<0> = [Array,49,21,26]; ]
     function tr() as Array {
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_26_27_26_98_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 26 29 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_49_27_49_98_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 49 29 ]
         %tmp.1 = newa 2;
         %tmp.2 = newa 6;
         %tmp.3 = 0;
@@ -158,35 +542,35 @@ _home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_26_27_26_98_
         %tmp.21 = dup %tmp.1;
         %tmp.22 = aputv %tmp.21 0 %tmp.20;
         %tmp.23 = newa 5;
-        symbol [ ROT %tmp.25 26 64 67 ];
+        symbol [ ROT %tmp.25 49 64 67 ];
         %tmp.25 = getv ? :ROT;
         %tmp.26 = dup %tmp.23;
         %tmp.27 = aputv %tmp.26 0 %tmp.25;
-        symbol [ ORANGE %tmp.29 26 69 75 ];
+        symbol [ ORANGE %tmp.29 49 69 75 ];
         %tmp.29 = getv ? :ORANGE;
         %tmp.30 = dup %tmp.27;
         %tmp.31 = aputv %tmp.30 1 %tmp.29;
-        symbol [ GRUEN %tmp.33 26 77 82 ];
+        symbol [ GRUEN %tmp.33 49 77 82 ];
         %tmp.33 = getv ? :GRUEN;
         %tmp.34 = dup %tmp.31;
         %tmp.35 = aputv %tmp.34 2 %tmp.33;
-        symbol [ BLAU %tmp.37 26 84 88 ];
+        symbol [ BLAU %tmp.37 49 84 88 ];
         %tmp.37 = getv ? :BLAU;
         %tmp.38 = dup %tmp.35;
         %tmp.39 = aputv %tmp.38 3 %tmp.37;
-        symbol [ LILA %tmp.41 26 90 94 ];
+        symbol [ LILA %tmp.41 49 90 94 ];
         %tmp.41 = getv ? :LILA;
         %tmp.42 = dup %tmp.39;
         %tmp.43 = aputv %tmp.42 4 %tmp.41;
         %tmp.44 = dup %tmp.22;
         %tmp.45 = aputv %tmp.44 1 %tmp.43;
         ret %tmp.45;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_26_27_26_98_stop:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_49_27_49_98_stop:
     }
-    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 27; @symbol_functiondef = [bb,27,13,15]; @symbol_return<0> = [Array,27,21,26]; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 50; @symbol_functiondef = [bb,50,13,15]; @symbol_return<0> = [Array,50,21,26]; ]
     function bb() as Array {
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_27_27_27_88_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 27 29 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_50_27_50_88_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 50 29 ]
         %tmp.1 = newa 2;
         %tmp.2 = newa 5;
         %tmp.3 = 0;
@@ -207,31 +591,31 @@ _home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_27_27_27_88_
         %tmp.18 = dup %tmp.1;
         %tmp.19 = aputv %tmp.18 0 %tmp.17;
         %tmp.20 = newa 4;
-        symbol [ ROT %tmp.22 27 60 63 ];
+        symbol [ ROT %tmp.22 50 60 63 ];
         %tmp.22 = getv ? :ROT;
         %tmp.23 = dup %tmp.20;
         %tmp.24 = aputv %tmp.23 0 %tmp.22;
-        symbol [ ORANGE %tmp.26 27 65 71 ];
+        symbol [ ORANGE %tmp.26 50 65 71 ];
         %tmp.26 = getv ? :ORANGE;
         %tmp.27 = dup %tmp.24;
         %tmp.28 = aputv %tmp.27 1 %tmp.26;
-        symbol [ GRUEN %tmp.30 27 73 78 ];
+        symbol [ GRUEN %tmp.30 50 73 78 ];
         %tmp.30 = getv ? :GRUEN;
         %tmp.31 = dup %tmp.28;
         %tmp.32 = aputv %tmp.31 2 %tmp.30;
-        symbol [ BLAU %tmp.34 27 80 84 ];
+        symbol [ BLAU %tmp.34 50 80 84 ];
         %tmp.34 = getv ? :BLAU;
         %tmp.35 = dup %tmp.32;
         %tmp.36 = aputv %tmp.35 3 %tmp.34;
         %tmp.37 = dup %tmp.19;
         %tmp.38 = aputv %tmp.37 1 %tmp.36;
         ret %tmp.38;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_27_27_27_88_stop:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_50_27_50_88_stop:
     }
-    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 28; @symbol_functiondef = [schlaf,28,13,19]; @symbol_return<0> = [Array,28,25,30]; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 51; @symbol_functiondef = [schlaf,51,13,19]; @symbol_return<0> = [Array,51,25,30]; ]
     function schlaf() as Array {
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_28_31_28_92_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 28 33 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_51_31_51_92_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 51 33 ]
         %tmp.1 = newa 2;
         %tmp.2 = newa 5;
         %tmp.3 = 0;
@@ -252,31 +636,31 @@ _home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_28_31_28_92_
         %tmp.18 = dup %tmp.1;
         %tmp.19 = aputv %tmp.18 0 %tmp.17;
         %tmp.20 = newa 4;
-        symbol [ ROT %tmp.22 28 64 67 ];
+        symbol [ ROT %tmp.22 51 64 67 ];
         %tmp.22 = getv ? :ROT;
         %tmp.23 = dup %tmp.20;
         %tmp.24 = aputv %tmp.23 0 %tmp.22;
-        symbol [ ORANGE %tmp.26 28 69 75 ];
+        symbol [ ORANGE %tmp.26 51 69 75 ];
         %tmp.26 = getv ? :ORANGE;
         %tmp.27 = dup %tmp.24;
         %tmp.28 = aputv %tmp.27 1 %tmp.26;
-        symbol [ GRUEN %tmp.30 28 77 82 ];
+        symbol [ GRUEN %tmp.30 51 77 82 ];
         %tmp.30 = getv ? :GRUEN;
         %tmp.31 = dup %tmp.28;
         %tmp.32 = aputv %tmp.31 2 %tmp.30;
-        symbol [ BLAU %tmp.34 28 84 88 ];
+        symbol [ BLAU %tmp.34 51 84 88 ];
         %tmp.34 = getv ? :BLAU;
         %tmp.35 = dup %tmp.32;
         %tmp.36 = aputv %tmp.35 3 %tmp.34;
         %tmp.37 = dup %tmp.19;
         %tmp.38 = aputv %tmp.37 1 %tmp.36;
         ret %tmp.38;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_28_31_28_92_stop:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_51_31_51_92_stop:
     }
-    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 30; @symbol_functiondef = [acwr,30,13,17]; @symbol_return<0> = [Array,30,23,28]; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 53; @symbol_functiondef = [acwr,53,13,17]; @symbol_return<0> = [Array,53,23,28]; ]
     function acwr() as Array {
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_30_29_30_93_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 30 31 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_53_29_53_93_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 53 31 ]
         %tmp.1 = newa 2;
         %tmp.2 = newa 5;
         %tmp.3 = 50;
@@ -297,31 +681,31 @@ _home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_30_29_30_93_
         %tmp.18 = dup %tmp.1;
         %tmp.19 = aputv %tmp.18 0 %tmp.17;
         %tmp.20 = newa 4;
-        symbol [ BLAU %tmp.22 30 65 69 ];
+        symbol [ BLAU %tmp.22 53 65 69 ];
         %tmp.22 = getv ? :BLAU;
         %tmp.23 = dup %tmp.20;
         %tmp.24 = aputv %tmp.23 0 %tmp.22;
-        symbol [ GRUEN %tmp.26 30 71 76 ];
+        symbol [ GRUEN %tmp.26 53 71 76 ];
         %tmp.26 = getv ? :GRUEN;
         %tmp.27 = dup %tmp.24;
         %tmp.28 = aputv %tmp.27 1 %tmp.26;
-        symbol [ ORANGE %tmp.30 30 78 84 ];
+        symbol [ ORANGE %tmp.30 53 78 84 ];
         %tmp.30 = getv ? :ORANGE;
         %tmp.31 = dup %tmp.28;
         %tmp.32 = aputv %tmp.31 2 %tmp.30;
-        symbol [ ROT %tmp.34 30 86 89 ];
+        symbol [ ROT %tmp.34 53 86 89 ];
         %tmp.34 = getv ? :ROT;
         %tmp.35 = dup %tmp.32;
         %tmp.36 = aputv %tmp.35 3 %tmp.34;
         %tmp.37 = dup %tmp.19;
         %tmp.38 = aputv %tmp.37 1 %tmp.36;
         ret %tmp.38;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_30_29_30_93_stop:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_53_29_53_93_stop:
     }
-    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 31; @symbol_functiondef = [tourform,31,13,21]; @symbol_return<0> = [Array,31,27,32]; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 54; @symbol_functiondef = [tourform,54,13,21]; @symbol_return<0> = [Array,54,27,32]; ]
     function tourform() as Array {
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_33_31_85_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 31 35 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_54_33_54_85_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 54 35 ]
         %tmp.1 = newa 2;
         %tmp.2 = newa 4;
         %tmp.3 = 0;
@@ -339,219 +723,219 @@ _home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_33_31_85_
         %tmp.15 = dup %tmp.1;
         %tmp.16 = aputv %tmp.15 0 %tmp.14;
         %tmp.17 = newa 3;
-        symbol [ ORANGE %tmp.19 31 62 68 ];
+        symbol [ ORANGE %tmp.19 54 62 68 ];
         %tmp.19 = getv ? :ORANGE;
         %tmp.20 = dup %tmp.17;
         %tmp.21 = aputv %tmp.20 0 %tmp.19;
-        symbol [ GRUEN %tmp.23 31 70 75 ];
+        symbol [ GRUEN %tmp.23 54 70 75 ];
         %tmp.23 = getv ? :GRUEN;
         %tmp.24 = dup %tmp.21;
         %tmp.25 = aputv %tmp.24 1 %tmp.23;
-        symbol [ BLAU %tmp.27 31 77 81 ];
+        symbol [ BLAU %tmp.27 54 77 81 ];
         %tmp.27 = getv ? :BLAU;
         %tmp.28 = dup %tmp.25;
         %tmp.29 = aputv %tmp.28 2 %tmp.27;
         %tmp.30 = dup %tmp.16;
         %tmp.31 = aputv %tmp.30 1 %tmp.29;
         ret %tmp.31;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_31_33_31_85_stop:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_54_33_54_85_stop:
     }
-    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 34; @symbol_functiondef = [last,34,13,17]; @symbol_param<0> = [lo,34,18,20]; @symbol_param<0>_type<0> = [Number,34,24,30]; @symbol_param<1> = [hi,34,33,35]; @symbol_param<1>_type<0> = [Number,34,39,45]; @symbol_return<0> = [Array,34,50,55]; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 57; @symbol_functiondef = [last,57,13,17]; @symbol_param<0> = [lo,57,18,20]; @symbol_param<0>_type<0> = [Number,57,24,30]; @symbol_param<1> = [hi,57,33,35]; @symbol_param<1>_type<0> = [Number,57,39,45]; @symbol_return<0> = [Array,57,50,55]; ]
     function last(lo as Number or Null, hi as Number) as Array {
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_34_56_41_4_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 35 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_34_56_41_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_34_56_41_4_stop" ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_57_56_64_4_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 58 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_57_56_64_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_57_56_64_4_stop" ]
         %o.1 = local;
-        symbol [ o %o.1 35 12 13 ];
+        symbol [ o %o.1 58 12 13 ];
         %tmp.1 = lgetv %hi;
-        symbol [ hi %tmp.1 35 16 18 ];
+        symbol [ hi %tmp.1 58 16 18 ];
         %tmp.2 = 115;
         %tmp.3 = mul %tmp.1 %tmp.2;
         %tmp.4 = 100;
         %tmp.5 = div %tmp.3 %tmp.4;
         lputv %o.1 %tmp.5;
-        symbol [ o %o.1 35 12 13 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 36 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_34_56_41_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_34_56_41_4_stop" ]
+        symbol [ o %o.1 58 12 13 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 59 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_57_56_64_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_57_56_64_4_stop" ]
         %m.2 = local;
-        symbol [ m %m.2 36 12 13 ];
+        symbol [ m %m.2 59 12 13 ];
         %tmp.6 = lgetv %hi;
-        symbol [ hi %tmp.6 36 16 18 ];
+        symbol [ hi %tmp.6 59 16 18 ];
         %tmp.7 = 13;
         %tmp.8 = mul %tmp.6 %tmp.7;
         %tmp.9 = 10;
         %tmp.10 = div %tmp.8 %tmp.9;
         lputv %m.2 %tmp.10;
-        symbol [ m %m.2 36 12 13 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 37 8 ]
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_37_8_37_35_if_stmt:
+        symbol [ m %m.2 59 12 13 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 60 8 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_60_8_60_35_if_stmt:
         %tmp.11 = lgetv %o.1;
-        symbol [ o %tmp.11 37 12 13 ];
+        symbol [ o %tmp.11 60 12 13 ];
         %tmp.12 = lgetv %hi;
-        symbol [ hi %tmp.12 37 17 19 ];
+        symbol [ hi %tmp.12 60 17 19 ];
         %tmp.13 = lte %tmp.11 %tmp.12;
-        bf %tmp.13 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_37_8_37_35_if_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_37_8_37_35_if_true:
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_37_21_37_35_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 37 23 ]
+        bf %tmp.13 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_60_8_60_35_if_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_60_8_60_35_if_true:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_60_21_60_35_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 60 23 ]
         %tmp.14 = lgetv %hi;
-        symbol [ hi %tmp.14 37 27 29 ];
+        symbol [ hi %tmp.14 60 27 29 ];
         %tmp.15 = 1;
         %tmp.16 = add %tmp.14 %tmp.15;
         lputv %o.1 %tmp.16;
-        symbol [ o %o.1 37 23 24 ];
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_37_21_37_35_stop:
-        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_37_8_37_35_if_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_37_8_37_35_if_end:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 38 8 ]
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_38_8_38_33_if_stmt:
+        symbol [ o %o.1 60 23 24 ];
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_60_21_60_35_stop:
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_60_8_60_35_if_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_60_8_60_35_if_end:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 61 8 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_61_8_61_33_if_stmt:
         %tmp.17 = lgetv %m.2;
-        symbol [ m %tmp.17 38 12 13 ];
+        symbol [ m %tmp.17 61 12 13 ];
         %tmp.18 = lgetv %o.1;
-        symbol [ o %tmp.18 38 17 18 ];
+        symbol [ o %tmp.18 61 17 18 ];
         %tmp.19 = lte %tmp.17 %tmp.18;
-        bf %tmp.19 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_38_8_38_33_if_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_38_8_38_33_if_true:
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_38_20_38_33_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 38 22 ]
+        bf %tmp.19 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_61_8_61_33_if_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_61_8_61_33_if_true:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_61_20_61_33_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 61 22 ]
         %tmp.20 = lgetv %o.1;
-        symbol [ o %tmp.20 38 26 27 ];
+        symbol [ o %tmp.20 61 26 27 ];
         %tmp.21 = 1;
         %tmp.22 = add %tmp.20 %tmp.21;
         lputv %m.2 %tmp.22;
-        symbol [ m %m.2 38 22 23 ];
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_38_20_38_33_stop:
-        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_38_8_38_33_if_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_38_8_38_33_if_end:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 39 8 ]
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_8_39_103_if_stmt:
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_12_39_41_begin:
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_12_39_31_begin:
+        symbol [ m %m.2 61 22 23 ];
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_61_20_61_33_stop:
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_61_8_61_33_if_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_61_8_61_33_if_end:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 62 8 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_62_8_62_103_if_stmt:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_62_12_62_41_begin:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_62_12_62_31_begin:
         %tmp.23 = lgetv %lo;
-        symbol [ lo %tmp.23 39 12 14 ];
+        symbol [ lo %tmp.23 62 12 14 ];
         %tmp.24 = null;
         %tmp.25 = ne %tmp.23 %tmp.24;
-        bf %tmp.25 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_8_39_103_if_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_26_39_31_true:
+        bf %tmp.25 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_62_8_62_103_if_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_62_26_62_31_true:
         %tmp.26 = lgetv %lo;
-        symbol [ lo %tmp.26 39 26 28 ];
+        symbol [ lo %tmp.26 62 26 28 ];
         %tmp.27 = as %tmp.26 { (!Null) };
         %tmp.28 = 0;
         %tmp.29 = gt %tmp.27 %tmp.28;
         push %tmp.29;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_26_39_31_end:
-        %tmp.30 = phi [%tmp.25 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_12_39_31_begin] [%tmp.29 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_26_39_31_true] [%tmp.30 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_26_39_31_end];
-        bf %tmp.30 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_8_39_103_if_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_36_39_41_true:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_62_26_62_31_end:
+        %tmp.30 = phi [%tmp.25 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_62_12_62_31_begin] [%tmp.29 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_62_26_62_31_true] [%tmp.30 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_62_26_62_31_end];
+        bf %tmp.30 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_62_8_62_103_if_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_62_36_62_41_true:
         %tmp.31 = lgetv %lo;
-        symbol [ lo %tmp.31 39 36 38 ];
+        symbol [ lo %tmp.31 62 36 38 ];
         %tmp.32 = as %tmp.31 { (!Null) };
         %tmp.33 = lgetv %hi;
-        symbol [ hi %tmp.33 39 41 43 ];
+        symbol [ hi %tmp.33 62 41 43 ];
         %tmp.34 = lt %tmp.32 %tmp.33;
         push %tmp.34;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_36_39_41_end:
-        %tmp.35 = phi [%tmp.30 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_12_39_41_begin] [%tmp.34 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_36_39_41_true] [%tmp.35 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_36_39_41_end];
-        bf %tmp.35 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_8_39_103_if_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_8_39_103_if_true:
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_45_39_103_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 39 47 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_62_36_62_41_end:
+        %tmp.35 = phi [%tmp.30 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_62_12_62_41_begin] [%tmp.34 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_62_36_62_41_true] [%tmp.35 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_62_36_62_41_end];
+        bf %tmp.35 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_62_8_62_103_if_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_62_8_62_103_if_true:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_62_45_62_103_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 62 47 ]
         %tmp.36 = newa 2;
         %tmp.37 = newa 5;
         %tmp.38 = 0;
         %tmp.39 = dup %tmp.37;
         %tmp.40 = aputv %tmp.39 0 %tmp.38;
         %tmp.41 = lgetv %lo;
-        symbol [ lo %tmp.41 39 59 61 ];
+        symbol [ lo %tmp.41 62 59 61 ];
         %tmp.42 = as %tmp.41 { (!Null) };
         %tmp.43 = dup %tmp.40;
         %tmp.44 = aputv %tmp.43 1 %tmp.42;
         %tmp.45 = lgetv %hi;
-        symbol [ hi %tmp.45 39 63 65 ];
+        symbol [ hi %tmp.45 62 63 65 ];
         %tmp.46 = dup %tmp.44;
         %tmp.47 = aputv %tmp.46 2 %tmp.45;
         %tmp.48 = lgetv %o.1;
-        symbol [ o %tmp.48 39 67 68 ];
+        symbol [ o %tmp.48 62 67 68 ];
         %tmp.49 = dup %tmp.47;
         %tmp.50 = aputv %tmp.49 3 %tmp.48;
         %tmp.51 = lgetv %m.2;
-        symbol [ m %tmp.51 39 70 71 ];
+        symbol [ m %tmp.51 62 70 71 ];
         %tmp.52 = dup %tmp.50;
         %tmp.53 = aputv %tmp.52 4 %tmp.51;
         %tmp.54 = dup %tmp.36;
         %tmp.55 = aputv %tmp.54 0 %tmp.53;
         %tmp.56 = newa 4;
-        symbol [ BLAU %tmp.58 39 75 79 ];
+        symbol [ BLAU %tmp.58 62 75 79 ];
         %tmp.58 = getv ? :BLAU;
         %tmp.59 = dup %tmp.56;
         %tmp.60 = aputv %tmp.59 0 %tmp.58;
-        symbol [ GRUEN %tmp.62 39 81 86 ];
+        symbol [ GRUEN %tmp.62 62 81 86 ];
         %tmp.62 = getv ? :GRUEN;
         %tmp.63 = dup %tmp.60;
         %tmp.64 = aputv %tmp.63 1 %tmp.62;
-        symbol [ ORANGE %tmp.66 39 88 94 ];
+        symbol [ ORANGE %tmp.66 62 88 94 ];
         %tmp.66 = getv ? :ORANGE;
         %tmp.67 = dup %tmp.64;
         %tmp.68 = aputv %tmp.67 2 %tmp.66;
-        symbol [ ROT %tmp.70 39 96 99 ];
+        symbol [ ROT %tmp.70 62 96 99 ];
         %tmp.70 = getv ? :ROT;
         %tmp.71 = dup %tmp.68;
         %tmp.72 = aputv %tmp.71 3 %tmp.70;
         %tmp.73 = dup %tmp.55;
         %tmp.74 = aputv %tmp.73 1 %tmp.72;
         ret %tmp.74;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_45_39_103_stop:
-        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_8_39_103_if_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_39_8_39_103_if_end:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 40 8 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_62_45_62_103_stop:
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_62_8_62_103_if_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_62_8_62_103_if_end:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 63 8 ]
         %tmp.75 = newa 2;
         %tmp.76 = newa 4;
         %tmp.77 = 0;
         %tmp.78 = dup %tmp.76;
         %tmp.79 = aputv %tmp.78 0 %tmp.77;
         %tmp.80 = lgetv %hi;
-        symbol [ hi %tmp.80 40 20 22 ];
+        symbol [ hi %tmp.80 63 20 22 ];
         %tmp.81 = dup %tmp.79;
         %tmp.82 = aputv %tmp.81 1 %tmp.80;
         %tmp.83 = lgetv %o.1;
-        symbol [ o %tmp.83 40 24 25 ];
+        symbol [ o %tmp.83 63 24 25 ];
         %tmp.84 = dup %tmp.82;
         %tmp.85 = aputv %tmp.84 2 %tmp.83;
         %tmp.86 = lgetv %m.2;
-        symbol [ m %tmp.86 40 27 28 ];
+        symbol [ m %tmp.86 63 27 28 ];
         %tmp.87 = dup %tmp.85;
         %tmp.88 = aputv %tmp.87 3 %tmp.86;
         %tmp.89 = dup %tmp.75;
         %tmp.90 = aputv %tmp.89 0 %tmp.88;
         %tmp.91 = newa 3;
-        symbol [ GRUEN %tmp.93 40 32 37 ];
+        symbol [ GRUEN %tmp.93 63 32 37 ];
         %tmp.93 = getv ? :GRUEN;
         %tmp.94 = dup %tmp.91;
         %tmp.95 = aputv %tmp.94 0 %tmp.93;
-        symbol [ ORANGE %tmp.97 40 39 45 ];
+        symbol [ ORANGE %tmp.97 63 39 45 ];
         %tmp.97 = getv ? :ORANGE;
         %tmp.98 = dup %tmp.95;
         %tmp.99 = aputv %tmp.98 1 %tmp.97;
-        symbol [ ROT %tmp.101 40 47 50 ];
+        symbol [ ROT %tmp.101 63 47 50 ];
         %tmp.101 = getv ? :ROT;
         %tmp.102 = dup %tmp.99;
         %tmp.103 = aputv %tmp.102 2 %tmp.101;
         %tmp.104 = dup %tmp.90;
         %tmp.105 = aputv %tmp.104 1 %tmp.103;
         ret %tmp.105;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_34_56_41_4_stop:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_57_56_64_4_stop:
     }
-    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 44; @symbol_functiondef = [woche,44,13,18]; @symbol_param<0> = [bud,44,19,22]; @symbol_param<0>_type<0> = [Number,44,26,32]; @symbol_return<0> = [Array,44,37,42]; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 67; @symbol_functiondef = [woche,67,13,18]; @symbol_param<0> = [bud,67,19,22]; @symbol_param<0>_type<0> = [Number,67,26,32]; @symbol_return<0> = [Array,67,37,42]; ]
     function woche(bud as Number) as Array {
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_44_43_46_4_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 45 8 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_67_43_69_4_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 68 8 ]
         %tmp.1 = newa 2;
         %tmp.2 = newa 5;
         %tmp.3 = 0;
         %tmp.4 = dup %tmp.2;
         %tmp.5 = aputv %tmp.4 0 %tmp.3;
         %tmp.6 = lgetv %bud;
-        symbol [ bud %tmp.6 45 20 23 ];
+        symbol [ bud %tmp.6 68 20 23 ];
         %tmp.7 = 85;
         %tmp.8 = mul %tmp.6 %tmp.7;
         %tmp.9 = 100;
@@ -559,11 +943,11 @@ _home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_44_43_46_4_s
         %tmp.11 = dup %tmp.5;
         %tmp.12 = aputv %tmp.11 1 %tmp.10;
         %tmp.13 = lgetv %bud;
-        symbol [ bud %tmp.13 45 36 39 ];
+        symbol [ bud %tmp.13 68 36 39 ];
         %tmp.14 = dup %tmp.12;
         %tmp.15 = aputv %tmp.14 2 %tmp.13;
         %tmp.16 = lgetv %bud;
-        symbol [ bud %tmp.16 45 41 44 ];
+        symbol [ bud %tmp.16 68 41 44 ];
         %tmp.17 = 115;
         %tmp.18 = mul %tmp.16 %tmp.17;
         %tmp.19 = 100;
@@ -571,7 +955,7 @@ _home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_44_43_46_4_s
         %tmp.21 = dup %tmp.15;
         %tmp.22 = aputv %tmp.21 3 %tmp.20;
         %tmp.23 = lgetv %bud;
-        symbol [ bud %tmp.23 45 58 61 ];
+        symbol [ bud %tmp.23 68 58 61 ];
         %tmp.24 = 13;
         %tmp.25 = mul %tmp.23 %tmp.24;
         %tmp.26 = 10;
@@ -581,143 +965,143 @@ _home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_44_43_46_4_s
         %tmp.30 = dup %tmp.1;
         %tmp.31 = aputv %tmp.30 0 %tmp.29;
         %tmp.32 = newa 4;
-        symbol [ BLAU %tmp.34 45 75 79 ];
+        symbol [ BLAU %tmp.34 68 75 79 ];
         %tmp.34 = getv ? :BLAU;
         %tmp.35 = dup %tmp.32;
         %tmp.36 = aputv %tmp.35 0 %tmp.34;
-        symbol [ GRUEN %tmp.38 45 81 86 ];
+        symbol [ GRUEN %tmp.38 68 81 86 ];
         %tmp.38 = getv ? :GRUEN;
         %tmp.39 = dup %tmp.36;
         %tmp.40 = aputv %tmp.39 1 %tmp.38;
-        symbol [ ORANGE %tmp.42 45 88 94 ];
+        symbol [ ORANGE %tmp.42 68 88 94 ];
         %tmp.42 = getv ? :ORANGE;
         %tmp.43 = dup %tmp.40;
         %tmp.44 = aputv %tmp.43 2 %tmp.42;
-        symbol [ ROT %tmp.46 45 96 99 ];
+        symbol [ ROT %tmp.46 68 96 99 ];
         %tmp.46 = getv ? :ROT;
         %tmp.47 = dup %tmp.44;
         %tmp.48 = aputv %tmp.47 3 %tmp.46;
         %tmp.49 = dup %tmp.31;
         %tmp.50 = aputv %tmp.49 1 %tmp.48;
         ret %tmp.50;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_44_43_46_4_stop:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_67_43_69_4_stop:
     }
-    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 48; @symbol_functiondef = [winkel,48,13,19]; @symbol_param<0> = [sk,48,20,22]; @symbol_param<0>_type<0> = [Array,48,26,31]; @symbol_param<1> = [v,48,33,34]; @symbol_param<1>_type<0> = [Numeric,48,38,45]; @symbol_return<0> = [Number,48,50,56]; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 71; @symbol_functiondef = [winkel,71,13,19]; @symbol_param<0> = [sk,71,20,22]; @symbol_param<0>_type<0> = [Array,71,26,31]; @symbol_param<1> = [v,71,33,34]; @symbol_param<1>_type<0> = [Numeric,71,38,45]; @symbol_return<0> = [Number,71,50,56]; ]
     function winkel(sk as Array, v as Numeric) as Number {
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_48_57_54_4_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 49 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_48_57_54_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_48_57_54_4_stop" ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_71_57_77_4_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 72 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_71_57_77_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_71_57_77_4_stop" ]
         %g.1 = local;
-        symbol [ g %g.1 49 12 13 ];
+        symbol [ g %g.1 72 12 13 ];
         %tmp.1 = lgetv %sk;
-        symbol [ sk %tmp.1 49 16 18 ];
+        symbol [ sk %tmp.1 72 16 18 ];
         %tmp.2 = 0;
         %tmp.3 = agetv %tmp.1 %tmp.2;
         %tmp.4 = as %tmp.3 Array;
-        symbol [ Array %tmp.4 49 25 30 ];
+        symbol [ Array %tmp.4 72 25 30 ];
         lputv %g.1 %tmp.4;
-        symbol [ g %g.1 49 12 13 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 50 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_48_57_54_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_48_57_54_4_stop" ]
+        symbol [ g %g.1 72 12 13 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 73 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_71_57_77_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_71_57_77_4_stop" ]
         %lo.2 = local;
-        symbol [ lo %lo.2 50 12 14 ];
+        symbol [ lo %lo.2 73 12 14 ];
         %tmp.5 = lgetv %g.1;
-        symbol [ g %tmp.5 50 17 18 ];
+        symbol [ g %tmp.5 73 17 18 ];
         %tmp.6 = 0;
         %tmp.7 = agetv %tmp.5 %tmp.6;
         %tmp.8 = as %tmp.7 Number;
-        symbol [ Number %tmp.8 50 25 31 ];
+        symbol [ Number %tmp.8 73 25 31 ];
         lputv %lo.2 %tmp.8;
-        symbol [ lo %lo.2 50 12 14 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 51 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_48_57_54_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_48_57_54_4_stop" ]
+        symbol [ lo %lo.2 73 12 14 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 74 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_71_57_77_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_71_57_77_4_stop" ]
         %hi.3 = local;
-        symbol [ hi %hi.3 51 12 14 ];
+        symbol [ hi %hi.3 74 12 14 ];
         %tmp.9 = lgetv %g.1;
-        symbol [ g %tmp.9 51 17 18 ];
+        symbol [ g %tmp.9 74 17 18 ];
         %tmp.10 = lgetv %g.1;
-        symbol [ g %tmp.10 51 19 20 ];
-        symbol [ size %tmp.11 51 21 25 ];
+        symbol [ g %tmp.10 74 19 20 ];
+        symbol [ size %tmp.11 74 21 25 ];
         %tmp.11 = getv function %tmp.10 :size;
         %tmp.12 = invoke %tmp.10 %tmp.11();
         %tmp.13 = 1;
         %tmp.14 = sub %tmp.12 %tmp.13;
         %tmp.15 = agetv %tmp.9 %tmp.14;
         %tmp.16 = as %tmp.15 Number;
-        symbol [ Number %tmp.16 51 36 42 ];
+        symbol [ Number %tmp.16 74 36 42 ];
         lputv %hi.3 %tmp.16;
-        symbol [ hi %hi.3 51 12 14 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 52 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_48_57_54_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_48_57_54_4_stop" ]
+        symbol [ hi %hi.3 74 12 14 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 75 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_71_57_77_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_71_57_77_4_stop" ]
         %x.4 = local;
-        symbol [ x %x.4 52 12 13 ];
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_52_16_52_46_begin:
+        symbol [ x %x.4 75 12 13 ];
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_75_16_75_46_begin:
         %tmp.17 = lgetv %v;
-        symbol [ v %tmp.17 52 16 17 ];
+        symbol [ v %tmp.17 75 16 17 ];
         %tmp.18 = lgetv %lo.2;
-        symbol [ lo %tmp.18 52 20 22 ];
+        symbol [ lo %tmp.18 75 20 22 ];
         %tmp.19 = lt %tmp.17 %tmp.18;
-        bf %tmp.19 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_52_16_52_46_else_false;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_52_16_52_46_true:
+        bf %tmp.19 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_75_16_75_46_else_false;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_75_16_75_46_true:
         %tmp.20 = lgetv %lo.2;
-        symbol [ lo %tmp.20 52 25 27 ];
+        symbol [ lo %tmp.20 75 25 27 ];
         push %tmp.20;
-        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_52_16_52_46_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_52_16_52_46_else_false:
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_52_31_52_45_begin:
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_75_16_75_46_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_75_16_75_46_else_false:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_75_31_75_45_begin:
         %tmp.21 = lgetv %v;
-        symbol [ v %tmp.21 52 31 32 ];
+        symbol [ v %tmp.21 75 31 32 ];
         %tmp.22 = lgetv %hi.3;
-        symbol [ hi %tmp.22 52 35 37 ];
+        symbol [ hi %tmp.22 75 35 37 ];
         %tmp.23 = gt %tmp.21 %tmp.22;
-        bf %tmp.23 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_52_31_52_45_else_false;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_52_31_52_45_true:
+        bf %tmp.23 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_75_31_75_45_else_false;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_75_31_75_45_true:
         %tmp.24 = lgetv %hi.3;
-        symbol [ hi %tmp.24 52 40 42 ];
+        symbol [ hi %tmp.24 75 40 42 ];
         push %tmp.24;
-        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_52_31_52_45_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_52_31_52_45_else_false:
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_75_31_75_45_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_75_31_75_45_else_false:
         %tmp.25 = lgetv %v;
-        symbol [ v %tmp.25 52 45 46 ];
+        symbol [ v %tmp.25 75 45 46 ];
         push %tmp.25;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_52_31_52_45_end:
-        %tmp.26 = phi [%tmp.23 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_52_31_52_45_begin] [%tmp.24 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_52_31_52_45_true] [%tmp.25 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_52_31_52_45_else_false] [%tmp.26 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_52_31_52_45_end];
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_75_31_75_45_end:
+        %tmp.26 = phi [%tmp.23 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_75_31_75_45_begin] [%tmp.24 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_75_31_75_45_true] [%tmp.25 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_75_31_75_45_else_false] [%tmp.26 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_75_31_75_45_end];
         push %tmp.26;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_52_16_52_46_end:
-        %tmp.27 = phi [%tmp.19 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_52_16_52_46_begin] [%tmp.20 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_52_16_52_46_true] [%tmp.26 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_52_16_52_46_else_false] [%tmp.27 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_52_16_52_46_end];
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_75_16_75_46_end:
+        %tmp.27 = phi [%tmp.19 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_75_16_75_46_begin] [%tmp.20 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_75_16_75_46_true] [%tmp.26 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_75_16_75_46_else_false] [%tmp.27 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_75_16_75_46_end];
         lputv %x.4 %tmp.27;
-        symbol [ x %x.4 52 12 13 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 53 8 ]
+        symbol [ x %x.4 75 12 13 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 76 8 ]
         %tmp.28 = 225;
         %tmp.29 = lgetv %x.4;
-        symbol [ x %tmp.29 53 23 24 ];
+        symbol [ x %tmp.29 76 23 24 ];
         %tmp.30 = lgetv %lo.2;
-        symbol [ lo %tmp.30 53 27 29 ];
+        symbol [ lo %tmp.30 76 27 29 ];
         %tmp.31 = sub %tmp.29 %tmp.30;
-        symbol [ toFloat %tmp.32 53 31 38 ];
+        symbol [ toFloat %tmp.32 76 31 38 ];
         %tmp.32 = getv function %tmp.31 :toFloat;
         %tmp.33 = invoke %tmp.31 %tmp.32();
         %tmp.34 = 270.0;
         %tmp.35 = mul %tmp.33 %tmp.34;
         %tmp.36 = lgetv %hi.3;
-        symbol [ hi %tmp.36 53 52 54 ];
+        symbol [ hi %tmp.36 76 52 54 ];
         %tmp.37 = lgetv %lo.2;
-        symbol [ lo %tmp.37 53 57 59 ];
+        symbol [ lo %tmp.37 76 57 59 ];
         %tmp.38 = sub %tmp.36 %tmp.37;
         %tmp.39 = div %tmp.35 %tmp.38;
         %tmp.40 = sub %tmp.28 %tmp.39;
-        symbol [ toNumber %tmp.41 53 62 70 ];
+        symbol [ toNumber %tmp.41 76 62 70 ];
         %tmp.41 = getv function %tmp.40 :toNumber;
         %tmp.42 = invoke %tmp.40 %tmp.41();
         ret %tmp.42;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_48_57_54_4_stop:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_71_57_77_4_stop:
     }
-    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 56; @symbol_functiondef = [norm,56,13,17]; @symbol_param<0> = [a,56,18,19]; @symbol_param<0>_type<0> = [Number,56,23,29]; @symbol_return<0> = [Number,56,34,40]; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 79; @symbol_functiondef = [norm,79,13,17]; @symbol_param<0> = [a,79,18,19]; @symbol_param<0>_type<0> = [Number,79,23,29]; @symbol_return<0> = [Number,79,34,40]; ]
     function norm(a as Number) as Number {
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_56_41_56_75_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 56 43 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_79_41_79_75_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 79 43 ]
         %tmp.1 = lgetv %a;
-        symbol [ a %tmp.1 56 52 53 ];
+        symbol [ a %tmp.1 79 52 53 ];
         %tmp.2 = 360;
         %tmp.3 = mod %tmp.1 %tmp.2;
         %tmp.4 = 360;
@@ -725,772 +1109,780 @@ _home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_56_41_56_75_
         %tmp.6 = 360;
         %tmp.7 = mod %tmp.5 %tmp.6;
         ret %tmp.7;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_56_41_56_75_stop:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_79_41_79_75_stop:
     }
-    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 59; @symbol_functiondef = [bogen,59,13,18]; @symbol_param<0> = [dc,59,19,21]; @symbol_param<0>_type<0> = [Graphics,59,25,33]; @symbol_param<0>_type<1> = [Dc,59,34,36]; @symbol_param<1> = [x,59,38,39]; @symbol_param<1>_type<0> = [Number,59,43,49]; @symbol_param<2> = [y,59,51,52]; @symbol_param<2>_type<0> = [Number,59,56,62]; @symbol_param<3> = [r,59,64,65]; @symbol_param<3>_type<0> = [Number,59,69,75]; @symbol_param<4> = [pen,59,77,80]; @symbol_param<4>_type<0> = [Number,59,84,90]; @symbol_param<5> = [v,59,92,93]; @symbol_param<5>_type<0> = [Numeric,59,97,104]; @symbol_param<6> = [sk,59,107,109]; @symbol_param<6>_type<0> = [Array,59,113,118]; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 82; @symbol_functiondef = [bogen,82,13,18]; @symbol_param<0> = [dc,82,19,21]; @symbol_param<0>_type<0> = [Graphics,82,25,33]; @symbol_param<0>_type<1> = [Dc,82,34,36]; @symbol_param<1> = [x,82,38,39]; @symbol_param<1>_type<0> = [Number,82,43,49]; @symbol_param<2> = [y,82,51,52]; @symbol_param<2>_type<0> = [Number,82,56,62]; @symbol_param<3> = [r,82,64,65]; @symbol_param<3>_type<0> = [Number,82,69,75]; @symbol_param<4> = [pen,82,77,80]; @symbol_param<4>_type<0> = [Number,82,84,90]; @symbol_param<5> = [v,82,92,93]; @symbol_param<5>_type<0> = [Numeric,82,97,104]; @symbol_param<6> = [sk,82,107,109]; @symbol_param<6>_type<0> = [Array,82,113,118]; ]
     function bogen(dc as Graphics.Dc, x as Number, y as Number, r as Number, pen as Number, v as Numeric or Null, sk as Array) as Void {
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_59_128_80_4_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 60 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_59_128_80_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_59_128_80_4_stop" ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_82_128_103_4_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 83 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_82_128_103_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_82_128_103_4_stop" ]
         %g.1 = local;
-        symbol [ g %g.1 60 12 13 ];
+        symbol [ g %g.1 83 12 13 ];
         %tmp.1 = lgetv %sk;
-        symbol [ sk %tmp.1 60 16 18 ];
+        symbol [ sk %tmp.1 83 16 18 ];
         %tmp.2 = 0;
         %tmp.3 = agetv %tmp.1 %tmp.2;
         %tmp.4 = as %tmp.3 Array;
-        symbol [ Array %tmp.4 60 25 30 ];
+        symbol [ Array %tmp.4 83 25 30 ];
         lputv %g.1 %tmp.4;
-        symbol [ g %g.1 60 12 13 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 61 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_59_128_80_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_59_128_80_4_stop" ]
+        symbol [ g %g.1 83 12 13 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 84 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_82_128_103_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_82_128_103_4_stop" ]
         %f.2 = local;
-        symbol [ f %f.2 61 12 13 ];
+        symbol [ f %f.2 84 12 13 ];
         %tmp.5 = lgetv %sk;
-        symbol [ sk %tmp.5 61 16 18 ];
+        symbol [ sk %tmp.5 84 16 18 ];
         %tmp.6 = 1;
         %tmp.7 = agetv %tmp.5 %tmp.6;
         %tmp.8 = as %tmp.7 Array;
-        symbol [ Array %tmp.8 61 25 30 ];
+        symbol [ Array %tmp.8 84 25 30 ];
         lputv %f.2 %tmp.8;
-        symbol [ f %f.2 61 12 13 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 62 8 ]
+        symbol [ f %f.2 84 12 13 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 85 8 ]
         %tmp.9 = lgetv %dc;
-        symbol [ dc %tmp.9 62 8 10 ];
-        symbol [ setPenWidth %tmp.10 62 11 22 ];
+        symbol [ dc %tmp.9 85 8 10 ];
+        symbol [ setPenWidth %tmp.10 85 11 22 ];
         %tmp.10 = getv function %tmp.9 :setPenWidth;
         %tmp.11 = lgetv %pen;
-        symbol [ pen %tmp.11 62 23 26 ];
+        symbol [ pen %tmp.11 85 23 26 ];
         invoke %tmp.9 %tmp.10(%tmp.11);
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 63 8 ]
-        for @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_63_8_69_8_for_test @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_63_8_69_8_for_incr @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_63_8_69_8_for_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_63_8_69_8_for_init:
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_63_8_69_8_for_begin" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_63_8_69_8_for_end" ]
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 86 8 ]
+        for @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_86_8_92_8_for_test @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_86_8_92_8_for_incr @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_86_8_92_8_for_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_86_8_92_8_for_init:
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_86_8_92_8_for_begin" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_86_8_92_8_for_end" ]
         %i.3 = local;
-        symbol [ i %i.3 63 17 18 ];
+        symbol [ i %i.3 86 17 18 ];
         %tmp.12 = 0;
         lputv %i.3 %tmp.12;
-        symbol [ i %i.3 63 17 18 ];
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_63_8_69_8_for_test:
+        symbol [ i %i.3 86 17 18 ];
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_86_8_92_8_for_test:
         %tmp.13 = lgetv %i.3;
-        symbol [ i %tmp.13 63 24 25 ];
+        symbol [ i %tmp.13 86 24 25 ];
         %tmp.14 = lgetv %f.2;
-        symbol [ f %tmp.14 63 28 29 ];
-        symbol [ size %tmp.15 63 30 34 ];
+        symbol [ f %tmp.14 86 28 29 ];
+        symbol [ size %tmp.15 86 30 34 ];
         %tmp.15 = getv function %tmp.14 :size;
         %tmp.16 = invoke %tmp.14 %tmp.15();
         %tmp.17 = lt %tmp.13 %tmp.16;
-        bf %tmp.17 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_63_8_69_8_for_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_63_8_69_8_for_begin:
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_63_43_69_8_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 64 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_63_43_69_8_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_63_43_69_8_stop" ]
+        bf %tmp.17 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_86_8_92_8_for_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_86_8_92_8_for_begin:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_86_43_92_8_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 87 12 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_86_43_92_8_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_86_43_92_8_stop" ]
         %a1.4 = local;
-        symbol [ a1 %a1.4 64 16 18 ];
+        symbol [ a1 %a1.4 87 16 18 ];
         %tmp.18 = self;
-        symbol [ winkel %tmp.19 64 21 27 ];
+        symbol [ winkel %tmp.19 87 21 27 ];
         %tmp.19 = getv function %tmp.18 :winkel;
         %tmp.20 = lgetv %sk;
-        symbol [ sk %tmp.20 64 28 30 ];
+        symbol [ sk %tmp.20 87 28 30 ];
         %tmp.21 = lgetv %g.1;
-        symbol [ g %tmp.21 64 32 33 ];
+        symbol [ g %tmp.21 87 32 33 ];
         %tmp.22 = lgetv %i.3;
-        symbol [ i %tmp.22 64 34 35 ];
+        symbol [ i %tmp.22 87 34 35 ];
         %tmp.23 = agetv %tmp.21 %tmp.22;
         %tmp.24 = as %tmp.23 Number;
-        symbol [ Number %tmp.24 64 40 46 ];
+        symbol [ Number %tmp.24 87 40 46 ];
         %tmp.25 = invoke %tmp.18 %tmp.19(%tmp.20, %tmp.24);
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_64_51_64_63_begin:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_87_51_87_63_begin:
         %tmp.26 = lgetv %i.3;
-        symbol [ i %tmp.26 64 51 52 ];
+        symbol [ i %tmp.26 87 51 52 ];
         %tmp.27 = 0;
         %tmp.28 = gt %tmp.26 %tmp.27;
-        bf %tmp.28 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_64_51_64_63_else_false;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_64_51_64_63_true:
+        bf %tmp.28 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_87_51_87_63_else_false;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_87_51_87_63_true:
         %tmp.29 = 2;
         push %tmp.29;
-        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_64_51_64_63_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_64_51_64_63_else_false:
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_87_51_87_63_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_87_51_87_63_else_false:
         %tmp.30 = 0;
         push %tmp.30;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_64_51_64_63_end:
-        %tmp.31 = phi [%tmp.28 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_64_51_64_63_begin] [%tmp.29 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_64_51_64_63_true] [%tmp.30 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_64_51_64_63_else_false] [%tmp.31 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_64_51_64_63_end];
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_87_51_87_63_end:
+        %tmp.31 = phi [%tmp.28 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_87_51_87_63_begin] [%tmp.29 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_87_51_87_63_true] [%tmp.30 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_87_51_87_63_else_false] [%tmp.31 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_87_51_87_63_end];
         %tmp.32 = sub %tmp.25 %tmp.31;
         lputv %a1.4 %tmp.32;
-        symbol [ a1 %a1.4 64 16 18 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 65 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_63_43_69_8_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_63_43_69_8_stop" ]
+        symbol [ a1 %a1.4 87 16 18 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 88 12 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_86_43_92_8_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_86_43_92_8_stop" ]
         %a2.5 = local;
-        symbol [ a2 %a2.5 65 16 18 ];
+        symbol [ a2 %a2.5 88 16 18 ];
         %tmp.33 = self;
-        symbol [ winkel %tmp.34 65 21 27 ];
+        symbol [ winkel %tmp.34 88 21 27 ];
         %tmp.34 = getv function %tmp.33 :winkel;
         %tmp.35 = lgetv %sk;
-        symbol [ sk %tmp.35 65 28 30 ];
+        symbol [ sk %tmp.35 88 28 30 ];
         %tmp.36 = lgetv %g.1;
-        symbol [ g %tmp.36 65 32 33 ];
+        symbol [ g %tmp.36 88 32 33 ];
         %tmp.37 = lgetv %i.3;
-        symbol [ i %tmp.37 65 34 35 ];
+        symbol [ i %tmp.37 88 34 35 ];
         %tmp.38 = 1;
         %tmp.39 = add %tmp.37 %tmp.38;
         %tmp.40 = agetv %tmp.36 %tmp.39;
         %tmp.41 = as %tmp.40 Number;
-        symbol [ Number %tmp.41 65 44 50 ];
+        symbol [ Number %tmp.41 88 44 50 ];
         %tmp.42 = invoke %tmp.33 %tmp.34(%tmp.35, %tmp.41);
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_65_55_65_78_begin:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_55_88_78_begin:
         %tmp.43 = lgetv %i.3;
-        symbol [ i %tmp.43 65 55 56 ];
+        symbol [ i %tmp.43 88 55 56 ];
         %tmp.44 = lgetv %f.2;
-        symbol [ f %tmp.44 65 59 60 ];
-        symbol [ size %tmp.45 65 61 65 ];
+        symbol [ f %tmp.44 88 59 60 ];
+        symbol [ size %tmp.45 88 61 65 ];
         %tmp.45 = getv function %tmp.44 :size;
         %tmp.46 = invoke %tmp.44 %tmp.45();
         %tmp.47 = 1;
         %tmp.48 = sub %tmp.46 %tmp.47;
         %tmp.49 = lt %tmp.43 %tmp.48;
-        bf %tmp.49 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_65_55_65_78_else_false;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_65_55_65_78_true:
+        bf %tmp.49 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_55_88_78_else_false;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_55_88_78_true:
         %tmp.50 = 2;
         push %tmp.50;
-        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_65_55_65_78_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_65_55_65_78_else_false:
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_55_88_78_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_55_88_78_else_false:
         %tmp.51 = 0;
         push %tmp.51;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_65_55_65_78_end:
-        %tmp.52 = phi [%tmp.49 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_65_55_65_78_begin] [%tmp.50 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_65_55_65_78_true] [%tmp.51 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_65_55_65_78_else_false] [%tmp.52 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_65_55_65_78_end];
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_55_88_78_end:
+        %tmp.52 = phi [%tmp.49 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_55_88_78_begin] [%tmp.50 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_55_88_78_true] [%tmp.51 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_55_88_78_else_false] [%tmp.52 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_55_88_78_end];
         %tmp.53 = add %tmp.42 %tmp.52;
         lputv %a2.5 %tmp.53;
-        symbol [ a2 %a2.5 65 16 18 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 66 12 ]
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_66_12_66_41_if_stmt:
+        symbol [ a2 %a2.5 88 16 18 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 89 12 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_89_12_89_41_if_stmt:
         %tmp.54 = lgetv %a1.4;
-        symbol [ a1 %tmp.54 66 16 18 ];
+        symbol [ a1 %tmp.54 89 16 18 ];
         %tmp.55 = lgetv %a2.5;
-        symbol [ a2 %tmp.55 66 21 23 ];
+        symbol [ a2 %tmp.55 89 21 23 ];
         %tmp.56 = sub %tmp.54 %tmp.55;
         %tmp.57 = 2;
         %tmp.58 = lt %tmp.56 %tmp.57;
-        bf %tmp.58 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_66_12_66_41_if_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_66_12_66_41_if_true:
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_66_29_66_41_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 66 31 ]
-        goto break @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_63_8_69_8_for_incr;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_66_29_66_41_stop:
-        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_66_12_66_41_if_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_66_12_66_41_if_end:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 67 12 ]
+        bf %tmp.58 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_89_12_89_41_if_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_89_12_89_41_if_true:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_89_29_89_41_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 89 31 ]
+        goto break @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_86_8_92_8_for_incr;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_89_29_89_41_stop:
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_89_12_89_41_if_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_89_12_89_41_if_end:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 90 12 ]
         %tmp.59 = lgetv %dc;
-        symbol [ dc %tmp.59 67 12 14 ];
-        symbol [ setColor %tmp.60 67 15 23 ];
+        symbol [ dc %tmp.59 90 12 14 ];
+        symbol [ setColor %tmp.60 90 15 23 ];
         %tmp.60 = getv function %tmp.59 :setColor;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_67_24_67_51_begin:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_90_24_90_61_begin:
         %tmp.61 = lgetv %v;
-        symbol [ v %tmp.61 67 24 25 ];
+        symbol [ v %tmp.61 90 24 25 ];
         %tmp.62 = null;
         %tmp.63 = eq %tmp.61 %tmp.62;
-        bf %tmp.63 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_67_24_67_51_else_false;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_67_24_67_51_true:
-        symbol [ GRAU %tmp.65 67 36 40 ];
+        bf %tmp.63 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_90_24_90_61_else_false;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_90_24_90_61_true:
+        symbol [ GRAU %tmp.65 90 36 40 ];
         %tmp.65 = getv ? :GRAU;
         push %tmp.65;
-        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_67_24_67_51_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_67_24_67_51_else_false:
-        %tmp.66 = lgetv %f.2;
-        symbol [ f %tmp.66 67 43 44 ];
-        %tmp.67 = lgetv %i.3;
-        symbol [ i %tmp.67 67 45 46 ];
-        %tmp.68 = agetv %tmp.66 %tmp.67;
-        %tmp.69 = as %tmp.68 Number;
-        symbol [ Number %tmp.69 67 51 57 ];
-        push %tmp.69;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_67_24_67_51_end:
-        %tmp.70 = phi [%tmp.63 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_67_24_67_51_begin] [%tmp.65 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_67_24_67_51_true] [%tmp.69 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_67_24_67_51_else_false] [%tmp.70 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_67_24_67_51_end];
-        symbol [ Graphics %tmp.71 67 59 67 ];
-        %tmp.71 = getm $.Toybox.Graphics;
-        symbol [ COLOR_TRANSPARENT %tmp.72 67 68 85 ];
-        %tmp.72 = getv %tmp.71 :COLOR_TRANSPARENT;
-        invoke %tmp.59 %tmp.60(%tmp.70, %tmp.72);
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 68 12 ]
-        %tmp.73 = lgetv %dc;
-        symbol [ dc %tmp.73 68 12 14 ];
-        symbol [ drawArc %tmp.74 68 15 22 ];
-        %tmp.74 = getv function %tmp.73 :drawArc;
-        %tmp.75 = lgetv %x;
-        symbol [ x %tmp.75 68 23 24 ];
-        %tmp.76 = lgetv %y;
-        symbol [ y %tmp.76 68 26 27 ];
-        %tmp.77 = lgetv %r;
-        symbol [ r %tmp.77 68 29 30 ];
-        symbol [ Graphics %tmp.78 68 32 40 ];
-        %tmp.78 = getm $.Toybox.Graphics;
-        symbol [ ARC_CLOCKWISE %tmp.79 68 41 54 ];
-        %tmp.79 = getv %tmp.78 :ARC_CLOCKWISE;
-        %tmp.80 = self;
-        symbol [ norm %tmp.81 68 56 60 ];
-        %tmp.81 = getv function %tmp.80 :norm;
-        %tmp.82 = lgetv %a1.4;
-        symbol [ a1 %tmp.82 68 61 63 ];
-        %tmp.83 = invoke %tmp.80 %tmp.81(%tmp.82);
-        %tmp.84 = self;
-        symbol [ norm %tmp.85 68 66 70 ];
-        %tmp.85 = getv function %tmp.84 :norm;
-        %tmp.86 = lgetv %a2.5;
-        symbol [ a2 %tmp.86 68 71 73 ];
-        %tmp.87 = invoke %tmp.84 %tmp.85(%tmp.86);
-        invoke %tmp.73 %tmp.74(%tmp.75, %tmp.76, %tmp.77, %tmp.79, %tmp.83, %tmp.87);
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_63_43_69_8_stop:
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_63_8_69_8_for_incr:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 63 ]
-        %tmp.90 = lgetv %i.3;
-        symbol [ i %tmp.90 63 38 39 ];
-        %tmp.91 = add %tmp.90 1;
-        lputv %i.3 %tmp.91;
-        symbol [ i %i.3 63 38 39 ];
-        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_63_8_69_8_for_test;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_63_8_69_8_for_end:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 70 8 ]
-        %tmp.92 = lgetv %dc;
-        symbol [ dc %tmp.92 70 8 10 ];
-        symbol [ setPenWidth %tmp.93 70 11 22 ];
-        %tmp.93 = getv function %tmp.92 :setPenWidth;
-        %tmp.94 = 1;
-        invoke %tmp.92 %tmp.93(%tmp.94);
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 71 8 ]
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_71_8_79_8_if_stmt:
-        %tmp.95 = lgetv %v;
-        symbol [ v %tmp.95 71 12 13 ];
-        %tmp.96 = null;
-        %tmp.97 = ne %tmp.95 %tmp.96;
-        bf %tmp.97 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_71_8_79_8_if_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_71_8_79_8_if_true:
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_71_23_79_8_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 72 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_71_23_79_8_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_71_23_79_8_stop" ]
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_90_24_90_61_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_90_24_90_61_else_false:
+        %tmp.66 = self;
+        symbol [ seg %tmp.67 90 43 46 ];
+        %tmp.67 = getv function %tmp.66 :seg;
+        %tmp.68 = lgetv %f.2;
+        symbol [ f %tmp.68 90 47 48 ];
+        %tmp.69 = lgetv %i.3;
+        symbol [ i %tmp.69 90 49 50 ];
+        %tmp.70 = agetv %tmp.68 %tmp.69;
+        %tmp.71 = as %tmp.70 Number;
+        symbol [ Number %tmp.71 90 55 61 ];
+        %tmp.72 = invoke %tmp.66 %tmp.67(%tmp.71);
+        push %tmp.72;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_90_24_90_61_end:
+        %tmp.73 = phi [%tmp.63 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_90_24_90_61_begin] [%tmp.65 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_90_24_90_61_true] [%tmp.72 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_90_24_90_61_else_false] [%tmp.73 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_90_24_90_61_end];
+        symbol [ Graphics %tmp.74 90 64 72 ];
+        %tmp.74 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.75 90 73 90 ];
+        %tmp.75 = getv %tmp.74 :COLOR_TRANSPARENT;
+        invoke %tmp.59 %tmp.60(%tmp.73, %tmp.75);
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 91 12 ]
+        %tmp.76 = lgetv %dc;
+        symbol [ dc %tmp.76 91 12 14 ];
+        symbol [ drawArc %tmp.77 91 15 22 ];
+        %tmp.77 = getv function %tmp.76 :drawArc;
+        %tmp.78 = lgetv %x;
+        symbol [ x %tmp.78 91 23 24 ];
+        %tmp.79 = lgetv %y;
+        symbol [ y %tmp.79 91 26 27 ];
+        %tmp.80 = lgetv %r;
+        symbol [ r %tmp.80 91 29 30 ];
+        symbol [ Graphics %tmp.81 91 32 40 ];
+        %tmp.81 = getm $.Toybox.Graphics;
+        symbol [ ARC_CLOCKWISE %tmp.82 91 41 54 ];
+        %tmp.82 = getv %tmp.81 :ARC_CLOCKWISE;
+        %tmp.83 = self;
+        symbol [ norm %tmp.84 91 56 60 ];
+        %tmp.84 = getv function %tmp.83 :norm;
+        %tmp.85 = lgetv %a1.4;
+        symbol [ a1 %tmp.85 91 61 63 ];
+        %tmp.86 = invoke %tmp.83 %tmp.84(%tmp.85);
+        %tmp.87 = self;
+        symbol [ norm %tmp.88 91 66 70 ];
+        %tmp.88 = getv function %tmp.87 :norm;
+        %tmp.89 = lgetv %a2.5;
+        symbol [ a2 %tmp.89 91 71 73 ];
+        %tmp.90 = invoke %tmp.87 %tmp.88(%tmp.89);
+        invoke %tmp.76 %tmp.77(%tmp.78, %tmp.79, %tmp.80, %tmp.82, %tmp.86, %tmp.90);
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_86_43_92_8_stop:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_86_8_92_8_for_incr:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 86 ]
+        %tmp.93 = lgetv %i.3;
+        symbol [ i %tmp.93 86 38 39 ];
+        %tmp.94 = add %tmp.93 1;
+        lputv %i.3 %tmp.94;
+        symbol [ i %i.3 86 38 39 ];
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_86_8_92_8_for_test;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_86_8_92_8_for_end:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 93 8 ]
+        %tmp.95 = lgetv %dc;
+        symbol [ dc %tmp.95 93 8 10 ];
+        symbol [ setPenWidth %tmp.96 93 11 22 ];
+        %tmp.96 = getv function %tmp.95 :setPenWidth;
+        %tmp.97 = 1;
+        invoke %tmp.95 %tmp.96(%tmp.97);
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 94 8 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_94_8_102_8_if_stmt:
+        %tmp.98 = lgetv %v;
+        symbol [ v %tmp.98 94 12 13 ];
+        %tmp.99 = null;
+        %tmp.100 = ne %tmp.98 %tmp.99;
+        bf %tmp.100 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_94_8_102_8_if_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_94_8_102_8_if_true:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_94_23_102_8_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 95 12 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_94_23_102_8_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_94_23_102_8_stop" ]
         %rad.6 = local;
-        symbol [ rad %rad.6 72 16 19 ];
-        symbol [ Math %tmp.98 72 22 26 ];
-        %tmp.98 = getm $.Toybox.Math;
-        symbol [ toRadians %tmp.99 72 27 36 ];
-        %tmp.99 = getv function %tmp.98 :toRadians;
-        %tmp.100 = self;
-        symbol [ winkel %tmp.101 72 37 43 ];
-        %tmp.101 = getv function %tmp.100 :winkel;
-        %tmp.102 = lgetv %sk;
-        symbol [ sk %tmp.102 72 44 46 ];
-        %tmp.103 = lgetv %v;
-        symbol [ v %tmp.103 72 48 49 ];
-        %tmp.104 = as %tmp.103 { (!Null) };
-        %tmp.105 = invoke %tmp.100 %tmp.101(%tmp.102, %tmp.104);
-        %tmp.106 = invoke %tmp.98 %tmp.99(%tmp.105);
-        lputv %rad.6 %tmp.106;
-        symbol [ rad %rad.6 72 16 19 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 73 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_71_23_79_8_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_71_23_79_8_stop" ]
+        symbol [ rad %rad.6 95 16 19 ];
+        symbol [ Math %tmp.101 95 22 26 ];
+        %tmp.101 = getm $.Toybox.Math;
+        symbol [ toRadians %tmp.102 95 27 36 ];
+        %tmp.102 = getv function %tmp.101 :toRadians;
+        %tmp.103 = self;
+        symbol [ winkel %tmp.104 95 37 43 ];
+        %tmp.104 = getv function %tmp.103 :winkel;
+        %tmp.105 = lgetv %sk;
+        symbol [ sk %tmp.105 95 44 46 ];
+        %tmp.106 = lgetv %v;
+        symbol [ v %tmp.106 95 48 49 ];
+        %tmp.107 = as %tmp.106 { (!Null) };
+        %tmp.108 = invoke %tmp.103 %tmp.104(%tmp.105, %tmp.107);
+        %tmp.109 = invoke %tmp.101 %tmp.102(%tmp.108);
+        lputv %rad.6 %tmp.109;
+        symbol [ rad %rad.6 95 16 19 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 96 12 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_94_23_102_8_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_94_23_102_8_stop" ]
         %px.7 = local;
-        symbol [ px %px.7 73 16 18 ];
-        %tmp.107 = lgetv %x;
-        symbol [ x %tmp.107 73 21 22 ];
-        %tmp.108 = lgetv %r;
-        symbol [ r %tmp.108 73 26 27 ];
-        symbol [ Math %tmp.109 73 30 34 ];
-        %tmp.109 = getm $.Toybox.Math;
-        symbol [ cos %tmp.110 73 35 38 ];
-        %tmp.110 = getv function %tmp.109 :cos;
-        %tmp.111 = lgetv %rad.6;
-        symbol [ rad %tmp.111 73 39 42 ];
-        %tmp.112 = invoke %tmp.109 %tmp.110(%tmp.111);
-        %tmp.113 = mul %tmp.108 %tmp.112;
-        symbol [ toNumber %tmp.114 73 45 53 ];
-        %tmp.114 = getv function %tmp.113 :toNumber;
-        %tmp.115 = invoke %tmp.113 %tmp.114();
-        %tmp.116 = add %tmp.107 %tmp.115;
-        lputv %px.7 %tmp.116;
-        symbol [ px %px.7 73 16 18 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 74 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_71_23_79_8_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_71_23_79_8_stop" ]
+        symbol [ px %px.7 96 16 18 ];
+        %tmp.110 = lgetv %x;
+        symbol [ x %tmp.110 96 21 22 ];
+        %tmp.111 = lgetv %r;
+        symbol [ r %tmp.111 96 26 27 ];
+        symbol [ Math %tmp.112 96 30 34 ];
+        %tmp.112 = getm $.Toybox.Math;
+        symbol [ cos %tmp.113 96 35 38 ];
+        %tmp.113 = getv function %tmp.112 :cos;
+        %tmp.114 = lgetv %rad.6;
+        symbol [ rad %tmp.114 96 39 42 ];
+        %tmp.115 = invoke %tmp.112 %tmp.113(%tmp.114);
+        %tmp.116 = mul %tmp.111 %tmp.115;
+        symbol [ toNumber %tmp.117 96 45 53 ];
+        %tmp.117 = getv function %tmp.116 :toNumber;
+        %tmp.118 = invoke %tmp.116 %tmp.117();
+        %tmp.119 = add %tmp.110 %tmp.118;
+        lputv %px.7 %tmp.119;
+        symbol [ px %px.7 96 16 18 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 97 12 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_94_23_102_8_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_94_23_102_8_stop" ]
         %py.8 = local;
-        symbol [ py %py.8 74 16 18 ];
-        %tmp.117 = lgetv %y;
-        symbol [ y %tmp.117 74 21 22 ];
-        %tmp.118 = lgetv %r;
-        symbol [ r %tmp.118 74 26 27 ];
-        symbol [ Math %tmp.119 74 30 34 ];
-        %tmp.119 = getm $.Toybox.Math;
-        symbol [ sin %tmp.120 74 35 38 ];
-        %tmp.120 = getv function %tmp.119 :sin;
-        %tmp.121 = lgetv %rad.6;
-        symbol [ rad %tmp.121 74 39 42 ];
-        %tmp.122 = invoke %tmp.119 %tmp.120(%tmp.121);
-        %tmp.123 = mul %tmp.118 %tmp.122;
-        symbol [ toNumber %tmp.124 74 45 53 ];
-        %tmp.124 = getv function %tmp.123 :toNumber;
-        %tmp.125 = invoke %tmp.123 %tmp.124();
-        %tmp.126 = sub %tmp.117 %tmp.125;
-        lputv %py.8 %tmp.126;
-        symbol [ py %py.8 74 16 18 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 75 12 ]
-        %tmp.127 = lgetv %dc;
-        symbol [ dc %tmp.127 75 12 14 ];
-        symbol [ setColor %tmp.128 75 15 23 ];
-        %tmp.128 = getv function %tmp.127 :setColor;
-        symbol [ Graphics %tmp.129 75 24 32 ];
-        %tmp.129 = getm $.Toybox.Graphics;
-        symbol [ COLOR_BLACK %tmp.130 75 33 44 ];
-        %tmp.130 = getv %tmp.129 :COLOR_BLACK;
-        symbol [ Graphics %tmp.131 75 46 54 ];
-        %tmp.131 = getm $.Toybox.Graphics;
-        symbol [ COLOR_TRANSPARENT %tmp.132 75 55 72 ];
-        %tmp.132 = getv %tmp.131 :COLOR_TRANSPARENT;
-        invoke %tmp.127 %tmp.128(%tmp.130, %tmp.132);
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 76 12 ]
-        %tmp.133 = lgetv %dc;
-        symbol [ dc %tmp.133 76 12 14 ];
-        symbol [ fillCircle %tmp.134 76 15 25 ];
-        %tmp.134 = getv function %tmp.133 :fillCircle;
-        %tmp.135 = lgetv %px.7;
-        symbol [ px %tmp.135 76 26 28 ];
-        %tmp.136 = lgetv %py.8;
-        symbol [ py %tmp.136 76 30 32 ];
-        %tmp.137 = lgetv %pen;
-        symbol [ pen %tmp.137 76 34 37 ];
-        %tmp.138 = 2;
-        %tmp.139 = div %tmp.137 %tmp.138;
-        %tmp.140 = 5;
-        %tmp.141 = add %tmp.139 %tmp.140;
-        invoke %tmp.133 %tmp.134(%tmp.135, %tmp.136, %tmp.141);
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 77 12 ]
-        %tmp.142 = lgetv %dc;
-        symbol [ dc %tmp.142 77 12 14 ];
-        symbol [ setColor %tmp.143 77 15 23 ];
-        %tmp.143 = getv function %tmp.142 :setColor;
-        %tmp.144 = self;
-        symbol [ farbe %tmp.145 77 24 29 ];
-        %tmp.145 = getv function %tmp.144 :farbe;
-        %tmp.146 = lgetv %sk;
-        symbol [ sk %tmp.146 77 30 32 ];
-        %tmp.147 = lgetv %v;
-        symbol [ v %tmp.147 77 34 35 ];
-        %tmp.148 = as %tmp.147 { (!Null) };
-        %tmp.149 = invoke %tmp.144 %tmp.145(%tmp.146, %tmp.148);
-        symbol [ Graphics %tmp.150 77 38 46 ];
-        %tmp.150 = getm $.Toybox.Graphics;
-        symbol [ COLOR_TRANSPARENT %tmp.151 77 47 64 ];
-        %tmp.151 = getv %tmp.150 :COLOR_TRANSPARENT;
-        invoke %tmp.142 %tmp.143(%tmp.149, %tmp.151);
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 78 12 ]
-        %tmp.152 = lgetv %dc;
-        symbol [ dc %tmp.152 78 12 14 ];
-        symbol [ fillCircle %tmp.153 78 15 25 ];
-        %tmp.153 = getv function %tmp.152 :fillCircle;
-        %tmp.154 = lgetv %px.7;
-        symbol [ px %tmp.154 78 26 28 ];
-        %tmp.155 = lgetv %py.8;
-        symbol [ py %tmp.155 78 30 32 ];
-        %tmp.156 = lgetv %pen;
-        symbol [ pen %tmp.156 78 34 37 ];
-        %tmp.157 = 2;
-        %tmp.158 = div %tmp.156 %tmp.157;
-        %tmp.159 = 3;
-        %tmp.160 = add %tmp.158 %tmp.159;
-        invoke %tmp.152 %tmp.153(%tmp.154, %tmp.155, %tmp.160);
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_71_23_79_8_stop:
-        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_71_8_79_8_if_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_71_8_79_8_if_end:
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_59_128_80_4_stop:
+        symbol [ py %py.8 97 16 18 ];
+        %tmp.120 = lgetv %y;
+        symbol [ y %tmp.120 97 21 22 ];
+        %tmp.121 = lgetv %r;
+        symbol [ r %tmp.121 97 26 27 ];
+        symbol [ Math %tmp.122 97 30 34 ];
+        %tmp.122 = getm $.Toybox.Math;
+        symbol [ sin %tmp.123 97 35 38 ];
+        %tmp.123 = getv function %tmp.122 :sin;
+        %tmp.124 = lgetv %rad.6;
+        symbol [ rad %tmp.124 97 39 42 ];
+        %tmp.125 = invoke %tmp.122 %tmp.123(%tmp.124);
+        %tmp.126 = mul %tmp.121 %tmp.125;
+        symbol [ toNumber %tmp.127 97 45 53 ];
+        %tmp.127 = getv function %tmp.126 :toNumber;
+        %tmp.128 = invoke %tmp.126 %tmp.127();
+        %tmp.129 = sub %tmp.120 %tmp.128;
+        lputv %py.8 %tmp.129;
+        symbol [ py %py.8 97 16 18 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 98 12 ]
+        %tmp.130 = lgetv %dc;
+        symbol [ dc %tmp.130 98 12 14 ];
+        symbol [ setColor %tmp.131 98 15 23 ];
+        %tmp.131 = getv function %tmp.130 :setColor;
+        symbol [ Graphics %tmp.132 98 24 32 ];
+        %tmp.132 = getm $.Toybox.Graphics;
+        symbol [ COLOR_BLACK %tmp.133 98 33 44 ];
+        %tmp.133 = getv %tmp.132 :COLOR_BLACK;
+        symbol [ Graphics %tmp.134 98 46 54 ];
+        %tmp.134 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.135 98 55 72 ];
+        %tmp.135 = getv %tmp.134 :COLOR_TRANSPARENT;
+        invoke %tmp.130 %tmp.131(%tmp.133, %tmp.135);
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 99 12 ]
+        %tmp.136 = lgetv %dc;
+        symbol [ dc %tmp.136 99 12 14 ];
+        symbol [ fillCircle %tmp.137 99 15 25 ];
+        %tmp.137 = getv function %tmp.136 :fillCircle;
+        %tmp.138 = lgetv %px.7;
+        symbol [ px %tmp.138 99 26 28 ];
+        %tmp.139 = lgetv %py.8;
+        symbol [ py %tmp.139 99 30 32 ];
+        %tmp.140 = lgetv %pen;
+        symbol [ pen %tmp.140 99 34 37 ];
+        %tmp.141 = 2;
+        %tmp.142 = div %tmp.140 %tmp.141;
+        %tmp.143 = 5;
+        %tmp.144 = add %tmp.142 %tmp.143;
+        invoke %tmp.136 %tmp.137(%tmp.138, %tmp.139, %tmp.144);
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 100 12 ]
+        %tmp.145 = lgetv %dc;
+        symbol [ dc %tmp.145 100 12 14 ];
+        symbol [ setColor %tmp.146 100 15 23 ];
+        %tmp.146 = getv function %tmp.145 :setColor;
+        %tmp.147 = self;
+        symbol [ punkt %tmp.148 100 24 29 ];
+        %tmp.148 = getv function %tmp.147 :punkt;
+        %tmp.149 = self;
+        symbol [ farbe %tmp.150 100 30 35 ];
+        %tmp.150 = getv function %tmp.149 :farbe;
+        %tmp.151 = lgetv %sk;
+        symbol [ sk %tmp.151 100 36 38 ];
+        %tmp.152 = lgetv %v;
+        symbol [ v %tmp.152 100 40 41 ];
+        %tmp.153 = as %tmp.152 { (!Null) };
+        %tmp.154 = invoke %tmp.149 %tmp.150(%tmp.151, %tmp.153);
+        %tmp.155 = invoke %tmp.147 %tmp.148(%tmp.154);
+        symbol [ Graphics %tmp.156 100 45 53 ];
+        %tmp.156 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.157 100 54 71 ];
+        %tmp.157 = getv %tmp.156 :COLOR_TRANSPARENT;
+        invoke %tmp.145 %tmp.146(%tmp.155, %tmp.157);
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 101 12 ]
+        %tmp.158 = lgetv %dc;
+        symbol [ dc %tmp.158 101 12 14 ];
+        symbol [ fillCircle %tmp.159 101 15 25 ];
+        %tmp.159 = getv function %tmp.158 :fillCircle;
+        %tmp.160 = lgetv %px.7;
+        symbol [ px %tmp.160 101 26 28 ];
+        %tmp.161 = lgetv %py.8;
+        symbol [ py %tmp.161 101 30 32 ];
+        %tmp.162 = lgetv %pen;
+        symbol [ pen %tmp.162 101 34 37 ];
+        %tmp.163 = 2;
+        %tmp.164 = div %tmp.162 %tmp.163;
+        %tmp.165 = 3;
+        %tmp.166 = add %tmp.164 %tmp.165;
+        invoke %tmp.158 %tmp.159(%tmp.160, %tmp.161, %tmp.166);
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_94_23_102_8_stop:
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_94_8_102_8_if_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_94_8_102_8_if_end:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_82_128_103_4_stop:
     }
-    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 83; @symbol_functiondef = [balken,83,13,19]; @symbol_param<0> = [dc,83,20,22]; @symbol_param<0>_type<0> = [Graphics,83,26,34]; @symbol_param<0>_type<1> = [Dc,83,35,37]; @symbol_param<1> = [x,83,39,40]; @symbol_param<1>_type<0> = [Number,83,44,50]; @symbol_param<2> = [y,83,52,53]; @symbol_param<2>_type<0> = [Number,83,57,63]; @symbol_param<3> = [bw,83,65,67]; @symbol_param<3>_type<0> = [Number,83,71,77]; @symbol_param<4> = [hoch,83,79,83]; @symbol_param<4>_type<0> = [Number,83,87,93]; @symbol_param<5> = [v,83,95,96]; @symbol_param<5>_type<0> = [Numeric,83,100,107]; @symbol_param<6> = [sk,83,110,112]; @symbol_param<6>_type<0> = [Array,83,116,121]; @symbol_param<7> = [rand,83,123,127]; @symbol_param<7>_type<0> = [Number,83,131,137]; ]
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 106; @symbol_functiondef = [balken,106,13,19]; @symbol_param<0> = [dc,106,20,22]; @symbol_param<0>_type<0> = [Graphics,106,26,34]; @symbol_param<0>_type<1> = [Dc,106,35,37]; @symbol_param<1> = [x,106,39,40]; @symbol_param<1>_type<0> = [Number,106,44,50]; @symbol_param<2> = [y,106,52,53]; @symbol_param<2>_type<0> = [Number,106,57,63]; @symbol_param<3> = [bw,106,65,67]; @symbol_param<3>_type<0> = [Number,106,71,77]; @symbol_param<4> = [hoch,106,79,83]; @symbol_param<4>_type<0> = [Number,106,87,93]; @symbol_param<5> = [v,106,95,96]; @symbol_param<5>_type<0> = [Numeric,106,100,107]; @symbol_param<6> = [sk,106,110,112]; @symbol_param<6>_type<0> = [Array,106,116,121]; @symbol_param<7> = [rand,106,123,127]; @symbol_param<7>_type<0> = [Number,106,131,137]; ]
     function balken(dc as Graphics.Dc, x as Number, y as Number, bw as Number, hoch as Number, v as Numeric or Null, sk as Array, rand as Number) as Void {
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_83_147_104_4_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 84 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_83_147_104_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_83_147_104_4_stop" ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_106_147_127_4_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 107 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_106_147_127_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_106_147_127_4_stop" ]
         %g.1 = local;
-        symbol [ g %g.1 84 12 13 ];
+        symbol [ g %g.1 107 12 13 ];
         %tmp.1 = lgetv %sk;
-        symbol [ sk %tmp.1 84 16 18 ];
+        symbol [ sk %tmp.1 107 16 18 ];
         %tmp.2 = 0;
         %tmp.3 = agetv %tmp.1 %tmp.2;
         %tmp.4 = as %tmp.3 Array;
-        symbol [ Array %tmp.4 84 25 30 ];
+        symbol [ Array %tmp.4 107 25 30 ];
         lputv %g.1 %tmp.4;
-        symbol [ g %g.1 84 12 13 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 85 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_83_147_104_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_83_147_104_4_stop" ]
+        symbol [ g %g.1 107 12 13 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 108 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_106_147_127_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_106_147_127_4_stop" ]
         %f.2 = local;
-        symbol [ f %f.2 85 12 13 ];
+        symbol [ f %f.2 108 12 13 ];
         %tmp.5 = lgetv %sk;
-        symbol [ sk %tmp.5 85 16 18 ];
+        symbol [ sk %tmp.5 108 16 18 ];
         %tmp.6 = 1;
         %tmp.7 = agetv %tmp.5 %tmp.6;
         %tmp.8 = as %tmp.7 Array;
-        symbol [ Array %tmp.8 85 25 30 ];
+        symbol [ Array %tmp.8 108 25 30 ];
         lputv %f.2 %tmp.8;
-        symbol [ f %f.2 85 12 13 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 86 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_83_147_104_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_83_147_104_4_stop" ]
+        symbol [ f %f.2 108 12 13 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 109 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_106_147_127_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_106_147_127_4_stop" ]
         %lo.3 = local;
-        symbol [ lo %lo.3 86 12 14 ];
+        symbol [ lo %lo.3 109 12 14 ];
         %tmp.9 = lgetv %g.1;
-        symbol [ g %tmp.9 86 17 18 ];
+        symbol [ g %tmp.9 109 17 18 ];
         %tmp.10 = 0;
         %tmp.11 = agetv %tmp.9 %tmp.10;
         %tmp.12 = as %tmp.11 Number;
-        symbol [ Number %tmp.12 86 25 31 ];
+        symbol [ Number %tmp.12 109 25 31 ];
         lputv %lo.3 %tmp.12;
-        symbol [ lo %lo.3 86 12 14 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 87 8 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_83_147_104_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_83_147_104_4_stop" ]
+        symbol [ lo %lo.3 109 12 14 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 110 8 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_106_147_127_4_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_106_147_127_4_stop" ]
         %hi.4 = local;
-        symbol [ hi %hi.4 87 12 14 ];
+        symbol [ hi %hi.4 110 12 14 ];
         %tmp.13 = lgetv %g.1;
-        symbol [ g %tmp.13 87 17 18 ];
+        symbol [ g %tmp.13 110 17 18 ];
         %tmp.14 = lgetv %g.1;
-        symbol [ g %tmp.14 87 19 20 ];
-        symbol [ size %tmp.15 87 21 25 ];
+        symbol [ g %tmp.14 110 19 20 ];
+        symbol [ size %tmp.15 110 21 25 ];
         %tmp.15 = getv function %tmp.14 :size;
         %tmp.16 = invoke %tmp.14 %tmp.15();
         %tmp.17 = 1;
         %tmp.18 = sub %tmp.16 %tmp.17;
         %tmp.19 = agetv %tmp.13 %tmp.18;
         %tmp.20 = as %tmp.19 Number;
-        symbol [ Number %tmp.20 87 36 42 ];
+        symbol [ Number %tmp.20 110 36 42 ];
         lputv %hi.4 %tmp.20;
-        symbol [ hi %hi.4 87 12 14 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 88 8 ]
-        for @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_8_94_8_for_test @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_8_94_8_for_incr @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_8_94_8_for_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_8_94_8_for_init:
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_8_94_8_for_begin" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_8_94_8_for_end" ]
+        symbol [ hi %hi.4 110 12 14 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 111 8 ]
+        for @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_111_8_117_8_for_test @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_111_8_117_8_for_incr @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_111_8_117_8_for_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_111_8_117_8_for_init:
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_111_8_117_8_for_begin" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_111_8_117_8_for_end" ]
         %i.5 = local;
-        symbol [ i %i.5 88 17 18 ];
+        symbol [ i %i.5 111 17 18 ];
         %tmp.21 = 0;
         lputv %i.5 %tmp.21;
-        symbol [ i %i.5 88 17 18 ];
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_8_94_8_for_test:
+        symbol [ i %i.5 111 17 18 ];
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_111_8_117_8_for_test:
         %tmp.22 = lgetv %i.5;
-        symbol [ i %tmp.22 88 24 25 ];
+        symbol [ i %tmp.22 111 24 25 ];
         %tmp.23 = lgetv %f.2;
-        symbol [ f %tmp.23 88 28 29 ];
-        symbol [ size %tmp.24 88 30 34 ];
+        symbol [ f %tmp.23 111 28 29 ];
+        symbol [ size %tmp.24 111 30 34 ];
         %tmp.24 = getv function %tmp.23 :size;
         %tmp.25 = invoke %tmp.23 %tmp.24();
         %tmp.26 = lt %tmp.22 %tmp.25;
-        bf %tmp.26 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_8_94_8_for_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_8_94_8_for_begin:
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_43_94_8_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 89 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_43_94_8_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_43_94_8_stop" ]
+        bf %tmp.26 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_111_8_117_8_for_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_111_8_117_8_for_begin:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_111_43_117_8_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 112 12 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_111_43_117_8_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_111_43_117_8_stop" ]
         %x1.6 = local;
-        symbol [ x1 %x1.6 89 16 18 ];
+        symbol [ x1 %x1.6 112 16 18 ];
         %tmp.27 = lgetv %x;
-        symbol [ x %tmp.27 89 21 22 ];
+        symbol [ x %tmp.27 112 21 22 ];
         %tmp.28 = lgetv %bw;
-        symbol [ bw %tmp.28 89 26 28 ];
+        symbol [ bw %tmp.28 112 26 28 ];
         %tmp.29 = lgetv %g.1;
-        symbol [ g %tmp.29 89 33 34 ];
+        symbol [ g %tmp.29 112 33 34 ];
         %tmp.30 = lgetv %i.5;
-        symbol [ i %tmp.30 89 35 36 ];
+        symbol [ i %tmp.30 112 35 36 ];
         %tmp.31 = agetv %tmp.29 %tmp.30;
         %tmp.32 = as %tmp.31 Number;
-        symbol [ Number %tmp.32 89 41 47 ];
+        symbol [ Number %tmp.32 112 41 47 ];
         %tmp.33 = lgetv %lo.3;
-        symbol [ lo %tmp.33 89 51 53 ];
+        symbol [ lo %tmp.33 112 51 53 ];
         %tmp.34 = sub %tmp.32 %tmp.33;
         %tmp.35 = mul %tmp.28 %tmp.34;
         %tmp.36 = lgetv %hi.4;
-        symbol [ hi %tmp.36 89 58 60 ];
+        symbol [ hi %tmp.36 112 58 60 ];
         %tmp.37 = lgetv %lo.3;
-        symbol [ lo %tmp.37 89 63 65 ];
+        symbol [ lo %tmp.37 112 63 65 ];
         %tmp.38 = sub %tmp.36 %tmp.37;
         %tmp.39 = div %tmp.35 %tmp.38;
         %tmp.40 = add %tmp.27 %tmp.39;
         lputv %x1.6 %tmp.40;
-        symbol [ x1 %x1.6 89 16 18 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 90 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_43_94_8_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_43_94_8_stop" ]
+        symbol [ x1 %x1.6 112 16 18 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 113 12 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_111_43_117_8_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_111_43_117_8_stop" ]
         %x2.7 = local;
-        symbol [ x2 %x2.7 90 16 18 ];
+        symbol [ x2 %x2.7 113 16 18 ];
         %tmp.41 = lgetv %x;
-        symbol [ x %tmp.41 90 21 22 ];
+        symbol [ x %tmp.41 113 21 22 ];
         %tmp.42 = lgetv %bw;
-        symbol [ bw %tmp.42 90 26 28 ];
+        symbol [ bw %tmp.42 113 26 28 ];
         %tmp.43 = lgetv %g.1;
-        symbol [ g %tmp.43 90 33 34 ];
+        symbol [ g %tmp.43 113 33 34 ];
         %tmp.44 = lgetv %i.5;
-        symbol [ i %tmp.44 90 35 36 ];
+        symbol [ i %tmp.44 113 35 36 ];
         %tmp.45 = 1;
         %tmp.46 = add %tmp.44 %tmp.45;
         %tmp.47 = agetv %tmp.43 %tmp.46;
         %tmp.48 = as %tmp.47 Number;
-        symbol [ Number %tmp.48 90 45 51 ];
+        symbol [ Number %tmp.48 113 45 51 ];
         %tmp.49 = lgetv %lo.3;
-        symbol [ lo %tmp.49 90 55 57 ];
+        symbol [ lo %tmp.49 113 55 57 ];
         %tmp.50 = sub %tmp.48 %tmp.49;
         %tmp.51 = mul %tmp.42 %tmp.50;
         %tmp.52 = lgetv %hi.4;
-        symbol [ hi %tmp.52 90 62 64 ];
+        symbol [ hi %tmp.52 113 62 64 ];
         %tmp.53 = lgetv %lo.3;
-        symbol [ lo %tmp.53 90 67 69 ];
+        symbol [ lo %tmp.53 113 67 69 ];
         %tmp.54 = sub %tmp.52 %tmp.53;
         %tmp.55 = div %tmp.51 %tmp.54;
         %tmp.56 = add %tmp.41 %tmp.55;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_90_75_90_98_begin:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_113_75_113_98_begin:
         %tmp.57 = lgetv %i.5;
-        symbol [ i %tmp.57 90 75 76 ];
+        symbol [ i %tmp.57 113 75 76 ];
         %tmp.58 = lgetv %f.2;
-        symbol [ f %tmp.58 90 79 80 ];
-        symbol [ size %tmp.59 90 81 85 ];
+        symbol [ f %tmp.58 113 79 80 ];
+        symbol [ size %tmp.59 113 81 85 ];
         %tmp.59 = getv function %tmp.58 :size;
         %tmp.60 = invoke %tmp.58 %tmp.59();
         %tmp.61 = 1;
         %tmp.62 = sub %tmp.60 %tmp.61;
         %tmp.63 = lt %tmp.57 %tmp.62;
-        bf %tmp.63 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_90_75_90_98_else_false;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_90_75_90_98_true:
+        bf %tmp.63 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_113_75_113_98_else_false;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_113_75_113_98_true:
         %tmp.64 = 2;
         push %tmp.64;
-        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_90_75_90_98_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_90_75_90_98_else_false:
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_113_75_113_98_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_113_75_113_98_else_false:
         %tmp.65 = 0;
         push %tmp.65;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_90_75_90_98_end:
-        %tmp.66 = phi [%tmp.63 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_90_75_90_98_begin] [%tmp.64 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_90_75_90_98_true] [%tmp.65 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_90_75_90_98_else_false] [%tmp.66 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_90_75_90_98_end];
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_113_75_113_98_end:
+        %tmp.66 = phi [%tmp.63 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_113_75_113_98_begin] [%tmp.64 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_113_75_113_98_true] [%tmp.65 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_113_75_113_98_else_false] [%tmp.66 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_113_75_113_98_end];
         %tmp.67 = sub %tmp.56 %tmp.66;
         lputv %x2.7 %tmp.67;
-        symbol [ x2 %x2.7 90 16 18 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 91 12 ]
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_91_12_91_38_if_stmt:
+        symbol [ x2 %x2.7 113 16 18 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 114 12 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_114_12_114_38_if_stmt:
         %tmp.68 = lgetv %x2.7;
-        symbol [ x2 %tmp.68 91 16 18 ];
+        symbol [ x2 %tmp.68 114 16 18 ];
         %tmp.69 = lgetv %x1.6;
-        symbol [ x1 %tmp.69 91 22 24 ];
+        symbol [ x1 %tmp.69 114 22 24 ];
         %tmp.70 = lte %tmp.68 %tmp.69;
-        bf %tmp.70 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_91_12_91_38_if_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_91_12_91_38_if_true:
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_91_26_91_38_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 91 28 ]
-        goto break @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_8_94_8_for_incr;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_91_26_91_38_stop:
-        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_91_12_91_38_if_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_91_12_91_38_if_end:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 92 12 ]
+        bf %tmp.70 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_114_12_114_38_if_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_114_12_114_38_if_true:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_114_26_114_38_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 114 28 ]
+        goto break @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_111_8_117_8_for_incr;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_114_26_114_38_stop:
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_114_12_114_38_if_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_114_12_114_38_if_end:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 115 12 ]
         %tmp.71 = lgetv %dc;
-        symbol [ dc %tmp.71 92 12 14 ];
-        symbol [ setColor %tmp.72 92 15 23 ];
+        symbol [ dc %tmp.71 115 12 14 ];
+        symbol [ setColor %tmp.72 115 15 23 ];
         %tmp.72 = getv function %tmp.71 :setColor;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_92_24_92_51_begin:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_115_24_115_51_begin:
         %tmp.73 = lgetv %v;
-        symbol [ v %tmp.73 92 24 25 ];
+        symbol [ v %tmp.73 115 24 25 ];
         %tmp.74 = null;
         %tmp.75 = eq %tmp.73 %tmp.74;
-        bf %tmp.75 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_92_24_92_51_else_false;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_92_24_92_51_true:
-        symbol [ GRAU %tmp.77 92 36 40 ];
+        bf %tmp.75 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_115_24_115_51_else_false;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_115_24_115_51_true:
+        symbol [ GRAU %tmp.77 115 36 40 ];
         %tmp.77 = getv ? :GRAU;
         push %tmp.77;
-        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_92_24_92_51_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_92_24_92_51_else_false:
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_115_24_115_51_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_115_24_115_51_else_false:
         %tmp.78 = lgetv %f.2;
-        symbol [ f %tmp.78 92 43 44 ];
+        symbol [ f %tmp.78 115 43 44 ];
         %tmp.79 = lgetv %i.5;
-        symbol [ i %tmp.79 92 45 46 ];
+        symbol [ i %tmp.79 115 45 46 ];
         %tmp.80 = agetv %tmp.78 %tmp.79;
         %tmp.81 = as %tmp.80 Number;
-        symbol [ Number %tmp.81 92 51 57 ];
+        symbol [ Number %tmp.81 115 51 57 ];
         push %tmp.81;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_92_24_92_51_end:
-        %tmp.82 = phi [%tmp.75 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_92_24_92_51_begin] [%tmp.77 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_92_24_92_51_true] [%tmp.81 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_92_24_92_51_else_false] [%tmp.82 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_92_24_92_51_end];
-        symbol [ Graphics %tmp.83 92 59 67 ];
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_115_24_115_51_end:
+        %tmp.82 = phi [%tmp.75 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_115_24_115_51_begin] [%tmp.77 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_115_24_115_51_true] [%tmp.81 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_115_24_115_51_else_false] [%tmp.82 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_115_24_115_51_end];
+        symbol [ Graphics %tmp.83 115 59 67 ];
         %tmp.83 = getm $.Toybox.Graphics;
-        symbol [ COLOR_TRANSPARENT %tmp.84 92 68 85 ];
+        symbol [ COLOR_TRANSPARENT %tmp.84 115 68 85 ];
         %tmp.84 = getv %tmp.83 :COLOR_TRANSPARENT;
         invoke %tmp.71 %tmp.72(%tmp.82, %tmp.84);
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 93 12 ]
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 116 12 ]
         %tmp.85 = lgetv %dc;
-        symbol [ dc %tmp.85 93 12 14 ];
-        symbol [ fillRectangle %tmp.86 93 15 28 ];
+        symbol [ dc %tmp.85 116 12 14 ];
+        symbol [ fillRectangle %tmp.86 116 15 28 ];
         %tmp.86 = getv function %tmp.85 :fillRectangle;
         %tmp.87 = lgetv %x1.6;
-        symbol [ x1 %tmp.87 93 29 31 ];
+        symbol [ x1 %tmp.87 116 29 31 ];
         %tmp.88 = lgetv %y;
-        symbol [ y %tmp.88 93 33 34 ];
+        symbol [ y %tmp.88 116 33 34 ];
         %tmp.89 = lgetv %x2.7;
-        symbol [ x2 %tmp.89 93 36 38 ];
+        symbol [ x2 %tmp.89 116 36 38 ];
         %tmp.90 = lgetv %x1.6;
-        symbol [ x1 %tmp.90 93 41 43 ];
+        symbol [ x1 %tmp.90 116 41 43 ];
         %tmp.91 = sub %tmp.89 %tmp.90;
         %tmp.92 = lgetv %hoch;
-        symbol [ hoch %tmp.92 93 45 49 ];
+        symbol [ hoch %tmp.92 116 45 49 ];
         invoke %tmp.85 %tmp.86(%tmp.87, %tmp.88, %tmp.91, %tmp.92);
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_43_94_8_stop:
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_8_94_8_for_incr:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 88 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_111_43_117_8_stop:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_111_8_117_8_for_incr:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 111 ]
         %tmp.95 = lgetv %i.5;
-        symbol [ i %tmp.95 88 38 39 ];
+        symbol [ i %tmp.95 111 38 39 ];
         %tmp.96 = add %tmp.95 1;
         lputv %i.5 %tmp.96;
-        symbol [ i %i.5 88 38 39 ];
-        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_8_94_8_for_test;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_88_8_94_8_for_end:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 95 8 ]
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_95_8_103_8_if_stmt:
+        symbol [ i %i.5 111 38 39 ];
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_111_8_117_8_for_test;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_111_8_117_8_for_end:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 118 8 ]
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_118_8_126_8_if_stmt:
         %tmp.97 = lgetv %v;
-        symbol [ v %tmp.97 95 12 13 ];
+        symbol [ v %tmp.97 118 12 13 ];
         %tmp.98 = null;
         %tmp.99 = ne %tmp.97 %tmp.98;
-        bf %tmp.99 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_95_8_103_8_if_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_95_8_103_8_if_true:
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_95_23_103_8_start:
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 96 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_95_23_103_8_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_95_23_103_8_stop" ]
+        bf %tmp.99 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_118_8_126_8_if_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_118_8_126_8_if_true:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_118_23_126_8_start:
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 119 12 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_118_23_126_8_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_118_23_126_8_stop" ]
         %vv.8 = local;
-        symbol [ vv %vv.8 96 16 18 ];
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_96_21_96_51_begin:
+        symbol [ vv %vv.8 119 16 18 ];
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_119_21_119_51_begin:
         %tmp.100 = lgetv %v;
-        symbol [ v %tmp.100 96 21 22 ];
+        symbol [ v %tmp.100 119 21 22 ];
         %tmp.101 = as %tmp.100 { (!Null) };
         %tmp.102 = lgetv %lo.3;
-        symbol [ lo %tmp.102 96 25 27 ];
+        symbol [ lo %tmp.102 119 25 27 ];
         %tmp.103 = lt %tmp.101 %tmp.102;
-        bf %tmp.103 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_96_21_96_51_else_false;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_96_21_96_51_true:
+        bf %tmp.103 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_119_21_119_51_else_false;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_119_21_119_51_true:
         %tmp.104 = lgetv %lo.3;
-        symbol [ lo %tmp.104 96 30 32 ];
+        symbol [ lo %tmp.104 119 30 32 ];
         push %tmp.104;
-        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_96_21_96_51_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_96_21_96_51_else_false:
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_96_36_96_50_begin:
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_119_21_119_51_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_119_21_119_51_else_false:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_119_36_119_50_begin:
         %tmp.105 = lgetv %v;
-        symbol [ v %tmp.105 96 36 37 ];
+        symbol [ v %tmp.105 119 36 37 ];
         %tmp.106 = as %tmp.105 { (!Null) };
         %tmp.107 = lgetv %hi.4;
-        symbol [ hi %tmp.107 96 40 42 ];
+        symbol [ hi %tmp.107 119 40 42 ];
         %tmp.108 = gt %tmp.106 %tmp.107;
-        bf %tmp.108 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_96_36_96_50_else_false;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_96_36_96_50_true:
+        bf %tmp.108 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_119_36_119_50_else_false;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_119_36_119_50_true:
         %tmp.109 = lgetv %hi.4;
-        symbol [ hi %tmp.109 96 45 47 ];
+        symbol [ hi %tmp.109 119 45 47 ];
         push %tmp.109;
-        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_96_36_96_50_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_96_36_96_50_else_false:
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_119_36_119_50_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_119_36_119_50_else_false:
         %tmp.110 = lgetv %v;
-        symbol [ v %tmp.110 96 50 51 ];
+        symbol [ v %tmp.110 119 50 51 ];
         %tmp.111 = as %tmp.110 { (!Null) };
         push %tmp.111;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_96_36_96_50_end:
-        %tmp.112 = phi [%tmp.108 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_96_36_96_50_begin] [%tmp.109 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_96_36_96_50_true] [%tmp.111 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_96_36_96_50_else_false] [%tmp.112 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_96_36_96_50_end];
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_119_36_119_50_end:
+        %tmp.112 = phi [%tmp.108 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_119_36_119_50_begin] [%tmp.109 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_119_36_119_50_true] [%tmp.111 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_119_36_119_50_else_false] [%tmp.112 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_119_36_119_50_end];
         push %tmp.112;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_96_21_96_51_end:
-        %tmp.113 = phi [%tmp.103 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_96_21_96_51_begin] [%tmp.104 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_96_21_96_51_true] [%tmp.112 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_96_21_96_51_else_false] [%tmp.113 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_96_21_96_51_end];
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_119_21_119_51_end:
+        %tmp.113 = phi [%tmp.103 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_119_21_119_51_begin] [%tmp.104 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_119_21_119_51_true] [%tmp.112 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_119_21_119_51_else_false] [%tmp.113 @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_119_21_119_51_end];
         lputv %vv.8 %tmp.113;
-        symbol [ vv %vv.8 96 16 18 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 97 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_95_23_103_8_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_95_23_103_8_stop" ]
+        symbol [ vv %vv.8 119 16 18 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 120 12 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_118_23_126_8_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_118_23_126_8_stop" ]
         %px.9 = local;
-        symbol [ px %px.9 97 16 18 ];
+        symbol [ px %px.9 120 16 18 ];
         %tmp.114 = lgetv %x;
-        symbol [ x %tmp.114 97 21 22 ];
+        symbol [ x %tmp.114 120 21 22 ];
         %tmp.115 = lgetv %bw;
-        symbol [ bw %tmp.115 97 26 28 ];
+        symbol [ bw %tmp.115 120 26 28 ];
         %tmp.116 = lgetv %vv.8;
-        symbol [ vv %tmp.116 97 32 34 ];
+        symbol [ vv %tmp.116 120 32 34 ];
         %tmp.117 = lgetv %lo.3;
-        symbol [ lo %tmp.117 97 37 39 ];
+        symbol [ lo %tmp.117 120 37 39 ];
         %tmp.118 = sub %tmp.116 %tmp.117;
-        symbol [ toFloat %tmp.119 97 41 48 ];
+        symbol [ toFloat %tmp.119 120 41 48 ];
         %tmp.119 = getv function %tmp.118 :toFloat;
         %tmp.120 = invoke %tmp.118 %tmp.119();
         %tmp.121 = mul %tmp.115 %tmp.120;
         %tmp.122 = lgetv %hi.4;
-        symbol [ hi %tmp.122 97 54 56 ];
+        symbol [ hi %tmp.122 120 54 56 ];
         %tmp.123 = lgetv %lo.3;
-        symbol [ lo %tmp.123 97 59 61 ];
+        symbol [ lo %tmp.123 120 59 61 ];
         %tmp.124 = sub %tmp.122 %tmp.123;
         %tmp.125 = div %tmp.121 %tmp.124;
-        symbol [ toNumber %tmp.126 97 64 72 ];
+        symbol [ toNumber %tmp.126 120 64 72 ];
         %tmp.126 = getv function %tmp.125 :toNumber;
         %tmp.127 = invoke %tmp.125 %tmp.126();
         %tmp.128 = add %tmp.114 %tmp.127;
         lputv %px.9 %tmp.128;
-        symbol [ px %px.9 97 16 18 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 98 12 ]
-        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_95_23_103_8_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_95_23_103_8_stop" ]
+        symbol [ px %px.9 120 16 18 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 121 12 ]
+        [ "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_118_23_126_8_start" "_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_118_23_126_8_stop" ]
         %cy.10 = local;
-        symbol [ cy %cy.10 98 16 18 ];
+        symbol [ cy %cy.10 121 16 18 ];
         %tmp.129 = lgetv %y;
-        symbol [ y %tmp.129 98 21 22 ];
+        symbol [ y %tmp.129 121 21 22 ];
         %tmp.130 = lgetv %hoch;
-        symbol [ hoch %tmp.130 98 25 29 ];
+        symbol [ hoch %tmp.130 121 25 29 ];
         %tmp.131 = 2;
         %tmp.132 = div %tmp.130 %tmp.131;
         %tmp.133 = add %tmp.129 %tmp.132;
         lputv %cy.10 %tmp.133;
-        symbol [ cy %cy.10 98 16 18 ];
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 99 12 ]
+        symbol [ cy %cy.10 121 16 18 ];
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 122 12 ]
         %tmp.134 = lgetv %dc;
-        symbol [ dc %tmp.134 99 12 14 ];
-        symbol [ setColor %tmp.135 99 15 23 ];
+        symbol [ dc %tmp.134 122 12 14 ];
+        symbol [ setColor %tmp.135 122 15 23 ];
         %tmp.135 = getv function %tmp.134 :setColor;
         %tmp.136 = lgetv %rand;
-        symbol [ rand %tmp.136 99 24 28 ];
-        symbol [ Graphics %tmp.137 99 30 38 ];
+        symbol [ rand %tmp.136 122 24 28 ];
+        symbol [ Graphics %tmp.137 122 30 38 ];
         %tmp.137 = getm $.Toybox.Graphics;
-        symbol [ COLOR_TRANSPARENT %tmp.138 99 39 56 ];
+        symbol [ COLOR_TRANSPARENT %tmp.138 122 39 56 ];
         %tmp.138 = getv %tmp.137 :COLOR_TRANSPARENT;
         invoke %tmp.134 %tmp.135(%tmp.136, %tmp.138);
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 100 12 ]
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 123 12 ]
         %tmp.139 = lgetv %dc;
-        symbol [ dc %tmp.139 100 12 14 ];
-        symbol [ fillCircle %tmp.140 100 15 25 ];
+        symbol [ dc %tmp.139 123 12 14 ];
+        symbol [ fillCircle %tmp.140 123 15 25 ];
         %tmp.140 = getv function %tmp.139 :fillCircle;
         %tmp.141 = lgetv %px.9;
-        symbol [ px %tmp.141 100 26 28 ];
+        symbol [ px %tmp.141 123 26 28 ];
         %tmp.142 = lgetv %cy.10;
-        symbol [ cy %tmp.142 100 30 32 ];
+        symbol [ cy %tmp.142 123 30 32 ];
         %tmp.143 = lgetv %hoch;
-        symbol [ hoch %tmp.143 100 34 38 ];
+        symbol [ hoch %tmp.143 123 34 38 ];
         %tmp.144 = 2;
         %tmp.145 = div %tmp.143 %tmp.144;
         %tmp.146 = 5;
         %tmp.147 = add %tmp.145 %tmp.146;
         invoke %tmp.139 %tmp.140(%tmp.141, %tmp.142, %tmp.147);
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 101 12 ]
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 124 12 ]
         %tmp.148 = lgetv %dc;
-        symbol [ dc %tmp.148 101 12 14 ];
-        symbol [ setColor %tmp.149 101 15 23 ];
+        symbol [ dc %tmp.148 124 12 14 ];
+        symbol [ setColor %tmp.149 124 15 23 ];
         %tmp.149 = getv function %tmp.148 :setColor;
         %tmp.150 = self;
-        symbol [ farbe %tmp.151 101 24 29 ];
+        symbol [ farbe %tmp.151 124 24 29 ];
         %tmp.151 = getv function %tmp.150 :farbe;
         %tmp.152 = lgetv %sk;
-        symbol [ sk %tmp.152 101 30 32 ];
+        symbol [ sk %tmp.152 124 30 32 ];
         %tmp.153 = lgetv %v;
-        symbol [ v %tmp.153 101 34 35 ];
+        symbol [ v %tmp.153 124 34 35 ];
         %tmp.154 = as %tmp.153 { (!Null) };
         %tmp.155 = invoke %tmp.150 %tmp.151(%tmp.152, %tmp.154);
-        symbol [ Graphics %tmp.156 101 38 46 ];
+        symbol [ Graphics %tmp.156 124 38 46 ];
         %tmp.156 = getm $.Toybox.Graphics;
-        symbol [ COLOR_TRANSPARENT %tmp.157 101 47 64 ];
+        symbol [ COLOR_TRANSPARENT %tmp.157 124 47 64 ];
         %tmp.157 = getv %tmp.156 :COLOR_TRANSPARENT;
         invoke %tmp.148 %tmp.149(%tmp.155, %tmp.157);
-[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 102 12 ]
+[ "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc" 125 12 ]
         %tmp.158 = lgetv %dc;
-        symbol [ dc %tmp.158 102 12 14 ];
-        symbol [ fillCircle %tmp.159 102 15 25 ];
+        symbol [ dc %tmp.158 125 12 14 ];
+        symbol [ fillCircle %tmp.159 125 15 25 ];
         %tmp.159 = getv function %tmp.158 :fillCircle;
         %tmp.160 = lgetv %px.9;
-        symbol [ px %tmp.160 102 26 28 ];
+        symbol [ px %tmp.160 125 26 28 ];
         %tmp.161 = lgetv %cy.10;
-        symbol [ cy %tmp.161 102 30 32 ];
+        symbol [ cy %tmp.161 125 30 32 ];
         %tmp.162 = lgetv %hoch;
-        symbol [ hoch %tmp.162 102 34 38 ];
+        symbol [ hoch %tmp.162 125 34 38 ];
         %tmp.163 = 2;
         %tmp.164 = div %tmp.162 %tmp.163;
         %tmp.165 = 3;
         %tmp.166 = add %tmp.164 %tmp.165;
         invoke %tmp.158 %tmp.159(%tmp.160, %tmp.161, %tmp.166);
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_95_23_103_8_stop:
-        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_95_8_103_8_if_end;
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_95_8_103_8_if_end:
-_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_83_147_104_4_stop:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_118_23_126_8_stop:
+        goto @_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_118_8_126_8_if_end;
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_118_8_126_8_if_end:
+_home_user_workspace_ck_repo_garmin_zifferblatt_source_KiraSkala_mc_106_147_127_4_stop:
     }
 }
 [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/source/KiraSkala.mc"; @line = 1; ]

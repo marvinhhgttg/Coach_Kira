@@ -81,6 +81,7 @@ class KiraZeiger extends WatchUi.WatchFace {
         eVotum = KiraWert.an("pVotumRing");
         eSek = KiraWert.an("pSek");
         eErhBB = KiraWert.an("pErhBB");
+        KiraSkala.stil = KiraWert.zahlE("pStil", 0);
         eDiaLast = KiraWert.an("pDiaLast");
         eDiaPlan = KiraWert.an("pDiaPlan");
     }
@@ -187,7 +188,7 @@ class KiraZeiger extends WatchUi.WatchFace {
     }
 
     function block(dc as Graphics.Dc, x as Number, y as Number, label as String, wert as String) as Void {
-        dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(KiraSkala.lab(), Graphics.COLOR_TRANSPARENT);
         dc.drawText(x, y, fLabel, label, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(x, y + dc.getFontHeight(fLabel) - 3, fWert, wert, Graphics.TEXT_JUSTIFY_CENTER);
@@ -229,7 +230,7 @@ class KiraZeiger extends WatchUi.WatchFace {
         if (kopf.size() == 0 || !kopf[0].equals("v2") || fk.size() < 3) { return; }
         for (var k = 0; k < 2; k++) {
             var xs = k == 0 ? fk[2] : fk[1];
-            dc.setColor(k == 0 ? KiraSkala.ORANGE : KiraSkala.GRUEN, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(KiraSkala.linie(k == 0 ? KiraSkala.ORANGE : KiraSkala.GRUEN), Graphics.COLOR_TRANSPARENT);
             dc.setPenWidth(k == 0 ? 2 : 3);
             var pax = -1;
             var pay = 0;
@@ -297,11 +298,11 @@ class KiraZeiger extends WatchUi.WatchFace {
             return;
         }
         var f = stufeFarbe(stufe, vote);
-        dc.setColor(dimmen(f), Graphics.COLOR_TRANSPARENT);
+        dc.setColor(KiraSkala.votSpur(f), Graphics.COLOR_TRANSPARENT);
         dc.drawCircle(cx, cy, r);
         var a = (hi != null && hi > 0 && ist != null && ist > 0) ? ist.toFloat() / hi : 0.0;
         if (a > 0.005) {
-            dc.setColor(f, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(KiraSkala.votFill(f), Graphics.COLOR_TRANSPARENT);
             if (a >= 0.999) { dc.drawCircle(cx, cy, r); }
             else { dc.drawArc(cx, cy, r, Graphics.ARC_CLOCKWISE, 90, 90 - (a * 360).toNumber()); }
         }
@@ -395,10 +396,10 @@ class KiraZeiger extends WatchUi.WatchFace {
         // Kopf: Akku · Votum
         var st = System.getSystemStats();
         var tage = (st has :batteryInDays) && st.batteryInDays != null ? st.batteryInDays.toNumber() : null;
-        dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(KiraSkala.lab(), Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, (h * 0.072).toNumber(), fKopf, st.battery.toNumber().toString() + "%" + (tage != null ? " · " + tage.toString() + "T" : ""), Graphics.TEXT_JUSTIFY_CENTER);
         var vf = heute && VOTE_FARBE.hasKey(vote) ? VOTE_FARBE.get(vote) as Number : GRAU;
-        dc.setColor(vf, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(KiraSkala.votText(vf), Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, (h * 0.135).toNumber(), fKopf, kira == null ? (kiraId == null ? "KIRA · APP ÖFFNEN" : "KIRA · WARTET") : "KIRA · " + (vote.length() > 0 ? vote : "-") + (heute && feld(t, 17).equals("1") ? "*" : "") + (heute ? "" : " (ALT)"), Graphics.TEXT_JUSTIFY_CENTER);
 
         // 24.11.2026: vier Ecken frei belegbar (Standard: Temperatur, Ausdauerwert, Wind, Plan)
@@ -426,7 +427,7 @@ class KiraZeiger extends WatchUi.WatchFace {
         KiraSkala.bogen(dc, rx, cy, rr, 6, rgL[0] as Number?, rgL[1] as Array);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(rx, cy, fRing, KiraWert.ringText(eRingL, rgL[0] as Number?), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-        dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(KiraSkala.lab(), Graphics.COLOR_TRANSPARENT);
         dc.drawText(rx, cy + rr + 7, fLabel, rgL[2] as String, Graphics.TEXT_JUSTIFY_CENTER);
 
         var lx = w - rx;
@@ -439,14 +440,14 @@ class KiraZeiger extends WatchUi.WatchFace {
             wochenRing(dc, lx, cy, rr + 7, zahl(t, 15), zahl(t, 16));
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
             dc.drawText(lx, cy, fRing, ist == null ? "-" : ist.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-            dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(KiraSkala.lab(), Graphics.COLOR_TRANSPARENT);
             dc.drawText(lx, cy + rr + (zahl(t, 16) != null ? 13 : 7), fLabel, hi == null ? "SOLL" : (lo != null ? lo.toString() + "-" : "") + hi.toString(), Graphics.TEXT_JUSTIFY_CENTER);
         } else {
             var rgR = KiraWert.ring(eRingR, t, heute);
             KiraSkala.bogen(dc, lx, cy, rr, 6, rgR[0] as Number?, rgR[1] as Array);
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
             dc.drawText(lx, cy, fRing, KiraWert.ringText(eRingR, rgR[0] as Number?), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-            dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(KiraSkala.lab(), Graphics.COLOR_TRANSPARENT);
             dc.drawText(lx, cy + rr + 7, fLabel, rgR[2] as String, Graphics.TEXT_JUSTIFY_CENTER);
         }
 
@@ -501,7 +502,7 @@ class KiraZeiger extends WatchUi.WatchFace {
                 var bh = v > 0 ? ((y1 - y0) * v / mx) : 2;
                 if (bh < 2) { bh = 2; }
                 // 23.11.2026: Balken blasser, ATL/CTL liegen darüber
-                dc.setColor(blass(lastFarbe(v, l1, h1), 70), Graphics.COLOR_TRANSPARENT);
+                dc.setColor(blass(KiraSkala.balkenF(lastFarbe(v, l1, h1)), 70), Graphics.COLOR_TRANSPARENT);
                 dc.fillRectangle(x + bw / 4, y1 - bh, bw / 2, bh);
             }
             kurven(dc, x0, bw, y0, y1, 0, false);
@@ -522,9 +523,9 @@ class KiraZeiger extends WatchUi.WatchFace {
         var aTxt = v2 && kopf.size() > 3 && kopf[3].length() > 0 ? kopf[3] : "-";
         var yt = y1 + dc.getFontHeight(fKlein) - 2;
         if (eDiaLast) {
-        dc.setColor(KiraSkala.GRUEN, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(KiraSkala.linie(KiraSkala.GRUEN), Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx - 6, yt, fKlein, "FIT " + cTxt, Graphics.TEXT_JUSTIFY_RIGHT);
-        dc.setColor(KiraSkala.ORANGE, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(KiraSkala.linie(KiraSkala.ORANGE), Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx + 6, yt, fKlein, "ERM " + aTxt, Graphics.TEXT_JUSTIFY_LEFT);
         }
 
@@ -564,7 +565,7 @@ class KiraZeiger extends WatchUi.WatchFace {
             dc.setColor(0x9FB3C8, Graphics.COLOR_TRANSPARENT);
             dc.drawText(cx - 6, yp, fKlein, ps, Graphics.TEXT_JUSTIFY_RIGHT);
             if (am != null) {
-                dc.setColor(am > 150 ? KiraSkala.ROT : am > 130 ? KiraSkala.ORANGE : am < 80 ? KiraSkala.BLAU : KiraSkala.GRUEN, Graphics.COLOR_TRANSPARENT);
+                dc.setColor(KiraSkala.punkt(am > 150 ? KiraSkala.ROT : am > 130 ? KiraSkala.ORANGE : am < 80 ? KiraSkala.BLAU : KiraSkala.GRUEN), Graphics.COLOR_TRANSPARENT);
                 dc.drawText(cx + 6, yp, fKlein, "ACWR " + (am / 100).toString() + "," + (am % 100).format("%02d"), Graphics.TEXT_JUSTIFY_LEFT);
             }
         } else {
@@ -582,8 +583,8 @@ class KiraZeiger extends WatchUi.WatchFace {
         // Zeiger
         zeiger(dc, cx, cy, wStd, (w * 0.25).toNumber(), 14, 9, 0xEDEDED);
         zeiger(dc, cx, cy, wMin, (w * 0.39).toNumber(), 14, 6, 0xEDEDED);
-        if (eSek) { zeiger(dc, cx, cy, uhr.sec / 60.0 * Math.PI * 2, (w * 0.41).toNumber(), 26, 2, ORANGE); }
-        dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
+        if (eSek) { zeiger(dc, cx, cy, uhr.sec / 60.0 * Math.PI * 2, (w * 0.41).toNumber(), 26, 2, KiraSkala.sek()); }
+        dc.setColor(KiraSkala.mitte(), Graphics.COLOR_TRANSPARENT);
         dc.fillCircle(cx, cy, 8);
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
         dc.fillCircle(cx, cy, 3);

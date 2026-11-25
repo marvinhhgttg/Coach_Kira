@@ -12,6 +12,29 @@ module KiraSkala {
     const LILA = 0x6E45E9;
     const GRAU = 0x3A3A3A;
 
+    // 25.11.2026: Farbstil (Einstellung pStil): 0 Bunt · 1 Dezent · 2 Grau mit Akzent · 3 Monochrom
+    var stil as Number = 0;
+
+    function dim(f as Number, p as Number) as Number {
+        return ((((f >> 16) & 0xFF) * p / 100) << 16) | ((((f >> 8) & 0xFF) * p / 100) << 8) | ((f & 0xFF) * p / 100);
+    }
+
+    function wahl(xs as Array<Number>) as Number { return xs[stil < 0 || stil > 3 ? 0 : stil]; }
+
+    function lab() as Number { return wahl([0xFF9A1F, 0xA6A6A6, 0x9A9A9A, 0x8C8C8C]); }
+    function akku() as Number { return wahl([0xFF9A1F, 0x8A8A8A, 0x8A8A8A, 0x6E6E6E]); }
+    function minuten() as Number { return wahl([0xFF9A1F, 0xFF9A1F, 0xBDBDBD, 0xE8E8E8]); }
+    function sek() as Number { return wahl([0xFF9A1F, 0xB0B0B0, 0xB0B0B0, 0x8C8C8C]); }
+    function mitte() as Number { return wahl([0xFF9A1F, 0xFF9A1F, 0xB0B0B0, 0xB0B0B0]); }
+    function votText(f as Number) as Number { return stil == 3 ? 0xB0B0B0 : f; }
+    // Ringsegmente: bunt · gedimmt · dunkelgrau
+    function seg(f as Number) as Number { return stil == 2 ? dim(f, 45) : (stil == 3 ? 0x484848 : f); }
+    // Punkt am Wert: in Monochrom nur bei rot/orange farbig
+    function punkt(f as Number) as Number { return stil == 3 && f != ROT && f != ORANGE ? 0xE6E6E6 : f; }
+    // Votum-Ring: Füllung und Grundring
+    function votFill(f as Number) as Number { return stil == 2 ? dim(f, 70) : (stil == 3 ? 0x9A9A9A : f); }
+    function votSpur(f as Number) as Number { return stil == 3 ? 0x2E2E2E : dim(f, 42); }
+
     // Skala = [grenzen (n+1 Werte, aufsteigend), farben (n)]
     function farbe(sk as Array, v as Numeric?) as Number {
         if (v == null) { return 0x888888; }
@@ -64,7 +87,7 @@ module KiraSkala {
             var a1 = winkel(sk, g[i] as Number) - (i > 0 ? 2 : 0);
             var a2 = winkel(sk, g[i + 1] as Number) + (i < f.size() - 1 ? 2 : 0);
             if (a1 - a2 < 2) { continue; }
-            dc.setColor(v == null ? GRAU : f[i] as Number, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(v == null ? GRAU : seg(f[i] as Number), Graphics.COLOR_TRANSPARENT);
             dc.drawArc(x, y, r, Graphics.ARC_CLOCKWISE, norm(a1), norm(a2));
         }
         dc.setPenWidth(1);
@@ -74,7 +97,7 @@ module KiraSkala {
             var py = y - (r * Math.sin(rad)).toNumber();
             dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
             dc.fillCircle(px, py, pen / 2 + 5);
-            dc.setColor(farbe(sk, v), Graphics.COLOR_TRANSPARENT);
+            dc.setColor(punkt(farbe(sk, v)), Graphics.COLOR_TRANSPARENT);
             dc.fillCircle(px, py, pen / 2 + 3);
         }
     }

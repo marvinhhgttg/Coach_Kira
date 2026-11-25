@@ -10,4 +10,5 @@
     <property id="pErhBB" type="boolean">true</property>
     <property id="pDiaLast" type="boolean">true</property>
     <property id="pDiaPlan" type="boolean">true</property>
+    <property id="pStil" type="number">0</property>
 </properties>

@@ -31,6 +31,11 @@ class KiraGlance extends WatchUi.GlanceView {
         var l = d.get("last");
         var plan = KiraHilfen.feld(d, "last", "planHeute");
         var zeile = "Soll " + (l instanceof Dictionary ? KiraHilfen.sollText(l) : "-") + " ESS" + (plan != null ? " · Plan " + KiraHilfen.zahl(plan, 0) : "");
+        // 25.11.2026: nach dem Training Ist statt Plan
+        var ist = KiraHilfen.feld(d, "last", "istHeute");
+        if (KiraHilfen.feld(d, "last", "erledigt") == true && ist != null) {
+            zeile = "Soll " + (l instanceof Dictionary ? KiraHilfen.sollText(l) : "-") + " ESS · Ist " + KiraHilfen.zahl(ist, 0);
+        }
         dc.setColor(0xBBBBBB, Graphics.COLOR_TRANSPARENT);
         dc.drawText(2, h * 3 / 4, Graphics.FONT_GLANCE, zeile, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
     }

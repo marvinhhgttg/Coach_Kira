@@ -1,5 +1,32 @@
 {
   "settings" : [ {
+    "key" : "pStil",
+    "valueType" : "number",
+    "defaultValue" : 0,
+    "configTitle" : "spStil",
+    "configPrompt" : null,
+    "configType" : "list",
+    "configError" : null,
+    "configHelpUrl" : null,
+    "configReadonly" : false,
+    "configRequired" : false,
+    "configOptions" : [ {
+      "display" : "lpStil0",
+      "value" : 0
+    }, {
+      "display" : "lpStil1",
+      "value" : 1
+    }, {
+      "display" : "lpStil2",
+      "value" : 2
+    }, {
+      "display" : "lpStil3",
+      "value" : 3
+    } ],
+    "configMin" : null,
+    "configMax" : null,
+    "configMaxLength" : null
+  }, {
     "key" : "pOL",
     "valueType" : "number",
     "defaultValue" : 0,
@@ -368,9 +395,14 @@
       "lE13" : "leer",
       "lE10" : "Woche (Ist/Budget)",
       "lE11" : "Erholungszeit",
+      "lpStil3" : "Monochrom",
+      "lpStil2" : "Grau mit Akzent",
+      "spStil" : "Farbstil",
+      "lpStil1" : "Dezent: Beschriftung grau",
       "AppName" : "Coach Kira Zeiger",
       "spOL" : "Ecke oben links",
       "spUR" : "Ecke unten rechts",
+      "lpStil0" : "Bunt (bisher)",
       "lpRingR10" : "Tageslast + Woche",
       "lpRingR11" : "Woche gegen Budget",
       "lpRingR12" : "ACWR",

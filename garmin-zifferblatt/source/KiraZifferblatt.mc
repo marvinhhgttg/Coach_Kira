@@ -77,6 +77,7 @@ class KiraZifferblatt extends WatchUi.WatchFace {
         eVotum = KiraWert.an("pVotumRing");
         eSek = KiraWert.an("pSek");
         eErhBB = KiraWert.an("pErhBB");
+        KiraSkala.stil = KiraWert.zahlE("pStil", 0);
     }
 
     function schrift(namen as Array<String>, px as Number, ersatz as Graphics.FontType) as Graphics.FontType {
@@ -175,7 +176,7 @@ class KiraZifferblatt extends WatchUi.WatchFace {
 
     // Kleiner Block: Bezeichnung (orange, klein) über Wert (weiß)
     function block(dc as Graphics.Dc, x as Number, y as Number, label as String, wert as String, wertFarbe as Number) as Void {
-        dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(KiraSkala.lab(), Graphics.COLOR_TRANSPARENT);
         dc.drawText(x, y, fLabel, label, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(wertFarbe, Graphics.COLOR_TRANSPARENT);
         dc.drawText(x, y + dc.getFontHeight(fLabel) - 2, fWert, wert, Graphics.TEXT_JUSTIFY_CENTER);
@@ -236,11 +237,11 @@ class KiraZifferblatt extends WatchUi.WatchFace {
             return;
         }
         var f = stufeFarbe(stufe, vote);
-        dc.setColor(dimmen(f), Graphics.COLOR_TRANSPARENT);
+        dc.setColor(KiraSkala.votSpur(f), Graphics.COLOR_TRANSPARENT);
         dc.drawCircle(cx, cy, r);
         var a = (hi != null && hi > 0 && ist != null && ist > 0) ? ist.toFloat() / hi : 0.0;
         if (a > 0.005) {
-            dc.setColor(f, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(KiraSkala.votFill(f), Graphics.COLOR_TRANSPARENT);
             if (a >= 0.999) { dc.drawCircle(cx, cy, r); }
             else { dc.drawArc(cx, cy, r, Graphics.ARC_CLOCKWISE, 90, 90 - (a * 360).toNumber()); }
         }
@@ -337,29 +338,29 @@ class KiraZifferblatt extends WatchUi.WatchFace {
             var a = Math.toRadians(135 - i * 90.0 / (n - 1));
             var r1 = cx - 19;
             var r2 = cx - 33;
-            dc.setColor(i < (akku / 100.0 * n) ? ORANGE : SPUR, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(i < (akku / 100.0 * n) ? KiraSkala.akku() : SPUR, Graphics.COLOR_TRANSPARENT);
             dc.setPenWidth(4);
             dc.drawLine(cx + (r1 * Math.cos(a)).toNumber(), cy - (r1 * Math.sin(a)).toNumber(),
                         cx + (r2 * Math.cos(a)).toNumber(), cy - (r2 * Math.sin(a)).toNumber());
         }
         dc.setPenWidth(1);
         var tage = (st has :batteryInDays) && st.batteryInDays != null ? st.batteryInDays.toNumber() : null;
-        dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(KiraSkala.lab(), Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, (h * 0.085).toNumber(), fKopf, akku.toNumber().toString() + "%" + (tage != null ? " · " + tage.toString() + "T" : ""), Graphics.TEXT_JUSTIFY_CENTER);
 
         // Kira-Votum statt Markenname
         var vf = heute && VOTE_FARBE.hasKey(vote) ? VOTE_FARBE.get(vote) as Number : GRAU;
-        dc.setColor(vf, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(KiraSkala.votText(vf), Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, (h * 0.145).toNumber(), fKopf, kira == null ? (kiraId == null ? "KIRA · APP ÖFFNEN" : "KIRA · WARTET") : "KIRA · " + (vote.length() > 0 ? vote : "-") + (heute && feld(t, 17).equals("1") ? "*" : "") + (heute ? "" : " (ALT)"), Graphics.TEXT_JUSTIFY_CENTER);
 
         // Uhrzeit: Stunden weiß, Minuten orange (wie fēnix)
         dc.setColor(0xE8E8E8, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, (h * 0.35).toNumber(), Graphics.FONT_NUMBER_HOT, std, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-        dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(KiraSkala.minuten(), Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, (h * 0.57).toNumber(), Graphics.FONT_NUMBER_HOT, min, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         // 24.11.2026: Sekunden (nur wach) mittig unter den Minuten
         if (eSek) {
-            dc.setColor(0xB0B0B0, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(KiraSkala.sek(), Graphics.COLOR_TRANSPARENT);
             dc.drawText(cx, (h * 0.695).toNumber(), fLabel, uhr.sec.format("%02d"), Graphics.TEXT_JUSTIFY_CENTER);
         }
 
@@ -372,7 +373,7 @@ class KiraZifferblatt extends WatchUi.WatchFace {
         KiraSkala.bogen(dc, rx, ry, rr, 7, rgL[0] as Number?, rgL[1] as Array);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(rx, ry, fRing, KiraWert.ringText(eRingL, rgL[0] as Number?), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-        dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(KiraSkala.lab(), Graphics.COLOR_TRANSPARENT);
         dc.drawText(rx, ry + rr + 8, fLabel, rgL[2] as String, Graphics.TEXT_JUSTIFY_CENTER);
 
         // Rechts: heutige Summenlast gegen Soll
@@ -386,7 +387,7 @@ class KiraZifferblatt extends WatchUi.WatchFace {
             wochenRing(dc, lx, ry, rr + 8, zahl(t, 15), zahl(t, 16));
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
             dc.drawText(lx, ry, fRing, ist == null ? "-" : ist.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-            dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(KiraSkala.lab(), Graphics.COLOR_TRANSPARENT);
             dc.drawText(lx, ry + rr + (zahl(t, 16) != null ? 14 : 8), fLabel, (hi == null ? "-" : (lo != null ? lo.toString() + "-" : "") + hi.toString()), Graphics.TEXT_JUSTIFY_CENTER);
         } else {
             // 24.11.2026: Ring rechts frei belegbar
@@ -394,7 +395,7 @@ class KiraZifferblatt extends WatchUi.WatchFace {
             KiraSkala.bogen(dc, lx, ry, rr, 7, rgR[0] as Number?, rgR[1] as Array);
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
             dc.drawText(lx, ry, fRing, KiraWert.ringText(eRingR, rgR[0] as Number?), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-            dc.setColor(ORANGE, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(KiraSkala.lab(), Graphics.COLOR_TRANSPARENT);
             dc.drawText(lx, ry + rr + 8, fLabel, rgR[2] as String, Graphics.TEXT_JUSTIFY_CENTER);
         }
 
@@ -411,6 +412,9 @@ class KiraZifferblatt extends WatchUi.WatchFace {
                 var pl = heute ? zahl(t, 9) : null;
                 lab = "PLAN" + (sp.length() > 0 && heute ? " " + sp.toUpper() : "");
                 ek = [lab, pl == null ? "-" : (pl == 0 ? "Ruhe" : pl.toString())];
+                // 25.11.2026: nach dem Training „IST“ mit der Tagessumme
+                var istE = heute ? zahl(t, 4) : null;
+                if (istE != null && istE > 0) { ek = ["IST" + (sp.length() > 0 ? " " + sp.toUpper() : ""), istE.toString()]; }
             }
             block(dc, pos[i][0] as Number, pos[i][1] as Number, ek[0] as String, ek[1] as String, Graphics.COLOR_WHITE);
         }

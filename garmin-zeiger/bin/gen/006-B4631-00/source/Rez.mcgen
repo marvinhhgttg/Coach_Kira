@@ -18,9 +18,14 @@ module Rez {
         (:initialized) var lE13 as ResourceId;
         (:initialized) var lE10 as ResourceId;
         (:initialized) var lE11 as ResourceId;
+        (:initialized) var lpStil3 as ResourceId;
+        (:initialized) var lpStil2 as ResourceId;
+        (:initialized) var spStil as ResourceId;
+        (:initialized) var lpStil1 as ResourceId;
         (:initialized) var AppName as ResourceId;
         (:initialized) var spOL as ResourceId;
         (:initialized) var spUR as ResourceId;
+        (:initialized) var lpStil0 as ResourceId;
         (:initialized) var lpRingR10 as ResourceId;
         (:initialized) var lpRingR11 as ResourceId;
         (:initialized) var lpRingR12 as ResourceId;
