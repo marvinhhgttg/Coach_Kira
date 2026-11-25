@@ -47,7 +47,12 @@ class KiraNetz {
         try {
             if (rc == 200 && data instanceof Dictionary) {
                 var u = data.get("uhr");
-                if (u instanceof Dictionary) { Storage.setValue("u", u); Storage.setValue("uDatum", data.get("datum")); data.remove("uhr"); }
+                if (u instanceof Dictionary) {
+                    var x = u.get("x");
+                    if (x instanceof Dictionary) { Storage.setValue("x", x); }
+                    u.remove("x");
+                    Storage.setValue("u", u); Storage.setValue("uDatum", data.get("datum")); data.remove("uhr");
+                }
                 Storage.setValue("d", data);
                 Storage.setValue("at", Time.now().value());
                 Storage.deleteValue("t401");
@@ -190,6 +195,59 @@ class KiraNetz {
         WatchUi.requestUpdate();
     }
 
+    // 25.11.2026: Tour-Rechner – Abschnitte an den Server, Ergebnis in kiraTourErg
+    function tour(teile as Array) as Void {
+        var tok = Storage.getValue("tok");
+        if (tok == null) { return; }
+        kiraTourErg = null;
+        kiraTourFehler = null;
+        Communications.makeWebRequest(KIRA_BASIS + "/api/widget/uhr/tour", { "teile" => teile },
+            {
+                :method => Communications.HTTP_REQUEST_METHOD_POST,
+                :headers => { "Authorization" => "Bearer " + tok, "Content-Type" => Communications.REQUEST_CONTENT_TYPE_JSON },
+                :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
+            },
+            method(:tourFertig));
+    }
+
+    function tourFertig(rc as Number, data as Null or ByteArray or Dictionary or String or PersistedContent.Iterator) as Void {
+        if (rc == 200 && data instanceof Dictionary && data.get("ok") == true) {
+            kiraTourErg = data;
+        } else {
+            kiraTourFehler = rc < 0 ? "Kein Netz (" + rc.toString() + ")" : data instanceof Dictionary && data.get("error") != null ? data.get("error").toString() : "Server " + rc.toString();
+        }
+        WatchUi.requestUpdate();
+    }
+
+    // 25.11.2026: Plan von der Uhr ändern (art: ess, ruhe, tausch)
+    function planAendern(body as Dictionary) as Void {
+        var tok = Storage.getValue("tok");
+        if (tok == null) { return; }
+        body.put("aktion", "plan_aendern");
+        status = "Plan wird gespeichert ...";
+        WatchUi.requestUpdate();
+        Communications.makeWebRequest(KIRA_BASIS + "/api/widget/aktion", body,
+            {
+                :method => Communications.HTTP_REQUEST_METHOD_POST,
+                :headers => { "Authorization" => "Bearer " + tok, "Content-Type" => Communications.REQUEST_CONTENT_TYPE_JSON },
+                :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
+            },
+            method(:planFertig));
+    }
+
+    function planFertig(rc as Number, data as Null or ByteArray or Dictionary or String or PersistedContent.Iterator) as Void {
+        if (rc == 200) {
+            var t = data instanceof Dictionary && data.get("text") != null ? data.get("text").toString() : "Plan gespeichert";
+            if (WatchUi has :showToast) { WatchUi.showToast(KiraHilfen.sauber(t), null); }
+            laden();
+        } else {
+            var t = data instanceof Dictionary && data.get("error") != null ? data.get("error").toString() : "Server " + rc.toString();
+            status = rc < 0 ? "Kein Netz (" + rc.toString() + ")" : t;
+            if (WatchUi has :showToast) { WatchUi.showToast(KiraHilfen.sauber(status as String), null); }
+        }
+        WatchUi.requestUpdate();
+    }
+
     function stop(meldung as String?) as Void {
         if (timer != null) { (timer as Timer.Timer).stop(); }
         anfrageId = null;
@@ -199,9 +257,10 @@ class KiraNetz {
 }
 
 class KiraView extends WatchUi.View {
-    // 0 Votum, 1 Werte, 2 Woche, 3 Last 14 T, 4 Morgen 7 T, 5 Form-Kurve, 6 Letzte Einheit, 7 Ziel, 8 Jetzt, 9 Erholung & Woche
+    // 0 Votum, 1 Werte, 2 Woche, 3 Last 14 T, 4 Morgen 7 T, 5 Form-Kurve, 6 Letzte Einheit, 7 Ziel, 8 Jetzt, 9 Erholung & Woche,
+    // 10–17 Zusatzseiten (KiraSeitenX.mc)
     var seite as Number = 0;
-    const SEITEN = 10;
+    const SEITEN = 18;
 
     function initialize() {
         View.initialize();
@@ -271,6 +330,14 @@ class KiraView extends WatchUi.View {
         else if (seite == 6) { seiteLetzte(dc, u, h); }
         else if (seite == 7) { seiteZiel(dc, d, h); }
         else if (seite == 9) { seiteErholung(dc, d, h); }
+        else if (seite == 10) { KiraX.vorausblick(self, dc, h); }
+        else if (seite == 11) { KiraX.heuteNoch(self, dc, h); }
+        else if (seite == 12) { KiraX.zonen(self, dc, h); }
+        else if (seite == 13) { KiraX.erholung(self, dc, h); }
+        else if (seite == 14) { KiraX.woche(self, dc, h); }
+        else if (seite == 15) { KiraX.morgen(self, dc, h); }
+        else if (seite == 16) { KiraX.ziel(self, dc, h); }
+        else if (seite == 17) { KiraX.treffer(self, dc, h); }
         else { seiteForm(dc, d, h); }
         // Seitenanzeige rechts
         var w = dc.getWidth();
@@ -278,7 +345,8 @@ class KiraView extends WatchUi.View {
         if (nS > 1) {
             for (var i = 0; i < nS; i++) {
                 dc.setColor(xs[i] == seite ? Graphics.COLOR_WHITE : 0x555555, Graphics.COLOR_TRANSPARENT);
-                dc.fillCircle(w - 14, h / 2 - (nS - 1) * 7 + i * 14, 3);
+                var ab = nS > 12 ? 10 : 14;
+                dc.fillCircle(w - 12, h / 2 - (nS - 1) * ab / 2 + i * ab, nS > 12 ? 2 : 3);
             }
         }
     }

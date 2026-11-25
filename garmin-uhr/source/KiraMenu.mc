@@ -11,6 +11,8 @@ function kiraMenuZeigen() as Void {
         m.addItem(new WatchUi.MenuItem("Plan-Vorschlag", v.get("text") != null ? v.get("text").toString() : "", :plan, null));
     }
     m.addItem(new WatchUi.MenuItem("Befinden eintragen", "1 bis 5 für heute", :befinden, null));
+    m.addItem(new WatchUi.MenuItem("Tour-Rechner", "ESS für eine geplante Tour", :tour, null));
+    m.addItem(new WatchUi.MenuItem("Plan ändern", "ESS, Ruhetag, Tage tauschen", :planneu, null));
     m.addItem(new WatchUi.MenuItem("Neu laden", null, :laden, null));
     m.addItem(new WatchUi.MenuItem("Einstellungen", "Seiten, Diagramme, Hinweise", :einst, null));
     m.addItem(new WatchUi.MenuItem("Kopplung lösen", null, :loesen, null));
@@ -37,6 +39,12 @@ class KiraMenuDelegate extends WatchUi.Menu2InputDelegate {
             p.addItem(new WatchUi.MenuItem("Übernehmen", "Lasten anpassen", :ja, null));
             p.addItem(new WatchUi.MenuItem("Verwerfen", "Plan bleibt", :nein, null));
             WatchUi.switchToView(p, new KiraPlanDelegate(), WatchUi.SLIDE_LEFT);
+        } else if (id == :tour) {
+            WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+            tourMenuZeigen(true);
+        } else if (id == :planneu) {
+            WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+            planMenuZeigen();
         } else if (id == :einst) {
             kiraEinstZeigen();
         } else if (id == :laden) {
@@ -76,7 +84,7 @@ class KiraPlanDelegate extends WatchUi.Menu2InputDelegate {
 function kiraEinstZeigen() as Void {
     var m = new WatchUi.Menu2({ :title => "Einstellungen" });
     m.addItem(new WatchUi.MenuItem("Seiten", "ein/aus", :seiten, null));
-    m.addItem(new WatchUi.MenuItem("Startseite", KiraEinst.SEITEN_NAMEN[KiraEinst.zahl("pStart", 0) % 10], :start, null));
+    m.addItem(new WatchUi.MenuItem("Startseite", KiraEinst.SEITEN_NAMEN[KiraEinst.zahl("pStart", 0) % KiraEinst.N], :start, null));
     m.addItem(new WatchUi.MenuItem("Last-Diagramm", KiraEinst.zahl("pLast", 14).toString() + " Tage", "pLast", null));
     m.addItem(new WatchUi.MenuItem("Morgenwerte", KiraEinst.zahl("pMorgen", 7).toString() + " Tage", "pMorgen", null));
     m.addItem(new WatchUi.MenuItem("Form-Kurve", KiraEinst.zahl("pForm", 42) == 42 ? "6 Wochen" : "90 Tage", "pForm", null));
@@ -94,7 +102,7 @@ class KiraEinstDelegate extends WatchUi.Menu2InputDelegate {
         var id = item.getId();
         if (id == :seiten) {
             var m = new WatchUi.Menu2({ :title => "Seiten" });
-            for (var i = 0; i < 10; i++) {
+            for (var i = 0; i < KiraEinst.N; i++) {
                 var k = "pS" + i.toString();
                 m.addItem(new WatchUi.ToggleMenuItem(KiraEinst.SEITEN_NAMEN[i], null, k, KiraEinst.an(k), null));
             }
@@ -109,7 +117,7 @@ class KiraEinstDelegate extends WatchUi.Menu2InputDelegate {
             WatchUi.pushView(m, new KiraToggleDelegate(), WatchUi.SLIDE_LEFT);
         } else if (id == :start) {
             var m = new WatchUi.Menu2({ :title => "Startseite" });
-            for (var i = 0; i < 10; i++) { m.addItem(new WatchUi.MenuItem(KiraEinst.SEITEN_NAMEN[i], null, i, null)); }
+            for (var i = 0; i < KiraEinst.N; i++) { m.addItem(new WatchUi.MenuItem(KiraEinst.SEITEN_NAMEN[i], null, i, null)); }
             WatchUi.pushView(m, new KiraStartDelegate(item), WatchUi.SLIDE_LEFT);
         } else if (id instanceof String && id.equals("pProg")) {
             KiraEinst.setzen("pProg", (item as WatchUi.ToggleMenuItem).isEnabled());

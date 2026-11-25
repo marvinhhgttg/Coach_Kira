@@ -6,7 +6,9 @@ import Toybox.Time.Gregorian;
 
 (:background :glance)
 module KiraEinst {
-    const SEITEN_NAMEN = ["Votum", "Werte", "Nächste Tage", "Last", "Morgenwerte", "Form-Kurve", "Letzte Einheit", "Ziel", "Form & Ausdauer", "Erholung & Woche"];
+    const SEITEN_NAMEN = ["Votum", "Werte", "Nächste Tage", "Last", "Morgenwerte", "Form-Kurve", "Letzte Einheit", "Ziel", "Form & Ausdauer", "Erholung & Woche",
+        "Vorausblick", "Heute noch", "Zonen 7/28", "Erholungstrend", "Wochenbilanz", "Bereitschaft morgen", "Ziel-Countdown", "Treffsicherheit"];
+    const N = 18;
 
     function wert(k as String, def) {
         try {
@@ -33,7 +35,7 @@ module KiraEinst {
     // aktive Seiten in fester Reihenfolge; mindestens Votum
     function seiten() as Array {
         var xs = [];
-        for (var i = 0; i < 10; i++) { if (an("pS" + i.toString())) { xs.add(i); } }
+        for (var i = 0; i < N; i++) { if (an("pS" + i.toString())) { xs.add(i); } }
         if (xs.size() == 0) { xs.add(0); }
         return xs;
     }

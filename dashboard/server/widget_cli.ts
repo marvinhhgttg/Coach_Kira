@@ -12,18 +12,20 @@ import { fetchExtras } from '../src/lib/extras';
 import { ladeP4, tourform as berechneTourform } from '../src/lib/paket4';
 import { zielArt, type Ziel } from '../src/lib/planning';
 import { fetchGarminTage } from '../src/lib/garmin';
-import { lerneModelle } from '../src/lib/essRechner';
+import { lerneModelle, vorwaerts } from '../src/lib/essRechner';
 import { atlStep, ctlStep, windowMean } from '../src/kern/formeln';
 import { eigeneBergtouren, eigeneSkitouren, setzeGarminTage, tourLastPersoenlich } from '../src/lib/tourEss';
 import { ladeP3, schlafKonto } from '../src/lib/paket3';
 
 // 22.11.2026: persönliche Soll-Obergrenzen aus der ganzen Historie (wie Cockpit)
 let baenderJetzt: Baender | null = null;
+let alleTage: RecoveryDay[] = [];
 async function baenderLaden(): Promise<Baender | null> {
   if (baenderJetzt) return baenderJetzt;
   try {
     const all: any = await fetchChartData('9999d' as any, RECOVERY_FETCH_METRICS as any);
-    baenderJetzt = persoenlicheBaender(buildDays(all?.data || []));
+    alleTage = buildDays(all?.data || []);
+    baenderJetzt = persoenlicheBaender(alleTage);
   } catch { baenderJetzt = null; }
   return baenderJetzt;
 }
@@ -36,6 +38,7 @@ const num = (v: unknown) => {
 const STATUS_TEXT: Record<string, string> = { QUALITY: 'Qualität möglich', TRAIN: 'normal trainieren', EASY: 'locker trainieren', REST: 'Erholung priorisieren' };
 
 let tageMerk: RecoveryDay[] = [];
+let sperreMerk: boolean[] = [];
 // 24.11.2026: Garmin-Livewerte vom Mac (vom Server per Umgebung übergeben, nur heute und höchstens 3 h alt)
 const LIVE: any = (() => {
   try {
@@ -120,6 +123,7 @@ async function heuteTeil() {
         .slice(0, 7)
         .map((x: any) => ({ d: String(x.date).slice(0, 10), ess: num(x.sim_load ?? x.load), sport: String(x.sport || ''), zone: String(x.zone || '') }));
     if (sim?.ok) sperre = (sim.days || []).filter((x: any) => String(x.date).slice(0, 10) > heute).slice(0, 7).map((x: any) => !!x.locked);
+    sperreMerk = sperre;
   } catch {}
   // 23.11.2026: Plan der nächsten 7 Tage mit ATL/CTL-Prognose (Kiras Formel ab Stand Ende heute, wie Ausblick im Cockpit)
   try {
@@ -416,8 +420,193 @@ async function uhrTeil(rahmen: any) {
   return { l14, m7, form, letzte, feld, plan7: plan7Merk };
 }
 
+// ─── 25.11.2026: zehn neue Uhr-Funktionen (Seiten 10–17, Tour-Rechner, Plan ändern) ───
+const WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+const tagK = (d: string) => { const x = new Date(d + 'T12:00:00Z'); return `${WT[x.getUTCDay()]} ${d.slice(8, 10)}.${d.slice(5, 7)}.`; };
+const plusTage = (d: string, n: number) => { const x = new Date(d + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
+const r1 = (x: number) => Math.round(x * 10) / 10;
+const istT = (d: RecoveryDay) => (d.activityDone ? d.actual?.load ?? d.load ?? 0 : 0);
+
+async function extraTeil(h: any, z: any, u: any) {
+  const heute = iso();
+  const days = tageMerk;
+  const t = days.length && days[days.length - 1].date === heute ? days[days.length - 1] : null;
+  const rahmen = h._rahmen;
+  const out: any = {};
+  let g: any = null;
+  try { g = await fetchGarminTage(); } catch {}
+  // 1 Vorausblick (Mac, lokal berechnet)
+  let pg: any = null;
+  try {
+    const it = (await fetchExtras<any>('prognose', 1))[0];
+    pg = it?.data || null;
+    if (pg) {
+      const fw = pg.fruehwarnung || {}, vk = pg.vorausblick || {};
+      out.vb = {
+        stufe: fw.stufe || null, prog: (() => { const t = String(fw.prognose || ''); const i = t.indexOf('Stellschraube'); return (i >= 0 ? t.slice(i) : t).slice(0, 260); })(), seit: String(fw.verlauf?.text || '').slice(0, 160),
+        acwr: vk.acwr_max ? { w: vk.acwr_max.wert, d: tagK(vk.acwr_max.datum) } : null,
+        qt: vk.qualitaetstag?.tag || null, tf: pg.tourfenster?.[0] ? { tag: pg.tourfenster[0].tag, s: pg.tourfenster[0].score } : null,
+        ctl: vk.ctl_heute ?? null, ctl28: vk.ctl_28 ?? null, trend: vk.trend || null, um: String(pg.erstellt || '').slice(11, 16), am: String(it.datum || ''),
+        sig: (fw.signale || []).slice(0, 4).map((x: any) => ({ n: x.name, s: x.schwere })),
+      };
+    }
+  } catch {}
+  // 2 Was geht heute noch? (Restbudget in Minuten je Sport, aus deinen Zonen-Raten)
+  try {
+    const ist = Math.max(t ? istT(t) : 0, liveSumme());
+    const raten = u?.feld?.raten || {};
+    if (rahmen && rahmen.max > 0) {
+      const rest = Math.max(0, Math.round(rahmen.max - ist)), restH = Math.max(0, Math.round((rahmen.halte || 0) - ist));
+      const opt = (lab: string, rate: number | undefined) => (rate && rate > 0 ? { s: lab, min: Math.round((rest / rate) * 60), minH: Math.round((restH / rate) * 60) } : null);
+      out.rest = {
+        ess: rest, halte: restH, ist: Math.round(ist), max: rahmen.max, min: rahmen.min,
+        opts: [opt('Bike Z2', raten.rad?.[1]), opt('Bike Z1', raten.rad?.[0]), opt('Lauf Z2', raten.lauf?.[1]), opt('Wandern', raten.berg ? (raten.berg[0] + raten.berg[1]) / 2 : undefined)].filter(Boolean),
+      };
+    }
+  } catch {}
+  // 4 Zonenverteilung 7/28 Tage (Minuten je Zone aus Garmin)
+  try {
+    if (g) {
+      const summe = (n: number) => {
+        const z5 = [0, 0, 0, 0, 0];
+        const ab = plusTage(heute, -(n - 1));
+        for (const [d, tg] of g) if (d >= ab && d <= heute) for (const a of tg.akt || []) ((a.zonen_s || []) as number[]).slice(0, 5).forEach((v, k) => { z5[k] += v || 0; });
+        const ges = z5.reduce((a, b) => a + b, 0);
+        return { p: z5.map((v) => (ges > 0 ? Math.round((v / ges) * 100) : 0)), h: r1(ges / 3600) };
+      };
+      const a = summe(7), b = summe(28);
+      out.zonen = { p7: a.p, h7: a.h, p28: b.p, h28: b.h, grau7: a.p[2], hart7: a.p[3] + a.p[4], grau28: b.p[2], hart28: b.p[3] + b.p[4] };
+    }
+  } catch {}
+  // 5 Erholungstrend 14 Tage
+  try {
+    const xs = days.slice(-14);
+    const schuld = xs.slice(-7).reduce((a, d) => a + (d.sleepH != null ? Math.max(0, 7.5 - d.sleepH) : 0), 0);
+    out.erh = {
+      sl: xs.map((d) => (d.sleepH != null ? Math.round(d.sleepH * 10) : -1)), sc: xs.map((d) => d.sleepScore ?? -1),
+      hrv: xs.map((d) => d.hrv ?? -1), lo: t?.hrvLow ?? xs.map((d) => d.hrvLow).filter((v) => v != null).pop() ?? null, hi: t?.hrvHigh ?? xs.map((d) => d.hrvHigh).filter((v) => v != null).pop() ?? null,
+      bb: xs.map((d) => { const v = g?.get(d.date)?.bb_aufwachen; return v != null ? Math.round(v) : -1; }), schuld: r1(schuld),
+    };
+  } catch {}
+  // 6 Wochenbilanz Mo–So
+  try {
+    const mo = (() => { const d = new Date(heute + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return d.toISOString().slice(0, 10); })();
+    const nx: any[] = h.naechste || [];
+    const tage = [];
+    for (let i = 0; i < 7; i++) {
+      const d = plusTage(mo, i);
+      const r = days.find((x) => x.date === d);
+      const p = nx.find((x) => x.d === d);
+      tage.push({ t: WT[new Date(d + 'T12:00:00Z').getUTCDay()].slice(0, 1), ist: d <= heute && r ? Math.round(istT(r)) : -1, plan: d > heute && p ? Math.round(p.ess || 0) : d === heute ? Math.round(h.last?.planHeute ?? 0) : -1, heute: d === heute });
+    }
+    const halte = rahmen?.halte || null;
+    const entl = nx.find((x) => halte && (x.ess || 0) <= halte * 0.4);
+    const mono = t?.monotonyPost ?? t?.monotony ?? null;
+    const sum7 = days.slice(-7).reduce((a, d) => a + istT(d), 0);
+    out.wb = { tage, mono: mono != null ? r1(mono) : null, strain: mono != null ? Math.round(mono * sum7) : null, entl: entl ? tagK(entl.d) : null, ohne: (() => { let n = 0; for (let i = days.length - 1; i >= 0 && halte && istT(days[i]) > halte * 0.4; i--) n++; return n; })() };
+  } catch {}
+  // 7 Bereitschaft morgen: Prognose vom Mac + persönliche Erfahrung (Readiness-Änderung über Nacht je Lastverhältnis)
+  try {
+    const pts: { q: number; d1: number }[] = [];
+    const all = alleTage.length ? alleTage : days;
+    for (let i = 1; i + 1 < all.length; i++) {
+      const d = all[i], n = all[i + 1];
+      if (d.readiness == null || n.readiness == null) continue;
+      const e = lastEmpfehlung(d, all[i - 1]);
+      if (!e || !(e.halte > 0)) continue;
+      pts.push({ q: istT(d) / e.halte, d1: n.readiness - d.readiness });
+    }
+    const bin = (q: number) => { const g2 = pts.filter((p) => Math.abs(p.q - q) <= 0.35); return g2.length >= 6 ? { d1: Math.round(g2.reduce((a, p) => a + p.d1, 0) / g2.length), n: g2.length } : null; };
+    const rd = t?.readiness ?? null;
+    const halte = rahmen?.halte || null;
+    const szen = [] as any[];
+    const kand = [[0, 'Ruhe'], [rahmen?.max, 'Obergrenze'], [h.last?.planHeute, 'Plan']] as [number | null | undefined, string][];
+    for (const [ess, lab] of kand) {
+      if (ess == null || !halte || rd == null) continue;
+      if (szen.some((x) => x.ess === Math.round(ess))) continue;
+      const b = bin(ess / halte);
+      if (b) szen.push({ lab, ess: Math.round(ess), rd: Math.max(1, Math.min(100, rd + b.d1)), d1: b.d1, n: b.n });
+    }
+    const pt = pg?.vorausblick?.tage?.[1];
+    out.bm = { heute: rd, prog: pt?.bereitschaft ?? null, progTag: pt?.datum ? tagK(pt.datum) : null, mae: pg?.vorausblick?.modell?.mae ?? null, szen };
+  } catch {}
+  // 9 Ziel-Countdown
+  try {
+    if (z) {
+      const ctlR = (u?.form?.ctl || []) as number[];
+      const ist = [] as number[];
+      for (let i = ctlR.length - 1; i >= 0 && ist.length < 9; i -= 7) ist.unshift(ctlR[i]);
+      const wo = (pg?.vorausblick?.wochen || []) as any[];
+      const prog = wo.filter((w) => w.bis <= z.datum || w.von <= z.datum).map((w) => w.ctl_ende);
+      out.zc = { name: String(z.name || '').slice(0, 30), tage: z.tage, tf: z.tourform, datum: tagK(z.datum), ist, prog, ctlEnde: prog.length ? prog[prog.length - 1] : null };
+    }
+  } catch {}
+  // 10 Treffsicherheit 28 Tage: im Rahmen / darüber / darunter und Readiness am Folgemorgen
+  try {
+    const b = await baenderLaden();
+    const grp: Record<string, number[]> = { drin: [], ueber: [], unter: [] };
+    const xs = days.slice(-29);
+    for (let i = 1; i < xs.length - 1; i++) {
+      const d = xs[i], n = xs[i + 1];
+      const e = lastEmpfehlung(d, xs[i - 1], b);
+      if (!e || !d.vote) continue;
+      const v = istT(d);
+      const k = v > e.max ? 'ueber' : v < e.min ? 'unter' : 'drin';
+      grp[k].push(n.readiness != null && d.readiness != null ? n.readiness - d.readiness : NaN);
+    }
+    const m = (a: number[]) => { const f = a.filter((x) => Number.isFinite(x)); return f.length ? Math.round(f.reduce((p, q) => p + q, 0) / f.length) : null; };
+    const nGes = grp.drin.length + grp.ueber.length + grp.unter.length;
+    out.tr = { n: nGes, drin: grp.drin.length, ueber: grp.ueber.length, unter: grp.unter.length, pDrin: nGes ? Math.round((grp.drin.length / nGes) * 100) : null, dDrin: m(grp.drin), dUeber: m(grp.ueber), dUnter: m(grp.unter) };
+  } catch {}
+  // 8 Plan ändern: die nächsten 7 Tage mit Sperre
+  out.pl = (h.naechste || []).slice(0, 7).map((x: any, i: number) => ({ d: x.d, t: tagK(x.d), ess: Math.round(x.ess || 0), s: x.sport || '', z: x.zone || '', lock: !!sperreMerk[i] }));
+  return out;
+}
+
+// 3 Tour-Rechner: node widget.mjs --tour '{"teile":[{"s":"gravel","km":17.3,"hm":650},…]}'
+async function tourRechnen(eingabe: any) {
+  const g = await fetchGarminTage();
+  const modelle = lerneModelle(g);
+  const akt: any[] = [];
+  for (const [d, tg] of g) for (const a of tg.akt || []) akt.push({ d, ...a });
+  const PROFIL: Record<string, string> = { gravel: 'bike_gravel', rad: 'bike_road', lauf: 'run', berg: 'hike' };
+  const TYP: Record<string, RegExp> = { gravel: /gravel|mountain_bik/, rad: /road_biking|^cycling$|gravel|mountain_bik/, lauf: /running/, berg: /hiking|mountaineering/, abfahrt: /cycling|biking/ };
+  const med = (x: number[]) => { const s = [...x].sort((a, b) => a - b); return s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2; };
+  const teile = [] as any[];
+  for (const tl of (eingabe?.teile || []).slice(0, 6)) {
+    const s = String(tl.s || ''), km = Math.max(0, Number(tl.km) || 0), hm = Math.max(0, Number(tl.hm) || 0);
+    if (s === 'abfahrt') {
+      const xs = akt.filter((a) => TYP.abfahrt.test(String(a.typ || '')) && a.km >= 5 && (a.hm || 0) / a.km < 5 && (a.last || 0) > 0 && (a.hf_avg || 200) < 118 && a.dauer_s > 0 && a.km / (a.dauer_s / 3600) >= 21);
+      const pk = xs.length >= 2 ? med(xs.map((a) => a.last / a.km)) : 1.2;
+      const ess = Math.round(pk * km);
+      teile.push({ s, km, hm, ess, lo: Math.round(ess * 0.75), hi: Math.round(ess * 1.3), q: xs.length >= 2 ? `${xs.length} eigene Abfahrten` : 'Faustwert', ref: '' });
+      continue;
+    }
+    const re = TYP[s] || /x^/;
+    const vgl = akt.filter((a) => re.test(String(a.typ || '')) && (a.last || 0) > 0 && a.km > 0 && a.km >= km * 0.5 && a.km <= km * 1.8 && (hm < 100 ? (a.hm || 0) < 250 : (a.hm || 0) >= hm * 0.65 && (a.hm || 0) <= hm * 1.5));
+    if (vgl.length >= 2) {
+      const sk = vgl.map((a) => a.last * (hm >= 100 && a.hm > 50 ? 0.2 * (km / a.km) + 0.8 * (hm / a.hm) : km / a.km));
+      const ess = Math.round(med(sk));
+      const best = vgl.slice().sort((a, b) => Math.abs(a.hm - hm) + 20 * Math.abs(a.km - km) - (Math.abs(b.hm - hm) + 20 * Math.abs(b.km - km)))[0];
+      teile.push({ s, km, hm, ess, lo: Math.round(Math.min(...sk)), hi: Math.round(Math.max(...sk)), q: `${vgl.length} eigene Touren`, ref: `${String(best.name || '').slice(0, 22)} ${best.last}` });
+    } else {
+      const m = modelle.find((x) => x.id === PROFIL[s]);
+      const r = m ? vorwaerts(m, { km, hm }) : null;
+      teile.push({ s, km, hm, ess: r ? Math.round(r.ess) : null, lo: r ? Math.round(r.lo) : null, hi: r ? Math.round(r.hi) : null, q: r ? 'ESS-Rechner' : 'keine Daten', ref: '' });
+    }
+  }
+  const ok = teile.filter((x) => x.ess != null);
+  return { ok: true, ess: ok.reduce((a, x) => a + x.ess, 0), lo: ok.reduce((a, x) => a + x.lo, 0), hi: ok.reduce((a, x) => a + x.hi, 0), teile };
+}
+
+if (process.argv[2] === '--tour') {
+  try { process.stdout.write(JSON.stringify(await tourRechnen(JSON.parse(process.argv[3] || '{}')))); }
+  catch (e: any) { process.stdout.write(JSON.stringify({ ok: false, error: String(e?.message || e) })); }
+} else {
 const [h, z, f] = await Promise.all([heuteTeil(), zielTeil().catch(() => null), formTeil().catch(() => null)]);
 let u: any = null;
 try { u = await uhrTeil((h as any)._rahmen ?? null); } catch {}
+try { if (u) u.x = await extraTeil(h, z, u); } catch {}
 const { _rahmen: _r, ...hRest } = h as any;
 process.stdout.write(JSON.stringify({ ok: true, stand: new Date().toISOString(), ...hRest, ziel: z, form: f, uhr: u }));
+}

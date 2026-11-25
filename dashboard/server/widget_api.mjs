@@ -172,7 +172,7 @@ export function setupWidget(app, { getSetting, setSetting, originOk, texte, apps
         const lang = new Map(((wp && wp.plan && wp.plan.tage) || []).filter((t) => t && t.langH != null).map((t) => [t.date, t.langH]));
         const naechste = (a.naechste || []).map((x) => (lang.has(x.d) ? { ...x, langH: lang.get(x.d) } : x));
         // 22.11.2026: Diagramme nur im Vordergrund (?mehr=1) – der Hintergrunddienst bleibt unter 8 KB
-        const mehr = req.query.mehr === '1' && u ? { uhr: { l14: u.l14, m7: u.m7, form: u.form, letzte: u.letzte, plan7: u.plan7 || null } } : {};
+        const mehr = req.query.mehr === '1' && u ? { uhr: { l14: u.l14, m7: u.m7, form: u.form, letzte: u.letzte, plan7: u.plan7 || null, x: u.x || null } } : {};
         // 24.11.2026: Hinweise (einmal je id auf der Uhr) und Plan-Vorschlag (Uhr-Menü: übernehmen/verwerfen)
         let hinw = [];
         try { hinw = (globalThis.ckHinweise?.(a, 'uhr') || []).slice(0, 6).map(({ id, titel, text }) => ({ id, titel, text })); } catch {}
@@ -302,6 +302,21 @@ export function setupWidget(app, { getSetting, setSetting, originOk, texte, apps
     res.json({ ok: true, geraete: geraete().map(({ hash, ...g }) => g) });
   });
 
+  // ---------- 25.11.2026: Tour-Rechner für die Uhr (eigene Touren, sonst ESS-Rechner) ----------
+  app.post('/api/widget/uhr/tour', (req, res) => {
+    if (!geraetZu(req)) return res.status(401).json({ ok: false, error: 'App nicht gekoppelt.' });
+    const teile = Array.isArray(req.body?.teile) ? req.body.teile.slice(0, 6).map((x) => ({ s: String(x.s || '').slice(0, 10), km: Number(x.km) || 0, hm: Number(x.hm) || 0 })) : [];
+    if (!teile.length) return res.status(400).json({ ok: false, error: 'Keine Abschnitte.' });
+    const p = spawn(process.execPath, [KERN, '--tour', JSON.stringify({ teile })], { stdio: ['ignore', 'pipe', 'pipe'] });
+    let out = '';
+    const to = setTimeout(() => p.kill('SIGKILL'), 90000);
+    p.stdout.on('data', (d) => (out += d));
+    p.on('close', () => {
+      clearTimeout(to);
+      try { res.json(JSON.parse(out)); } catch { res.status(502).json({ ok: false, error: 'Tour-Rechnung fehlgeschlagen.' }); }
+    });
+  });
+
   // ---------- Knöpfe im Widget ----------
   app.post('/api/widget/aktion', (req, res) => {
     if (!geraetZu(req)) return res.status(401).json({ ok: false, error: 'App nicht gekoppelt.' });
@@ -322,6 +337,13 @@ export function setupWidget(app, { getSetting, setSetting, originOk, texte, apps
       const v = globalThis.ckVorschlag;
       if (!v) return res.status(503).json({ ok: false, error: 'Automatik nicht aktiv.' });
       return Promise.resolve(aktion === 'plan_annehmen' ? v.annehmen(id) : v.verwerfen(id))
+        .then((r) => res.status(r.ok ? 200 : 409).json(r))
+        .catch((e) => res.status(502).json({ ok: false, error: String(e.message || e) }));
+    }
+    if (aktion === 'plan_aendern') {
+      const f = globalThis.ckPlanAendern;
+      if (!f) return res.status(503).json({ ok: false, error: 'Automatik nicht aktiv.' });
+      return Promise.resolve(f(req.body || {}))
         .then((r) => res.status(r.ok ? 200 : 409).json(r))
         .catch((e) => res.status(502).json({ ok: false, error: String(e.message || e) }));
     }

@@ -180,6 +180,47 @@ export function setupAuto(app, { getSetting, setSetting, macOk, callAppsScript, 
   }
   globalThis.ckVorschlag = { annehmen: vorschlagAnnehmen, verwerfen: vorschlagVerwerfen, status: () => lesen('auto_vorschlag', {}) };
 
+  // 25.11.2026: Plan direkt von der Uhr ändern – ESS eines Tages setzen, Ruhetag, zwei Tage tauschen (gesperrte Tage bleiben)
+  async function planAendern(b) {
+    const art = String(b.art || ''), d = String(b.d || '').slice(0, 10), d2 = String(b.d2 || '').slice(0, 10);
+    const heute = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || d <= heute) return { ok: false, error: 'Nur künftige Tage lassen sich ändern.' };
+    const r = await fetch(`${scriptUrl}?mode=planSimulationJson&cb=${Date.now()}`, { redirect: 'follow' });
+    const sim = await r.json();
+    if (!sim?.ok || !Array.isArray(sim.days)) return { ok: false, error: 'Plan-Simulation nicht lesbar.' };
+    const days = sim.days.map((x) => ({ ...x }));
+    const i = days.findIndex((x) => String(x.date).slice(0, 10) === d);
+    if (i < 0) return { ok: false, error: 'Tag nicht im Plan.' };
+    if (days[i].locked) return { ok: false, error: `${tagKurz(d)} ist gesperrt.` };
+    let text = '';
+    if (art === 'ess' || art === 'ruhe') {
+      const ess = art === 'ruhe' ? 0 : Math.max(0, Math.min(600, Math.round(Number(b.ess) || 0)));
+      text = `${tagKurz(d)}: ${Math.round(Number(days[i].load) || 0)} → ${ess} ESS`;
+      days[i].load = ess;
+      if (ess === 0) { days[i].sport = 'Off'; days[i].zone = 'Off'; days[i].te_ae = 0; days[i].te_an = 0; }
+    } else if (art === 'tausch') {
+      const j = days.findIndex((x) => String(x.date).slice(0, 10) === d2);
+      if (j < 0 || d2 <= heute) return { ok: false, error: 'Zieltag nicht im Plan.' };
+      if (days[j].locked) return { ok: false, error: `${tagKurz(d2)} ist gesperrt.` };
+      for (const k of ['load', 'sport', 'zone', 'te_ae', 'te_an']) { const tmp = days[i][k]; days[i][k] = days[j][k]; days[j][k] = tmp; }
+      text = `${tagKurz(d)} ↔ ${tagKurz(d2)} getauscht`;
+    } else return { ok: false, error: 'Aktion unbekannt.' };
+    const res = await callAppsScript({
+      action: 'saveSimulatedPlan',
+      loads: JSON.stringify(days.map((x) => Number(x.load) || 0)),
+      teAe: JSON.stringify(days.map((x) => Number(x.te_ae) || 0)),
+      teAn: JSON.stringify(days.map((x) => Number(x.te_an) || 0)),
+      sports: JSON.stringify(days.map((x) => x.sport || '')),
+      zones: JSON.stringify(days.map((x) => x.zone || '')),
+      locks: JSON.stringify(days.map((x) => !!x.locked)),
+    });
+    protokoll({ art: 'plan_uhr', ok: !!res?.ok, text, fehler: res?.ok ? undefined : String(res?.error || '').slice(0, 160) });
+    if (!res?.ok) return { ok: false, error: res?.error || 'Speichern fehlgeschlagen.' };
+    try { globalThis.ckWidgetNeu?.(); } catch {}
+    return { ok: true, text: `Plan gespeichert: ${text}.` };
+  }
+  globalThis.ckPlanAendern = planAendern;
+
   // ---------- Workout für morgen bauen ----------
   let faktoren = null;
   async function faktorenLaden() {

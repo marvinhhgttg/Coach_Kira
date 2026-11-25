@@ -9,6 +9,14 @@
     <property id="pS7" type="boolean">true</property>
     <property id="pS8" type="boolean">true</property>
     <property id="pS9" type="boolean">true</property>
+    <property id="pS10" type="boolean">true</property>
+    <property id="pS11" type="boolean">true</property>
+    <property id="pS12" type="boolean">true</property>
+    <property id="pS13" type="boolean">true</property>
+    <property id="pS14" type="boolean">true</property>
+    <property id="pS15" type="boolean">true</property>
+    <property id="pS16" type="boolean">true</property>
+    <property id="pS17" type="boolean">true</property>
     <property id="pStart" type="number">0</property>
     <property id="pLast" type="number">14</property>
     <property id="pMorgen" type="number">7</property>
