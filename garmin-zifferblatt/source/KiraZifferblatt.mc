@@ -250,7 +250,7 @@ class KiraZifferblatt extends WatchUi.WatchFace {
             var b = a - 1.0;
             // zweite Runde gleich breit, direkt innen daneben (1 px Abstand)
             dc.setPenWidth(6);
-            dc.setColor(0xFF6A00, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(KiraSkala.ueber(), Graphics.COLOR_TRANSPARENT);
             if (b >= 0.999) { dc.drawCircle(cx, cy, r - 7); }
             else { dc.drawArc(cx, cy, r - 7, Graphics.ARC_CLOCKWISE, 90, 90 - (b * 360).toNumber()); }
         }

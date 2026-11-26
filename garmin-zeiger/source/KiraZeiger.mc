@@ -311,7 +311,7 @@ class KiraZeiger extends WatchUi.WatchFace {
             var b = a - 1.0;
             // zweite Runde gleich breit, direkt innen daneben (1 px Abstand)
             dc.setPenWidth(6);
-            dc.setColor(0xFF6A00, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(KiraSkala.ueber(), Graphics.COLOR_TRANSPARENT);
             if (b >= 0.999) { dc.drawCircle(cx, cy, r - 7); }
             else { dc.drawArc(cx, cy, r - 7, Graphics.ARC_CLOCKWISE, 90, 90 - (b * 360).toNumber()); }
         }
@@ -549,7 +549,7 @@ class KiraZeiger extends WatchUi.WatchFace {
                 var bx = x0 + i * pbw + pbw / 4;
                 dc.setColor(0x26303B, Graphics.COLOR_TRANSPARENT);
                 dc.fillRectangle(bx, b1 - ph, pbw / 2, ph);
-                dc.setColor(0x7F95AD, Graphics.COLOR_TRANSPARENT);
+                dc.setColor(KiraSkala.planF(), Graphics.COLOR_TRANSPARENT);
                 dc.drawRectangle(bx, b1 - ph, pbw / 2, ph);
             }
             kurven(dc, x0, pbw, b0, b1, 7, true);

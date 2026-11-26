@@ -21,22 +21,27 @@ module KiraSkala {
 
     function wahl(xs as Array<Number>) as Number { return xs[stil < 0 || stil > 3 ? 0 : stil]; }
 
-    function lab() as Number { return wahl([0xFF9A1F, 0xA6A6A6, 0x9A9A9A, 0x8C8C8C]); }
-    function akku() as Number { return wahl([0xFF9A1F, 0x8A8A8A, 0x8A8A8A, 0x6E6E6E]); }
-    function minuten() as Number { return wahl([0xFF9A1F, 0xFF9A1F, 0xBDBDBD, 0xE8E8E8]); }
-    function sek() as Number { return wahl([0xFF9A1F, 0xB0B0B0, 0xB0B0B0, 0x8C8C8C]); }
+    // 26.11.2026: Farbstile klar getrennt – alle Ringe, Bögen, Balken, Punkte und Texte laufen hierüber
+    //   0 Bunt: Garmin-Farben · 1 Dezent: gedimmte Farben, orange Minuten · 2 Grau mit Akzent: graue Skalen,
+    //   nur Wert-Punkt und Votum farbig · 3 Monochrom: alles grau/weiß, nur Warnungen (rot/orange) farbig
+    function lab() as Number { return wahl([0xFF9A1F, 0x9A9A9A, 0x8A8A8A, 0x8C8C8C]); }
+    function akku() as Number { return wahl([0xFF9A1F, 0x7A7A7A, 0x6E6E6E, 0x6E6E6E]); }
+    function minuten() as Number { return wahl([0xFF9A1F, 0xFF9A1F, 0xE8E8E8, 0xE8E8E8]); }
+    function sek() as Number { return wahl([0xFF9A1F, 0x9A9A9A, 0x9A9A9A, 0x8C8C8C]); }
     function mitte() as Number { return wahl([0xFF9A1F, 0xFF9A1F, 0xB0B0B0, 0xB0B0B0]); }
-    function votText(f as Number) as Number { return stil == 3 ? 0xB0B0B0 : f; }
-    // Ringsegmente: bunt · gedimmt · dunkelgrau
-    function seg(f as Number) as Number { return stil == 2 ? dim(f, 45) : (stil == 3 ? 0x484848 : f); }
+    function votText(f as Number) as Number { return stil == 3 ? 0xB0B0B0 : (stil == 1 ? dim(f, 85) : f); }
+    // Skalen-Segmente
+    function seg(f as Number) as Number { return stil == 1 ? dim(f, 55) : (stil == 2 ? 0x464646 : (stil == 3 ? 0x3C3C3C : f)); }
     // Punkt am Wert: in Monochrom nur bei rot/orange farbig
     function punkt(f as Number) as Number { return stil == 3 && f != ROT && f != ORANGE ? 0xE6E6E6 : f; }
-    // Votum-Ring: Füllung und Grundring
-    function votFill(f as Number) as Number { return stil == 2 ? dim(f, 70) : (stil == 3 ? 0x9A9A9A : f); }
-    // Diagrammlinien/-texte: Fitness hell, Ermüdung mittelgrau (Monochrom), sonst leicht gedimmt
-    function linie(f as Number) as Number { return stil == 3 ? (f == GRUEN ? 0xD6D6D6 : 0x8C8C8C) : (stil == 2 ? dim(f, 80) : f); }
-    function balkenF(f as Number) as Number { return stil == 3 && f != ROT ? 0x6A6A6A : f; }
-    function votSpur(f as Number) as Number { return stil == 3 ? 0x2E2E2E : dim(f, 42); }
+    // Votum-Ring: Füllung, Grundring und zweite Runde über der Obergrenze
+    function votFill(f as Number) as Number { return stil == 1 ? dim(f, 70) : (stil == 3 ? 0x9A9A9A : f); }
+    function votSpur(f as Number) as Number { return stil == 0 ? dim(f, 42) : (stil == 1 ? dim(f, 28) : 0x2E2E2E); }
+    function ueber() as Number { return wahl([0xFF6A00, 0xB04A00, 0xFF6A00, 0x707070]); }
+    // Diagrammlinien/-texte und Lastbalken
+    function linie(f as Number) as Number { return stil == 3 ? (f == GRUEN ? 0xD6D6D6 : 0x8C8C8C) : (stil == 2 ? dim(f, 80) : (stil == 1 ? dim(f, 75) : f)); }
+    function balkenF(f as Number) as Number { return stil == 1 ? dim(f, 70) : (stil == 2 ? 0x5A5A5A : (stil == 3 && f != ROT ? 0x6A6A6A : f)); }
+    function planF() as Number { return wahl([0x7F95AD, 0x66788A, 0x8A8A8A, 0x8A8A8A]); }
 
     // Skala = [grenzen (n+1 Werte, aufsteigend), farben (n)]
     function farbe(sk as Array, v as Numeric?) as Number {
@@ -115,7 +120,7 @@ module KiraSkala {
             var x1 = x + (bw * ((g[i] as Number) - lo) / (hi - lo));
             var x2 = x + (bw * ((g[i + 1] as Number) - lo) / (hi - lo)) - (i < f.size() - 1 ? 2 : 0);
             if (x2 <= x1) { continue; }
-            dc.setColor(v == null ? GRAU : f[i] as Number, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(v == null ? GRAU : seg(f[i] as Number), Graphics.COLOR_TRANSPARENT);
             dc.fillRectangle(x1, y, x2 - x1, hoch);
         }
         if (v != null) {
@@ -124,7 +129,7 @@ module KiraSkala {
             var cy = y + hoch / 2;
             dc.setColor(rand, Graphics.COLOR_TRANSPARENT);
             dc.fillCircle(px, cy, hoch / 2 + 5);
-            dc.setColor(farbe(sk, v), Graphics.COLOR_TRANSPARENT);
+            dc.setColor(punkt(farbe(sk, v)), Graphics.COLOR_TRANSPARENT);
             dc.fillCircle(px, cy, hoch / 2 + 3);
         }
     }
