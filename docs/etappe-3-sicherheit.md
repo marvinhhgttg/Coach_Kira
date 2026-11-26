@@ -75,3 +75,10 @@ Reihenfolge wie entschieden: 1 → 2 → 3.
 - Alte HTML-Seiten (page=chat/plan/…, Standardseite WebApp_V2): abgeschaltet, Antwort ist ein kurzer Text. Rückweg `ckSec_seitenAn()`. Zähler: `?mode=sicherheitLesen`.
 - Lesen: Schalter CK_LESE_PFLICHT (aus | protokoll | an), Stand `protokoll` (nur zählen). Server und Rechner-Kindprozesse hängen den Token an (server/gsFetch.mjs). Browser liest über /api/gs, ohne Sitzung fällt er auf den direkten Weg zurück (wird gezählt). Scharf schalten mit `ckSec_leseAn()` erst, wenn der Zähler nur noch erwartete Quellen zeigt; Rückweg `ckSec_leseAus()`.
 - Beide Bereitstellungen (live und v2) auf Version 983. Sicherungen: apps-script-backup/2026-11-25-vor-restrisiken und -nach-restrisiken.
+
+### Lese-Pflicht scharf (26.11.2026, 05:38)
+
+- Zähler vor dem Scharfschalten: fast nur Testinstanz v2 (status, planSimulationJson, kernVotum), dazu wenige extras/rohdaten.
+- Entscheidung Marc: v2 ohne Daten. `ckSec_leseAn()` ausgeführt, CK_LESE_PFLICHT = an.
+- Geprüft: Aufruf ohne Token → `token_required`; Live-Votum, Zeitreihe und Cockpit (Comet, angemeldet) laden normal.
+- Rückweg: `ckSec_leseAus()` oder `ckSec_leseProtokoll()`.

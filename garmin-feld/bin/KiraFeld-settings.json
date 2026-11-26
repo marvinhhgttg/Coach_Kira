@@ -37,6 +37,9 @@
     }, {
       "display" : "lpOben8",
       "value" : 8
+    }, {
+      "display" : "lpOben9",
+      "value" : 9
     } ],
     "configMin" : null,
     "configMax" : null,
@@ -70,6 +73,9 @@
     }, {
       "display" : "lpMitte5",
       "value" : 5
+    }, {
+      "display" : "lpMitte6",
+      "value" : 6
     } ],
     "configMin" : null,
     "configMax" : null,
@@ -115,7 +121,25 @@
     }, {
       "display" : "lpUnten9",
       "value" : 9
+    }, {
+      "display" : "lpUnten10",
+      "value" : 10
     } ],
+    "configMin" : null,
+    "configMax" : null,
+    "configMaxLength" : null
+  }, {
+    "key" : "pAktiv",
+    "valueType" : "boolean",
+    "defaultValue" : true,
+    "configTitle" : "spAktiv",
+    "configPrompt" : null,
+    "configType" : "boolean",
+    "configError" : null,
+    "configHelpUrl" : null,
+    "configReadonly" : false,
+    "configRequired" : false,
+    "configOptions" : null,
     "configMin" : null,
     "configMax" : null,
     "configMaxLength" : null
@@ -153,6 +177,8 @@
   "supportsLiveValidation" : false,
   "languages" : {
     "valyrian" : {
+      "lpUnten10" : "Puls",
+      "spAktiv" : "Uhrzeit, Strecke, Dauer, Puls anzeigen",
       "FitLabel" : "Kira ESS",
       "AppName" : "Kira ESS",
       "lpOben7" : "Distanz",
@@ -165,12 +191,14 @@
       "FitTitel" : "Kira ESS",
       "lpOben1" : "Zone jetzt",
       "lpOben0" : "Titel (KIRA TAG / Einheit)",
+      "lpOben9" : "Puls",
       "lpOben8" : "Uhrzeit",
       "spVibGrenze" : "Vibration: Unter-/Obergrenze",
       "FitEinheit" : "ESS",
       "spUnten" : "Untere Zeile",
       "spVibZone" : "Vibration: falsche Zone",
       "lpMitte5" : "Uhrzeit",
+      "lpMitte6" : "Puls",
       "lpMitte1" : "ESS dieser Einheit",
       "lpUnten9" : "Uhrzeit",
       "lpMitte2" : "ESS bis Obergrenze",

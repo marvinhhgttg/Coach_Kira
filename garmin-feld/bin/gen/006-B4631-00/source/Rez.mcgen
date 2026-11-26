@@ -10,6 +10,8 @@ module Rez {
     } // Drawables
 
     module Strings {
+        (:initialized) var lpUnten10 as ResourceId;
+        (:initialized) var spAktiv as ResourceId;
         (:initialized) var FitLabel as ResourceId;
         (:initialized) var AppName as ResourceId;
         (:initialized) var lpOben7 as ResourceId;
@@ -22,12 +24,14 @@ module Rez {
         (:initialized) var FitTitel as ResourceId;
         (:initialized) var lpOben1 as ResourceId;
         (:initialized) var lpOben0 as ResourceId;
+        (:initialized) var lpOben9 as ResourceId;
         (:initialized) var lpOben8 as ResourceId;
         (:initialized) var spVibGrenze as ResourceId;
         (:initialized) var FitEinheit as ResourceId;
         (:initialized) var spUnten as ResourceId;
         (:initialized) var spVibZone as ResourceId;
         (:initialized) var lpMitte5 as ResourceId;
+        (:initialized) var lpMitte6 as ResourceId;
         (:initialized) var lpMitte1 as ResourceId;
         (:initialized) var lpUnten9 as ResourceId;
         (:initialized) var lpMitte2 as ResourceId;
