@@ -5,7 +5,7 @@ Wird von kira_garmin_live.py nach jeder Live-Meldung aufgerufen (gleicher Garmin
   formular     Morgens (≥ 15 min nach Garmins Aufwachwert), nach jeder gespeicherten Einheit, abends ab 23:30 (bis 24.11. 21:30)
                → POST /api/auto/eintrag (Server prüft gegen die Timeline, trägt über onFormSubmit ein)
   sicherung    Server-Zustand (Kopplungen, Token, Einstellungen) lokal sichern; nach einem Neustart wiederherstellen
-  hinweise     fällige Hinweise ans iPhone (Erinnerungen-App, iCloud) und als Mac-Mitteilung
+  hinweise     fällige Hinweise als Google-Tasks-Aufgabe (Liste „Coach Kira“), Push und Mac-Mitteilung
   workout      ab 20 Uhr das morgige Plan-Workout in die Garmin-Warteschlange (kira_runner lädt es hoch)
   waechter     Selbstüberwachung – meldet sich nur bei Fehlern (je Fehler höchstens einmal am Tag)
 
@@ -27,7 +27,8 @@ STATE = BASE / "auto_state.json"
 SICHERUNG = BASE / "server_sicherung.json"
 LOG = BASE / "logs" / "auto.log"
 SERVER = "https://coachkira.pplx.app/port/5000"
-VERSION = "auto-2026-11-24"
+SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCEN11KRlFaLL7uVJyeBLCrRJVmfBWagSmqvyJ8Ci7nwxi8HbolzTy23Z-G2mivC2h/exec"
+VERSION = "auto-2026-11-26"
 
 ZUSTAND = {
     "PRODUCTIVE": "Formaufbau", "MAINTAINING": "Formerhalt", "PEAKING": "Höchstform", "RECOVERY": "Erholung",
@@ -123,7 +124,7 @@ def push(titel: str, text: str, kennung: str = "") -> None:
 
 
 def nachricht(titel: str, text: str, iphone: bool = True) -> None:
-    """Mac-Mitteilung und (für iPhone/Uhr) eine Erinnerung in der Liste „Coach Kira“ (iCloud)."""
+    """Mac-Mitteilung, Push und (für iPhone/Uhr) eine Google-Tasks-Aufgabe in der Liste „Coach Kira“."""
     esc = lambda s: s.replace("\\", "\\\\").replace('"', '\\"')
     try:
         subprocess.run(["osascript", "-e", f'display notification "{esc(text)}" with title "{esc(titel)}"'], timeout=10)
@@ -138,30 +139,23 @@ def nachricht(titel: str, text: str, iphone: bool = True) -> None:
             return
     except Exception:
         pass
-    # 25.11.2026: Aufgaben nur mit Datum (ganztägig), ohne Uhrzeit
-    skript = (
-        'tell application "Reminders"\n'
-        '  if (name of every account) contains "iCloud" then\n'
-        '    if not (exists list "Coach Kira" of account "iCloud") then make new list at account "iCloud" with properties {name:"Coach Kira"}\n'
-        '    set l to list "Coach Kira" of account "iCloud"\n'
-        '  else\n'
-        '    if not (exists list "Coach Kira") then make new list with properties {name:"Coach Kira"}\n'
-        '    set l to list "Coach Kira"\n'
-        '  end if\n'
-        '  set alt to (current date) - (6 * hours)\n'
-        '  try\n'
-        '    delete (every reminder of l whose creation date < alt)\n'
-        '  end try\n'
-        f'  make new reminder at end of l with properties {{name:"{esc(titel)}", body:"{esc(text)}", allday due date:(current date)}}\n'
-        'end tell'
-    )
+    # 26.11.2026: Hinweise als Aufgabe in Google Tasks (Liste „Coach Kira“), nur mit Datum, ohne Uhrzeit.
+    # Weg: Apps Script (POST ?mode=aufgabe mit Token) – der Mac braucht keinen eigenen Google-Zugang.
     try:
-        r = subprocess.run(["osascript", "-e", skript], capture_output=True, text=True, timeout=25)
-        if r.returncode != 0:
-            log(f"Erinnerung fehlgeschlagen: {r.stderr.strip()[:160]}")
-            pause.write_text(str(time.time() + 3600))
+        z = lesen(BASE / "zugang.json", {})
+        tok = str(z.get("apps_script_token") or "") if isinstance(z, dict) else ""
+        if not tok:
+            raise RuntimeError("Apps-Script-Token fehlt in zugang.json")
+        from urllib.parse import quote
+        body = json.dumps({"titel": titel, "text": text, "datum": datetime.date.today().isoformat()}).encode("utf-8")
+        req = Request(SCRIPT_URL + "?mode=aufgabe&token=" + quote(tok), data=body,
+                      headers={"Content-Type": "text/plain;charset=utf-8", "User-Agent": "coach-kira-runner"}, method="POST")
+        with urlopen(req, timeout=40) as r:
+            antwort = json.loads(r.read().decode("utf-8"))
+        if not antwort.get("ok"):
+            raise RuntimeError(str(antwort.get("error") or antwort)[:160])
     except Exception as e:
-        log(f"Erinnerung fehlgeschlagen (Freigabe für Erinnerungen fehlt?): {str(e)[:80]}")
+        log(f"Google-Tasks-Aufgabe fehlgeschlagen: {str(e)[:160]}")
         pause.write_text(str(time.time() + 3600))
 
 
