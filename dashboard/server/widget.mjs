@@ -3192,6 +3192,44 @@ function windowMean(reihe, win = CTL_MODEL.win) {
 // src/screens/RecoveryPanel.tsx
 var import_react7 = __toESM(require_react(), 1);
 
+// src/kern/datenstand.ts
+var DATEN_LABEL = {
+  vollstaendig: "Daten vollst\xE4ndig",
+  eingeschraenkt: "Daten eingeschr\xE4nkt",
+  offen: "Nicht entscheidungsf\xE4hig"
+};
+function datenstand(today, heuteIso) {
+  const fehlt = [];
+  const optional = [];
+  const istHeute = !!today && today.date === heuteIso;
+  if (!today || !istHeute || today.readiness == null) {
+    return {
+      stufe: "offen",
+      label: DATEN_LABEL.offen,
+      fehlt: [!today || !istHeute ? "Morgenwerte von heute" : "Trainingsbereitschaft"],
+      optional,
+      datum: today?.date ?? null
+    };
+  }
+  if (today.hrv == null) fehlt.push("HRV");
+  else if (today.hrvLow == null || today.hrvHigh == null) fehlt.push("HRV-Normalband");
+  if (today.rhr == null) fehlt.push("Ruhepuls");
+  else if (today.rhrDelta == null) fehlt.push("Ruhepuls-Basis");
+  if (today.sleepH == null) fehlt.push("Schlafdauer");
+  if (today.acwr == null) fehlt.push("ACWR (Belastungsverlauf)");
+  if (today.befinden == null) optional.push("Befinden");
+  const stufe = fehlt.length ? "eingeschraenkt" : "vollstaendig";
+  return { stufe, label: DATEN_LABEL[stufe], fehlt, optional, datum: today.date };
+}
+function fehltText(liste) {
+  const mehr = liste.length > 1 || /werte/i.test(liste[0] || "");
+  return `${liste.join(", ")} ${mehr ? "fehlen" : "fehlt"}`;
+}
+function datenstandKurz(d) {
+  if (d.stufe === "vollstaendig") return d.optional.length ? `${d.label} \xB7 ${d.optional.join(", ")} offen` : d.label;
+  return `${d.label}: ${fehltText(d.fehlt)}`;
+}
+
 // src/components/ZeitraumWahl.tsx
 var import_react2 = __toESM(require_react(), 1);
 
@@ -5368,9 +5406,11 @@ async function heuteTeil() {
   const wIstHeute = t ? istTag(t) : 0;
   const wPlanRest = naechste.filter((x) => x.d <= sonntag).reduce((a, x) => a + (x.ess || 0), 0);
   const wocheTeil = { kw: montag, istVorher: Math.round(wIstVorher), ist: Math.round(wIstVorher + wIstHeute), budgetBasis: Math.round(wIstVorher + Math.max(wIstHeute, planLoad || 0) + wPlanRest) };
+  const dsKern = datenstand(t, heute2);
   return {
     datum: heute2,
     woche: wocheTeil,
+    daten: { stufe: dsKern.stufe, label: dsKern.label, kurz: datenstandKurz(dsKern), fehlt: dsKern.fehlt, optional: dsKern.optional },
     votum: t?.vote ? { stufe: VOTE_LEVEL[t.vote], vote: t.vote, label: VOTE_LABEL[t.vote], text: (vorlaeufig ? "Vorl\xE4ufig (Garmin live): " : "") + STATUS_TEXT[t.vote], gruende: t.reasons.slice(0, 3), vorlaeufig, quelle: vorlaeufig ? "garmin live" : "sheet" } : { stufe: "grau", vote: null, label: "\u2013", text: t ? "Morgenwerte fehlen" : "noch keine Daten f\xFCr heute", gruende: t?.reasons?.slice(0, 1) || [] },
     morgen: t ? {
       eingetragen: !!t.hasMorningData,

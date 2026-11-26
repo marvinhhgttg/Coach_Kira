@@ -121,6 +121,9 @@ struct Kopf: View {
             Circle().fill(farbe).frame(width: 9, height: 9)
             Text(KiraStil.farbname(d.votum?.stufe)).font(.headline.weight(.heavy)).foregroundStyle(farbe)
             Text("· \(d.votum?.text ?? "–")").font(.subheadline).foregroundStyle(.white).lineLimit(1)
+            if let ds = d.daten, ds.stufe != "vollstaendig" {
+                Image(systemName: "exclamationmark.triangle.fill").font(.caption2).foregroundStyle(.orange)
+            }
             Spacer(minLength: 4)
             Text(KiraStil.datumKurz(d.datum)).font(.caption2).foregroundStyle(.white.opacity(0.6))
         }
@@ -180,6 +183,9 @@ struct KleinView: View {
             }
             Text(KiraStil.farbname(d.votum?.stufe)).font(.title.weight(.heavy)).foregroundStyle(farbe).minimumScaleFactor(0.7)
             Text(d.votum?.text ?? "–").font(.caption).foregroundStyle(.white).lineLimit(2)
+            if let ds = d.daten, ds.stufe != "vollstaendig" {
+                Text(ds.label ?? "Daten eingeschränkt").font(.caption2.weight(.semibold)).foregroundStyle(.orange).lineLimit(1)
+            }
             Spacer(minLength: 0)
             Text("Readiness \(KiraStil.zahl(d.morgen?.readiness))").font(.caption.weight(.semibold).monospacedDigit()).foregroundStyle(KiraStil.trFarbe(d.morgen?.readiness))
             Text("Soll \(d.last?.soll ?? "–") ESS · \(KiraStil.uhrzeit(d.stand))").font(.caption2).foregroundStyle(.white.opacity(0.55))

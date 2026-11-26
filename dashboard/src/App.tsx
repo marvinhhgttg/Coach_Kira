@@ -17,7 +17,7 @@ type ThemeMode = 'dark' | 'garmin';
 const TABS: { id: Tab; label: string; sub: string }[] = [
   { id: 'command', label: 'Heute', sub: 'Tagesentscheid · KI-Lage' },
   { id: 'entry', label: 'Eingabe', sub: 'morgens · aktivität · abends' },
-  { id: 'plan', label: 'Plan', sub: 'Plan Cockpit' },
+  { id: 'plan', label: 'Plan', sub: 'Woche · Ziele' },
   { id: 'charts', label: 'Analyse', sub: 'Steuerung · Verlauf' },
   { id: 'reports', label: 'Berichte', sub: 'Monat · Woche · Jahr' },
   { id: 'logs', label: 'Log', sub: 'Aktivitäten' },
@@ -84,6 +84,9 @@ export function App() {
     refreshProxyStatus();
   }, []);
 
+  // 26.11.2026: Hinweis in der Testinstanz v2 (ohne Daten)
+  const istV2 = typeof window !== 'undefined' && /^coachkira-v2\./.test(window.location.hostname);
+
   function pushToast(kind: 'ok' | 'err' | 'info', text: string) {
     setToast({ kind, text });
   }
@@ -94,7 +97,7 @@ export function App() {
       setProxy({ available: true, configured: s.configured, authenticated: s.authenticated });
       setToken('');
       setSetupPin('');
-      pushToast('ok', 'Privater Proxy eingerichtet. Token liegt jetzt serverseitig.');
+      pushToast('ok', 'Server-Zugang eingerichtet. Der Token liegt nur auf dem Server.');
     } catch (e: any) {
       pushToast('err', e?.message || String(e));
     }
@@ -105,7 +108,7 @@ export function App() {
       const s = await loginProxy(pin.trim());
       setProxy({ available: true, configured: s.configured, authenticated: s.authenticated });
       setPin('');
-      pushToast('ok', 'Proxy-Session aktiv.');
+      pushToast('ok', 'Angemeldet.');
     } catch (e: any) {
       pushToast('err', e?.message || String(e));
     }
@@ -114,7 +117,7 @@ export function App() {
   async function onProxyLogout() {
     await logoutProxy();
     await refreshProxyStatus();
-    pushToast('info', 'Proxy-Session beendet.');
+    pushToast('info', 'Abgemeldet.');
   }
 
   return (
@@ -208,6 +211,11 @@ export function App() {
         </nav>
       </header>
 
+      {istV2 && (
+        <div className="bg-bg-subtle border-b border-border text-xs text-ink-muted" data-testid="hinweis-v2">
+          <div className="max-w-[1400px] mx-auto px-5 py-2">Testinstanz v2 – ohne Daten (Lesezugriff nur für das Live-Cockpit). Kacheln bleiben hier leer.</div>
+        </div>
+      )}
       <main className="flex-1 max-w-[1400px] w-full mx-auto px-5 py-6">
         {tab === 'command' && (
           <CommandCenter

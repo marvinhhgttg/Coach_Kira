@@ -179,7 +179,7 @@ export function setupWidget(app, { getSetting, setSetting, originOk, texte, apps
         const st = globalThis.ckVorschlag?.status?.() || {};
         const pv = a.planVorschlag && st.id !== a.planVorschlag.id ? { id: a.planVorschlag.id, text: a.planVorschlag.aenderungen.map((x) => `${x.d.slice(8, 10)}.${x.d.slice(5, 7)}. ${x.alt}>${x.neu}`).join(' · '), max: a.planVorschlag.maxNeu } : null;
         const { planVorschlag: _pv, schlaf: _sl, ...rest2 } = rest;
-        return res.json({ ...rest2, naechste: req.query.mehr === '1' ? naechste : naechste.slice(0, 4), votum: a.votum ? { ...a.votum, gruende: (a.votum.gruende || []).slice(0, 2) } : null, hinweise: hinw, vorschlag: pv, ...mehr });
+        return res.json({ ...rest2, naechste: req.query.mehr === '1' ? naechste : naechste.slice(0, 4), votum: a.votum ? { ...a.votum, gruende: (a.votum.gruende || []).slice(0, 2) } : null, daten: a.daten ? { stufe: a.daten.stufe, kurz: a.daten.kurz } : null, hinweise: hinw, vorschlag: pv, ...mehr });
       }
       const { uhr: _u, ...ohneUhr } = a;
       res.json(ohneUhr);

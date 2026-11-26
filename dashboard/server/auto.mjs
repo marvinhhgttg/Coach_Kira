@@ -24,7 +24,7 @@ const ERLAUBT = {
 const TEXT = new Set(['hrv_threshholds', 'Trainingszustand', 'Sport_x', 'Zone']);
 const SPORT_OK = new Set(['Run', 'Bike', 'Hike', 'Row', 'Swim', 'Skike', 'Ski']);
 const ZUSTAND_OK = new Set(['Formaufbau', 'Formerhalt', 'Höchstform', 'Höchstleistung', 'Erholung', 'Unproduktiv', 'Formverlust', 'Überlastung', 'Ermüdet']);
-const SICHERN = ['widget_geraete', 'dashboard_token', 'pin_hash', 'pin_salt', 'wochenplan', 'wochen_budget', 'geraete_einstellungen', 'texte_einstellung', 'auto_einstellung', 'auto_vorschlag', 'garmin_workouts'];
+const SICHERN = ['widget_geraete', 'dashboard_token', 'pin_hash', 'pin_salt', 'wochenplan', 'wochen_budget', 'geraete_einstellungen', 'texte_einstellung', 'auto_einstellung', 'auto_vorschlag', 'garmin_workouts', 'sitzungen'];
 const STANDARD = { formular: true, hinweise: true, plancheck: true, workout: true, erfolg: true };
 
 const heute = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
@@ -301,6 +301,17 @@ export function setupAuto(app, { getSetting, setSetting, macOk, callAppsScript, 
         const ids = new Set(alt.map((g) => g.id));
         const plus = dazu.filter((g) => g && g.id && g.hash && !ids.has(g.id));
         if (plus.length) { setSetting(k, JSON.stringify([...alt, ...plus].slice(-10))); neu.push(`${k}+${plus.length}`); }
+        continue;
+      }
+      if (k === 'sitzungen') {
+        // Anmeldungen zusammenführen (nur Hash + Ablauf), abgelaufene fallen weg
+        let alt = [], dazu = [];
+        try { alt = JSON.parse(getSetting(k) || '[]'); dazu = JSON.parse(v); } catch { continue; }
+        if (!Array.isArray(alt) || !Array.isArray(dazu)) continue;
+        const jetzt = Date.now();
+        const hs = new Set(alt.map((x) => x && x.h));
+        const plus = dazu.filter((x) => x && typeof x.h === 'string' && x.h.length === 64 && Number(x.e) > jetzt && !hs.has(x.h));
+        if (plus.length) { setSetting(k, JSON.stringify([...alt, ...plus].slice(-50))); neu.push(`${k}+${plus.length}`); }
         continue;
       }
       if (!getSetting(k)) { setSetting(k, v); neu.push(k); }

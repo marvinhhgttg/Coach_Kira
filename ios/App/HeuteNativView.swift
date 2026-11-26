@@ -86,6 +86,12 @@ struct HeuteNativView: View {
                     Text(d.votum?.text ?? "").font(.subheadline).foregroundStyle(.white.opacity(0.75))
                 }
             }
+            if let ds = d.daten {
+                // 26.11.2026: Datenstand des Votums
+                Text(ds.kurz ?? ds.label ?? "")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(ds.stufe == "vollstaendig" ? Color.green : Color.orange)
+            }
             ForEach(Array((d.votum?.gruende ?? []).enumerated()), id: \.offset) { _, g in
                 Text("· \(g)").font(.footnote).foregroundStyle(.white.opacity(0.7))
             }

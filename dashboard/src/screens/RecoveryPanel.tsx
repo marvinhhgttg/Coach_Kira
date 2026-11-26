@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { datenstand, fehltText } from '../kern/datenstand';
 import { ZeitraumWahl } from '../components/ZeitraumWahl';
 import { BefindenHinweis } from '../components/BefindenHinweis';
 import {
@@ -982,7 +983,22 @@ function WichtigsteDaten({ today, todayIso, trJetzt = null, trLiveZeit = null }:
   const hrvFarbe = hrvTxt === 'Im Bereich' ? AMPEL_HEX.gruen : hrvTxt === '—' ? AMPEL_HEX.grau : AMPEL_HEX.orange;
   const bbFarbe = bb == null ? AMPEL_HEX.grau : farbeVon(BB_SKALA, bb);
   const hrvSk = hrvSkala(lo, hi);
+  const ds = datenstand(today, todayIso);
+  const dsFarbe = ds.stufe === 'vollstaendig' ? AMPEL_HEX.gruen : ds.stufe === 'eingeschraenkt' ? AMPEL_HEX.gelb : AMPEL_HEX.grau;
+  const dsText =
+    ds.stufe === 'offen'
+      ? `${fehltText(ds.fehlt)} – heute noch kein Votum. Morgenwerte unter Eingabe → morgens eintragen oder auf Garmin warten.`
+      : ds.stufe === 'eingeschraenkt'
+        ? `${fehltText(ds.fehlt)} – die zugehörige Regel greift heute nicht.`
+        : 'alle Eingaben für das Votum liegen vor.';
   return (
+    <>
+    <div data-testid="datenstand" className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-ink-muted">
+      <span className="inline-block rounded-full" style={{ width: 9, height: 9, background: dsFarbe }} />
+      <span className="font-semibold text-ink">{ds.label}</span>
+      <span>· {dsText}</span>
+      {ds.stufe !== 'offen' && <span className="text-ink-dim">· {trLiveZeit ? `Garmin-Stand ${trLiveZeit}` : `Morgenwerte vom ${ds.datum ? ds.datum.split('-').reverse().join('.') : '—'}`}{ds.optional.length ? ` · ${ds.optional.join(', ')} noch offen` : ''}</span>}
+    </div>
     <StoryGrid spalten={4}>
       <KpiKachel testid="kpi-readiness" titel="Trainingsbereitschaft" ring={r} wert={r != null ? Math.round(r) : '—'} farbe={r != null ? trFarbe(r) : AMPEL_HEX[rLvl]} baender={TR_BAENDER} unter={rUnter} />
       <KpiKachel testid="kpi-votum" titel="Tagesvotum" symbol={<Punkt farbe={vote ? AMPEL_HEX[VOTE_LEVEL[vote]] : AMPEL_HEX.grau} haken={vote === 'TRAIN' || vote === 'QUALITY'} />} wert={vote ? VOTE_LABEL[vote] : '—'} unter={vote ? VOTE_STATUS_TEXT[vote].replace(/^[A-ZÜ]+ — /, '') : 'noch offen'} />
@@ -993,6 +1009,7 @@ function WichtigsteDaten({ today, todayIso, trJetzt = null, trLiveZeit = null }:
       )}
       <KpiKachel testid="kpi-bb" titel="Body Battery" ring={bb} skala={BB_SKALA} wert={bb != null ? Math.round(bb) : '—'} farbe={bbFarbe} unter={bb != null ? `${nameVon(BB_SKALA, bb)} · ${g?.bb_aufwachen != null ? 'beim Aufwachen' : 'Tageshoch'}` : 'keine Garmin-Daten'} />
     </StoryGrid>
+    </>
   );
 }
 

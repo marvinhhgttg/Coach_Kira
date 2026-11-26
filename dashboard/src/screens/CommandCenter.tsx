@@ -319,8 +319,8 @@ function StatusRadarSection({ items }: { items: StatusItemLike[] }) {
     <Panel title="Status-Radar">
       <div className="grid gap-4 xl:grid-cols-3">
         <RadarChart title="Gesamtzustand" labels={RADAR_MAP.overall} items={items} />
-        <RadarChart title="Recovery" labels={RADAR_MAP.recovery} items={items} />
-        <RadarChart title="Training" labels={RADAR_MAP.training} items={items} />
+        <RadarChart title="Erholung" labels={RADAR_MAP.recovery} items={items} />
+        <RadarChart title="Belastung" labels={RADAR_MAP.training} items={items} />
       </div>
     </Panel>
   );
@@ -510,7 +510,7 @@ export function CommandCenter({
     items.find((x) => (x.metrik || '').toLowerCase().includes(needle.toLowerCase()));
   const readiness = findMetric('Training Readiness')?.score ?? findMetric('Training Readiness')?.wert;
   const kei = findMetric('KEI')?.score ?? findMetric('KEI')?.wert;
-  const nutrition = findMetric('7-Tage-Bilanz')?.score ?? findMetric('Ernährung')?.score ?? 100;
+  const nutrition = findMetric('7-Tage-Bilanz')?.score ?? findMetric('Ernährung')?.score ?? null; // 26.11.2026: fehlender Wert bleibt leer (früher Standard 100)
   const acwr = findMetric('ACWR')?.wert;
   const toGaugeValue = (v: unknown) => (typeof v === 'number' ? v : Number(v));
 
@@ -548,7 +548,7 @@ export function CommandCenter({
         <KpiKachel testid="score-training" skala={SCORE_SKALA} titel="Training" ring={zahlOderNull(summary?.trainingScore)} wert={wertText(summary?.trainingScore)} farbe={scoreFarbe(summary?.trainingScore)} unter="Training Score" />
         <KpiKachel testid="score-recovery" skala={SCORE_SKALA} titel="Recovery" ring={zahlOderNull(summary?.recoveryScore)} wert={wertText(summary?.recoveryScore)} farbe={scoreFarbe(summary?.recoveryScore)} unter="Recovery Score" />
         <KpiKachel testid="score-kei" skala={SCORE_SKALA} titel="KEI" ring={zahlOderNull(kei)} wert={wertText(kei)} farbe={scoreFarbe(kei)} unter="Effizienz" />
-        <KpiKachel testid="score-ernaehrung" skala={SCORE_SKALA} titel="Ernährung" ring={zahlOderNull(nutrition)} wert={wertText(nutrition)} farbe={scoreFarbe(nutrition)} unter="Bilanz / Score" />
+        <KpiKachel testid="score-ernaehrung" skala={SCORE_SKALA} titel="Ernährung" ring={zahlOderNull(nutrition)} wert={wertText(nutrition)} farbe={scoreFarbe(nutrition)} unter={nutrition == null ? 'keine Ernährungsdaten' : 'Bilanz / Score'} />
         <KpiKachel
           testid="score-acwr"
           titel="ACWR"
@@ -667,7 +667,7 @@ export function CommandCenter({
       <div className="mb-4"><VotumAbgleichTile /></div>
       <div className="mb-4"><SollAbgleichTile /></div>
       {/* Letzter Lauf (ganz unten) */}
-      <Panel title="Letzter Lauf · Heartbeat">
+      <Panel title="Letzter Lauf · Lebenszeichen">
         {statusLoading ? (
           <Skeleton className="h-16" />
         ) : (
@@ -688,14 +688,14 @@ export function CommandCenter({
               </dd>
             </div>
             <div>
-              <dt className="label">Stage</dt>
+              <dt className="label">Schritt</dt>
               <dd className="tnum mt-1 flex items-center gap-2">
                 <AmpelDot ampel="BLAU" size={6} />
                 {hb?.stage || '—'}
               </dd>
             </div>
             <div>
-              <dt className="label">RunId</dt>
+              <dt className="label">Lauf-Kennung</dt>
               <dd className="tnum mt-1 text-ink-muted">{hb?.runId || '—'}</dd>
             </div>
           </dl>
@@ -716,7 +716,7 @@ export function CommandCenter({
           <div className="space-y-4">
             <p className="text-ink leading-relaxed">{activeRoutine.desc}</p>
             <div className="rounded border border-accent-strong/30 bg-accent-strong/5 p-3 text-sm">
-              <div className="label mb-2">Agent-Auftrag</div>
+              <div className="label mb-2">Auftrag an den Agenten</div>
               <code className="block tnum text-accent text-base">{activeRoutine.skill}</code>
               <p className="text-2xs text-ink-muted mt-2 leading-relaxed">
                 Starte diese Routine in deiner Perplexity-Computer-Sitzung mit dem oben genannten Auftrag.

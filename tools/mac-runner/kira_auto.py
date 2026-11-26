@@ -351,7 +351,7 @@ def sicherung(st: dict) -> dict:
     alt_werte = alt.get("werte") or {}
     neustart = alt.get("start") and r.get("start") and alt.get("start") != r.get("start")
     if neustart:
-        fehlt = {k: v for k, v in alt_werte.items() if k not in werte or (k == "widget_geraete" and r.get("geraete", 0) == 0)}
+        fehlt = {k: v for k, v in alt_werte.items() if k not in werte or k == "sitzungen" or (k == "widget_geraete" and r.get("geraete", 0) == 0)}
         if fehlt:
             w = api("POST", "/api/auto/wiederherstellen", {"werte": fehlt})
             log(f"Server neu gestartet – wiederhergestellt: {w.get('wiederhergestellt')}")

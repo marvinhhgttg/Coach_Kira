@@ -33,10 +33,19 @@ export function Skeleton({ className = '' }: { className?: string }) {
   );
 }
 
+/** 26.11.2026: technische Fehlermeldungen in Alltagssprache (Lade-, Fehler-, Anmelde-Zustand unterscheidbar) */
+export function klartextFehler(message: string): string {
+  const m = String(message || '');
+  if (/token_required|not_authenticated|401|403/i.test(m)) return 'Gesperrt – dieses Gerät ist nicht angemeldet. Bitte mit der PIN anmelden.';
+  if (/Zeitüberschreitung|timeout|aborted/i.test(m)) return 'Keine Antwort – Google Sheets ist gerade langsam. Bitte erneut versuchen.';
+  if (/Failed to fetch|NetworkError|Load failed|ECONN|502|503/i.test(m)) return 'Keine Verbindung zum Server. Netz prüfen und erneut versuchen.';
+  return `Fehler: ${m}`;
+}
+
 export function ErrorBox({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
     <div className="rounded border border-ampel-rot/40 bg-ampel-rot/5 px-3 py-2 text-sm text-red-300 flex items-center justify-between gap-3">
-      <span className="truncate">Fehler: {message}</span>
+      <span className="truncate" title={message}>{klartextFehler(message)}</span>
       {onRetry && (
         <button onClick={onRetry} className="btn btn-ghost text-xs px-2 py-1">
           Erneut

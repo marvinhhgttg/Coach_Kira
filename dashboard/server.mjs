@@ -73,10 +73,36 @@ function verifyPin(pin) {
   return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(expected, 'hex'));
 }
 
+// 26.11.2026: Anmeldungen überstehen einen Publish – Spiegel (nur Hash + Ablauf) in den Einstellungen,
+// den der Mac mit sichert und nach einem Neustart zurückspielt (Schlüssel „sitzungen“).
+const sitzHash = (id) => crypto.createHash('sha256').update(String(id)).digest('hex');
+function sitzungenSpiegeln() {
+  try {
+    const rows = db.prepare('SELECT id, expires_at FROM sessions WHERE expires_at > ?').all(now());
+    let alt = [];
+    try { alt = JSON.parse(getSetting('sitzungen') || '[]'); } catch { alt = []; }
+    const map = new Map((Array.isArray(alt) ? alt : []).filter((x) => x && x.h && x.e > now()).map((x) => [x.h, x.e]));
+    for (const r of rows) map.set(sitzHash(r.id), r.expires_at);
+    setSetting('sitzungen', JSON.stringify([...map].map(([h, e]) => ({ h, e })).slice(-50)));
+  } catch { /* egal */ }
+}
+function sitzungAusSpiegel(id) {
+  try {
+    const h = sitzHash(id);
+    const z = (JSON.parse(getSetting('sitzungen') || '[]') || []).find((x) => x && x.h === h && x.e > now());
+    if (!z) return false;
+    db.prepare('INSERT OR IGNORE INTO sessions(id,created_at,expires_at) VALUES(?,?,?)').run(id, now(), z.e);
+    return true;
+  } catch { return false; }
+}
+
+setTimeout(() => sitzungenSpiegeln(), 0);
+
 function createSession(res) {
   const id = crypto.randomBytes(32).toString('hex');
   const expires = now() + 1000 * 60 * 60 * 24 * 45;
   db.prepare('INSERT INTO sessions(id,created_at,expires_at) VALUES(?,?,?)').run(id, now(), expires);
+  sitzungenSpiegeln();
   res.cookie(COOKIE_NAME, id, {
     httpOnly: true,
     sameSite: 'lax',
@@ -89,21 +115,29 @@ function createSession(res) {
 
 function clearSession(req, res) {
   const id = req.cookies?.[COOKIE_NAME];
-  if (id) db.prepare('DELETE FROM sessions WHERE id=?').run(id);
+  if (id) {
+    db.prepare('DELETE FROM sessions WHERE id=?').run(id);
+    try {
+      const h = sitzHash(id);
+      const alt = JSON.parse(getSetting('sitzungen') || '[]') || [];
+      setSetting('sitzungen', JSON.stringify(alt.filter((x) => x && x.h !== h)));
+    } catch { /* egal */ }
+  }
   res.clearCookie(COOKIE_NAME, { path: '/', secure: PROD, sameSite: 'lax' });
 }
 
 function isAuthed(req) {
   const id = req.cookies?.[COOKIE_NAME];
   if (!id) return false;
-  const row = db.prepare('SELECT expires_at FROM sessions WHERE id=?').get(id);
+  let row = db.prepare('SELECT expires_at FROM sessions WHERE id=?').get(id);
+  if (!row && sitzungAusSpiegel(id)) row = db.prepare('SELECT expires_at FROM sessions WHERE id=?').get(id);
   if (!row || row.expires_at < now()) {
     if (row) db.prepare('DELETE FROM sessions WHERE id=?').run(id);
     return false;
   }
   // gleitend: bei Nutzung wieder 45 Tage (höchstens einmal pro Stunde schreiben)
   const neu = now() + 1000 * 60 * 60 * 24 * 45;
-  if (neu - row.expires_at > 1000 * 60 * 60) db.prepare('UPDATE sessions SET expires_at=? WHERE id=?').run(neu, id);
+  if (neu - row.expires_at > 1000 * 60 * 60) { db.prepare('UPDATE sessions SET expires_at=? WHERE id=?').run(neu, id); sitzungenSpiegeln(); }
   return true;
 }
 

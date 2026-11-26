@@ -70,7 +70,7 @@ class KiraNetz {
                     status = "Server neu - Kopplung kommt zurück";
                 }
             } else {
-                status = rc < 0 ? "Kein Netz (" + rc.toString() + ")" : "Server " + rc.toString();
+                status = rc < 0 ? "Kein Netz - später erneut" : rc >= 500 ? "Server-Fehler - später erneut" : "Server " + rc.toString();
             }
         } catch (e) {
             status = "Fehler: " + e.getErrorMessage();
@@ -371,6 +371,11 @@ class KiraView extends WatchUi.View {
             if (txt != null) { var tt = txt.toString(); var k = tt.find(": "); if (k != null) { txt = tt.substring(k + 2, tt.length()); } }
         }
         if (txt != null) { y = zeile(dc, y, Graphics.FONT_SMALL, txt.toString(), Graphics.COLOR_WHITE); }
+        // 26.11.2026: Datenstand des Votums (Kern) – nur wenn nicht vollständig
+        var ds = d.get("daten");
+        if (heute && ds instanceof Dictionary && ds.get("stufe") != null && !ds.get("stufe").toString().equals("vollstaendig") && ds.get("kurz") != null) {
+            y = zeile(dc, y, Graphics.FONT_XTINY, ds.get("kurz").toString(), 0xE0A800);
+        }
         var gr = KiraHilfen.feld(d, "votum", "gruende");
         if (gr instanceof Array && gr.size() > 0) {
             y = zeile(dc, y + 4, Graphics.FONT_XTINY, gr[0].toString(), 0xBBBBBB);

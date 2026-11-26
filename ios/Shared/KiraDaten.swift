@@ -58,6 +58,12 @@ struct WidgetDaten: Codable {
         /// „Plan 180“ oder leer
         var planKurz: String { planHeute.map { "Plan \(KiraStil.zahl($0))" } ?? "" }
     }
+    /// 26.11.2026: Datenstand des Votums (Kern): vollstaendig | eingeschraenkt | offen
+    struct Daten: Codable {
+        let stufe: String
+        let label: String?
+        let kurz: String?
+    }
     struct Ziel: Codable {
         let name: String
         let datum: String
@@ -84,6 +90,7 @@ struct WidgetDaten: Codable {
     let stand: String?
     let datum: String?
     let votum: Votum?
+    let daten: Daten?
     let morgen: Morgen?
     let last: Last?
     let ziel: Ziel?
@@ -93,6 +100,7 @@ struct WidgetDaten: Codable {
     static let beispiel = WidgetDaten(
         ok: true, stand: nil, datum: nil,
         votum: Votum(stufe: "gruen", vote: "TRAIN", label: "Train", text: "normal trainieren", gruende: nil),
+        daten: Daten(stufe: "vollstaendig", label: "Daten vollständig", kurz: "Daten vollständig"),
         morgen: Morgen(eingetragen: true, readiness: 72, schlaf: 84, schlafH: 7.4, hrv: 52, hrvStufe: "gruen", rhr: 48, rhrDelta: 0, befinden: 4),
         last: Last(sollHeute: 120, sportHeute: "Run", zoneHeute: "Z2", istHeute: 0, erledigt: false, acwr: 1.08, acwrBand: "korridor",
                    woche: [95.0, 0, 140, 60, 0, 180, 0].enumerated().map { Tag(d: "\($0.offset)", ist: $0.element) }),

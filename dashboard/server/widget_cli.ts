@@ -6,6 +6,7 @@
  */
 import './gsFetch.mjs'; // Restrisiko 3: Token für Lesezugriffe
 import { buildDays, RECOVERY_FETCH_METRICS, VOTE_LABEL, VOTE_LEVEL, type RecoveryDay } from '../src/kern/votum';
+import { datenstand, datenstandKurz } from '../src/kern/datenstand';
 import { lastEmpfehlung, persoenlicheBaender, type Baender } from '../src/kern/soll';
 import { fetchChartData, fetchPlanSimulationWithTimeout } from '../src/lib/api';
 import { rangeFor } from '../src/lib/windows';
@@ -193,9 +194,12 @@ async function heuteTeil() {
   const wIstHeute = t ? istTag(t) : 0;
   const wPlanRest = naechste.filter((x) => x.d <= sonntag).reduce((a, x) => a + (x.ess || 0), 0);
   const wocheTeil = { kw: montag, istVorher: Math.round(wIstVorher), ist: Math.round(wIstVorher + wIstHeute), budgetBasis: Math.round(wIstVorher + Math.max(wIstHeute, planLoad || 0) + wPlanRest) };
+  // 26.11.2026: Datenstand des Votums (Kern) – gleiche Aussage wie im Cockpit
+  const dsKern = datenstand(t, heute);
   return {
     datum: heute,
     woche: wocheTeil,
+    daten: { stufe: dsKern.stufe, label: dsKern.label, kurz: datenstandKurz(dsKern), fehlt: dsKern.fehlt, optional: dsKern.optional },
     votum: t?.vote
       ? { stufe: VOTE_LEVEL[t.vote], vote: t.vote, label: VOTE_LABEL[t.vote], text: (vorlaeufig ? 'Vorläufig (Garmin live): ' : '') + STATUS_TEXT[t.vote], gruende: t.reasons.slice(0, 3), vorlaeufig, quelle: vorlaeufig ? 'garmin live' : 'sheet' }
       : { stufe: 'grau', vote: null, label: '–', text: t ? 'Morgenwerte fehlen' : 'noch keine Daten für heute', gruende: t?.reasons?.slice(0, 1) || [] },

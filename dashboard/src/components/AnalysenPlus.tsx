@@ -100,7 +100,7 @@ export function WindRadTile() {
           <p className="text-2xs text-ink-muted mt-1">
             {klein ? 'Ergebnis: Die verfügbare Windstärke (ohne Richtung) verändert den Trend kaum. Dass Wind den realen Verlauf verzerrt, lässt sich damit nicht ausschließen.' : 'Die Windstärke wirkt im Modell messbar – nutze den bereinigten Trend.'} Die meisten Einheiten lagen unter 10 km/h Wind.
           </p>
-          <KiraFazit title="Wind Rad" facts={facts} evidenz="schwach" evidenzText={`Tendenz – ${r.n} Einheiten, meist wenig Wind, keine Windrichtung; „kaum messbar“ heißt nicht „kein Einfluss“`} regeln={['Kernaussage: ob Wind die Werte messbar verändert. Ein steigender Trend Watt je km/h bedeutet mehr Aufwand, nicht mehr Effizienz.']} />
+          <KiraFazit title="Wind beim Radfahren" facts={facts} evidenz="schwach" evidenzText={`Tendenz – ${r.n} Einheiten, meist wenig Wind, keine Windrichtung; „kaum messbar“ heißt nicht „kein Einfluss“`} regeln={['Kernaussage: ob Wind die Werte messbar verändert. Ein steigender Trend Watt je km/h bedeutet mehr Aufwand, nicht mehr Effizienz.']} />
         </>
       )}
     </Panel>

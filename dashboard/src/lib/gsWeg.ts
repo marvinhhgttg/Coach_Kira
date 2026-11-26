@@ -13,6 +13,14 @@ const IST_V2 =
   typeof window !== 'undefined' &&
   (/^coachkira-v2\./.test(window.location.hostname) || (() => { try { return localStorage.getItem('ck-v2-test') === '1'; } catch { return false; } })());
 
+/** 26.11.2026: Apps Script weist Lesen ohne Anmeldung ab → Anmeldeseite wieder zeigen (AnmeldeTor) */
+function gesperrtPruefen(r: Response): Response {
+  try {
+    r.clone().text().then((t) => { if (/token_required/.test(t)) window.dispatchEvent(new Event('ck-abgemeldet')); }).catch(() => {});
+  } catch { /* egal */ }
+  return r;
+}
+
 if (typeof window !== 'undefined' && !IST_V2 && !(window as any).__ckGsWeg) {
   (window as any).__ckGsWeg = true;
   const orig = window.fetch.bind(window);
@@ -35,7 +43,7 @@ if (typeof window !== 'undefined' && !IST_V2 && !(window as any).__ckGsWeg) {
         const nurLesen = methode !== 'POST' && !u.searchParams.has('action');
         if (!nurLesen) return proxy;
         // Lesen: ohne Sitzung (401/403) oder ohne Server-Token (503) direkt wie bisher – wird in Apps Script gezählt
-        return proxy.then((r) => (r.status === 401 || r.status === 403 || r.status === 503 ? orig(input as any, init) : r))
+        return proxy.then((r) => (r.status === 401 || r.status === 403 || r.status === 503 ? orig(input as any, init).then(gesperrtPruefen) : r))
           .catch((e) => { if ((e as any)?.name === 'AbortError') throw e; return orig(input as any, init); });
       }
     }
