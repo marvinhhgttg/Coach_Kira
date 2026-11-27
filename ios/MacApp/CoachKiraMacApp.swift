@@ -57,7 +57,7 @@ final class MacSteuerung: ObservableObject {
         return z > 0 ? z : zoomStandardWert
     }
 
-    func zoom(_ schritt: Double) { setzeZoom((webView?.pageZoom ?? Self.gespeicherterZoom) + schritt) }
+    func zoom(_ schritt: Double) { setzeZoom((webView.map { Double($0.pageZoom) } ?? Self.gespeicherterZoom) + schritt) }
     func zoomStandard() { setzeZoom(Self.zoomStandardWert) }
 
     private func setzeZoom(_ z: Double) {
