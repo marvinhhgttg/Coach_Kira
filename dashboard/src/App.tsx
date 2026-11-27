@@ -1,0 +1,252 @@
+import { useEffect, useState } from 'react';
+import { CommandCenter } from './screens/CommandCenter';
+import { PlanCockpit } from './screens/PlanCockpit';
+import { ChartDeck } from './screens/ChartDeck';
+import { TacticalLog } from './screens/TacticalLog';
+import { EntryPanel } from './screens/EntryPanel';
+import { Reports } from './screens/Reports';
+import { Toast } from './components/UI';
+import { Logo } from './components/Logo';
+import { fmtTime } from './lib/format';
+import { getProxyStatus, loginProxy, logoutProxy, setupProxy } from './lib/proxy';
+import { HeaderEngineSwitch } from './components/EngineSwitch';
+
+type Tab = 'command' | 'entry' | 'plan' | 'charts' | 'reports' | 'logs';
+type ThemeMode = 'dark' | 'garmin';
+
+const TABS: { id: Tab; label: string; sub: string }[] = [
+  { id: 'command', label: 'Heute', sub: 'Tagesentscheid · KI-Lage' },
+  { id: 'entry', label: 'Eingabe', sub: 'morgens · aktivität · abends' },
+  { id: 'plan', label: 'Plan', sub: 'Woche · Ziele' },
+  { id: 'charts', label: 'Analyse', sub: 'Steuerung · Verlauf' },
+  { id: 'reports', label: 'Berichte', sub: 'Monat · Woche · Jahr' },
+  { id: 'logs', label: 'Log', sub: 'Aktivitäten' },
+];
+
+const HASH_TAB: Record<string, Tab> = { heute: 'command', eingabe: 'entry', plan: 'plan', ziele: 'plan', analyse: 'charts', berichte: 'reports', log: 'logs' };
+function tabAusHash(): Tab | null {
+  const h = (window.location.hash || '').replace('#', '').toLowerCase();
+  const t = HASH_TAB[h];
+  if (!t) return null;
+  if (h === 'ziele') {
+    try { localStorage.setItem('ck_plan_tab', 'ziele'); } catch { /* egal */ }
+    window.dispatchEvent(new CustomEvent('ck-plan-tab', { detail: 'ziele' }));
+  }
+  return t;
+}
+
+export function App() {
+  // Token in React state ONLY — never persisted.
+  const [token, setToken] = useState('');
+  const [tab, setTab] = useState<Tab>(() => tabAusHash() || 'command');
+  // Sprungziele aus App und Widgets: #heute, #eingabe, #plan, #ziele, #analyse, #berichte, #log
+  useEffect(() => {
+    const f = () => {
+      const t = tabAusHash();
+      if (t) setTab(t);
+    };
+    window.addEventListener('hashchange', f);
+    return () => window.removeEventListener('hashchange', f);
+  }, []);
+  const [toast, setToast] = useState<
+    { kind: 'ok' | 'err' | 'info'; text: string } | null
+  >(null);
+  const [now, setNow] = useState(new Date());
+  const [proxy, setProxy] = useState({ available: false, configured: false, authenticated: false });
+  const [pin, setPin] = useState('');
+  const [setupPin, setSetupPin] = useState('');
+  const [themeMode, setThemeModeState] = useState<ThemeMode>(() => {
+    try { return (localStorage.getItem('ck-theme') as ThemeMode) || 'garmin'; } catch { return 'garmin'; }
+  });
+  const setThemeMode = (m: ThemeMode) => { setThemeModeState(m); try { localStorage.setItem('ck-theme', m); } catch { /* egal */ } };
+
+  useEffect(() => {
+    if (!toast) return;
+    const id = window.setTimeout(() => setToast(null), 6000);
+    return () => window.clearTimeout(id);
+  }, [toast]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  async function refreshProxyStatus() {
+    try {
+      const s = await getProxyStatus();
+      setProxy({ available: true, configured: s.configured, authenticated: s.authenticated });
+    } catch {
+      setProxy({ available: false, configured: false, authenticated: false });
+    }
+  }
+
+  useEffect(() => {
+    refreshProxyStatus();
+  }, []);
+
+  // 26.11.2026: Hinweis in der Testinstanz v2 (ohne Daten)
+  const istV2 = typeof window !== 'undefined' && /^coachkira-v2\./.test(window.location.hostname);
+
+  function pushToast(kind: 'ok' | 'err' | 'info', text: string) {
+    setToast({ kind, text });
+  }
+
+  async function onProxySetup() {
+    try {
+      const s = await setupProxy(token.trim(), setupPin.trim());
+      setProxy({ available: true, configured: s.configured, authenticated: s.authenticated });
+      setToken('');
+      setSetupPin('');
+      pushToast('ok', 'Server-Zugang eingerichtet. Der Token liegt nur auf dem Server.');
+    } catch (e: any) {
+      pushToast('err', e?.message || String(e));
+    }
+  }
+
+  async function onProxyLogin() {
+    try {
+      const s = await loginProxy(pin.trim());
+      setProxy({ available: true, configured: s.configured, authenticated: s.authenticated });
+      setPin('');
+      pushToast('ok', 'Angemeldet.');
+    } catch (e: any) {
+      pushToast('err', e?.message || String(e));
+    }
+  }
+
+  async function onProxyLogout() {
+    await logoutProxy();
+    await refreshProxyStatus();
+    pushToast('info', 'Abgemeldet.');
+  }
+
+  return (
+    <div className={`min-h-full flex flex-col ${themeMode === 'garmin' ? 'garmin-mode' : 'dark-mode'}`}>
+      {/* Header */}
+      <header className="border-b border-border bg-bg-raised/70 backdrop-blur-sm sticky top-0 z-30">
+        <div className="max-w-[1400px] mx-auto px-5 py-3 flex items-center gap-5">
+          <div className="flex items-center gap-2.5 text-ink">
+            <Logo size={30} />
+            <div className="leading-tight">
+              <div className="text-sm font-semibold tracking-tight">Coach Kira</div>
+              <div className="text-2xs text-ink-dim tnum">Trainingscockpit</div>
+            </div>
+          </div>
+
+          <nav className="hidden md:flex gap-0.5 ml-4" role="tablist">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                role="tab"
+                aria-selected={tab === t.id}
+                onClick={() => setTab(t.id)}
+                className={`px-3 py-1.5 rounded text-sm transition-colors ${
+                  tab === t.id
+                    ? 'bg-bg-subtle text-ink'
+                    : 'text-ink-muted hover:text-ink hover:bg-bg-subtle/60'
+                }`}
+                data-testid={`tab-${t.id}`}
+              >
+                <span className="block">{t.label}</span>
+                <span className="block text-2xs text-ink-dim tnum mt-0.5">{t.sub}</span>
+              </button>
+            ))}
+          </nav>
+
+          <div className="ml-auto flex items-center gap-3 text-2xs tnum text-ink-dim">
+            <HeaderEngineSwitch />
+            <div
+              className="theme-switch inline-flex items-center rounded-md border border-border bg-bg-panel p-0.5 shadow-sm"
+              role="group"
+              aria-label="Darstellungsmodus wählen"
+              data-testid="theme-mode-switch"
+            >
+              <button
+                onClick={() => setThemeMode('dark')}
+                className={`theme-switch-option px-2.5 py-1 text-xs rounded transition-colors ${
+                  themeMode === 'dark'
+                    ? 'bg-bg-subtle text-ink'
+                    : 'text-ink-muted hover:text-ink'
+                }`}
+                data-testid="button-theme-dark"
+                aria-pressed={themeMode === 'dark'}
+                title="Darkmode aktivieren"
+              >
+                Dark
+              </button>
+              <button
+                onClick={() => setThemeMode('garmin')}
+                className={`theme-switch-option px-2.5 py-1 text-xs rounded transition-colors ${
+                  themeMode === 'garmin'
+                    ? 'bg-bg-subtle text-ink'
+                    : 'text-ink-muted hover:text-ink'
+                }`}
+                data-testid="button-theme-garmin"
+                aria-pressed={themeMode === 'garmin'}
+                title="Garmin-Mode aktivieren"
+              >
+                Garmin
+              </button>
+            </div>
+            <span className="hidden sm:inline">{fmtTime(now.toISOString())}</span>
+            <span className="hidden md:inline">Europe/Berlin</span>
+          </div>
+        </div>
+
+        {/* mobile tab strip */}
+        <nav className="md:hidden flex overflow-x-auto px-3 pb-2 gap-1" role="tablist">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              role="tab"
+              aria-selected={tab === t.id}
+              onClick={() => setTab(t.id)}
+              className={`shrink-0 px-3 py-1.5 rounded text-xs ${
+                tab === t.id ? 'bg-bg-subtle text-ink' : 'text-ink-muted'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </nav>
+      </header>
+
+      {istV2 && (
+        <div className="bg-bg-subtle border-b border-border text-xs text-ink-muted" data-testid="hinweis-v2">
+          <div className="max-w-[1400px] mx-auto px-5 py-2">Testinstanz v2 – ohne Daten (Lesezugriff nur für das Live-Cockpit). Kacheln bleiben hier leer.</div>
+        </div>
+      )}
+      <main className="flex-1 max-w-[1400px] w-full mx-auto px-5 py-6">
+        {tab === 'command' && (
+          <CommandCenter
+            token={token}
+            setToken={setToken}
+            toast={pushToast}
+            proxy={proxy}
+            pin={pin}
+            setPin={setPin}
+            setupPin={setupPin}
+            setSetupPin={setSetupPin}
+            onProxySetup={onProxySetup}
+            onProxyLogin={onProxyLogin}
+            onProxyLogout={onProxyLogout}
+          />
+        )}
+        {tab === 'entry' && <EntryPanel token={token} toast={pushToast} proxyAuthenticated={proxy.authenticated} />}
+        {tab === 'plan' && <PlanCockpit token={token} toast={pushToast} proxyAuthenticated={proxy.authenticated} />}
+        {tab === 'charts' && <ChartDeck />}
+        {tab === 'reports' && <Reports />}
+        {tab === 'logs' && <TacticalLog />}
+      </main>
+
+      <footer className="border-t border-border mt-6">
+        <div className="max-w-[1400px] mx-auto px-5 py-3 flex flex-wrap items-center justify-between gap-2 text-2xs text-ink-dim tnum">
+          <span>© {new Date().getFullYear()} Coach Kira · Trainingssteuerung</span>
+          <span>Daten: Garmin Connect · Google Sheets</span>
+        </div>
+      </footer>
+
+      <Toast toast={toast} onClose={() => setToast(null)} />
+    </div>
+  );
+}

@@ -1,0 +1,128 @@
+# Coach Kira – iPhone-App mit Widgets. Erzeugen: `xcodegen` im Ordner ios/, dann CoachKira.xcodeproj öffnen.
+name: CoachKira
+options:
+  bundleIdPrefix: de.reichpietsch
+  deploymentTarget:
+    iOS: "17.0"
+    macOS: "14.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: D9UU3689LG  # dein Personal Team, bleibt nach xcodegen erhalten
+    SWIFT_VERSION: "5.0"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+targets:
+  CoachKira:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+      - path: Shared
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: Coach Kira
+        UILaunchScreen: {}
+        CFBundleURLTypes:
+          - CFBundleURLName: de.reichpietsch.coachkira
+            CFBundleURLSchemes: [coachkira]
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        ITSAppUsesNonExemptEncryption: false
+    entitlements:
+      path: App/CoachKira.entitlements
+      properties:
+        com.apple.security.application-groups: [group.de.reichpietsch.coachkira]
+        aps-environment: development  # 25.11.2026: Push; Xcode setzt beim TestFlight-Export production
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: de.reichpietsch.coachkira
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: "1,2"
+    dependencies:
+      - target: CoachKiraWidgets
+  CoachKiraWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Widgets
+      - path: Shared
+    info:
+      path: Widgets/Info.plist
+      properties:
+        CFBundleDisplayName: Coach Kira
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: Widgets/CoachKiraWidgets.entitlements
+      properties:
+        com.apple.security.application-groups: [group.de.reichpietsch.coachkira]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: de.reichpietsch.coachkira.widgets
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SKIP_INSTALL: YES
+  CoachKiraMac:
+    type: application
+    platform: macOS
+    sources:
+      - path: MacApp
+      - path: Shared
+    info:
+      path: MacApp/Info.plist
+      properties:
+        CFBundleDisplayName: Coach Kira
+        LSApplicationCategoryType: public.app-category.healthcare-fitness
+        KiraAppGroup: "$(TeamIdentifierPrefix)de.reichpietsch.coachkira"
+        CFBundleURLTypes:
+          - CFBundleURLName: de.reichpietsch.coachkira.mac
+            CFBundleURLSchemes: [coachkira]
+    entitlements:
+      path: MacApp/CoachKiraMac.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.network.client: true
+        com.apple.security.files.user-selected.read-write: true
+        com.apple.security.application-groups: ["$(TeamIdentifierPrefix)de.reichpietsch.coachkira"]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: de.reichpietsch.coachkira.mac
+        PRODUCT_NAME: Coach Kira
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_HARDENED_RUNTIME: YES
+    dependencies:
+      - target: CoachKiraMacWidgets
+  CoachKiraMacWidgets:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: Widgets
+      - path: Shared
+    info:
+      path: MacWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: Coach Kira
+        KiraAppGroup: "$(TeamIdentifierPrefix)de.reichpietsch.coachkira"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: MacWidgets/CoachKiraMacWidgets.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.network.client: true
+        com.apple.security.application-groups: ["$(TeamIdentifierPrefix)de.reichpietsch.coachkira"]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: de.reichpietsch.coachkira.mac.widgets
+        ENABLE_HARDENED_RUNTIME: YES
+        SKIP_INSTALL: YES

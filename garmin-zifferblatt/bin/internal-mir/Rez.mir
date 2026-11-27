@@ -1,0 +1,109 @@
+[ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 1; @symbol_importdef<0> = [Toybox,1,7,13]; @symbol_importdef<1> = [Lang,1,14,18]; ]
+import Toybox.Lang;
+[ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 2; @symbol_usingdef<0> = [Toybox,2,6,12]; @symbol_usingdef<1> = [WatchUi,2,13,20]; ]
+using Toybox.WatchUi;
+[ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 3; @symbol_usingdef<0> = [Toybox,3,6,12]; @symbol_usingdef<1> = [WatchUi,3,13,20]; @symbol_usingAlias = [Ui,3,24,26]; ]
+using Toybox.WatchUi as :Ui;
+[ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 4; @symbol_usingdef<0> = [Toybox,4,6,12]; @symbol_usingdef<1> = [Graphics,4,13,21]; ]
+using Toybox.Graphics;
+[ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 5; @symbol_usingdef<0> = [Toybox,5,6,12]; @symbol_usingdef<1> = [Graphics,5,13,21]; @symbol_usingAlias = [Gfx,5,25,28]; ]
+using Toybox.Graphics as :Gfx;
+[ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 7; @symbol_moduledef = [Rez,7,7,10]; ]
+module Rez {
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 7; ]
+    <init> {
+    }
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 8; @symbol_moduledef = [Drawables,8,11,20]; ]
+    module Drawables {
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 8; ]
+        <init> {
+        }
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 9; @position = 27; initialized = true; @symbol_vardef = [LauncherIcon,9,27,39]; @symbol_type<0> = [ResourceId,9,43,53]; ]
+        var LauncherIcon as ResourceId;
+    }
+    [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 12; @symbol_moduledef = [Strings,12,11,18]; ]
+    module Strings {
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 12; ]
+        <init> {
+        }
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 13; @position = 27; initialized = true; @symbol_vardef = [spUL,13,27,31]; @symbol_type<0> = [ResourceId,13,35,45]; ]
+        var spUL as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 14; @position = 27; initialized = true; @symbol_vardef = [lE9,14,27,30]; @symbol_type<0> = [ResourceId,14,34,44]; ]
+        var lE9 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 15; @position = 27; initialized = true; @symbol_vardef = [spLangDruck,15,27,38]; @symbol_type<0> = [ResourceId,15,42,52]; ]
+        var spLangDruck as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 16; @position = 27; initialized = true; @symbol_vardef = [spRingR,16,27,34]; @symbol_type<0> = [ResourceId,16,38,48]; ]
+        var spRingR as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 17; @position = 27; initialized = true; @symbol_vardef = [lE12,17,27,31]; @symbol_type<0> = [ResourceId,17,35,45]; ]
+        var lE12 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 18; @position = 27; initialized = true; @symbol_vardef = [lE13,18,27,31]; @symbol_type<0> = [ResourceId,18,35,45]; ]
+        var lE13 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 19; @position = 27; initialized = true; @symbol_vardef = [lE10,19,27,31]; @symbol_type<0> = [ResourceId,19,35,45]; ]
+        var lE10 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 20; @position = 27; initialized = true; @symbol_vardef = [lE11,20,27,31]; @symbol_type<0> = [ResourceId,20,35,45]; ]
+        var lE11 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 21; @position = 27; initialized = true; @symbol_vardef = [lpStil3,21,27,34]; @symbol_type<0> = [ResourceId,21,38,48]; ]
+        var lpStil3 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 22; @position = 27; initialized = true; @symbol_vardef = [lpStil2,22,27,34]; @symbol_type<0> = [ResourceId,22,38,48]; ]
+        var lpStil2 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 23; @position = 27; initialized = true; @symbol_vardef = [spStil,23,27,33]; @symbol_type<0> = [ResourceId,23,37,47]; ]
+        var spStil as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 24; @position = 27; initialized = true; @symbol_vardef = [lpStil1,24,27,34]; @symbol_type<0> = [ResourceId,24,38,48]; ]
+        var lpStil1 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 25; @position = 27; initialized = true; @symbol_vardef = [AppName,25,27,34]; @symbol_type<0> = [ResourceId,25,38,48]; ]
+        var AppName as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 26; @position = 27; initialized = true; @symbol_vardef = [spOL,26,27,31]; @symbol_type<0> = [ResourceId,26,35,45]; ]
+        var spOL as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 27; @position = 27; initialized = true; @symbol_vardef = [spUR,27,27,31]; @symbol_type<0> = [ResourceId,27,35,45]; ]
+        var spUR as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 28; @position = 27; initialized = true; @symbol_vardef = [lpStil0,28,27,34]; @symbol_type<0> = [ResourceId,28,38,48]; ]
+        var lpStil0 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 29; @position = 27; initialized = true; @symbol_vardef = [lpRingR10,29,27,36]; @symbol_type<0> = [ResourceId,29,40,50]; ]
+        var lpRingR10 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 30; @position = 27; initialized = true; @symbol_vardef = [lpRingR11,30,27,36]; @symbol_type<0> = [ResourceId,30,40,50]; ]
+        var lpRingR11 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 31; @position = 27; initialized = true; @symbol_vardef = [lpRingR12,31,27,36]; @symbol_type<0> = [ResourceId,31,40,50]; ]
+        var lpRingR12 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 32; @position = 27; initialized = true; @symbol_vardef = [lpRingL1,32,27,35]; @symbol_type<0> = [ResourceId,32,39,49]; ]
+        var lpRingL1 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 33; @position = 27; initialized = true; @symbol_vardef = [lpRingL0,33,27,35]; @symbol_type<0> = [ResourceId,33,39,49]; ]
+        var lpRingL0 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 34; @position = 27; initialized = true; @symbol_vardef = [lpRingL3,34,27,35]; @symbol_type<0> = [ResourceId,34,39,49]; ]
+        var lpRingL3 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 35; @position = 27; initialized = true; @symbol_vardef = [lpRingL2,35,27,35]; @symbol_type<0> = [ResourceId,35,39,49]; ]
+        var lpRingL2 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 36; @position = 27; initialized = true; @symbol_vardef = [lpRingR13,36,27,36]; @symbol_type<0> = [ResourceId,36,40,50]; ]
+        var lpRingR13 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 37; @position = 27; initialized = true; @symbol_vardef = [spErhBB,37,27,34]; @symbol_type<0> = [ResourceId,37,38,48]; ]
+        var spErhBB as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 38; @position = 27; initialized = true; @symbol_vardef = [spSek,38,27,32]; @symbol_type<0> = [ResourceId,38,36,46]; ]
+        var spSek as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 39; @position = 27; initialized = true; @symbol_vardef = [spOR,39,27,31]; @symbol_type<0> = [ResourceId,39,35,45]; ]
+        var spOR as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 40; @position = 27; initialized = true; @symbol_vardef = [lE0,40,27,30]; @symbol_type<0> = [ResourceId,40,34,44]; ]
+        var lE0 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 41; @position = 27; initialized = true; @symbol_vardef = [lE2,41,27,30]; @symbol_type<0> = [ResourceId,41,34,44]; ]
+        var lE2 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 42; @position = 27; initialized = true; @symbol_vardef = [spVotumRing,42,27,38]; @symbol_type<0> = [ResourceId,42,42,52]; ]
+        var spVotumRing as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 43; @position = 27; initialized = true; @symbol_vardef = [lE1,43,27,30]; @symbol_type<0> = [ResourceId,43,34,44]; ]
+        var lE1 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 44; @position = 27; initialized = true; @symbol_vardef = [lE4,44,27,30]; @symbol_type<0> = [ResourceId,44,34,44]; ]
+        var lE4 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 45; @position = 27; initialized = true; @symbol_vardef = [lE3,45,27,30]; @symbol_type<0> = [ResourceId,45,34,44]; ]
+        var lE3 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 46; @position = 27; initialized = true; @symbol_vardef = [lE6,46,27,30]; @symbol_type<0> = [ResourceId,46,34,44]; ]
+        var lE6 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 47; @position = 27; initialized = true; @symbol_vardef = [lE5,47,27,30]; @symbol_type<0> = [ResourceId,47,34,44]; ]
+        var lE5 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 48; @position = 27; initialized = true; @symbol_vardef = [lE8,48,27,30]; @symbol_type<0> = [ResourceId,48,34,44]; ]
+        var lE8 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 49; @position = 27; initialized = true; @symbol_vardef = [lE7,49,27,30]; @symbol_type<0> = [ResourceId,49,34,44]; ]
+        var lE7 as ResourceId;
+        [ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 50; @position = 27; initialized = true; @symbol_vardef = [spRingL,50,27,34]; @symbol_type<0> = [ResourceId,50,38,48]; ]
+        var spRingL as ResourceId;
+    }
+}
+[ @file = "/home/user/workspace/ck-repo/garmin-zifferblatt/bin/gen/006-B4631-00/source/Rez.mcgen"; @line = 1; ]
+<init> {
+}

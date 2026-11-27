@@ -1,0 +1,342 @@
+import type { ReactNode } from 'react';
+
+export function Panel({
+  title,
+  children,
+  right,
+  className = '',
+}: {
+  title?: string;
+  children: ReactNode;
+  right?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={`panel ${className}`}>
+      {(title || right) && (
+        <header className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 border-b border-border">
+          {title && <h2 className="label">{title}</h2>}
+          {right}
+        </header>
+      )}
+      <div className="p-4">{children}</div>
+    </section>
+  );
+}
+
+export function Skeleton({ className = '' }: { className?: string }) {
+  return (
+    <div
+      className={`bg-bg-subtle/60 rounded animate-pulse ${className}`}
+      aria-hidden
+    />
+  );
+}
+
+/** 26.11.2026: technische Fehlermeldungen in Alltagssprache (Lade-, Fehler-, Anmelde-Zustand unterscheidbar) */
+export function klartextFehler(message: string): string {
+  const m = String(message || '');
+  if (/token_required|not_authenticated|401|403/i.test(m)) return 'Gesperrt – dieses Gerät ist nicht angemeldet. Bitte mit der PIN anmelden.';
+  if (/Zeitüberschreitung|timeout|aborted/i.test(m)) return 'Keine Antwort – Google Sheets ist gerade langsam. Bitte erneut versuchen.';
+  if (/Failed to fetch|NetworkError|Load failed|ECONN|502|503/i.test(m)) return 'Keine Verbindung zum Server. Netz prüfen und erneut versuchen.';
+  return `Fehler: ${m}`;
+}
+
+export function ErrorBox({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  return (
+    <div className="rounded border border-ampel-rot/40 bg-ampel-rot/5 px-3 py-2 text-sm text-red-300 flex items-center justify-between gap-3">
+      <span className="truncate" title={message}>{klartextFehler(message)}</span>
+      {onRetry && (
+        <button onClick={onRetry} className="btn btn-ghost text-xs px-2 py-1">
+          Erneut
+        </button>
+      )}
+    </div>
+  );
+}
+
+export function StatPill({
+  label,
+  value,
+  hint,
+  emphasize,
+}: {
+  label: string;
+  value: ReactNode;
+  hint?: ReactNode;
+  emphasize?: boolean;
+}) {
+  return (
+    <div className="panel-raised px-4 py-3">
+      <div className="label">{label}</div>
+      <div
+        className={`tnum ${emphasize ? 'text-3xl' : 'text-2xl'} font-semibold mt-1 leading-none`}
+      >
+        {value}
+      </div>
+      {hint && <div className="text-2xs text-ink-muted mt-1.5 tnum">{hint}</div>}
+    </div>
+  );
+}
+
+export function ArcGauge({
+  label,
+  value,
+  sub,
+  tone = 'auto',
+}: {
+  label: string;
+  value: number | null | undefined;
+  sub?: ReactNode;
+  tone?: 'auto' | 'blue' | 'orange' | 'green' | 'red';
+}) {
+  const v = typeof value === 'number' && Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : null;
+  const circumference = 2 * Math.PI * 42;
+  const arc = circumference * 0.72;
+  const gap = circumference - arc;
+  const offset = v === null ? arc : arc * (1 - v / 100);
+  const color =
+    tone === 'green'
+      ? '#22c55e'
+      : tone === 'orange'
+        ? '#f97316'
+        : tone === 'red'
+          ? '#ef4444'
+          : tone === 'blue'
+            ? '#38bdf8'
+            : v === null
+              ? '#6b7280'
+              : v < 30
+                ? '#ef4444'
+                : v < 50
+                  ? '#f97316'
+                  : v < 70
+                    ? '#eab308'
+                    : v < 85
+                      ? '#38bdf8'
+                      : '#22c55e';
+
+  return (
+    <div className="panel-raised p-4 min-h-[172px] flex flex-col items-center justify-between">
+      <div className="label self-start">{label}</div>
+      <div className="relative h-28 w-36">
+        <svg viewBox="0 0 120 100" className="h-full w-full">
+          <defs>
+            <linearGradient id={`gauge-${label.replace(/\s+/g, '-')}`} x1="0" x2="1" y1="1" y2="0">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="30%" stopColor="#f97316" />
+              <stop offset="55%" stopColor="#eab308" />
+              <stop offset="78%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#38bdf8" />
+            </linearGradient>
+          </defs>
+          <path
+            d="M18 70 A42 42 0 1 1 102 70"
+            fill="none"
+            stroke="#1f2731"
+            strokeWidth="9"
+            strokeLinecap="round"
+          />
+          <path
+            d="M18 70 A42 42 0 1 1 102 70"
+            fill="none"
+            stroke={`url(#gauge-${label.replace(/\s+/g, '-')})`}
+            strokeWidth="9"
+            strokeLinecap="round"
+            pathLength={100}
+            strokeDasharray={`${v === null ? 0 : v} 100`}
+          />
+          {v !== null && (
+            <circle
+              cx={18 + (84 * v) / 100}
+              cy={70 - Math.sin((Math.PI * v) / 100) * 42}
+              r="4"
+              fill={color}
+              stroke="#0a0d12"
+              strokeWidth="2"
+            />
+          )}
+        </svg>
+        <div className="absolute inset-x-0 bottom-5 text-center">
+          <div className="tnum text-3xl font-semibold leading-none" style={{ color }}>
+            {v === null ? '—' : Math.round(v)}
+          </div>
+        </div>
+      </div>
+      {sub && <div className="text-2xs text-ink-muted tnum text-center">{sub}</div>}
+    </div>
+  );
+}
+
+export function Toast({
+  toast,
+  onClose,
+}: {
+  toast: { kind: 'ok' | 'err' | 'info'; text: string } | null;
+  onClose: () => void;
+}) {
+  if (!toast) return null;
+  const colors =
+    toast.kind === 'ok'
+      ? 'border-ampel-gruen/50 bg-ampel-gruen/10 text-green-200'
+      : toast.kind === 'err'
+        ? 'border-ampel-rot/50 bg-ampel-rot/10 text-red-200'
+        : 'border-accent-strong/40 bg-accent-strong/10 text-accent';
+  return (
+    <div className="fixed bottom-4 right-4 z-50 max-w-sm">
+      <div className={`rounded border px-3.5 py-2.5 text-sm shadow-lg ${colors}`}>
+        <div className="flex items-start gap-3">
+          <div className="flex-1">{toast.text}</div>
+          <button onClick={onClose} className="text-ink-muted hover:text-ink text-xs">
+            ✕
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function Modal({
+  open,
+  onClose,
+  title,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: ReactNode;
+}) {
+  if (!open) return null;
+  return (
+    <div
+      className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <div
+        className="panel-raised w-full max-w-lg shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <header className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <h3 className="text-sm font-semibold tracking-tight">{title}</h3>
+          <button onClick={onClose} className="btn btn-ghost text-xs">
+            Schliessen
+          </button>
+        </header>
+        <div className="p-4 text-sm">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+export function Spinner({ size = 14 }: { size?: number }) {
+  return (
+    <span
+      className="inline-block rounded-full border-2 border-border border-t-accent animate-spin"
+      style={{ width: size, height: size }}
+      aria-hidden
+    />
+  );
+}
+
+/** Abschnitt einer Seite (Garmin-Connect-Stil: große, ruhige Überschrift). */
+export function StorySection({ titel, unter, rechts, children, id }: { titel: string; unter?: string; rechts?: ReactNode; children: ReactNode; id?: string }) {
+  return (
+    <section className="story-section" data-testid={id ? `story-${id}` : undefined}>
+      <div className="flex flex-wrap items-end justify-between gap-2 mb-3">
+        <div>
+          <h2 className="story-h2">{titel}</h2>
+          {unter && <p className="story-unter">{unter}</p>}
+        </div>
+        {rechts}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+/** Raster mit gleich hohen Karten je Zeile (spalten: 2 Standard, 4 für Kennzahlen). */
+export function StoryGrid({ spalten = 2, children }: { spalten?: 1 | 2 | 3 | 4; children: ReactNode }) {
+  const cls = spalten === 4 ? 'sm:grid-cols-2 xl:grid-cols-4' : spalten === 3 ? 'md:grid-cols-2 xl:grid-cols-3' : spalten === 2 ? 'lg:grid-cols-2' : '';
+  return <div className={`story-grid grid gap-4 grid-cols-[minmax(0,1fr)] ${cls}`}>{children}</div>;
+}
+
+/** Kennzahl-Kachel wie „Wichtigste Daten“ in Garmin Connect. */
+/** 23.11.2026: Bogen wie bei Garmin – 270°, farbige Segmente je Bereich, Punkt an der Stelle des Werts. */
+export function BandBogen({ wert, min = 0, max = 100, baender, groesse = 86, dicke = 5 }: { wert: number | null; min?: number; max?: number; baender: readonly { von: number; bis: number; farbe: string }[]; groesse?: number; dicke?: number }) {
+  // 23.11.2026: Garmin-Bogen (270°, Segmente nach individuellen Grenzen, Punkt am Wert)
+  const c = groesse / 2, r = groesse / 2 - Math.max(5, dicke + 2), start = 135, bogen = 270, luecke = 3;
+  const pt = (g: number) => { const a = (g * Math.PI) / 180; return [c + r * Math.cos(a), c + r * Math.sin(a)]; };
+  const arc = (g1: number, g2: number) => { const [x1, y1] = pt(g1), [x2, y2] = pt(g2); return `M ${x1} ${y1} A ${r} ${r} 0 ${g2 - g1 > 180 ? 1 : 0} 1 ${x2} ${y2}`; };
+  const klemm = (v: number) => Math.max(min, Math.min(max, v));
+  const winkel = (v: number) => start + ((klemm(v) - min) / (max - min)) * bogen;
+  const sichtbar = baender.filter((b) => b.bis > min && b.von < max);
+  const [mx, my] = wert != null ? pt(winkel(wert)) : [0, 0];
+  const aktiv = wert != null ? (wert < baender[0].von ? baender[0] : baender.find((b) => wert >= b.von && wert < b.bis) ?? baender[baender.length - 1]) : null;
+  return (
+    <svg width={groesse} height={groesse} viewBox={`0 0 ${groesse} ${groesse}`} className="absolute inset-0" aria-hidden>
+      {sichtbar.map((b, i) => {
+        const g1 = winkel(b.von) + (i > 0 ? luecke / 2 : 0), g2 = winkel(b.bis) - (i < sichtbar.length - 1 ? luecke / 2 : 0);
+        return g2 > g1 ? <path key={i} d={arc(g1, g2)} fill="none" stroke={b.farbe} strokeWidth={dicke} strokeLinecap={i === 0 || i === sichtbar.length - 1 ? 'round' : 'butt'} /> : null;
+      })}
+      {aktiv && <circle cx={mx} cy={my} r={dicke + 1.5} fill={aktiv.farbe} className="bogen-punkt" strokeWidth="2.5" />}
+    </svg>
+  );
+}
+
+/** 23.11.2026: Garmin-Balken (Segmente nach individuellen Grenzen, Marker am Wert) */
+export function BandBalken({ wert, skala, hoehe = 6, className = '' }: { wert: number | null; skala: { min: number; max: number; baender: readonly { von: number; bis: number; farbe: string }[] }; hoehe?: number; className?: string }) {
+  const { min, max } = skala;
+  const pos = (v: number) => ((Math.max(min, Math.min(max, v)) - min) / (max - min)) * 100;
+  const sichtbar = skala.baender.filter((b) => b.bis > min && b.von < max);
+  const aktiv = wert != null ? (wert < skala.baender[0].von ? skala.baender[0] : skala.baender.find((b) => wert >= b.von && wert < b.bis) ?? skala.baender[skala.baender.length - 1]) : null;
+  return (
+    <div className={`relative w-full ${className}`} style={{ height: hoehe + 8 }} aria-hidden>
+      <div className="absolute inset-x-0 flex gap-[2px]" style={{ top: 4, height: hoehe }}>
+        {sichtbar.map((b, i) => (
+          <div key={i} style={{ width: `${pos(b.bis) - pos(b.von)}%`, background: b.farbe, borderRadius: i === 0 ? '999px 0 0 999px' : i === sichtbar.length - 1 ? '0 999px 999px 0' : 0 }} />
+        ))}
+      </div>
+      {aktiv && wert != null && (
+        <span className="absolute rounded-full bogen-punkt" style={{ left: `calc(${pos(wert)}% - ${(hoehe + 6) / 2}px)`, top: 4 + hoehe / 2 - (hoehe + 6) / 2, width: hoehe + 6, height: hoehe + 6, background: aktiv.farbe, boxShadow: '0 0 0 2px var(--bogen-rand, #0f1319)' }} />
+      )}
+    </div>
+  );
+}
+
+export function KpiKachel({ titel, wert, unter, ring, farbe = '#1976d2', symbol, testid, baender, skala }: { titel: string; wert: ReactNode; unter?: ReactNode; ring?: number | null; farbe?: string; symbol?: ReactNode; testid?: string; baender?: readonly { von: number; bis: number; farbe: string }[]; skala?: { min: number; max: number; baender: readonly { von: number; bis: number; farbe: string }[] } | null }) {
+  if (skala && !baender) baender = skala.baender;
+  if (baender) {
+    return (
+      <div className="panel kpi-kachel flex flex-col items-center justify-center text-center px-3 py-4" data-testid={testid}>
+        <div className="kpi-titel">{titel}</div>
+        <div className="relative mt-2 flex items-center justify-center" style={{ width: 86, height: 86 }}>
+          <BandBogen wert={ring ?? null} baender={baender} min={skala?.min ?? 0} max={skala?.max ?? 100} />
+          <span className="relative tnum text-2xl font-semibold text-ink">{wert}</span>
+        </div>
+        {unter && <div className="mt-1 text-2xs text-ink-muted leading-snug">{unter}</div>}
+      </div>
+    );
+  }
+  const r = 34, u = 2 * Math.PI * r;
+  const anteil = ring != null && Number.isFinite(ring) ? Math.max(0, Math.min(100, ring)) / 100 : null;
+  return (
+    <div className="panel kpi-kachel flex flex-col items-center justify-center text-center px-3 py-4" data-testid={testid}>
+      <div className="kpi-titel">{titel}</div>
+      <div className="relative mt-2 flex items-center justify-center" style={{ width: 86, height: 86 }}>
+        {anteil != null ? (
+          <svg width="86" height="86" viewBox="0 0 86 86" className="absolute inset-0">
+            <circle cx="43" cy="43" r={r} fill="none" stroke="currentColor" strokeOpacity="0.12" strokeWidth="7" />
+            <circle cx="43" cy="43" r={r} fill="none" stroke={farbe} strokeWidth="7" strokeLinecap="round"
+              strokeDasharray={`${u * anteil} ${u}`} transform="rotate(-90 43 43)" />
+          </svg>
+        ) : symbol ? (
+          <div className="absolute inset-0 flex items-center justify-center">{symbol}</div>
+        ) : null}
+        {anteil != null && <span className="relative tnum text-2xl font-semibold text-ink">{wert}</span>}
+      </div>
+      {anteil == null && <div className="mt-1 text-lg font-semibold text-ink leading-tight">{wert}</div>}
+      {unter && <div className="mt-1 text-2xs text-ink-muted leading-snug">{unter}</div>}
+    </div>
+  );
+}

@@ -1,0 +1,8 @@
+<complications>
+    <complication id="0" access="public" longLabel="@Strings.KompliLang" shortLabel="@Strings.KompliKurz" icon="@Drawables.KompliIcon" glancePreview="true">
+        <faceIt defaultText="@Strings.KompliLang"/>
+    </complication>
+    <complication id="1" access="private" longLabel="@Strings.KompliDaten" shortLabel="@Strings.KompliKurz" icon="@Drawables.KompliIcon"/>
+    <complication id="2" access="private" longLabel="@Strings.KompliWoche" shortLabel="@Strings.KompliKurz" icon="@Drawables.KompliIcon"/>
+    <complication id="3" access="private" longLabel="@Strings.KompliForm" shortLabel="@Strings.KompliKurz" icon="@Drawables.KompliIcon"/>
+</complications>

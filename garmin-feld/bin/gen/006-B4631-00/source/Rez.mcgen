@@ -1,0 +1,52 @@
+import Toybox.Lang;
+using Toybox.WatchUi;
+using Toybox.WatchUi as Ui;
+using Toybox.Graphics;
+using Toybox.Graphics as Gfx;
+
+module Rez {
+    module Drawables {
+        (:initialized) var LauncherIcon as ResourceId;
+    } // Drawables
+
+    module Strings {
+        (:initialized) var lpUnten10 as ResourceId;
+        (:initialized) var spAktiv as ResourceId;
+        (:initialized) var FitLabel as ResourceId;
+        (:initialized) var AppName as ResourceId;
+        (:initialized) var lpOben7 as ResourceId;
+        (:initialized) var lpOben6 as ResourceId;
+        (:initialized) var lpOben5 as ResourceId;
+        (:initialized) var lpOben4 as ResourceId;
+        (:initialized) var lpOben3 as ResourceId;
+        (:initialized) var lpOben2 as ResourceId;
+        (:initialized) var spMitte as ResourceId;
+        (:initialized) var FitTitel as ResourceId;
+        (:initialized) var lpOben1 as ResourceId;
+        (:initialized) var lpOben0 as ResourceId;
+        (:initialized) var lpOben9 as ResourceId;
+        (:initialized) var lpOben8 as ResourceId;
+        (:initialized) var spVibGrenze as ResourceId;
+        (:initialized) var FitEinheit as ResourceId;
+        (:initialized) var spUnten as ResourceId;
+        (:initialized) var spVibZone as ResourceId;
+        (:initialized) var lpMitte5 as ResourceId;
+        (:initialized) var lpMitte6 as ResourceId;
+        (:initialized) var lpMitte1 as ResourceId;
+        (:initialized) var lpUnten9 as ResourceId;
+        (:initialized) var lpMitte2 as ResourceId;
+        (:initialized) var lpUnten8 as ResourceId;
+        (:initialized) var lpMitte3 as ResourceId;
+        (:initialized) var lpMitte4 as ResourceId;
+        (:initialized) var spOben as ResourceId;
+        (:initialized) var lpMitte0 as ResourceId;
+        (:initialized) var lpUnten1 as ResourceId;
+        (:initialized) var lpUnten0 as ResourceId;
+        (:initialized) var lpUnten3 as ResourceId;
+        (:initialized) var lpUnten2 as ResourceId;
+        (:initialized) var lpUnten5 as ResourceId;
+        (:initialized) var lpUnten4 as ResourceId;
+        (:initialized) var lpUnten7 as ResourceId;
+        (:initialized) var lpUnten6 as ResourceId;
+    } // Strings
+} // Rez

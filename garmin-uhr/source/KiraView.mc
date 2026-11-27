@@ -1,0 +1,1031 @@
+import Toybox.Application;
+import Toybox.Application.Storage;
+import Toybox.Communications;
+import Toybox.Graphics;
+import Toybox.Lang;
+import Toybox.Math;
+import Toybox.ActivityMonitor;
+import Toybox.SensorHistory;
+import Toybox.PersistedContent;
+import Toybox.System;
+import Toybox.Time;
+import Toybox.Timer;
+import Toybox.WatchUi;
+
+// Laden und Koppeln im Vordergrund (ein Objekt, Rückrufe über method(:…))
+var kiraNetz as KiraNetz? = null;
+function netz() as KiraNetz {
+    if (kiraNetz == null) { kiraNetz = new KiraNetz(); }
+    return kiraNetz as KiraNetz;
+}
+
+class KiraNetz {
+    var status as String? = null;   // "laedt", "koppelt", Fehlertext
+    var code as String? = null;     // Kopplungscode zum Anzeigen
+    var anfrageId as String? = null;
+    var timer as Timer.Timer? = null;
+    var versuche as Number = 0;
+
+    function initialize() {
+    }
+
+    function laden() as Void {
+        var tok = Storage.getValue("tok");
+        if (tok == null) { return; }
+        status = "laedt";
+        WatchUi.requestUpdate();
+        Communications.makeWebRequest(KIRA_BASIS + "/api/widget?uhr=1&mehr=1", null,
+            {
+                :method => Communications.HTTP_REQUEST_METHOD_GET,
+                :headers => { "Authorization" => "Bearer " + tok },
+                :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
+            },
+            method(:geladen));
+    }
+
+    function geladen(rc as Number, data as Null or ByteArray or Dictionary or String or PersistedContent.Iterator) as Void {
+        try {
+            if (rc == 200 && data instanceof Dictionary) {
+                var u = data.get("uhr");
+                if (u instanceof Dictionary) {
+                    var x = u.get("x");
+                    if (x instanceof Dictionary) { Storage.setValue("x", x); }
+                    u.remove("x");
+                    Storage.setValue("u", u); Storage.setValue("uDatum", data.get("datum")); data.remove("uhr");
+                }
+                Storage.setValue("d", data);
+                Storage.setValue("at", Time.now().value());
+                Storage.deleteValue("t401");
+                kiraKomplikation(data);
+                status = null;
+            } else if (rc == 401) {
+                // 24.11.2026: nach einem Server-Neustart stellt der Mac die Kopplung wieder her – Schlüssel erst nach 48 h verwerfen
+                var erst = Storage.getValue("t401");
+                if (erst == null) { Storage.setValue("t401", Time.now().value()); erst = Time.now().value(); }
+                if (Time.now().value() - (erst as Number) > 48 * 3600) {
+                    Storage.deleteValue("tok");
+                    Storage.deleteValue("t401");
+                    status = "Kopplung widerrufen";
+                } else {
+                    status = "Server neu - Kopplung kommt zurück";
+                }
+            } else {
+                status = rc < 0 ? "Kein Netz - später erneut" : rc >= 500 ? "Server-Fehler - später erneut" : "Server " + rc.toString();
+            }
+        } catch (e) {
+            status = "Fehler: " + e.getErrorMessage();
+        }
+        WatchUi.requestUpdate();
+    }
+
+    function koppeln() as Void {
+        status = "koppelt";
+        code = null;
+        WatchUi.requestUpdate();
+        Communications.makeWebRequest(KIRA_BASIS + "/api/widget/uhr/anfrage", { "geraet" => "fenix 8 Pro" },
+            {
+                :method => Communications.HTTP_REQUEST_METHOD_POST,
+                :headers => { "Content-Type" => Communications.REQUEST_CONTENT_TYPE_JSON },
+                :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
+            },
+            method(:angefragt));
+    }
+
+    function angefragt(rc as Number, data as Null or ByteArray or Dictionary or String or PersistedContent.Iterator) as Void {
+        try {
+            if (rc == 200 && data instanceof Dictionary && data.get("id") != null) {
+                anfrageId = data.get("id").toString();
+                code = data.get("code").toString();
+                status = null;
+                versuche = 0;
+                if (timer == null) { timer = new Timer.Timer(); }
+                (timer as Timer.Timer).start(method(:abfragen), 4000, true);
+            } else {
+                status = rc < 0 ? "Kein Netz (" + rc.toString() + ")" : "Kopplung: Server " + rc.toString();
+            }
+        } catch (e) {
+            status = "Fehler: " + e.getErrorMessage();
+        }
+        WatchUi.requestUpdate();
+    }
+
+    function abfragen() as Void {
+        versuche += 1;
+        if (versuche > 150 || anfrageId == null) {   // 10 min
+            stop("Code abgelaufen – START");
+            return;
+        }
+        Communications.makeWebRequest(KIRA_BASIS + "/api/widget/uhr/status?id=" + anfrageId, null,
+            {
+                :method => Communications.HTTP_REQUEST_METHOD_GET,
+                :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
+            },
+            method(:abgefragt));
+    }
+
+    function abgefragt(rc as Number, data as Null or ByteArray or Dictionary or String or PersistedContent.Iterator) as Void {
+        try {
+            if (rc == 200 && data instanceof Dictionary && data.get("token") != null) {
+                Storage.setValue("tok", data.get("token").toString());
+                stop(null);
+                code = null;
+                var app = Application.getApp();
+                if (app instanceof KiraApp) { app.hintergrundAn(); }
+                laden();
+            } else if (rc == 404) {
+                stop("Code abgelaufen – START");
+            }
+        } catch (e) {
+            stop("Fehler: " + e.getErrorMessage());
+        }
+    }
+
+    // 22.11.2026: Befinden 1–5 von der Uhr ans Cockpit
+    function befinden(wert as Number) as Void {
+        var tok = Storage.getValue("tok");
+        if (tok == null) { return; }
+        status = "sendet Befinden ...";
+        WatchUi.requestUpdate();
+        Communications.makeWebRequest(KIRA_BASIS + "/api/widget/befinden", { "value" => wert },
+            {
+                :method => Communications.HTTP_REQUEST_METHOD_POST,
+                :headers => { "Authorization" => "Bearer " + tok, "Content-Type" => Communications.REQUEST_CONTENT_TYPE_JSON },
+                :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
+            },
+            method(:befindenFertig));
+    }
+
+    function befindenFertig(rc as Number, data as Null or ByteArray or Dictionary or String or PersistedContent.Iterator) as Void {
+        if (rc == 200) {
+            status = null;
+            Storage.setValue("bef", Time.now().value());
+            laden();   // Votum mit Befinden neu holen
+        } else {
+            status = rc < 0 ? "Kein Netz (" + rc.toString() + ")" : "Befinden: Server " + rc.toString();
+        }
+        WatchUi.requestUpdate();
+    }
+
+    // 24.11.2026: Plan-Vorschlag auf der Uhr übernehmen oder verwerfen
+    function vorschlag(annehmen as Boolean) as Void {
+        var tok = Storage.getValue("tok");
+        var d = Storage.getValue("d");
+        if (tok == null || !(d instanceof Dictionary)) { return; }
+        var v = d.get("vorschlag");
+        if (!(v instanceof Dictionary)) { return; }
+        status = annehmen ? "Plan wird angepasst ..." : "verwirft ...";
+        WatchUi.requestUpdate();
+        Communications.makeWebRequest(KIRA_BASIS + "/api/widget/aktion", { "aktion" => annehmen ? "plan_annehmen" : "plan_verwerfen", "id" => v.get("id") },
+            {
+                :method => Communications.HTTP_REQUEST_METHOD_POST,
+                :headers => { "Authorization" => "Bearer " + tok, "Content-Type" => Communications.REQUEST_CONTENT_TYPE_JSON },
+                :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
+            },
+            method(:vorschlagFertig));
+    }
+
+    function vorschlagFertig(rc as Number, data as Null or ByteArray or Dictionary or String or PersistedContent.Iterator) as Void {
+        if (rc == 200) {
+            status = data instanceof Dictionary && data.get("text") != null ? data.get("text").toString() : null;
+            laden();
+        } else {
+            var t = data instanceof Dictionary && data.get("error") != null ? data.get("error").toString() : "Server " + rc.toString();
+            status = rc < 0 ? "Kein Netz (" + rc.toString() + ")" : t;
+        }
+        WatchUi.requestUpdate();
+    }
+
+    // 27.11.2026: Garmin-Tagesvorschlag an Kira (Zweitmeinung zum Votum)
+    function garminVorschlag(body as Dictionary) as Void {
+        var tok = Storage.getValue("tok");
+        if (tok == null) { return; }
+        body.put("aktion", "garmin_vorschlag");
+        status = "sendet Garmin-Vorschlag ...";
+        WatchUi.requestUpdate();
+        Communications.makeWebRequest(KIRA_BASIS + "/api/widget/aktion", body,
+            {
+                :method => Communications.HTTP_REQUEST_METHOD_POST,
+                :headers => { "Authorization" => "Bearer " + tok, "Content-Type" => Communications.REQUEST_CONTENT_TYPE_JSON },
+                :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
+            },
+            method(:vorschlagFertig));
+    }
+
+    // 25.11.2026: Tour-Rechner – Abschnitte an den Server, Ergebnis in kiraTourErg
+    function tour(teile as Array) as Void {
+        var tok = Storage.getValue("tok");
+        if (tok == null) { return; }
+        kiraTourErg = null;
+        kiraTourFehler = null;
+        Communications.makeWebRequest(KIRA_BASIS + "/api/widget/uhr/tour", { "teile" => teile },
+            {
+                :method => Communications.HTTP_REQUEST_METHOD_POST,
+                :headers => { "Authorization" => "Bearer " + tok, "Content-Type" => Communications.REQUEST_CONTENT_TYPE_JSON },
+                :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
+            },
+            method(:tourFertig));
+    }
+
+    function tourFertig(rc as Number, data as Null or ByteArray or Dictionary or String or PersistedContent.Iterator) as Void {
+        if (rc == 200 && data instanceof Dictionary && data.get("ok") == true) {
+            kiraTourErg = data;
+        } else {
+            kiraTourFehler = rc < 0 ? "Kein Netz (" + rc.toString() + ")" : data instanceof Dictionary && data.get("error") != null ? data.get("error").toString() : "Server " + rc.toString();
+        }
+        WatchUi.requestUpdate();
+    }
+
+    // 25.11.2026: Plan von der Uhr ändern (art: ess, ruhe, tausch)
+    function planAendern(body as Dictionary) as Void {
+        var tok = Storage.getValue("tok");
+        if (tok == null) { return; }
+        body.put("aktion", "plan_aendern");
+        status = "Plan wird gespeichert ...";
+        WatchUi.requestUpdate();
+        Communications.makeWebRequest(KIRA_BASIS + "/api/widget/aktion", body,
+            {
+                :method => Communications.HTTP_REQUEST_METHOD_POST,
+                :headers => { "Authorization" => "Bearer " + tok, "Content-Type" => Communications.REQUEST_CONTENT_TYPE_JSON },
+                :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
+            },
+            method(:planFertig));
+    }
+
+    function planFertig(rc as Number, data as Null or ByteArray or Dictionary or String or PersistedContent.Iterator) as Void {
+        if (rc == 200) {
+            var t = data instanceof Dictionary && data.get("text") != null ? data.get("text").toString() : "Plan gespeichert";
+            if (WatchUi has :showToast) { WatchUi.showToast(KiraHilfen.sauber(t), null); }
+            laden();
+        } else {
+            var t = data instanceof Dictionary && data.get("error") != null ? data.get("error").toString() : "Server " + rc.toString();
+            status = rc < 0 ? "Kein Netz (" + rc.toString() + ")" : t;
+            if (WatchUi has :showToast) { WatchUi.showToast(KiraHilfen.sauber(status as String), null); }
+        }
+        WatchUi.requestUpdate();
+    }
+
+    function stop(meldung as String?) as Void {
+        if (timer != null) { (timer as Timer.Timer).stop(); }
+        anfrageId = null;
+        status = meldung;
+        WatchUi.requestUpdate();
+    }
+}
+
+class KiraView extends WatchUi.View {
+    // 0 Votum, 1 Werte, 2 Woche, 3 Last 14 T, 4 Morgen 7 T, 5 Form-Kurve, 6 Letzte Einheit, 7 Ziel, 8 Jetzt, 9 Erholung & Woche,
+    // 10–17 Zusatzseiten (KiraSeitenX.mc)
+    var seite as Number = 0;
+    const SEITEN = 18;
+
+    function initialize() {
+        View.initialize();
+        startSetzen();
+    }
+
+    // Startseite aus den Einstellungen; deaktivierte Startseite → erste aktive
+    function startSetzen() as Void {
+        var xs = KiraEinst.seiten();
+        var st = KiraEinst.zahl("pStart", 0);
+        seite = xs.indexOf(st) >= 0 ? st : xs[0];
+    }
+
+    function onShow() as Void {
+        if (Storage.getValue("tok") != null) {
+            netz().laden();
+        }
+    }
+
+    function blaettern(n as Number) as Void {
+        var xs = KiraEinst.seiten();
+        var i = xs.indexOf(seite);
+        if (i < 0) { i = 0; n = 0; }
+        seite = xs[(i + n + xs.size()) % xs.size()];
+        WatchUi.requestUpdate();
+    }
+
+    // Zeile mittig, auf die Kreisbreite bei y gekürzt; gibt die nächste y-Position zurück
+    function zeile(dc as Graphics.Dc, y as Number, font as Graphics.FontType, text as String, farbe as Number) as Number {
+        var w = dc.getWidth();
+        var r = w / 2;
+        var fh = dc.getFontHeight(font);
+        var mitte = y + fh / 2 - r;
+        var halb = r * r - mitte * mitte;
+        var breite = halb > 0 ? (2 * Math.sqrt(halb) * 0.86).toNumber() : 0;
+        if (breite < 40) { return y + fh; }
+        var t = Graphics.fitTextToArea(KiraHilfen.sauber(text), font, breite, fh, true);
+        dc.setColor(farbe, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(r, y, font, t, Graphics.TEXT_JUSTIFY_CENTER);
+        return y + fh;
+    }
+
+    function onUpdate(dc as Graphics.Dc) as Void {
+        var h = dc.getHeight();
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+        dc.clear();
+        if (Storage.getValue("tok") == null) {
+            zeigeKopplung(dc, h);
+            return;
+        }
+        var d = KiraHilfen.daten();
+        if (!(d instanceof Dictionary)) {
+            zeile(dc, (h * 0.12).toNumber(), Graphics.FONT_XTINY, "COACH KIRA", 0x9A9A9A);
+            var st = netz().status;
+            zeile(dc, (h * 0.45).toNumber(), Graphics.FONT_SMALL, st != null && !st.equals("laedt") ? st : "Lädt ...", Graphics.COLOR_WHITE);
+            return;
+        }
+        var u = Storage.getValue("u");
+        var xs = KiraEinst.seiten();
+        if (xs.indexOf(seite) < 0) { seite = xs[0]; }
+        if (seite == 0) { seiteVotum(dc, d, h); }
+        else if (seite == 1) { seiteWerte(dc, d, h); }
+        else if (seite == 2) { seiteTage(dc, d, h); }
+        else if (seite == 3) { seiteLast(dc, d, u, h); }
+        else if (seite == 4) { seiteMorgen(dc, u, h); }
+        else if (seite == 5) { seiteKurve(dc, d, u, h); }
+        else if (seite == 6) { seiteLetzte(dc, u, h); }
+        else if (seite == 7) { seiteZiel(dc, d, h); }
+        else if (seite == 9) { seiteErholung(dc, d, h); }
+        else if (seite == 10) { KiraX.vorausblick(self, dc, h); }
+        else if (seite == 11) { KiraX.heuteNoch(self, dc, h); }
+        else if (seite == 12) { KiraX.zonen(self, dc, h); }
+        else if (seite == 13) { KiraX.erholung(self, dc, h); }
+        else if (seite == 14) { KiraX.woche(self, dc, h); }
+        else if (seite == 15) { KiraX.morgen(self, dc, h); }
+        else if (seite == 16) { KiraX.ziel(self, dc, h); }
+        else if (seite == 17) { KiraX.treffer(self, dc, h); }
+        else { seiteForm(dc, d, h); }
+        // Seitenanzeige rechts
+        var w = dc.getWidth();
+        var nS = xs.size();
+        if (nS > 1) {
+            for (var i = 0; i < nS; i++) {
+                dc.setColor(xs[i] == seite ? Graphics.COLOR_WHITE : 0x555555, Graphics.COLOR_TRANSPARENT);
+                var ab = nS > 12 ? 10 : 14;
+                dc.fillCircle(w - 12, h / 2 - (nS - 1) * ab / 2 + i * ab, nS > 12 ? 2 : 3);
+            }
+        }
+    }
+
+    function seiteVotum(dc as Graphics.Dc, d as Dictionary, h as Number) as Void {
+        var w = dc.getWidth();
+        var heute = KiraHilfen.vonHeute(d);
+        var farbe = heute ? KiraHilfen.farbe(KiraHilfen.feld(d, "votum", "stufe")) : 0x888888;
+        var y = (h * 0.11).toNumber();
+        y = zeile(dc, y, Graphics.FONT_XTINY, heute ? "COACH KIRA" : "COACH KIRA - STAND GESTERN", 0x9A9A9A);
+        y += 10;
+        dc.setColor(farbe, Graphics.COLOR_TRANSPARENT);
+        dc.fillCircle(w / 2, y + 12, 12);
+        y += 30;
+        var label = KiraHilfen.feld(d, "votum", "label");
+        y = zeile(dc, y, Graphics.FONT_LARGE, label == null ? "-" : label.toString().toUpper(), farbe);
+        var txt = KiraHilfen.feld(d, "votum", "text");
+        // 24.11.2026: vorläufiges Votum aus Garmin-Livewerten (Sheet-Morgenwerte fehlen noch)
+        var vl = KiraHilfen.feld(d, "votum", "vorlaeufig");
+        if (vl == true) {
+            y = zeile(dc, y, Graphics.FONT_XTINY, "VORLÄUFIG · GARMIN LIVE", 0xE5822F);
+            if (txt != null) { var tt = txt.toString(); var k = tt.find(": "); if (k != null) { txt = tt.substring(k + 2, tt.length()); } }
+        }
+        if (txt != null) { y = zeile(dc, y, Graphics.FONT_SMALL, txt.toString(), Graphics.COLOR_WHITE); }
+        // 26.11.2026: Datenstand des Votums (Kern) – nur wenn nicht vollständig
+        var ds = d.get("daten");
+        if (heute && ds instanceof Dictionary && ds.get("stufe") != null && !ds.get("stufe").toString().equals("vollstaendig") && ds.get("kurz") != null) {
+            y = zeile(dc, y, Graphics.FONT_XTINY, ds.get("kurz").toString(), 0xE0A800);
+        }
+        var gr = KiraHilfen.feld(d, "votum", "gruende");
+        if (gr instanceof Array && gr.size() > 0) {
+            y = zeile(dc, y + 4, Graphics.FONT_XTINY, gr[0].toString(), 0xBBBBBB);
+        }
+        // Soll heute – das Wichtigste nach dem Votum
+        var l = d.get("last");
+        if (y < (h * 0.62).toNumber()) { y = (h * 0.62).toNumber(); } else { y += 6; }
+        if (l instanceof Dictionary) {
+            // 22.11.2026: Soll = Rahmen des Kerns (wie Cockpit), Plan darunter
+            y = zeile(dc, y, Graphics.FONT_SMALL, "Soll " + KiraHilfen.sollText(l) + " ESS", Graphics.COLOR_WHITE);
+            var sp = l.get("sportHeute");
+            var zo = l.get("zoneHeute");
+            var plan = l.get("planHeute");
+            var sz = (plan != null ? "Plan " + KiraHilfen.zahl(plan, 0) : "") + (sp != null && sp.toString().length() > 0 ? " " + sp.toString() : "") + (zo != null && zo.toString().length() > 0 ? " " + zo.toString() : "");
+            var lage = l.get("planLage");
+            if (lage != null && lage.toString().equals("darueber") && l.get("erledigt") != true) { sz += " zu viel"; }
+            // 25.11.2026: nach dem Training „Ist“ statt „Plan“ – Tagessumme aller gespeicherten Einheiten
+            if (l.get("erledigt") == true) {
+                var ist = l.get("istHeute");
+                sz = "Ist " + (ist != null ? KiraHilfen.zahl(ist, 0) + " ESS" : "erledigt") + (sp != null && sp.toString().length() > 0 ? " " + sp.toString() : "");
+            }
+            if (sz.length() > 0) { zeile(dc, y, Graphics.FONT_XTINY, sz, 0xBBBBBB); }
+        }
+        unten(dc, h, d);
+    }
+
+    function seiteWerte(dc as Graphics.Dc, d as Dictionary, h as Number) as Void {
+        var w = dc.getWidth();
+        var y = (h * 0.11).toNumber();
+        y = zeile(dc, y, Graphics.FONT_XTINY, "MORGENWERTE", 0x9A9A9A);
+        var m = d.get("morgen");
+        y += 6;
+        if (m instanceof Dictionary && m.get("eingetragen") != false) {
+            var zh = dc.getFontHeight(Graphics.FONT_XTINY) + dc.getFontHeight(Graphics.FONT_SMALL) + 2;
+            // 23.11.2026: Werte im Garmin-Farbmuster mit den jeweiligen Grenzen
+            kachelF(dc, w * 0.33, y, "Readiness", KiraHilfen.zahl(m.get("readiness"), 0), m.get("readiness") == null ? Graphics.COLOR_WHITE : KiraSkala.farbe(KiraSkala.tr(), m.get("readiness")));
+            kachelF(dc, w * 0.67, y, "Schlaf", KiraHilfen.zahl(m.get("schlaf"), 0), m.get("schlaf") == null ? Graphics.COLOR_WHITE : KiraSkala.farbe(KiraSkala.schlaf(), m.get("schlaf")));
+            y += zh;
+            kachelF(dc, w * 0.33, y, "HRV", KiraHilfen.zahl(m.get("hrv"), 0), stufeHrv(m.get("hrvStufe")));
+            kachelF(dc, w * 0.67, y, "Ruhepuls", KiraHilfen.zahl(m.get("rhr"), 0), stufeG(m.get("rhrStufe")));
+            y += zh;
+        } else {
+            y = zeile(dc, y + 20, Graphics.FONT_SMALL, "Morgenwerte fehlen", 0xE67E22) + 20;
+        }
+        var z = d.get("ziel");
+        if (z instanceof Dictionary && z.get("name") != null) {
+            var zt = z.get("name").toString() + " in " + KiraHilfen.zahl(z.get("tage"), 0) + " T";
+            if (z.get("tourform") != null) { zt += " · " + KiraHilfen.zahl(z.get("tourform"), 0) + " %"; }
+            y = zeile(dc, y, Graphics.FONT_XTINY, zt, 0x9AD0FF);
+        }
+        var l = d.get("last");
+        if (l instanceof Dictionary) {
+            var band = l.get("acwrBand");
+            var ac = l.get("acwr");
+            y = zeile(dc, y, Graphics.FONT_XTINY, "ACWR " + KiraHilfen.zahl(ac, 2) + (band != null ? " · " + band.toString() : ""), ac == null ? Graphics.COLOR_WHITE : (ac > 1.5 ? KiraSkala.ROT : ac > 1.3 ? KiraSkala.ORANGE : ac < 0.8 ? KiraSkala.BLAU : KiraSkala.GRUEN));
+            var woche = l.get("woche");
+            if (woche instanceof Array && woche.size() > 0) { balken(dc, y + 6, woche); }
+        }
+    }
+
+    // Seite 3: die nächsten 4 Tage aus dem Plan, lange Einheiten aus Kiras Wochenplan
+    function seiteTage(dc as Graphics.Dc, d as Dictionary, h as Number) as Void {
+        var w = dc.getWidth();
+        var y = (h * 0.11).toNumber();
+        y = zeile(dc, y, Graphics.FONT_XTINY, "WOCHE", 0x9A9A9A);
+        y += 2;
+        var xs = d.get("naechste");
+        if (!(xs instanceof Array) || xs.size() == 0) {
+            zeile(dc, (h * 0.42).toNumber(), Graphics.FONT_SMALL, "Kein Plan", 0xBBBBBB);
+            return;
+        }
+        var fnt = xs.size() > 4 ? Graphics.FONT_XTINY : Graphics.FONT_TINY;
+        var fh = dc.getFontHeight(fnt);
+        var lang = "";
+        for (var i = 0; i < xs.size() && i < 7; i++) {
+            var x = xs[i];
+            if (!(x instanceof Dictionary)) { continue; }
+            var dt = x.get("d") != null ? x.get("d").toString() : "";
+            var ess = x.get("ess");
+            var sp = KiraHilfen.sportDe(x.get("sport"));
+            var zo = x.get("zone") != null ? x.get("zone").toString() : "";
+            var ruhe = ess == null || ess == 0 || sp.equals("Ruhe");
+            var lh = x.get("langH");
+            dc.setColor(0x9A9A9A, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(w * 0.2, y, fnt, KiraHilfen.wochentag(dt).substring(0, 2), Graphics.TEXT_JUSTIFY_LEFT);
+            dc.setColor(ruhe ? 0x777777 : Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(w * 0.48, y, fnt, ruhe ? "-" : KiraHilfen.zahl(ess, 0), Graphics.TEXT_JUSTIFY_RIGHT);
+            dc.setColor(lh != null ? 0x9AD0FF : (ruhe ? 0x777777 : 0xBBBBBB), Graphics.COLOR_TRANSPARENT);
+            dc.drawText(w * 0.53, y, fnt, ruhe ? "Ruhe" : sp + (zo.length() > 0 && !zo.equals("Off") ? " " + zo : ""), Graphics.TEXT_JUSTIFY_LEFT);
+            if (lh != null && lang.length() == 0) { lang = "Lang " + KiraHilfen.wochentag(dt) + " " + KiraHilfen.stunden(lh); }
+            y += fh + (fnt == Graphics.FONT_XTINY ? 0 : 4);
+        }
+        y += 4;
+        zeile(dc, y, Graphics.FONT_XTINY, lang.length() > 0 ? lang : "ESS · Sport · Zone", lang.length() > 0 ? 0x9AD0FF : 0x777777);
+    }
+
+    // Seite 4: Endurance Score, Fitness, Garmin-Tag
+    function seiteForm(dc as Graphics.Dc, d as Dictionary, h as Number) as Void {
+        var w = dc.getWidth();
+        var y = (h * 0.11).toNumber();
+        y = zeile(dc, y, Graphics.FONT_XTINY, "FORM JETZT", 0x9A9A9A);
+        var f = d.get("form");
+        if (!(f instanceof Dictionary)) {
+            zeile(dc, (h * 0.42).toNumber(), Graphics.FONT_SMALL, "Keine Daten", 0xBBBBBB);
+            return;
+        }
+        y = zeile(dc, y + 4, Graphics.FONT_XTINY, "Endurance Score", 0x9A9A9A);
+        y = zeile(dc, y, Graphics.FONT_MEDIUM, KiraHilfen.zahl(f.get("es"), 0), Graphics.COLOR_WHITE);
+        var e28 = f.get("es28");
+        if (e28 != null) {
+            var plus = e28 >= 0 ? "+" : "";
+            y = zeile(dc, y, Graphics.FONT_XTINY, plus + KiraHilfen.zahl(e28, 0) + " in 28 Tagen", e28 >= 0 ? 0x2ECC71 : 0xE67E22);
+        }
+        y += 6;
+        var zh = dc.getFontHeight(Graphics.FONT_XTINY) + dc.getFontHeight(Graphics.FONT_SMALL) + 2;
+        kachel(dc, w * 0.27, y, "CTL", KiraHilfen.zahl(f.get("ctl"), 0));
+        kachel(dc, w * 0.50, y, "ATL", KiraHilfen.zahl(f.get("atl"), 0));
+        kachel(dc, w * 0.73, y, "Mono", KiraHilfen.zahl(f.get("monotonie"), 1));
+        y += zh + 4;
+        // 22.11.2026: live von der Uhr statt vom Mac
+        var bb = sensorJetzt(:bb);
+        var st = sensorJetzt(:stress);
+        var sch = null;
+        try { sch = ActivityMonitor.getInfo().steps; } catch (e) { }
+        kachel(dc, w * 0.27, y, "Body Batt.", KiraHilfen.zahl(bb, 0));
+        kachel(dc, w * 0.50, y, "Stress", KiraHilfen.zahl(st, 0));
+        kachel(dc, w * 0.73, y, "Schritte", sch != null ? (sch >= 10000 ? (sch / 1000).toString() + "k" : sch.toString()) : "-");
+        zeile(dc, y + zh + 2, Graphics.FONT_XTINY, "live von der Uhr", 0x777777);
+    }
+
+    // 23.11.2026: Bereit-ab (Garmin-Erholungszeit live von der Uhr, abgeglichen mit Kiras Plan) und Wochen-Budget
+    function seiteErholung(dc as Graphics.Dc, d as Dictionary, h as Number) as Void {
+        var w = dc.getWidth();
+        var y = (h * 0.11).toNumber();
+        y = zeile(dc, y, Graphics.FONT_XTINY, "ERHOLUNG & WOCHE", 0x9A9A9A);
+        var min = erholMinuten();
+        y = zeile(dc, y + 4, Graphics.FONT_XTINY, min != null && min <= 0 ? "Garmin: erholt" : "Erholt ab (Garmin)", 0x9A9A9A);
+        y = zeile(dc, y, Graphics.FONT_MEDIUM, min == null ? "-" : erholtAb(min), min != null && min <= 0 ? 0x2ECC71 : Graphics.COLOR_WHITE);
+        if (min != null && min > 0) { y = zeile(dc, y, Graphics.FONT_XTINY, "noch " + ((min + 59) / 60).toString() + " h", 0x9A9A9A); }
+        var ic = intensitaetCheck(d, min);
+        if (ic != null) {
+            y = zeile(dc, y + 4, Graphics.FONT_XTINY, (ic[0] as String) + ((ic[1] as Boolean) ? ": passt" : ": zu früh"), (ic[1] as Boolean) ? 0x2ECC71 : 0xE67E22);
+        }
+        var wo = d.get("woche");
+        if (wo instanceof Dictionary && wo.get("budget") != null && wo.get("budget").toNumber() > 0) {
+            var ist = wo.get("ist") != null ? wo.get("ist").toNumber() : 0;
+            var bud = wo.get("budget").toNumber();
+            y = zeile(dc, y + 8, Graphics.FONT_XTINY, "WOCHE MO-SO", 0x9A9A9A);
+            y = zeile(dc, y, Graphics.FONT_SMALL, ist.toString() + " / " + bud.toString() + " ESS", KiraSkala.farbe(KiraSkala.woche(bud), ist));
+            var bw = (w * 0.5).toNumber();
+            var x = w / 2 - bw / 2;
+            // 23.11.2026: Garmin-Balken mit Kiras Wochenbudget
+            KiraSkala.balken(dc, x, y + 6, bw, 6, ist, KiraSkala.woche(bud), Graphics.COLOR_BLACK);
+        }
+    }
+
+    // Letzter Wert aus der Sensor-Historie der Uhr
+    function sensorJetzt(art as Symbol) {
+        try {
+            var it = null;
+            if (art == :bb && SensorHistory has :getBodyBatteryHistory) { it = SensorHistory.getBodyBatteryHistory({ :period => 1 }); }
+            else if (art == :stress && SensorHistory has :getStressHistory) { it = SensorHistory.getStressHistory({ :period => 1 }); }
+            if (it == null) { return null; }
+            var s = it.next();
+            return s != null && s.data != null ? s.data.toNumber() : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function arr(u, a as String, b as String) as Array? {
+        if (!(u instanceof Dictionary)) { return null; }
+        var x = u.get(a);
+        if (!(x instanceof Dictionary)) { return null; }
+        var y = x.get(b);
+        return y instanceof Array ? y : null;
+    }
+
+    function ohneDaten(dc as Graphics.Dc, h as Number, titel as String) as Void {
+        zeile(dc, (h * 0.11).toNumber(), Graphics.FONT_XTINY, titel, 0x9A9A9A);
+        zeile(dc, (h * 0.42).toNumber(), Graphics.FONT_SMALL, "Keine Daten", 0xBBBBBB);
+        zeile(dc, (h * 0.55).toNumber(), Graphics.FONT_XTINY, "START = neu laden", 0x777777);
+    }
+
+    // Seite 4: Last der letzten 14 Tage mit Soll-Rahmen als Band
+    function seiteLast(dc as Graphics.Dc, d as Dictionary, u, h as Number) as Void {
+        var ist = arr(u, "l14", "ist");
+        var lo = arr(u, "l14", "lo");
+        var hi = arr(u, "l14", "hi");
+        var nT = KiraEinst.zahl("pLast", 14);
+        var titel = "LAST " + nT.toString() + " TAGE";
+        if (ist == null || lo == null || hi == null || ist.size() == 0) { ohneDaten(dc, h, titel); return; }
+        ist = KiraEinst.ende(ist, nT);
+        lo = KiraEinst.ende(lo, nT);
+        hi = KiraEinst.ende(hi, nT);
+        if (ist.size() < nT) { titel = "LAST " + ist.size().toString() + " TAGE"; }
+        var w = dc.getWidth();
+        zeile(dc, (h * 0.11).toNumber(), Graphics.FONT_XTINY, titel, 0x9A9A9A);
+        var n = ist.size();
+        var x0 = (w * 0.18).toNumber();
+        var x1 = (w * 0.82).toNumber();
+        var y0 = (h * 0.25).toNumber();
+        var y1 = (h * 0.60).toNumber();
+        var mx = 1;
+        for (var i = 0; i < n; i++) {
+            if (ist[i] > mx) { mx = ist[i]; }
+            if (hi[i] > mx) { mx = hi[i]; }
+        }
+        var bw = (x1 - x0) / n;
+        var drin = 0;
+        var trainiert = 0;
+        var summe = 0;
+        for (var i = 0; i < n; i++) {
+            var x = x0 + i * bw;
+            // Band
+            if (hi[i] > 0) {
+                var yb1 = y1 - ((y1 - y0) * hi[i] / mx);
+                var yb0 = y1 - ((y1 - y0) * (lo[i] > 0 ? lo[i] : 0) / mx);
+                dc.setColor(0x33414F, Graphics.COLOR_TRANSPARENT);
+                dc.fillRectangle(x + 1, yb1, bw - 2, yb0 - yb1 + 1);
+            }
+            var v = ist[i];
+            summe += v;
+            var farbe = 0x555555;
+            if (v > 0) {
+                trainiert += 1;
+                // 23.11.2026: Garmin-Farbmuster mit dem Soll-Rahmen des Tages
+                if (hi[i] > 0) { farbe = KiraSkala.farbe(KiraSkala.last(lo[i], hi[i]), v); } else { farbe = 0xBBBBBB; }
+                if (hi[i] > 0 && v <= hi[i] && lo[i] >= 0 && v >= lo[i]) { drin += 1; }
+            }
+            var bh = v > 0 ? ((y1 - y0) * v / mx) : 3;
+            if (bh < 3) { bh = 3; }
+            dc.setColor(farbe, Graphics.COLOR_TRANSPARENT);
+            dc.fillRectangle(x + bw / 4, y1 - bh, bw / 2, bh);
+        }
+        // heute markieren
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.fillRectangle(x0 + (n - 1) * bw + bw / 4, y1 + 4, bw / 2, 3);
+        var y = y1 + 12;
+        var l = d.get("last");
+        if (l instanceof Dictionary) { y = zeile(dc, y, Graphics.FONT_TINY, "Soll " + KiraHilfen.sollText(l), Graphics.COLOR_WHITE); }
+        y = zeile(dc, y, Graphics.FONT_XTINY, "Rahmen " + drin.toString() + "/" + trainiert.toString() + " · Ø " + (summe / n).toString(), 0xBBBBBB);
+        zeile(dc, y, Graphics.FONT_XTINY, "grau = Rahmen", 0x777777);
+    }
+
+    // Kleine Linie mit Ampelpunkten; v < 0 = fehlt
+    function linie(dc as Graphics.Dc, x0 as Number, x1 as Number, y as Number, hoch as Number, xs as Array, stufen as String?, farbe as Number) as Void {
+        var lo = 99999;
+        var hi = -99999;
+        for (var i = 0; i < xs.size(); i++) {
+            if (xs[i] < 0) { continue; }
+            if (xs[i] < lo) { lo = xs[i]; }
+            if (xs[i] > hi) { hi = xs[i]; }
+        }
+        if (hi < lo) { return; }
+        if (hi == lo) { hi = lo + 1; }
+        var n = xs.size();
+        var dx = n > 1 ? (x1 - x0).toFloat() / (n - 1) : 0.0;
+        var px = -1;
+        var py = -1;
+        dc.setPenWidth(2);
+        for (var i = 0; i < n; i++) {
+            if (xs[i] < 0) { continue; }
+            var x = (x0 + i * dx).toNumber();
+            var yy = (y + hoch - (hoch * (xs[i] - lo).toFloat() / (hi - lo))).toNumber();
+            if (px >= 0) {
+                dc.setColor(farbe, Graphics.COLOR_TRANSPARENT);
+                dc.drawLine(px, py, x, yy);
+            }
+            px = x;
+            py = yy;
+        }
+        dc.setPenWidth(1);
+        if (stufen != null) {
+            for (var i = 0; i < n; i++) {
+                if (xs[i] < 0) { continue; }
+                var x = (x0 + i * dx).toNumber();
+                var yy = (y + hoch - (hoch * (xs[i] - lo).toFloat() / (hi - lo))).toNumber();
+                var c = i < stufen.length() ? stufen.substring(i, i + 1) : "x";
+                dc.setColor(c.equals("g") ? 0x2ECC71 : c.equals("y") ? 0xF1C40F : c.equals("o") ? 0xE67E22 : c.equals("r") ? 0xE74C3C : c.equals("b") ? 0x3A78CF : c.equals("v") ? 0x6E45E9 : c.equals("G") ? 0x5DB75B : c.equals("O") ? 0xE5822F : c.equals("R") ? 0xD9433A : 0x888888, Graphics.COLOR_TRANSPARENT);
+                dc.fillCircle(x, yy, i == n - 1 ? 6 : 4);
+            }
+        }
+    }
+
+    // Seite 5: Morgenwerte der letzten 7 Tage
+    function seiteMorgen(dc as Graphics.Dc, u, h as Number) as Void {
+        var nT = KiraEinst.zahl("pMorgen", 7);
+        if (!(u instanceof Dictionary) || !(u.get("m7") instanceof Dictionary)) { ohneDaten(dc, h, "MORGEN " + nT.toString() + " TAGE"); return; }
+        var m = u.get("m7") as Dictionary;
+        var w = dc.getWidth();
+        var rd = m.get("rd");
+        if (rd instanceof Array && rd.size() < nT) { nT = rd.size(); }
+        zeile(dc, (h * 0.11).toNumber(), Graphics.FONT_XTINY, "MORGEN " + nT.toString() + " TAGE", 0x9A9A9A);
+        var reihen = [["Ready", "rd", "rdS"], ["HRV", "hrv", "hrvS"], ["Puls", "rhr", "rhrS"], ["Schlaf", "sl", "slS"]];
+        var y = (h * 0.22).toNumber();
+        var zh = (h * 0.135).toNumber();
+        for (var i = 0; i < reihen.size(); i++) {
+            var xs = m.get(reihen[i][1]);
+            var st = m.get(reihen[i][2]);
+            if (!(xs instanceof Array)) { continue; }
+            if (xs.size() > nT) {
+                var weg = xs.size() - nT;
+                xs = xs.slice(weg, null);
+                if (st instanceof String && st.length() > weg) { st = st.substring(weg, st.length()); }
+            }
+            dc.setColor(0x9A9A9A, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(w * 0.13, y + zh / 2, Graphics.FONT_XTINY, reihen[i][0], Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+            linie(dc, (w * 0.37).toNumber(), (w * 0.70).toNumber(), y + 10, zh - 20, xs, st instanceof String ? st : null, 0x777777);
+            var letzt = xs.size() > 0 ? xs[xs.size() - 1] : -1;
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(w * 0.88, y + zh / 2, Graphics.FONT_SMALL, letzt < 0 ? "-" : letzt.toString(), Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER);
+            y += zh;
+        }
+        zeile(dc, y + 4, Graphics.FONT_XTINY, "rechts = heute", 0x777777);
+    }
+
+    // Seite 6: Fitness (CTL) und Ermüdung (ATL) 6 Wochen, Ausdauerwert 90 Tage
+    function seiteKurve(dc as Graphics.Dc, d as Dictionary, u, h as Number) as Void {
+        var ctl = arr(u, "form", "ctl");
+        var atl = arr(u, "form", "atl");
+        var es = arr(u, "form", "es");
+        if (ctl == null || atl == null) { ohneDaten(dc, h, "FORM-KURVE"); return; }
+        var nT = KiraEinst.zahl("pForm", 42);
+        ctl = KiraEinst.ende(ctl, nT);
+        atl = KiraEinst.ende(atl, nT);
+        // 24.11.2026: optional 7 Tage Plan-Prognose (gestrichelt wirkend: dünn, heller) rechts anhängen
+        var pc = null;
+        var pa = null;
+        var p7 = u instanceof Dictionary ? u.get("plan7") : null;
+        if (KiraEinst.an("pProg") && p7 instanceof Dictionary && p7.get("ctl") instanceof Array && p7.get("atl") instanceof Array) {
+            pc = p7.get("ctl") as Array;
+            pa = p7.get("atl") as Array;
+        }
+        var w = dc.getWidth();
+        zeile(dc, (h * 0.11).toNumber(), Graphics.FONT_XTINY, (nT == 42 ? "FORM 6 WOCHEN" : "FORM " + nT.toString() + " TAGE") + (pc != null ? " + PLAN" : ""), 0x9A9A9A);
+        // gemeinsame Skala für CTL und ATL
+        var both = [];
+        both.addAll(ctl);
+        both.addAll(atl);
+        if (pc != null) { both.addAll(pc); both.addAll(pa); }
+        var lo = 99999;
+        var hi = -1;
+        for (var i = 0; i < both.size(); i++) { if (both[i] >= 0 && both[i] < lo) { lo = both[i]; } if (both[i] > hi) { hi = both[i]; } }
+        var x0 = (w * 0.20).toNumber();
+        var x1 = (w * 0.80).toNumber();
+        var y0 = (h * 0.22).toNumber();
+        var hoch = (h * 0.20).toNumber();
+        // ATL zuerst (dünn), CTL darüber
+        var atlS = skaliert(atl, lo, hi);
+        var ctlS = skaliert(ctl, lo, hi);
+        if (pc != null) {
+            // Verlauf + Prognose auf gemeinsamer x-Achse; Trennlinie bei heute
+            var nH = ctl.size();
+            var nP = pc.size() < pa.size() ? pc.size() : pa.size();
+            var gesamt = nH + nP;
+            var xh = x0 + ((x1 - x0) * (nH - 1)) / (gesamt - 1);
+            var pcS = [ctlS[nH - 1]];
+            var paS = [atlS[atl.size() - 1]];
+            pcS.addAll(skaliert(pc.slice(0, nP), lo, hi));
+            paS.addAll(skaliert(pa.slice(0, nP), lo, hi));
+            dc.setColor(0x444444, Graphics.COLOR_TRANSPARENT);
+            dc.drawLine(xh, y0 - 2, xh, y0 + hoch + 2);
+            linieFest(dc, x0, xh, y0, hoch, atlS, 0xE67E22, 1);
+            linieFest(dc, x0, xh, y0, hoch, ctlS, 0x2ECC71, 3);
+            linieFest(dc, xh, x1, y0, hoch, paS, 0x8A5A2B, 1);
+            linieFest(dc, xh, x1, y0, hoch, pcS, 0x1E7A45, 2);
+        } else {
+            linieFest(dc, x0, x1, y0, hoch, atlS, 0xE67E22, 1);
+            linieFest(dc, x0, x1, y0, hoch, ctlS, 0x2ECC71, 3);
+        }
+        var y = y0 + hoch + 6;
+        var c = letzter(ctl);
+        var a = letzter(atl);
+        dc.setColor(0x2ECC71, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(w * 0.30, y, Graphics.FONT_XTINY, "CTL " + c.toString(), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.setColor(0xE67E22, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(w * 0.70, y, Graphics.FONT_XTINY, "ATL " + a.toString(), Graphics.TEXT_JUSTIFY_CENTER);
+        y += dc.getFontHeight(Graphics.FONT_XTINY) + 6;
+        if (es != null && es.size() > 1) {
+            y = zeile(dc, y, Graphics.FONT_XTINY, "AUSDAUERWERT 90 TAGE", 0x9A9A9A);
+            var eh = (h * 0.13).toNumber();
+            linie(dc, x0 + 20, x1 - 20, y + 2, eh, es, null, 0x5DADE2);
+            y += eh + 8;
+            var e1 = letzter(es);
+            var e0 = -1;
+            for (var i = 0; i < es.size(); i++) { if (es[i] > 0) { e0 = es[i]; break; } }
+            var diff = e1 > 0 && e0 > 0 ? e1 - e0 : 0;
+            zeile(dc, y, Graphics.FONT_SMALL, e1.toString() + "  " + (diff >= 0 ? "+" : "") + diff.toString(), diff >= 0 ? 0x2ECC71 : 0xE67E22);
+        }
+    }
+
+    function skaliert(xs as Array, lo as Number, hi as Number) as Array {
+        var out = [];
+        var sp = hi > lo ? hi - lo : 1;
+        for (var i = 0; i < xs.size(); i++) { out.add(xs[i] < 0 ? -1.0 : (xs[i] - lo).toFloat() / sp); }
+        return out;
+    }
+
+    function linieFest(dc as Graphics.Dc, x0 as Number, x1 as Number, y as Number, hoch as Number, xs as Array, farbe as Number, pen as Number) as Void {
+        var n = xs.size();
+        var dx = n > 1 ? (x1 - x0).toFloat() / (n - 1) : 0.0;
+        var px = -1;
+        var py = -1;
+        dc.setColor(farbe, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(pen);
+        for (var i = 0; i < n; i++) {
+            if (xs[i] < 0) { continue; }
+            var x = (x0 + i * dx).toNumber();
+            var yy = (y + hoch - hoch * xs[i]).toNumber();
+            if (px >= 0) { dc.drawLine(px, py, x, yy); }
+            px = x;
+            py = yy;
+        }
+        dc.setPenWidth(1);
+    }
+
+    function letzter(xs as Array) as Number {
+        for (var i = xs.size() - 1; i >= 0; i--) { if (xs[i] >= 0) { return xs[i]; } }
+        return 0;
+    }
+
+    // Seite 7: letzte Einheit mit Zonen und Vergleich zum Rahmen
+    // 22.11.2026: Trainingstag statt nur letzter Einheit – Tagessumme groß, darunter alle Einheiten
+    function seiteLetzte(dc as Graphics.Dc, u, h as Number) as Void {
+        if (!(u instanceof Dictionary) || !(u.get("letzte") instanceof Dictionary)) { ohneDaten(dc, h, "TRAININGSTAG"); return; }
+        var a = u.get("letzte") as Dictionary;
+        var w = dc.getWidth();
+        var dt = a.get("d") != null ? a.get("d").toString() : "";
+        var ein = a.get("einheiten");
+        var liste = ein instanceof Array ? ein as Array : [] as Array;
+        var n = liste.size();
+        var heuteTag = dt.equals(KiraHilfen.heuteIso());
+        var titel = heuteTag ? "TRAINING HEUTE" : "TRAINING " + KiraHilfen.wochentag(dt).toUpper();
+        var y = zeile(dc, (h * 0.11).toNumber(), Graphics.FONT_XTINY, titel, 0x9A9A9A);
+        var minT = a.get("tagMin") != null ? a.get("tagMin") : a.get("min");
+        var kmT = a.get("tagKm") != null ? a.get("tagKm") : a.get("km");
+        y = zeile(dc, y, Graphics.FONT_XTINY, (n > 1 ? n.toString() + "× · " : "") + KiraHilfen.zahl(minT, 0) + " min" + (kmT != null && kmT.toFloat() > 0 ? " · " + KiraHilfen.zahl(kmT, 1) + " km" : ""), 0xBBBBBB);
+        var summe = a.get("tagEss") != null ? a.get("tagEss") : a.get("ess");
+        y = zeile(dc, y + 2, Graphics.FONT_MEDIUM, KiraHilfen.zahl(summe, 0) + " ESS", Graphics.COLOR_WHITE);
+        var lage = a.get("lage");
+        if (lage != null && a.get("hi") != null) {
+            var ls = lage.toString();
+            var lf = ls.equals("darueber") ? KiraSkala.ORANGE : ls.equals("im Rahmen") ? KiraSkala.GRUEN : KiraSkala.BLAU;
+            var lt = (ls.equals("darueber") ? "über" : ls.equals("im Rahmen") ? "im" : "unter") + " Rahmen " + KiraHilfen.zahl(a.get("lo"), 0) + "-" + KiraHilfen.zahl(a.get("hi"), 0);
+            y = zeile(dc, y, Graphics.FONT_XTINY, lt, lf);
+        }
+        // Einheiten: ESS · Minuten · Name
+        if (n == 0 && a.get("name") != null) {
+            y = zeile(dc, y, Graphics.FONT_XTINY, KiraHilfen.zahl(a.get("ess"), 0) + " · " + KiraHilfen.zahl(a.get("min"), 0) + "' · " + a.get("name").toString(), Graphics.COLOR_WHITE);
+        }
+        for (var i = 0; i < n && i < 3; i++) {
+            var e = liste[i];
+            if (!(e instanceof Dictionary)) { continue; }
+            y = zeile(dc, y, Graphics.FONT_XTINY, KiraHilfen.zahl(e.get("ess"), 0) + " · " + KiraHilfen.zahl(e.get("min"), 0) + "' · " + (e.get("name") != null ? e.get("name").toString() : ""), Graphics.COLOR_WHITE);
+        }
+        // Zonenbalken für den ganzen Tag
+        var z = a.get("tagZ") instanceof Array ? a.get("tagZ") : a.get("z");
+        if (z instanceof Array && z.size() >= 5) {
+            var sz = 0;
+            for (var i = 0; i < 5; i++) { sz += z[i]; }
+            if (sz > 0) {
+                var farben = [0x9AA5B1, KiraSkala.BLAU, KiraSkala.GRUEN, KiraSkala.ORANGE, KiraSkala.ROT];
+                var x0 = (w * 0.22).toNumber();
+                var bw = (w * 0.56).toNumber();
+                var x = x0;
+                y += 6;
+                for (var i = 0; i < 5; i++) {
+                    var b = bw * z[i] / sz;
+                    dc.setColor(farben[i], Graphics.COLOR_TRANSPARENT);
+                    dc.fillRectangle(x, y, b, 12);
+                    x += b;
+                }
+                y += 16;
+                var t = "";
+                for (var i = 0; i < 5; i++) { if (z[i] > 0) { t += (t.length() > 0 ? " " : "") + "Z" + (i + 1).toString() + " " + z[i].toString() + "'"; } }
+                zeile(dc, y, Graphics.FONT_XTINY, t, 0x9A9A9A);
+            }
+        }
+    }
+
+    // Seite 8: Ziel-Countdown als Ring
+    function seiteZiel(dc as Graphics.Dc, d as Dictionary, h as Number) as Void {
+        var z = d.get("ziel");
+        if (!(z instanceof Dictionary) || z.get("name") == null) { ohneDaten(dc, h, "ZIEL"); return; }
+        var w = dc.getWidth();
+        zeile(dc, (h * 0.11).toNumber(), Graphics.FONT_XTINY, "ZIEL", 0x9A9A9A);
+        var p = z.get("tourform");
+        var pz = p != null ? p.toNumber() : 0;
+        if (pz > 100) { pz = 100; }
+        var cx = w / 2;
+        var cy = (h * 0.43).toNumber();
+        var r = (h * 0.19).toNumber();
+        // 23.11.2026: Tourform als Garmin-Bogen (Kira: 60 / 80 %)
+        KiraSkala.bogen(dc, cx, cy, r, 12, p != null ? pz : null, KiraSkala.tourform());
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(cx, cy, Graphics.FONT_SMALL, p != null ? pz.toString() + "%" : "-", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        var y = cy + r + 14;
+        y = zeile(dc, y, Graphics.FONT_SMALL, z.get("name").toString(), Graphics.COLOR_WHITE);
+        y = zeile(dc, y, Graphics.FONT_XTINY, "in " + KiraHilfen.zahl(z.get("tage"), 0) + " Tagen", 0x9AD0FF);
+        // nächste lange Einheit aus der Woche
+        var xs = d.get("naechste");
+        if (xs instanceof Array) {
+            for (var i = 0; i < xs.size(); i++) {
+                var x = xs[i];
+                if (x instanceof Dictionary && x.get("langH") != null) {
+                    zeile(dc, y, Graphics.FONT_XTINY, "Lang " + KiraHilfen.wochentag(x.get("d").toString()) + " " + KiraHilfen.stunden(x.get("langH")), 0xBBBBBB);
+                    break;
+                }
+            }
+        }
+    }
+
+    function stufeG(s) as Number {
+        if (s == null) { return Graphics.COLOR_WHITE; }
+        var t = s.toString();
+        return t.equals("gruen") ? KiraSkala.BLAU : t.equals("gelb") ? KiraSkala.GRUEN : t.equals("orange") ? KiraSkala.ORANGE : t.equals("rot") ? KiraSkala.ROT : Graphics.COLOR_WHITE;
+    }
+
+    function stufeHrv(s) as Number {
+        if (s == null) { return Graphics.COLOR_WHITE; }
+        var t = s.toString();
+        return t.equals("gruen") ? KiraSkala.GRUEN : t.equals("orange") || t.equals("gelb") ? KiraSkala.ORANGE : t.equals("rot") ? KiraSkala.ROT : Graphics.COLOR_WHITE;
+    }
+
+    function kachelF(dc as Graphics.Dc, x, y as Number, titel as String, v as String, f as Number) as Void {
+        dc.setColor(0x9A9A9A, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(x, y, Graphics.FONT_XTINY, titel, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.setColor(f, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(x, y + dc.getFontHeight(Graphics.FONT_XTINY), Graphics.FONT_SMALL, v, Graphics.TEXT_JUSTIFY_CENTER);
+    }
+
+    function kachel(dc as Graphics.Dc, x, y as Number, titel as String, v as String) as Void {
+        dc.setColor(0x9A9A9A, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(x, y, Graphics.FONT_XTINY, titel, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(x, y + dc.getFontHeight(Graphics.FONT_XTINY), Graphics.FONT_SMALL, v, Graphics.TEXT_JUSTIFY_CENTER);
+    }
+
+    // 7 Balken der letzten Tage (Ist-ESS), heute rechts
+    function balken(dc as Graphics.Dc, y as Number, woche as Array) as Number {
+        var w = dc.getWidth();
+        var hoch = 36;
+        var mx = 1;
+        for (var i = 0; i < woche.size(); i++) {
+            var e = woche[i];
+            if (e instanceof Dictionary && e.get("ist") != null && e.get("ist") > mx) { mx = e.get("ist"); }
+        }
+        var n = woche.size();
+        var breite = (w * 0.5 / n).toNumber();
+        var x0 = (w * 0.25).toNumber();
+        for (var i = 0; i < n; i++) {
+            var e = woche[i];
+            var v = e instanceof Dictionary && e.get("ist") != null ? e.get("ist") : 0;
+            var bh = v > 0 ? (hoch * v / mx).toNumber() : 2;
+            if (bh < 2) { bh = 2; }
+            dc.setColor(i == n - 1 ? 0x2ECC71 : 0x777777, Graphics.COLOR_TRANSPARENT);
+            dc.fillRectangle(x0 + i * breite + 3, y + hoch - bh, breite - 6, bh);
+        }
+        return y + hoch;
+    }
+
+    function unten(dc as Graphics.Dc, h as Number, d as Dictionary) as Void {
+        var st = netz().status;
+        var t = st == null ? "Stand " + KiraHilfen.uhrzeit(Storage.getValue("at")) : st.equals("laedt") ? "aktualisiert ..." : st;
+        var m = d.get("morgen");
+        if (st == null && m instanceof Dictionary && m.get("befinden") == null && KiraHilfen.vonHeute(d)) { t = "Befinden fehlt - MENU"; }
+        zeile(dc, (h * 0.86).toNumber(), Graphics.FONT_XTINY, t, st != null && !st.equals("laedt") ? 0xE67E22 : 0x777777);
+    }
+
+    function zeigeKopplung(dc as Graphics.Dc, h as Number) as Void {
+        var n = netz();
+        zeile(dc, (h * 0.12).toNumber(), Graphics.FONT_XTINY, "COACH KIRA", 0x9A9A9A);
+        if (n.code != null) {
+            var y = zeile(dc, (h * 0.24).toNumber(), Graphics.FONT_SMALL, "Code im Cockpit eingeben", Graphics.COLOR_WHITE);
+            y = zeile(dc, y, Graphics.FONT_XTINY, "Heute > Technik", 0x9A9A9A);
+            zeile(dc, y + 16, Graphics.FONT_NUMBER_MEDIUM, n.code as String, 0x2ECC71);
+            zeile(dc, (h * 0.74).toNumber(), Graphics.FONT_XTINY, "wartet auf Bestätigung ...", 0x777777);
+        } else {
+            var st = n.status;
+            var y = zeile(dc, (h * 0.36).toNumber(), Graphics.FONT_SMALL, "Mit Cockpit koppeln", Graphics.COLOR_WHITE);
+            zeile(dc, y + 4, Graphics.FONT_XTINY, st != null && st.equals("koppelt") ? "fordert Code an ..." : "START drücken", 0x9A9A9A);
+            if (st != null && !st.equals("koppelt")) { zeile(dc, (h * 0.62).toNumber(), Graphics.FONT_XTINY, st, 0xE67E22); }
+        }
+    }
+}
+
+class KiraDelegate extends WatchUi.BehaviorDelegate {
+    var view as KiraView;
+
+    function initialize(v as KiraView) {
+        BehaviorDelegate.initialize();
+        view = v;
+    }
+
+    function onNextPage() as Boolean {
+        view.blaettern(1);
+        return true;
+    }
+
+    function onPreviousPage() as Boolean {
+        view.blaettern(-1);
+        return true;
+    }
+
+    // START: koppeln bzw. neu laden
+    function onSelect() as Boolean {
+        if (Storage.getValue("tok") == null) {
+            netz().koppeln();
+        } else {
+            netz().laden();
+        }
+        return true;
+    }
+
+    // MENU (lange UP): Befinden, neu laden, Kopplung lösen
+    function onMenu() as Boolean {
+        if (Storage.getValue("tok") == null) { return false; }
+        kiraMenuZeigen();
+        return true;
+    }
+}
+
+class KiraLoesen extends WatchUi.ConfirmationDelegate {
+    function initialize() {
+        ConfirmationDelegate.initialize();
+    }
+
+    function onResponse(r) as Boolean {
+        if (r == WatchUi.CONFIRM_YES) {
+            Storage.deleteValue("tok");
+            Storage.deleteValue("d");
+            WatchUi.requestUpdate();
+        }
+        return true;
+    }
+}

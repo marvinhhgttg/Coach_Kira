@@ -1,0 +1,84 @@
+[ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 7; @symbol_importdef<0> = [Toybox,7,7,13]; @symbol_importdef<1> = [Application,7,14,25]; ]
+import Toybox.Application;
+[ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 8; @symbol_importdef<0> = [Toybox,8,7,13]; @symbol_importdef<1> = [Lang,8,14,18]; ]
+import Toybox.Lang;
+[ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 9; @symbol_importdef<0> = [Toybox,9,7,13]; @symbol_importdef<1> = [WatchUi,9,14,21]; ]
+import Toybox.WatchUi;
+[ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 11; @position = 6; @symbol_constdef = [KIRA_BASIS,11,6,16]; ]
+const KIRA_BASIS = "https://coachkira.pplx.app/port/5000";
+[ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 13; @symbol_classdef = [KiraFeldApp,13,6,17]; @symbol_extends<0> = [Application,13,26,37]; @symbol_extends<1> = [AppBase,13,38,45]; ]
+class KiraFeldApp extends Application.AppBase {
+    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 13; ]
+    <init> {
+    }
+    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 13; ]
+    static
+    <init> {
+    }
+    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 14; @position = 8; @symbol_vardef = [ansicht,14,8,15]; @symbol_type<0> = [KiraFeldView,14,19,31]; ]
+    var ansicht as KiraFeldView or Null = null;
+    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 15; @symbol_functiondef = [initialize,15,13,23]; ]
+    function initialize() as Void {
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_15_26_17_4_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 16 8 ]
+        symbol [ AppBase %tmp.2 16 8 15 ];
+        %tmp.2 = getv ? :AppBase;
+        symbol [ initialize %tmp.3 16 16 26 ];
+        %tmp.3 = getv function %tmp.2 :initialize;
+        invoke %tmp.2 %tmp.3();
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_15_26_17_4_stop:
+    }
+    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 19; @symbol_functiondef = [getInitialView,19,13,27]; @symbol_return<0> = [WatchUi,19,34,41]; @symbol_return<1> = [Views,19,42,47]; @symbol_return<2> = [WatchUi,19,53,60]; @symbol_return<3> = [Views,19,61,66]; @symbol_return<4> = [WatchUi,19,68,75]; @symbol_return<5> = [InputDelegates,19,76,90]; ]
+    function getInitialView() as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] {
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_19_92_22_4_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 20 8 ]
+        symbol [ KiraFeldView %tmp.4 20 22 34 ];
+        %tmp.4 = getv ? :KiraFeldView;
+        %tmp.1 = newc %tmp.4 ();
+        symbol [ ansicht ? 20 8 15 ];
+        putv self :ansicht %tmp.1;
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 21 8 ]
+        %tmp.5 = newa 1;
+        symbol [ ansicht %tmp.7 21 16 23 ];
+        %tmp.7 = getv ? :ansicht;
+        %tmp.8 = dup %tmp.5;
+        %tmp.9 = aputv %tmp.8 0 %tmp.7;
+        ret %tmp.9;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_19_92_22_4_stop:
+    }
+    [ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 25; @symbol_functiondef = [onSettingsChanged,25,13,30]; ]
+    function onSettingsChanged() as Void {
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_25_41_28_4_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 26 8 ]
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_8_26_71_if_stmt:
+        symbol [ ansicht %tmp.2 26 12 19 ];
+        %tmp.2 = getv ? :ansicht;
+        %tmp.3 = null;
+        %tmp.4 = ne %tmp.2 %tmp.3;
+        bf %tmp.4 @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_8_26_71_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_8_26_71_if_true:
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_29_26_71_start:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 26 31 ]
+        symbol [ ansicht %tmp.6 26 32 39 ];
+        %tmp.6 = getv ? :ansicht;
+        %tmp.7 = as %tmp.6 { (!Null) };
+        %tmp.8 = as %tmp.7 KiraFeldView;
+        symbol [ KiraFeldView %tmp.8 26 43 55 ];
+        symbol [ einstLesen %tmp.9 26 57 67 ];
+        %tmp.9 = getv function %tmp.8 :einstLesen;
+        invoke %tmp.8 %tmp.9();
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_29_26_71_stop:
+        goto @_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_8_26_71_if_end;
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_26_8_26_71_if_end:
+[ "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc" 27 8 ]
+        symbol [ WatchUi %tmp.10 27 8 15 ];
+        %tmp.10 = getm $.Toybox.WatchUi;
+        symbol [ requestUpdate %tmp.11 27 16 29 ];
+        %tmp.11 = getv function %tmp.10 :requestUpdate;
+        invoke %tmp.10 %tmp.11();
+_home_user_workspace_ck_repo_garmin_feld_source_KiraFeldApp_mc_25_41_28_4_stop:
+    }
+}
+[ @file = "/home/user/workspace/ck-repo/garmin-feld/source/KiraFeldApp.mc"; @line = 7; ]
+<init> {
+}
