@@ -9,7 +9,7 @@ import { lerneModelle } from '../lib/essRechner';
 import { eigeneBergtouren, eigeneSkitouren, setzeGarminTage, tourLastPersoenlich } from '../lib/tourEss';
 import { ladeLangKontext } from '../lib/briefingLocal';
 import { getEngine } from '../lib/engine';
-import { WT_NAME, zielRahmen, zielplanAusrollen, zielplanCsv, zielplanLesen, zielplanPrompt, zielplanWochen, type Zielplan } from '../lib/zielplan';
+import { WT_NAME, musterText, trainingsMuster, zielRahmen, zielplanAusrollen, zielplanCsv, zielplanLesen, zielplanPrompt, zielplanWochen, type Zielplan } from '../lib/zielplan';
 
 interface Block { titel: string; von: string; bis: string; wochen_ess: number; schluesseleinheiten: string[] }
 interface ZielDaten { ziel: Ziel; plan?: { bloecke: Block[]; hinweise: string[]; tapering?: string; erstellt?: string }; zielplan?: Zielplan }
@@ -176,7 +176,7 @@ export function GoalPlannerTile() {
     try {
       const lk = await ladeLangKontext().catch(() => null);
       const h = hist.filter((x) => x.date < heute()).map((x) => ({ date: x.date, load: x.load }));
-      const r = zielRahmen(z, bereit.tourLast, h, lk, heute());
+      const r = zielRahmen(z, bereit.tourLast, h, lk, heute(), trainingsMuster(garmin, heute()));
       const extra = [`Stand Vorbereitung: ${bereit.punkte.join(' | ')}`, cur.data.plan?.bloecke?.length ? `Bisherige Grobplanung: ${cur.data.plan.bloecke.map((b) => `${b.titel} (${b.wochen_ess} ESS/Woche)`).join(', ')} – Daten darin nicht übernehmen.` : ''].filter(Boolean).join('\n');
       const t = await localChat(zielplanPrompt(z, r, extra), { format: 'json', temperature: 0.3, numCtx: 16384 });
       const k = zielplanLesen(parseJsonLoose<any>(t) || {}, r, z.datum);
@@ -332,6 +332,11 @@ export function GoalPlannerTile() {
                 <span className="text-ink-muted"> · {Math.round((new Date(zp.ziel.datum).getTime() - new Date(zp.einstieg).getTime()) / 86400000 / 7)} Wochen · {zp.rahmen.klasseText} · {zp.rahmen.knapp ? 'Einstieg sofort (Ziel ist nah)' : `Rahmen ${fmtDateShort(zp.rahmen.fruehestens)}–${fmtDateShort(zp.rahmen.spaetestens)}`} · Tapering ab {fmtDateShort(zp.rahmen.taperAb)} · lange Einheit bis {hh(zp.rahmen.zielH)} h</span>
               </div>
               {zp.begruendung && <p className="text-xs text-ink-muted">{zp.begruendung}</p>}
+              {zp.rahmen.muster ? (
+                <p className="text-2xs text-ink-dim" data-testid="zp-muster">Dein Trainingsmuster (letzte {zp.rahmen.muster.wochen} Wochen, bleibt in allen Phasen): {musterText(zp.rahmen.muster)}</p>
+              ) : (
+                <p className="text-2xs text-ink-dim">Erstellt vor dem 27.11.2026 ohne dein Trainingsmuster – neu planen, damit deine gewohnten Sportarten bleiben.</p>
+              )}
               <div className="flex flex-wrap gap-1.5 text-2xs">
                 {zp.phasen.map((p) => (
                   <span key={p.name + p.von} className="rounded border border-border px-1.5 py-0.5" title={p.fokus}>

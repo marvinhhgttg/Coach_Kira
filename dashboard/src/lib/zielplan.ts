@@ -8,6 +8,7 @@
 import { atlStep, ctlStep, windowMean } from './ctlModel';
 import type { Ziel } from './planning';
 import type { EssRate, LangKontext } from './esLang';
+import type { GarminTage } from './garmin';
 
 export const ZP_SPORTARTEN = ['Rad', 'Lauf', 'Wandern', 'Bergtour', 'Skitour', 'Skike', 'Langlauf', 'Kraft', 'Mobility', 'Off'] as const;
 export type ZpZone = 'Off' | 'Z1' | 'Z2' | 'Z3' | 'Z4' | 'Z5';
@@ -24,7 +25,73 @@ export type ZpRahmen = {
   langWt: number; // 1 = Mo … 7 = So
   sportarten: string[];
   raten: Record<string, number>;
+  /** 27.11.2026: dein Trainingsmuster der letzten Wochen (Sportart je Wochentag) – verbindlich für die Vorbereitung */
+  muster?: TrainingsMuster | null;
 };
+export type MusterTag = { wt: number; sport: string; tage: number; von: number };
+export type TrainingsMuster = { wochen: number; tage: MusterTag[]; anteile: Record<string, number>; sportarten: string[] };
+
+/** Garmin-Aktivitätstyp → Sportart des Zielplans */
+export function zpSportVonTyp(typ: string): string | null {
+  const t = String(typ || '').toLowerCase();
+  if (/backcountry|ski_tour/.test(t)) return 'Skitour';
+  if (/skate_ski|inline_skat|roller_ski/.test(t)) return 'Skike';
+  if (/cross_country_ski/.test(t)) return 'Langlauf';
+  if (/cycling|biking|virtual_ride|indoor_cycl/.test(t)) return 'Rad';
+  if (/running|treadmill/.test(t)) return 'Lauf';
+  if (/mountaineering/.test(t)) return 'Bergtour';
+  if (/hiking|walking/.test(t)) return 'Wandern';
+  if (/strength|fitness_equipment|hiit/.test(t)) return 'Kraft';
+  if (/yoga|pilates|mobility|breathwork|stretch/.test(t)) return 'Mobility';
+  return null;
+}
+
+/** Trainingsmuster aus den Garmin-Aktivitäten der letzten Wochen: je Wochentag die häufigste Hauptsportart (nach ESS). */
+export function trainingsMuster(garmin: GarminTage | null | undefined, heute: string, wochen = 12): TrainingsMuster | null {
+  if (!garmin) return null;
+  const ab = addT(heute, -wochen * 7);
+  const proWt: Record<number, Record<string, number>> = { 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {}, 7: {} };
+  const ess: Record<string, number> = {};
+  let tageMitDaten = 0;
+  for (let d = ab; d < heute; d = addT(d, 1)) {
+    const tag = garmin.get(d);
+    const wt = wtVon(d);
+    const proSport: Record<string, number> = {};
+    for (const a of tag?.akt || []) {
+      const sp = zpSportVonTyp(String(a.typ || ''));
+      if (!sp) continue;
+      const l = Math.max(Number(a.last) || 0, sp === 'Kraft' || sp === 'Mobility' ? 1 : 0);
+      if (l <= 0 && (Number(a.dauer_s) || 0) < 900) continue;
+      proSport[sp] = (proSport[sp] || 0) + l;
+      ess[sp] = (ess[sp] || 0) + l;
+    }
+    if (tag) tageMitDaten++;
+    // Hauptsportart des Tages: die mit der meisten Last (Kraft/Mobility nur, wenn sonst nichts war)
+    const ks = Object.entries(proSport).sort((x, y) => y[1] - x[1]);
+    const haupt = ks.find(([k]) => k !== 'Kraft' && k !== 'Mobility')?.[0] || ks[0]?.[0] || 'Off';
+    proWt[wt][haupt] = (proWt[wt][haupt] || 0) + 1;
+  }
+  if (tageMitDaten < 21) return null;
+  const tage: MusterTag[] = [];
+  for (let wt = 1; wt <= 7; wt++) {
+    const xs = Object.entries(proWt[wt]).sort((x, y) => y[1] - x[1]);
+    const von = xs.reduce((a, [, n]) => a + n, 0);
+    const aktiv = xs.filter(([k]) => k !== 'Off');
+    const nAktiv = aktiv.reduce((a, [, n]) => a + n, 0);
+    // Ruhetag, wenn an diesem Wochentag öfter nichts war als etwas
+    const sport = nAktiv * 2 < von || !aktiv.length ? 'Off' : aktiv[0][0];
+    tage.push({ wt, sport, tage: sport === 'Off' ? von - nAktiv : aktiv[0][1], von });
+  }
+  const summe = Object.values(ess).reduce((a, b) => a + b, 0) || 1;
+  const anteile: Record<string, number> = Object.fromEntries(Object.entries(ess).map(([k, v]) => [k, Math.round((v / summe) * 100)]).sort((x, y) => (y[1] as number) - (x[1] as number)));
+  const sportarten = [...new Set([...tage.filter((t) => t.sport !== 'Off').map((t) => t.sport), ...Object.entries(anteile).filter(([, v]) => v >= 5).map(([k]) => k)])];
+  return { wochen, tage, anteile, sportarten };
+}
+export function musterText(m: TrainingsMuster | null | undefined): string {
+  if (!m) return '';
+  return m.tage.map((t) => `${WT_NAME[t.wt]} ${t.sport}${t.von ? ` (${t.tage}/${t.von})` : ''}`).join(', ') +
+    ` · Lastanteile: ${Object.entries(m.anteile).map(([k, v]) => `${k} ${v} %`).join(', ')}`;
+}
 export type ZpPhase = { name: string; von: string; bis: string; wochen_ess: number; fokus: string; woche: ZpMuster[] };
 export type ZpMuster = { wt: number; sport: string; zone: ZpZone; anteil: number; training: string; lang?: boolean };
 export type ZpTag = {
@@ -63,7 +130,7 @@ function ratenAus(sp: Record<string, EssRate> | undefined): Record<string, numbe
 const ZONE_FAKTOR: Record<ZpZone, number> = { Off: 0, Z1: 0.8, Z2: 1, Z3: 1.5, Z4: 2, Z5: 2.4 };
 
 /** Rahmen aus Ziel, Fitness und Langzeitkontext. hist = Tageslasten (älteste zuerst, bis gestern). */
-export function zielRahmen(z: Ziel, tourLast: number, hist: { date: string; load: number | null }[], lk: LangKontext | null, heute: string): ZpRahmen {
+export function zielRahmen(z: Ziel, tourLast: number, hist: { date: string; load: number | null }[], lk: LangKontext | null, heute: string, muster?: TrainingsMuster | null): ZpRahmen {
   const h = z.dauer_h || 0;
   const schwer = (z.hm || 0) >= 1500 || (z.distanz_km || 0) >= 40;
   let klasse: ZpRahmen['klasse'] = h >= 10 ? 'ultra' : h >= 7 ? 'lang' : h >= 4 ? 'mittel' : 'kurz';
@@ -94,9 +161,13 @@ export function zielRahmen(z: Ziel, tourLast: number, hist: { date: string; load
   const wochenlastJetzt = Math.round(loads.slice(-28).reduce((a, b) => a + b, 0) / 4);
   const monat = d2(z.datum).getMonth() + 1;
   const winter = monat >= 11 || monat <= 3;
-  const sportarten = winter
+  const alle = winter
     ? ['Rad', 'Lauf', 'Wandern', 'Bergtour', 'Skitour', 'Skike', 'Langlauf', 'Kraft', 'Mobility', 'Off']
     : ['Rad', 'Lauf', 'Wandern', 'Bergtour', 'Skike', 'Kraft', 'Mobility', 'Off'];
+  // 27.11.2026: nur deine gewohnten Sportarten plus Zielsport (lange Einheit) – dein Muster bleibt
+  const sportarten = muster?.sportarten?.length
+    ? alle.filter((x) => muster.sportarten.includes(x) || x === zielSportVon(z) || (zielSportVon(z) === 'Skitour' && x === 'Bergtour') || x === 'Mobility' || x === 'Off')
+    : alle;
   const langWt = lk?.einstellung?.tage?.length ? Math.max(...lk.einstellung.tage) : 6;
   return {
     klasse,
@@ -105,7 +176,7 @@ export function zielRahmen(z: Ziel, tourLast: number, hist: { date: string; load
     taperTage, taperAb: addT(z.datum, -taperTage),
     zielSport, zielH, schrittH: geh ? 1 : 0.5, laengsteH: Math.round((lk?.status?.laengste28h || 0) * 4) / 4,
     tourLast: Math.round(tourLast), wochenlastJetzt, ctlJetzt: Math.round(ctl), atlJetzt: Math.round(atl),
-    langWt, sportarten, raten: ratenAus(lk?.essProStunde?.spanne),
+    langWt, sportarten, raten: ratenAus(lk?.essProStunde?.spanne), muster: muster ?? null,
   };
 }
 
@@ -123,11 +194,12 @@ export function zielplanPrompt(z: Ziel, r: ZpRahmen, extra: string): { role: 'sy
     `- Wochenlast: Grundlage etwa auf heutigem Niveau (Ø ${r.wochenlastJetzt} ESS), Aufbau und Spezifisch bis etwa +20 %, Tapering etwa 60 %. Steigerung höchstens 8 % pro Woche; jede 4. Woche Entlastung (macht der Kern). ACWR muss unter 1,3 bleiben. Lange Geh-Einheiten bringen wenig ESS (Wandern ${r.raten.Wandern}/h) – die Wochenlast kommt dann aus Rad und Lauf.`,
     `- Vortag und Folgetag der langen Einheit locker (Z1–Z2) oder frei. Mindestens 1 Ruhetag pro Woche. Höchstens 2 harte Tage (Z4–Z5) pro Woche.`,
     `- Erlaubte Sportarten: ${r.sportarten.join(', ')}. ESS pro Stunde ruhig bei Marc: ${raten}.`,
+    r.muster ? `- MARCS TRAININGSMUSTER der letzten ${r.muster.wochen} Wochen (verbindlich, in ALLEN Phasen beibehalten – auch in Spezifisch): ${musterText(r.muster)}. Jeder Wochentag behält seine Sportart; Ruhetage bleiben Ruhetage. Spezifisch wird die Vorbereitung über Zone, Dauer, Gelände/Höhenmeter und die lange Einheit (nur sie im Zielsport), nicht über neue Sportarten.` : '',
     extra ? `KONTEXT:\n${extra}` : '',
     '',
     'AUFGABE: Lege den Einstieg fest und teile die Zeit bis zum Tapering in 2–4 Phasen (z. B. Grundlage, Aufbau, Spezifisch) plus die Phase Tapering. ' +
       'Je Phase: Wochenlast (ESS) am Phasenanfang, Fokus und ein Wochenmuster mit genau 7 Tagen (wt 1=Mo … 7=So): Sportart, Zone, Anteil an der Wochenlast in Prozent (Summe 100, Ruhetag 0), Training in max. 6 Wörtern. ' +
-      'Spezifisch heißt: Sport und Gelände wie am Zieltag (Höhenmeter, Dauer, Rucksack), Back-to-Back-Tage sind erlaubt.',
+      (r.muster ? 'Spezifisch heißt: die lange Einheit im Zielsport mit Gelände wie am Zieltag (Höhenmeter, Dauer, Rucksack); die übrigen Tage bleiben in Marcs gewohnten Sportarten, dort z. B. Höhenmeter, Rucksack oder längere Dauer einbauen.' : 'Spezifisch heißt: Sport und Gelände wie am Zieltag (Höhenmeter, Dauer, Rucksack), Back-to-Back-Tage sind erlaubt.'),
     'Antworte nur mit JSON: {"einstieg":"YYYY-MM-DD","begruendung":"2 Sätze","phasen":[{"name":"Grundlage","von":"YYYY-MM-DD","bis":"YYYY-MM-DD","wochen_ess":500,"fokus":"1 Satz","woche":[{"wt":1,"sport":"Rad","zone":"Z2","anteil":15,"training":"Pendeln locker"}, … 7 Einträge, einer mit "lang": true]}],"tapering":"1 Satz","hinweise":["…"]}',
   ].filter(Boolean).join('\n');
   return [
@@ -204,12 +276,41 @@ export function zielplanLesen(j: any, r: ZpRahmen, zielDatum: string): { einstie
       am.lang = true;
     }
   }
+  // 27.11.2026: Trainingsmuster beibehalten – jeder Wochentag behält deine gewohnte Sportart (nur die lange Einheit im Zielsport)
+  const m = r.muster;
+  if (m) {
+    let n = 0;
+    const haupt = m.tage.filter((t) => t.sport !== 'Off').sort((a, b) => b.tage - a.tage)[0]?.sport || 'Rad';
+    for (const p of phasen) for (const x of p.woche) {
+      const gew = m.tage[x.wt - 1]?.sport || 'Off';
+      if (x.lang) {
+        const soll = r.zielSport;
+        if (x.sport !== soll && !(soll === 'Skitour' && x.sport === 'Bergtour')) { x.sport = soll; n++; }
+        if (x.anteil <= 0) { x.anteil = 25; x.zone = 'Z2'; }
+        continue;
+      }
+      if (gew === 'Off') {
+        // gewohnter Ruhetag: bleibt frei, außer Kira braucht ihn – dann in deiner Hauptsportart, locker
+        if (x.anteil > 0 && x.sport !== haupt && !m.sportarten.includes(x.sport)) { x.sport = haupt; n++; }
+        continue;
+      }
+      if (x.anteil > 0 && x.sport !== gew && x.sport !== 'Kraft' && x.sport !== 'Mobility') { x.sport = gew; n++; }
+      if (x.anteil > 0 && (x.sport === 'Kraft' || x.sport === 'Mobility') && gew !== x.sport && !m.sportarten.includes(x.sport)) { x.sport = gew; n++; }
+    }
+    if (n) korr.push(`Sportarten an dein Trainingsmuster angepasst (${n}× – jeder Wochentag behält seine gewohnte Sportart, nur die lange Einheit im Zielsport).`);
+  }
   return {
     einstieg, begruendung: String(j?.begruendung || '').slice(0, 400), phasen,
     tapering: String(j?.tapering || '').slice(0, 200), hinweise: (Array.isArray(j?.hinweise) ? j.hinweise : []).map((x: unknown) => String(x).slice(0, 200)).slice(0, 5), korrekturen: korr,
   };
 }
 
+/** Deine Hauptsportart (häufigste im Muster), sonst Rad */
+const hauptSport = (r: ZpRahmen) => {
+  const m = r.muster;
+  const s = m ? m.tage.filter((t) => t.sport !== 'Off' && t.sport !== 'Kraft' && t.sport !== 'Mobility').sort((a, b) => b.tage - a.tage)[0]?.sport : null;
+  return s && ['Rad', 'Lauf', 'Skike', 'Langlauf'].includes(s) ? s : 'Rad';
+};
 const HART = (z: ZpZone) => z === 'Z3' || z === 'Z4' || z === 'Z5';
 
 /** Tag für Tag ausrollen und prüfen. hist wie bei zielRahmen. */
@@ -247,7 +348,7 @@ export function zielplanAusrollen(z: Ziel, r: ZpRahmen, k: ReturnType<typeof zie
     }
     if (d > z.datum) {
       const t1 = diffT(z.datum, d) === 1;
-      tage.push({ date: d, wt, woche: w, phase: 'Erholung', sport: t1 ? 'Off' : 'Rad', zone: t1 ? 'Off' : 'Z1', intensitaet: t1 ? 'Ruhe' : 'sehr locker', ess: t1 ? 0 : 25, dauerH: t1 ? null : 0.5, training: t1 ? 'Ruhetag, Beine hoch' : 'Locker ausrollen', art: 'erholung' });
+      tage.push({ date: d, wt, woche: w, phase: 'Erholung', sport: t1 ? 'Off' : hauptSport(r), zone: t1 ? 'Off' : 'Z1', intensitaet: t1 ? 'Ruhe' : 'sehr locker', ess: t1 ? 0 : 25, dauerH: t1 ? null : 0.5, training: t1 ? 'Ruhetag, Beine hoch' : 'Locker ausrollen', art: 'erholung' });
       continue;
     }
     const p = phaseAm(d);
@@ -266,7 +367,7 @@ export function zielplanAusrollen(z: Ziel, r: ZpRahmen, k: ReturnType<typeof zie
     let sport = m.sport, zone = m.zone, training = m.training, dauerH: number | null = null, ess = 0, art: ZpTag['art'];
     const tageBisZiel = diffT(d, z.datum);
     if (tageBisZiel === 1) { sport = 'Off'; zone = 'Off'; training = 'Ruhetag vor dem Ziel'; }
-    else if (tageBisZiel === 2) { sport = 'Rad'; zone = 'Z1'; training = 'Kurz locker, Beine wach'; dauerH = 0.75; ess = rund5(0.75 * r.raten.Rad * ZONE_FAKTOR.Z1); }
+    else if (tageBisZiel === 2) { sport = hauptSport(r); zone = 'Z1'; training = 'Kurz locker, Beine wach'; dauerH = 0.75; ess = rund5(0.75 * (r.raten[sport] || r.raten.Rad) * ZONE_FAKTOR.Z1); }
     else if (m.lang) {
       sport = r.zielSport === 'Skitour' && sport !== 'Skitour' && sport !== 'Bergtour' ? 'Skitour' : sport === 'Off' ? r.zielSport : sport;
       zone = HART(zone) ? 'Z2' : zone === 'Off' ? 'Z2' : zone;
