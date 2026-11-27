@@ -11,6 +11,8 @@ import type { RecoveryDay, Vote } from './votumRegeln';
 export const BAND: Record<Vote, [number, number]> = { REST: [0, 0.25], EASY: [0.3, 0.8], TRAIN: [0.7, 1.25], QUALITY: [1.0, 1.7] };
 export type Empfehlung = {
   min: number; max: number; halte: number; acwrGrenze: number | null; gedeckelt: boolean;
+  /** 27.11.2026: ACWR-Deckel läge unter der Votums-Untergrenze → Obergrenze = Untergrenze des Votums, ACWR dort */
+  untergrenze?: { last: number; acwr: number } | null;
   /** 22.11.2026: Obergrenze aus deiner Historie angehoben (Faktor × Fitness halten) */
   persoenlich?: { faktor: number; standard: number; n: number; d1: number } | null;
 };
@@ -75,8 +77,15 @@ export function lastEmpfehlung(today: RecoveryDay, yesterday: RecoveryDay | null
   const persoenlich = pb && pb.faktor > BAND[vote][1] ? { faktor: pb.faktor, standard: hi, n: pb.n, d1: pb.d1 } : null;
   if (persoenlich) hi = r5(pb!.faktor * halte);
   let gedeckelt = false;
-  if (acwrGrenze != null && hi > acwrGrenze) { hi = r5(Math.max(0, acwrGrenze)); gedeckelt = true; if (lo > hi) lo = r5(hi * 0.6); }
-  return { min: lo, max: hi, halte: r5(halte), acwrGrenze: acwrGrenze != null ? r5(acwrGrenze) : null, gedeckelt, persoenlich };
+  let untergrenze: { last: number; acwr: number } | null = null;
+  if (acwrGrenze != null && hi > acwrGrenze) {
+    hi = r5(Math.max(0, acwrGrenze)); gedeckelt = true;
+    // 27.11.2026: Der ACWR-Deckel darf das Votum nicht aushebeln (z. B. Easy, aber 0–0 ESS). Liegt er unter der
+    // Untergrenze des Votums, gilt die Untergrenze als Obergrenze – die ACWR dort wird offen ausgewiesen.
+    if (hi < lo) { hi = lo; untergrenze = { last: lo, acwr: Math.round(acwrNach(lo) * 100) / 100 }; }
+    if (lo >= hi) lo = r5(hi * 0.6);
+  }
+  return { min: lo, max: hi, halte: r5(halte), acwrGrenze: acwrGrenze != null ? r5(acwrGrenze) : null, gedeckelt, persoenlich, untergrenze };
 }
 
 /** Liegt ein Lastwert im Soll-Rahmen? */

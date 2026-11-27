@@ -70,6 +70,8 @@ function planVerdict(p: PlannedSession, vote: Vote, emp: Empfehlung | null): { o
   if (vote === 'REST') return { ok: false, text: 'Einheit streichen oder durch 20–30 min Mobility ersetzen.' };
   if (vote === 'EASY') {
     if (emp && emp.max > 0) return { ok: false, text: `Einheit auf höchstens ${emp.max} ESS in Z1–Z2 kürzen oder mit einem lockeren Tag tauschen.` };
+    // 27.11.2026: Rahmen vorhanden, aber Obergrenze 0 → keine eigene Ersatzrechnung, sondern dieselbe Aussage wie „Empfehlung heute"
+    if (emp) return { ok: false, text: 'Einheit mit einem lockeren Tag tauschen – heute höchstens Mobility.' };
     const shorter = Math.max(30, Math.round((p.load * 0.6) / 5) * 5);
     return { ok: false, text: `Einheit auf etwa ${shorter} ESS in Z1–Z2 kürzen oder mit einem lockeren Tag tauschen.` };
   }
@@ -153,7 +155,7 @@ function EmpfehlungZeile({ e, vote, plan, ist = false }: { e: Empfehlung; vote: 
         </div>
       )}
       <div className="mt-0.5 text-2xs text-ink-dim tnum">
-        Votum {VOTE_LABEL[vote]} · Fitness halten ≈ {e.halte} ESS{e.acwrGrenze != null ? ` · ACWR 1,3 bei ≈ ${e.acwrGrenze} ESS` : ''}{e.gedeckelt ? ' (Obergrenze dadurch gesenkt)' : ''}{e.persoenlich ? ` · Obergrenze persönlich ${e.persoenlich.faktor.toLocaleString('de-DE')}× statt ${e.persoenlich.standard} (${e.persoenlich.n} vergleichbare Tage, Readiness am Folgemorgen Ø ${e.persoenlich.d1 >= 0 ? '+' : ''}${e.persoenlich.d1.toLocaleString('de-DE')})` : ''}
+        Votum {VOTE_LABEL[vote]} · Fitness halten ≈ {e.halte} ESS{e.acwrGrenze != null ? ` · ACWR 1,3 bei ≈ ${e.acwrGrenze} ESS` : ''}{e.untergrenze ? ` (Obergrenze = Votums-Untergrenze ${e.untergrenze.last} ESS, ACWR dann ≈ ${e.untergrenze.acwr.toLocaleString('de-DE')})` : e.gedeckelt ? ' (Obergrenze dadurch gesenkt)' : ''}{e.persoenlich ? ` · Obergrenze persönlich ${e.persoenlich.faktor.toLocaleString('de-DE')}× statt ${e.persoenlich.standard} (${e.persoenlich.n} vergleichbare Tage, Readiness am Folgemorgen Ø ${e.persoenlich.d1 >= 0 ? '+' : ''}${e.persoenlich.d1.toLocaleString('de-DE')})` : ''}
         {lage && <> · {ist ? 'Absolviert' : 'Plan'} {fmtNum(plan!.load)} ESS <span style={{ color: farbeVon(lastSkala(e.min, e.max), plan!.load) }}>{lage}</span></>}
       </div>
     </div>

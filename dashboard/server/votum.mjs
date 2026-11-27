@@ -3254,12 +3254,17 @@ function lastEmpfehlung(today, yesterday, baender) {
   const persoenlich = pb && pb.faktor > BAND[vote][1] ? { faktor: pb.faktor, standard: hi, n: pb.n, d1: pb.d1 } : null;
   if (persoenlich) hi = r5(pb.faktor * halte);
   let gedeckelt = false;
+  let untergrenze = null;
   if (acwrGrenze != null && hi > acwrGrenze) {
     hi = r5(Math.max(0, acwrGrenze));
     gedeckelt = true;
-    if (lo > hi) lo = r5(hi * 0.6);
+    if (hi < lo) {
+      hi = lo;
+      untergrenze = { last: lo, acwr: Math.round(acwrNach(lo) * 100) / 100 };
+    }
+    if (lo >= hi) lo = r5(hi * 0.6);
   }
-  return { min: lo, max: hi, halte: r5(halte), acwrGrenze: acwrGrenze != null ? r5(acwrGrenze) : null, gedeckelt, persoenlich };
+  return { min: lo, max: hi, halte: r5(halte), acwrGrenze: acwrGrenze != null ? r5(acwrGrenze) : null, gedeckelt, persoenlich, untergrenze };
 }
 function lageImRahmen(load, e) {
   if (load == null || !e) return null;
