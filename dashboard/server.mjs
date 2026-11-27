@@ -418,7 +418,7 @@ app.post('/api/garmin/anfrage/status', (req, res) => {
 // Trainingsbereitschaft, akute/chronische Last, ACWR, Trainingszustand und Ausdauerwert und meldet sie hier.
 // Nur für die Anzeige (Uhr, Zifferblätter, Widget, Heute-Seite). Die Timeline bleibt die Wahrheit, das Votum
 // rechnet weiter mit den Morgenwerten.
-const LIVE_FELDER = { tr: [0, 100], atl: [0, 5000], ctl: [0, 5000], acwr: [0, 10], es: [0, 15000], erholH: [0, 200], vo2: [10, 100], hrv: [5, 250], hrvLo: [5, 250], hrvHi: [5, 250], rhr: [25, 120], schlafScore: [0, 100], schlafH: [0, 16], bbAufwachen: [0, 100] };
+const LIVE_FELDER = { erholHMorgen: [0, 200], tr: [0, 100], atl: [0, 5000], ctl: [0, 5000], acwr: [0, 10], es: [0, 15000], erholH: [0, 200], vo2: [10, 100], hrv: [5, 250], hrvLo: [5, 250], hrvHi: [5, 250], rhr: [25, 120], schlafScore: [0, 100], schlafH: [0, 16], bbAufwachen: [0, 100] };
 app.post('/api/garmin/live', (req, res) => {
   const b = req.body || {};
   const datum = String(b.datum || '');
@@ -436,14 +436,51 @@ app.post('/api/garmin/live', (req, res) => {
       typ: String(x?.typ ?? '').slice(0, 30), min: Math.max(0, Math.min(1440, Math.round(Number(x?.min) || 0))), last: Math.max(0, Math.min(2000, Math.round(Number(x?.last) || 0))),
     })).sort((p, q) => p.start.localeCompare(q.start));
   }
+  // 27.11.2026: Garmin-Belastungsfokus (4-Wochen-Last je Bereich gegen Garmins Zielbereich) fürs Votum
+  if (b.fokus && typeof b.fokus === 'object') {
+    const f = {};
+    for (const k of ['lo', 'hi', 'an', 'loMin', 'loMax', 'hiMin', 'hiMax', 'anMin', 'anMax']) {
+      const v = Number(b.fokus[k]);
+      f[k] = b.fokus[k] != null && Number.isFinite(v) && v >= 0 && v <= 100000 ? Math.round(v) : null;
+    }
+    if (b.fokus.phrase != null) f.phrase = String(b.fokus.phrase).slice(0, 60);
+    if (['lo', 'hi', 'an'].some((k) => f[k] != null)) w.fokus = f;
+  }
   setSetting('garmin_live', JSON.stringify(w));
   try { globalThis.ckWidgetNeu?.(); } catch {}
   res.json({ ok: true, gespeichert: Object.keys(w).length - 3 });
 });
-app.get('/api/garmin/live', (req, res) => {
-  let w = null;
+// 27.11.2026: Garmin-Tagesvorschlag (von Marc auf der Uhr oder im Cockpit eingetragen) – Zweitmeinung zum Votum
+const VORSCHLAG_TYPEN = ['ruhe', 'erholung', 'basis', 'lang', 'tempo', 'schwelle', 'vo2max', 'anaerob'];
+const heuteBerlin = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+function garminVorschlagSetzen(b) {
+  const typ = String(b?.typ || '').toLowerCase();
+  if (typ === 'loeschen') { setSetting('garmin_vorschlag', ''); try { globalThis.ckWidgetNeu?.(); } catch {} return { ok: true, vorschlag: null }; }
+  if (!VORSCHLAG_TYPEN.includes(typ)) return { ok: false, error: 'Typ unbekannt.' };
+  const min = typ === 'ruhe' ? 0 : Math.round(Number(b?.min));
+  if (typ !== 'ruhe' && !(min >= 5 && min <= 600)) return { ok: false, error: 'Dauer 5–600 min.' };
+  const zone = /^Z[1-5](–Z[1-5])?$/.test(String(b?.zone || '')) ? String(b.zone) : null;
+  const v = { datum: heuteBerlin(), typ, min, zone, at: now() };
+  setSetting('garmin_vorschlag', JSON.stringify(v));
+  try { globalThis.ckWidgetNeu?.(); } catch {}
+  return { ok: true, vorschlag: v };
+}
+globalThis.ckGarminVorschlag = garminVorschlagSetzen;
+function liveMitVorschlag() {
+  let w = null, v = null;
   try { w = JSON.parse(getSetting('garmin_live') || 'null'); } catch { w = null; }
-  res.json({ ok: true, live: w });
+  try { v = JSON.parse(getSetting('garmin_vorschlag') || 'null'); } catch { v = null; }
+  if (v && v.datum !== heuteBerlin()) v = null;
+  if (v) w = { ...(w || { datum: v.datum }), vorschlag: v };
+  return w;
+}
+globalThis.ckLiveJson = () => JSON.stringify(liveMitVorschlag());
+app.get('/api/garmin/live', (req, res) => {
+  res.json({ ok: true, live: liveMitVorschlag() });
+});
+app.post('/api/garmin/vorschlag', (req, res) => {
+  const r = garminVorschlagSetzen(req.body || {});
+  res.status(r.ok ? 200 : 400).json(r);
 });
 
 // Workout an Garmin senden: Cockpit legt das fertige Workout als Auftrag ab, der Mac (60-s-Takt) lädt es

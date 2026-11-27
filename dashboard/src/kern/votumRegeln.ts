@@ -3,6 +3,7 @@
  * Verschoben aus src/screens/RecoveryPanel.tsx (Etappe 2). Einzige Quelle für Cockpit, Widgets und Server.
  */
 import { dedupeByDateKeepLast, toNum, type Range } from '../lib/api';
+import { garminDeckel, type GarminSignale } from './garminSignale';
 import { fmtNum } from '../lib/format';
 import { WINDOWS, rangeFor, type WinKey } from '../lib/windows';
 import { assessMonotony, type MonoAssessment } from '../lib/monotony';
@@ -146,6 +147,8 @@ export type RecoveryDay = {
   ruleVote?: Vote | null;
   /** Hinweise aus dem Erfahrungsmodell (nur heute) */
   erfahrung?: string[];
+  /** 27.11.2026: Garmin-Signale (nur heute, live vom Mac) */
+  garmin?: GarminSignale | null;
 };
 
 export function localIsoDate(d = new Date()) {
@@ -218,11 +221,13 @@ export function capVote(vote: Vote, max: Vote): Vote {
  * 5. Zwei oder mehr Warnsignale (orange/rot) → max. Easy
  * 6. ΔRHR ≥ +5 bpm und Readiness < 55 → Rest
  * 7. Befinden 3 → max. Train · 2 → max. Easy · 1 → Rest
+ * 9. Garmin (nur heute, kern/garminSignale.ts): Erholungszeit morgens ≥ 60 h → max. Easy · ≥ 36 h → max. Train ·
+ *    Trainingszustand Überlastet/Überzogen → max. Easy
  * 8. Belastung: ACWR > 1,3 → max. Train · ACWR > 1,5 → max. Easy
  *    Monotonie (Verlauf, lib/monotony.ts): 2 Tage > 2,0 nach 4–5 fordernden Tagen → Easy · bleibt > 2,5 → Easy + Ruhetag binnen 48 h ·
  *    > 3,0 → Easy + Entlastungstag · > 2,0 mit schlechter Erholung → keine Qualität · 5+ Tage ohne Entlastung → Easy
  */
-export type VoteGrund = 'readiness' | 'rot' | 'rhr_schlaf' | 'hrv' | 'warn2' | 'rhr_ready' | 'acwr' | 'mono' | 'befinden';
+export type VoteGrund = 'readiness' | 'rot' | 'rhr_schlaf' | 'hrv' | 'warn2' | 'rhr_ready' | 'acwr' | 'mono' | 'befinden' | 'garmin';
 
 export function decideVote(d: Omit<RecoveryDay, 'vote' | 'reasons' | 'bind'>): { vote: Vote | null; reasons: string[]; bind: VoteGrund | null } {
   if (d.readiness == null) return { vote: null, reasons: ['Readiness fehlt (Morgenwerte noch nicht erfasst).'], bind: null };
@@ -294,6 +299,12 @@ export function decideVote(d: Omit<RecoveryDay, 'vote' | 'reasons' | 'bind'>): {
       if (vote !== before) reasons.push('Befinden 3/5 → keine Qualitätseinheit.');
     }
   }
+  // 9. Garmin-Signale (nur heute): Erholungszeit am Morgen und Trainingszustand
+  for (const g of garminDeckel(d.garmin)) {
+    const before = vote;
+    senke(capVote(vote, g.cap), 'garmin');
+    if (vote !== before) reasons.push(g.grund);
+  }
   return { vote, reasons, bind };
 }
 
@@ -360,6 +371,7 @@ export function buildDays(raw: any[]): RecoveryDay[] {
         zone: String(r.Zone || ''),
       },
       befinden,
+      garmin: (r.__garmin as GarminSignale | undefined) ?? null,
       hasMorningData: readiness != null || rhr != null || sleepH != null,
       levels: {
         readiness: levelReadiness(readiness),

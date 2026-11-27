@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const VOTUM_KERN = path.join(path.dirname(fileURLToPath(import.meta.url)), 'votum.mjs');
 function votumRechnen() {
   return new Promise((resolve) => {
-    const p = spawn(process.execPath, [VOTUM_KERN], { stdio: ['ignore', 'pipe', 'pipe'] });
+    const p = spawn(process.execPath, [VOTUM_KERN], { stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, CK_LIVE: (globalThis.ckLiveJson ? globalThis.ckLiveJson() : '') || '' } });
     let out = '', err = '';
     const to = setTimeout(() => p.kill(), 90000);
     p.stdout.on('data', (b) => (out += b));

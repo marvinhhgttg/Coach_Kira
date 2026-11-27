@@ -27,9 +27,10 @@ export const GRUND_LABEL: Record<VoteGrund, string> = {
   acwr: 'ACWR',
   mono: 'Monotonie',
   befinden: 'Befinden',
+  garmin: 'Garmin-Erholung/-Zustand',
 };
 /** Schutzsignale: werden nie durch Erfahrung gelockert */
-export const SCHUTZ: VoteGrund[] = ['hrv', 'rhr_ready', 'befinden', 'rot'];
+export const SCHUTZ: VoteGrund[] = ['hrv', 'rhr_ready', 'befinden', 'rot', 'garmin'];
 export const MIN_N = 8;
 const MIN_N_ALLE = 12;
 import { persoenlicheBaender, type Baender } from '../kern/soll';

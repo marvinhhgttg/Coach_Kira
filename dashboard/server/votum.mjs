@@ -1356,7 +1356,7 @@ var require_react_development = __commonJS({
           }
           return dispatcher.useContext(Context);
         }
-        function useState9(initialState) {
+        function useState10(initialState) {
           var dispatcher = resolveDispatcher();
           return dispatcher.useState(initialState);
         }
@@ -1368,7 +1368,7 @@ var require_react_development = __commonJS({
           var dispatcher = resolveDispatcher();
           return dispatcher.useRef(initialValue);
         }
-        function useEffect7(create, deps) {
+        function useEffect8(create, deps) {
           var dispatcher = resolveDispatcher();
           return dispatcher.useEffect(create, deps);
         }
@@ -1380,7 +1380,7 @@ var require_react_development = __commonJS({
           var dispatcher = resolveDispatcher();
           return dispatcher.useLayoutEffect(create, deps);
         }
-        function useCallback(callback, deps) {
+        function useCallback2(callback, deps) {
           var dispatcher = resolveDispatcher();
           return dispatcher.useCallback(callback, deps);
         }
@@ -2147,11 +2147,11 @@ var require_react_development = __commonJS({
         exports.memo = memo;
         exports.startTransition = startTransition;
         exports.unstable_act = act;
-        exports.useCallback = useCallback;
+        exports.useCallback = useCallback2;
         exports.useContext = useContext;
         exports.useDebugValue = useDebugValue;
         exports.useDeferredValue = useDeferredValue;
-        exports.useEffect = useEffect7;
+        exports.useEffect = useEffect8;
         exports.useId = useId;
         exports.useImperativeHandle = useImperativeHandle;
         exports.useInsertionEffect = useInsertionEffect;
@@ -2159,7 +2159,7 @@ var require_react_development = __commonJS({
         exports.useMemo = useMemo4;
         exports.useReducer = useReducer;
         exports.useRef = useRef3;
-        exports.useState = useState9;
+        exports.useState = useState10;
         exports.useSyncExternalStore = useSyncExternalStore;
         exports.useTransition = useTransition;
         exports.version = ReactVersion;
@@ -3091,11 +3091,11 @@ var require_react_jsx_runtime_development = __commonJS({
             return jsxWithValidation(type, props, key, false);
           }
         }
-        var jsx7 = jsxWithValidationDynamic;
-        var jsxs7 = jsxWithValidationStatic;
+        var jsx8 = jsxWithValidationDynamic;
+        var jsxs8 = jsxWithValidationStatic;
         exports.Fragment = REACT_FRAGMENT_TYPE;
-        exports.jsx = jsx7;
-        exports.jsxs = jsxs7;
+        exports.jsx = jsx8;
+        exports.jsxs = jsxs8;
       })();
     }
   }
@@ -3138,7 +3138,7 @@ if (!globalThis.__ckGsFetch && typeof globalThis.fetch === "function") {
 }
 
 // src/lib/engine.ts
-var import_react8 = __toESM(require_react(), 1);
+var import_react9 = __toESM(require_react(), 1);
 
 // src/lib/garmin.ts
 var import_react = __toESM(require_react(), 1);
@@ -3156,7 +3156,7 @@ function ctlStep(ctl, last, mittel28) {
 }
 
 // src/screens/RecoveryPanel.tsx
-var import_react7 = __toESM(require_react(), 1);
+var import_react8 = __toESM(require_react(), 1);
 
 // src/components/ZeitraumWahl.tsx
 var import_react2 = __toESM(require_react(), 1);
@@ -3271,9 +3271,53 @@ function lageImRahmen(load, e) {
   return load > e.max ? "dar\xFCber" : load < e.min ? "darunter" : "im Rahmen";
 }
 
+// src/kern/garminSignale.ts
+var fmt = (v, d = 0) => v.toLocaleString("de-DE", { minimumFractionDigits: d, maximumFractionDigits: d });
+var ERHOL_EASY_H = 60;
+var ERHOL_TRAIN_H = 36;
+function statusLabel(s2) {
+  const k = String(s2 || "").toUpperCase().replace(/_\d+$/, "");
+  const m = {
+    PRODUCTIVE: "Produktiv",
+    MAINTAINING: "Erhaltend",
+    RECOVERY: "Erholung",
+    UNPRODUCTIVE: "Unproduktiv",
+    DETRAINING: "Leistungsverlust",
+    PEAKING: "Leistungshoch",
+    STRAINED: "\xDCberlastet",
+    OVERREACHING: "\xDCberzogen",
+    NO_STATUS: "Kein Status"
+  };
+  return k ? m[k] || k : null;
+}
+function garminDeckel(s2) {
+  const out = [];
+  if (!s2) return out;
+  const e = s2.erholH;
+  if (e != null && Number.isFinite(e)) {
+    if (e >= ERHOL_EASY_H) out.push({ cap: "EASY", grund: `Garmin-Erholungszeit ${fmt(e)} h (\u2265 ${ERHOL_EASY_H} h) \u2192 maximal Easy.` });
+    else if (e >= ERHOL_TRAIN_H) out.push({ cap: "TRAIN", grund: `Garmin-Erholungszeit ${fmt(e)} h (\u2265 ${ERHOL_TRAIN_H} h) \u2192 keine Qualit\xE4tseinheit.` });
+  }
+  const k = String(s2.status || "").toUpperCase();
+  if (/^(STRAINED|OVERREACHING)/.test(k)) out.push({ cap: "EASY", grund: `Garmin-Trainingszustand \u201E${statusLabel(k)}\u201C \u2192 maximal Easy.` });
+  return out;
+}
+function signaleAusLive(live, heute3) {
+  if (!live || live.datum !== heute3) return null;
+  const erholH = live.erholHMorgen ?? null;
+  const s2 = { erholH: erholH != null ? Number(erholH) : null, status: live.status ?? null, fokus: live.fokus ?? null, vorschlag: live.vorschlag && live.vorschlag.datum === heute3 ? live.vorschlag : null };
+  return s2.erholH != null || s2.status || s2.fokus || s2.vorschlag ? s2 : null;
+}
+
+// src/components/GarminZweitmeinung.tsx
+var import_react5 = __toESM(require_react(), 1);
+
 // src/lib/cloudLLM.ts
 var SENTINEL = "__PORT_5000__";
 var SERVER_BASE = SENTINEL.startsWith("__PORT") ? "" : "/" + SENTINEL.replace(/^\/+/, "");
+
+// src/components/GarminZweitmeinung.tsx
+var import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
 
 // src/lib/format.ts
 function fmtNum(v, digits = 0) {
@@ -3285,11 +3329,11 @@ function fmtNum(v, digits = 0) {
 }
 
 // src/components/UI.tsx
-var import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
 
 // src/screens/CorrelationPanel.tsx
-var import_react5 = __toESM(require_react(), 1);
-var import_jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
+var import_react6 = __toESM(require_react(), 1);
+var import_jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
 var VARS = [
   { key: "readiness", label: "Readiness", short: "Ready", unit: "" },
   { key: "hrv", label: "HRV", short: "HRV", unit: "ms" },
@@ -3374,8 +3418,8 @@ var TOURFORM_SKALA = {
 };
 
 // src/components/GarminSportProfilTile.tsx
-var import_react6 = __toESM(require_react(), 1);
-var import_jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
+var import_react7 = __toESM(require_react(), 1);
+var import_jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
 
 // src/lib/monotony.ts
 var MONO = { GUT: 1.5, NORMAL: 2, UNGUENSTIG: 2.5, WARNUNG: 3 };
@@ -3459,7 +3503,7 @@ var MONOTONIE_REGEL_TEXT = [
 ].join("\n");
 
 // src/screens/RecoveryPanel.tsx
-var import_jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime7 = __toESM(require_jsx_runtime(), 1);
 
 // src/lib/chatContext.ts
 var OLLAMA_HTTP = "http://localhost:11434";
@@ -3762,6 +3806,11 @@ function decideVote(d) {
       if (vote !== before) reasons.push("Befinden 3/5 \u2192 keine Qualit\xE4tseinheit.");
     }
   }
+  for (const g of garminDeckel(d.garmin)) {
+    const before = vote;
+    senke(capVote(vote, g.cap), "garmin");
+    if (vote !== before) reasons.push(g.grund);
+  }
   return { vote, reasons, bind };
 }
 function buildDays(raw) {
@@ -3816,6 +3865,7 @@ function buildDays(raw) {
         zone: String(r.Zone || "")
       },
       befinden,
+      garmin: r.__garmin ?? null,
       hasMorningData: readiness != null || rhr != null || sleepH != null,
       levels: {
         readiness: levelReadiness(readiness),
@@ -3867,7 +3917,15 @@ var [res, st] = await Promise.all([
   fetchChartData(rangeFor(30, 28, 90), RECOVERY_FETCH_METRICS),
   fetch(`${V2_URL}?mode=status&cb=${Date.now()}`, { redirect: "follow" }).then((r) => r.json()).catch((e) => ({ ok: false, error: String(e) }))
 ]);
-var days = buildDays(res?.data || []).filter((d) => d.date <= heute2);
+var garminHeute = (() => {
+  try {
+    return signaleAusLive(JSON.parse(process.env.CK_LIVE || "null"), heute2);
+  } catch {
+    return null;
+  }
+})();
+var rohZeilen = (res?.data || []).map((r) => garminHeute && String(r?.date || "").slice(0, 10) === heute2 ? { ...r, __garmin: garminHeute } : r);
+var days = buildDays(rohZeilen).filter((d) => d.date <= heute2);
 var t = days.find((d) => d.date === heute2) || null;
 var ti = t ? days.indexOf(t) : -1;
 var rahmen = t && ti > 0 ? lastEmpfehlung(t, days[ti - 1], await baenderLaden()) : null;

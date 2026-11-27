@@ -8,6 +8,7 @@ import { buildDays, RECOVERY_FETCH_METRICS, STUFE_COCKPIT, stufeSupervisor, verg
 import { fetchChartData, fetchPlanSimulationWithTimeout } from '../src/lib/api';
 import { lastEmpfehlung, lageImRahmen, persoenlicheBaender, type Baender } from '../src/kern/soll';
 import { rangeFor } from '../src/lib/windows';
+import { signaleAusLive } from '../src/kern/garminSignale';
 
 // 22.11.2026: persönliche Soll-Obergrenzen aus der ganzen Historie (wie Cockpit)
 let baenderJetzt: Baender | null = null;
@@ -29,7 +30,10 @@ const [res, st]: any[] = await Promise.all([
   fetchChartData(rangeFor(30, 28, 90), RECOVERY_FETCH_METRICS as any),
   fetch(`${V2_URL}?mode=status&cb=${Date.now()}`, { redirect: 'follow' }).then((r) => r.json()).catch((e) => ({ ok: false, error: String(e) })),
 ]);
-const days: RecoveryDay[] = buildDays(res?.data || []).filter((d) => d.date <= heute);
+// 27.11.2026: Garmin-Signale (live vom Mac) nur in die heutige Zeile
+const garminHeute = (() => { try { return signaleAusLive(JSON.parse(process.env.CK_LIVE || 'null'), heute); } catch { return null; } })();
+const rohZeilen = (res?.data || []).map((r: any) => (garminHeute && String(r?.date || '').slice(0, 10) === heute ? { ...r, __garmin: garminHeute } : r));
+const days: RecoveryDay[] = buildDays(rohZeilen).filter((d) => d.date <= heute);
 const t = days.find((d) => d.date === heute) || null;
 // Etappe 2b: Soll-Rahmen aus dem Kern gegen den Plan im Sheet (coachE_ESS_day bzw. Plan-Simulation Tag 1)
 const ti = t ? days.indexOf(t) : -1;

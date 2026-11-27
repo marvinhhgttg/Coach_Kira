@@ -1356,7 +1356,7 @@ var require_react_development = __commonJS({
           }
           return dispatcher.useContext(Context);
         }
-        function useState9(initialState) {
+        function useState10(initialState) {
           var dispatcher = resolveDispatcher();
           return dispatcher.useState(initialState);
         }
@@ -1368,7 +1368,7 @@ var require_react_development = __commonJS({
           var dispatcher = resolveDispatcher();
           return dispatcher.useRef(initialValue);
         }
-        function useEffect7(create, deps) {
+        function useEffect8(create, deps) {
           var dispatcher = resolveDispatcher();
           return dispatcher.useEffect(create, deps);
         }
@@ -1380,7 +1380,7 @@ var require_react_development = __commonJS({
           var dispatcher = resolveDispatcher();
           return dispatcher.useLayoutEffect(create, deps);
         }
-        function useCallback(callback, deps) {
+        function useCallback2(callback, deps) {
           var dispatcher = resolveDispatcher();
           return dispatcher.useCallback(callback, deps);
         }
@@ -2147,11 +2147,11 @@ var require_react_development = __commonJS({
         exports.memo = memo;
         exports.startTransition = startTransition;
         exports.unstable_act = act;
-        exports.useCallback = useCallback;
+        exports.useCallback = useCallback2;
         exports.useContext = useContext;
         exports.useDebugValue = useDebugValue;
         exports.useDeferredValue = useDeferredValue;
-        exports.useEffect = useEffect7;
+        exports.useEffect = useEffect8;
         exports.useId = useId;
         exports.useImperativeHandle = useImperativeHandle;
         exports.useInsertionEffect = useInsertionEffect;
@@ -2159,7 +2159,7 @@ var require_react_development = __commonJS({
         exports.useMemo = useMemo4;
         exports.useReducer = useReducer;
         exports.useRef = useRef3;
-        exports.useState = useState9;
+        exports.useState = useState10;
         exports.useSyncExternalStore = useSyncExternalStore;
         exports.useTransition = useTransition;
         exports.version = ReactVersion;
@@ -3091,11 +3091,11 @@ var require_react_jsx_runtime_development = __commonJS({
             return jsxWithValidation(type, props, key, false);
           }
         }
-        var jsx7 = jsxWithValidationDynamic;
-        var jsxs7 = jsxWithValidationStatic;
+        var jsx8 = jsxWithValidationDynamic;
+        var jsxs8 = jsxWithValidationStatic;
         exports.Fragment = REACT_FRAGMENT_TYPE;
-        exports.jsx = jsx7;
-        exports.jsxs = jsxs7;
+        exports.jsx = jsx8;
+        exports.jsxs = jsxs8;
       })();
     }
   }
@@ -4020,7 +4020,7 @@ function telegramMessages(frage, ctx) {
 }
 
 // src/screens/RecoveryPanel.tsx
-var import_react8 = __toESM(require_react(), 1);
+var import_react9 = __toESM(require_react(), 1);
 
 // src/components/ZeitraumWahl.tsx
 var import_react = __toESM(require_react(), 1);
@@ -4180,6 +4180,42 @@ function toNum(v) {
 // src/components/BefindenHinweis.tsx
 var import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
 
+// src/kern/garminSignale.ts
+var fmt = (v, d = 0) => v.toLocaleString("de-DE", { minimumFractionDigits: d, maximumFractionDigits: d });
+var ERHOL_EASY_H = 60;
+var ERHOL_TRAIN_H = 36;
+function statusLabel(s) {
+  const k = String(s || "").toUpperCase().replace(/_\d+$/, "");
+  const m = {
+    PRODUCTIVE: "Produktiv",
+    MAINTAINING: "Erhaltend",
+    RECOVERY: "Erholung",
+    UNPRODUCTIVE: "Unproduktiv",
+    DETRAINING: "Leistungsverlust",
+    PEAKING: "Leistungshoch",
+    STRAINED: "\xDCberlastet",
+    OVERREACHING: "\xDCberzogen",
+    NO_STATUS: "Kein Status"
+  };
+  return k ? m[k] || k : null;
+}
+function garminDeckel(s) {
+  const out = [];
+  if (!s) return out;
+  const e = s.erholH;
+  if (e != null && Number.isFinite(e)) {
+    if (e >= ERHOL_EASY_H) out.push({ cap: "EASY", grund: `Garmin-Erholungszeit ${fmt(e)} h (\u2265 ${ERHOL_EASY_H} h) \u2192 maximal Easy.` });
+    else if (e >= ERHOL_TRAIN_H) out.push({ cap: "TRAIN", grund: `Garmin-Erholungszeit ${fmt(e)} h (\u2265 ${ERHOL_TRAIN_H} h) \u2192 keine Qualit\xE4tseinheit.` });
+  }
+  const k = String(s.status || "").toUpperCase();
+  if (/^(STRAINED|OVERREACHING)/.test(k)) out.push({ cap: "EASY", grund: `Garmin-Trainingszustand \u201E${statusLabel(k)}\u201C \u2192 maximal Easy.` });
+  return out;
+}
+
+// src/components/GarminZweitmeinung.tsx
+var import_react6 = __toESM(require_react(), 1);
+var import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
+
 // src/lib/format.ts
 function fmtNum(v, digits = 0) {
   if (v === null || v === void 0 || !Number.isFinite(v)) return "\u2014";
@@ -4190,11 +4226,11 @@ function fmtNum(v, digits = 0) {
 }
 
 // src/components/UI.tsx
-var import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
 
 // src/screens/CorrelationPanel.tsx
-var import_react6 = __toESM(require_react(), 1);
-var import_jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
+var import_react7 = __toESM(require_react(), 1);
+var import_jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
 var VARS = [
   { key: "readiness", label: "Readiness", short: "Ready", unit: "" },
   { key: "hrv", label: "HRV", short: "HRV", unit: "ms" },
@@ -4315,8 +4351,8 @@ var TOURFORM_SKALA = {
 };
 
 // src/components/GarminSportProfilTile.tsx
-var import_react7 = __toESM(require_react(), 1);
-var import_jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
+var import_react8 = __toESM(require_react(), 1);
+var import_jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
 
 // src/kern/votumRegeln.ts
 var SLEEP_GOAL_H = 7.5;
@@ -4466,6 +4502,11 @@ function decideVote(d) {
       if (vote !== before) reasons.push("Befinden 3/5 \u2192 keine Qualit\xE4tseinheit.");
     }
   }
+  for (const g of garminDeckel(d.garmin)) {
+    const before = vote;
+    senke(capVote(vote, g.cap), "garmin");
+    if (vote !== before) reasons.push(g.grund);
+  }
   return { vote, reasons, bind };
 }
 function buildDays(raw) {
@@ -4520,6 +4561,7 @@ function buildDays(raw) {
         zone: String(r.Zone || "")
       },
       befinden,
+      garmin: r.__garmin ?? null,
       hasMorningData: readiness != null || rhr != null || sleepH != null,
       levels: {
         readiness: levelReadiness(readiness),
@@ -4537,7 +4579,7 @@ function buildDays(raw) {
 }
 
 // src/screens/RecoveryPanel.tsx
-var import_jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime7 = __toESM(require_jsx_runtime(), 1);
 function plannedDemand(p) {
   const zone = (p.zone || "").toUpperCase();
   const sport = (p.sport || "").toLowerCase();
@@ -4568,9 +4610,10 @@ var GRUND_LABEL = {
   rhr_ready: "Ruhepuls hoch + niedrige Bereitschaft",
   acwr: "ACWR",
   mono: "Monotonie",
-  befinden: "Befinden"
+  befinden: "Befinden",
+  garmin: "Garmin-Erholung/-Zustand"
 };
-var SCHUTZ = ["hrv", "rhr_ready", "befinden", "rot"];
+var SCHUTZ = ["hrv", "rhr_ready", "befinden", "rot", "garmin"];
 var MIN_N = 8;
 var MIN_N_ALLE = 12;
 var pos = (v) => typeof v === "number" && Number.isFinite(v) && v > 0 ? v : null;

@@ -1356,7 +1356,7 @@ var require_react_development = __commonJS({
           }
           return dispatcher.useContext(Context);
         }
-        function useState9(initialState) {
+        function useState10(initialState) {
           var dispatcher = resolveDispatcher();
           return dispatcher.useState(initialState);
         }
@@ -1368,7 +1368,7 @@ var require_react_development = __commonJS({
           var dispatcher = resolveDispatcher();
           return dispatcher.useRef(initialValue);
         }
-        function useEffect7(create, deps) {
+        function useEffect8(create, deps) {
           var dispatcher = resolveDispatcher();
           return dispatcher.useEffect(create, deps);
         }
@@ -1380,7 +1380,7 @@ var require_react_development = __commonJS({
           var dispatcher = resolveDispatcher();
           return dispatcher.useLayoutEffect(create, deps);
         }
-        function useCallback(callback, deps) {
+        function useCallback2(callback, deps) {
           var dispatcher = resolveDispatcher();
           return dispatcher.useCallback(callback, deps);
         }
@@ -2147,11 +2147,11 @@ var require_react_development = __commonJS({
         exports.memo = memo;
         exports.startTransition = startTransition;
         exports.unstable_act = act;
-        exports.useCallback = useCallback;
+        exports.useCallback = useCallback2;
         exports.useContext = useContext;
         exports.useDebugValue = useDebugValue;
         exports.useDeferredValue = useDeferredValue;
-        exports.useEffect = useEffect7;
+        exports.useEffect = useEffect8;
         exports.useId = useId;
         exports.useImperativeHandle = useImperativeHandle;
         exports.useInsertionEffect = useInsertionEffect;
@@ -2159,7 +2159,7 @@ var require_react_development = __commonJS({
         exports.useMemo = useMemo4;
         exports.useReducer = useReducer;
         exports.useRef = useRef3;
-        exports.useState = useState9;
+        exports.useState = useState10;
         exports.useSyncExternalStore = useSyncExternalStore;
         exports.useTransition = useTransition;
         exports.version = ReactVersion;
@@ -3091,11 +3091,11 @@ var require_react_jsx_runtime_development = __commonJS({
             return jsxWithValidation(type, props, key, false);
           }
         }
-        var jsx7 = jsxWithValidationDynamic;
-        var jsxs7 = jsxWithValidationStatic;
+        var jsx8 = jsxWithValidationDynamic;
+        var jsxs8 = jsxWithValidationStatic;
         exports.Fragment = REACT_FRAGMENT_TYPE;
-        exports.jsx = jsx7;
-        exports.jsxs = jsxs7;
+        exports.jsx = jsx8;
+        exports.jsxs = jsxs8;
       })();
     }
   }
@@ -3138,7 +3138,7 @@ if (!globalThis.__ckGsFetch && typeof globalThis.fetch === "function") {
 }
 
 // src/lib/engine.ts
-var import_react8 = __toESM(require_react(), 1);
+var import_react9 = __toESM(require_react(), 1);
 
 // src/lib/garmin.ts
 var import_react = __toESM(require_react(), 1);
@@ -3190,7 +3190,7 @@ function windowMean(reihe, win = CTL_MODEL.win) {
 }
 
 // src/screens/RecoveryPanel.tsx
-var import_react7 = __toESM(require_react(), 1);
+var import_react8 = __toESM(require_react(), 1);
 
 // src/kern/datenstand.ts
 var DATEN_LABEL = {
@@ -3339,9 +3339,123 @@ function lastEmpfehlung(today, yesterday, baender) {
   return { min: lo, max: hi, halte: r5(halte), acwrGrenze: acwrGrenze != null ? r5(acwrGrenze) : null, gedeckelt, persoenlich, untergrenze };
 }
 
+// src/kern/garminSignale.ts
+var VORSCHLAG_LABEL = {
+  ruhe: "Ruhe",
+  erholung: "Erholung",
+  basis: "Basis",
+  lang: "Lang",
+  tempo: "Tempo",
+  schwelle: "Schwelle",
+  vo2max: "VO2max",
+  anaerob: "Anaerob"
+};
+var VORSCHLAG_VOTUM = {
+  ruhe: "REST",
+  erholung: "EASY",
+  basis: "TRAIN",
+  lang: "TRAIN",
+  tempo: "QUALITY",
+  schwelle: "QUALITY",
+  vo2max: "QUALITY",
+  anaerob: "QUALITY"
+};
+var VORSCHLAG_ZONE = {
+  ruhe: "",
+  erholung: "Z2",
+  basis: "Z2",
+  lang: "Z2",
+  tempo: "Z3",
+  schwelle: "Z4",
+  vo2max: "Z5",
+  anaerob: "Z5"
+};
+var ORDER = ["REST", "EASY", "TRAIN", "QUALITY"];
+var LABEL = { QUALITY: "Quality", TRAIN: "Train", EASY: "Easy", REST: "Rest" };
+var fmt = (v, d = 0) => v.toLocaleString("de-DE", { minimumFractionDigits: d, maximumFractionDigits: d });
+var ERHOL_EASY_H = 60;
+var ERHOL_TRAIN_H = 36;
+function statusLabel(s) {
+  const k = String(s || "").toUpperCase().replace(/_\d+$/, "");
+  const m = {
+    PRODUCTIVE: "Produktiv",
+    MAINTAINING: "Erhaltend",
+    RECOVERY: "Erholung",
+    UNPRODUCTIVE: "Unproduktiv",
+    DETRAINING: "Leistungsverlust",
+    PEAKING: "Leistungshoch",
+    STRAINED: "\xDCberlastet",
+    OVERREACHING: "\xDCberzogen",
+    NO_STATUS: "Kein Status"
+  };
+  return k ? m[k] || k : null;
+}
+function garminDeckel(s) {
+  const out = [];
+  if (!s) return out;
+  const e = s.erholH;
+  if (e != null && Number.isFinite(e)) {
+    if (e >= ERHOL_EASY_H) out.push({ cap: "EASY", grund: `Garmin-Erholungszeit ${fmt(e)} h (\u2265 ${ERHOL_EASY_H} h) \u2192 maximal Easy.` });
+    else if (e >= ERHOL_TRAIN_H) out.push({ cap: "TRAIN", grund: `Garmin-Erholungszeit ${fmt(e)} h (\u2265 ${ERHOL_TRAIN_H} h) \u2192 keine Qualit\xE4tseinheit.` });
+  }
+  const k = String(s.status || "").toUpperCase();
+  if (/^(STRAINED|OVERREACHING)/.test(k)) out.push({ cap: "EASY", grund: `Garmin-Trainingszustand \u201E${statusLabel(k)}\u201C \u2192 maximal Easy.` });
+  return out;
+}
+function fokusHinweis(vote, f) {
+  if (!f) return { mangel: [], text: null };
+  const mangel = [];
+  const unter = (v, min) => v != null && min != null && min > 0 && v < min;
+  if (unter(f.lo, f.loMin)) mangel.push("lo");
+  if (unter(f.hi, f.hiMin)) mangel.push("hi");
+  if (unter(f.an, f.anMin)) mangel.push("an");
+  const name = { lo: "niedrig aerob (Z1\u2013Z2)", hi: "hoch aerob (Z3\u2013Z4)", an: "anaerob (Z5, Sprints)" };
+  if (!mangel.length) return { mangel, text: "Garmin-Belastungsfokus ausgeglichen." };
+  const erlaubt = (m) => m === "lo" ? vote !== "REST" : m === "hi" ? vote === "TRAIN" || vote === "QUALITY" : vote === "QUALITY";
+  const jetzt = mangel.filter(erlaubt);
+  const spaeter = mangel.filter((m) => !erlaubt(m));
+  const teile = [];
+  if (jetzt.length) teile.push(`Schwerpunkt heute: ${jetzt.map((m) => name[m]).join(" und ")} \u2013 dort fehlt dir laut Garmin Belastung`);
+  if (spaeter.length) teile.push(`${spaeter.map((m) => name[m]).join(" und ")} fehlt auch, passt aber nicht zum Votum ${vote ? LABEL[vote] : "\u2013"}`);
+  return { mangel, text: teile.join("; ") + "." };
+}
+function vorschlagAbgleich(vote, v, ess, rahmen) {
+  if (!v || !VORSCHLAG_VOTUM[v.typ]) return null;
+  const anspruch = VORSCHLAG_VOTUM[v.typ];
+  const zone = v.zone || VORSCHLAG_ZONE[v.typ];
+  const titel = v.typ === "ruhe" ? "Ruhe" : `${v.min} min ${VORSCHLAG_LABEL[v.typ]}${zone ? ` ${zone}` : ""}`;
+  let urteil = "offen";
+  let text = `Garmin schl\xE4gt vor: ${titel}${ess != null && v.typ !== "ruhe" ? ` (\u2248 ${ess} ESS)` : ""}`;
+  if (vote) {
+    const d = ORDER.indexOf(anspruch) - ORDER.indexOf(vote);
+    urteil = d === 0 ? "gleich" : d > 0 ? "garmin_mehr" : "garmin_weniger";
+    text += urteil === "gleich" ? ` \u2013 passt zu Kiras Votum ${LABEL[vote]}.` : urteil === "garmin_mehr" ? ` \u2013 mehr als Kiras Votum ${LABEL[vote]}; Kira bleibt bei ${LABEL[vote]}.` : ` \u2013 vorsichtiger als Kiras Votum ${LABEL[vote]}; Garmins Vorschlag ist heute die sichere Wahl.`;
+  } else text += ".";
+  const lage = rahmen && ess != null && v.typ !== "ruhe" ? ess > rahmen.max ? "dar\xFCber" : ess < rahmen.min ? "darunter" : "im Rahmen" : null;
+  return { titel, anspruch, urteil, ess, lage, text };
+}
+function vorschlagEss(v, raten) {
+  if (!v || v.typ === "ruhe") return v ? 0 : null;
+  if (!raten || raten.length < 5) return null;
+  const z = Number(String(v.zone || VORSCHLAG_ZONE[v.typ]).replace(/[^1-5]/g, "").slice(0, 1)) || 2;
+  return Math.round(v.min / 60 * raten[z - 1] / 5) * 5;
+}
+function signaleAusLive(live, heute2) {
+  if (!live || live.datum !== heute2) return null;
+  const erholH = live.erholHMorgen ?? null;
+  const s = { erholH: erholH != null ? Number(erholH) : null, status: live.status ?? null, fokus: live.fokus ?? null, vorschlag: live.vorschlag && live.vorschlag.datum === heute2 ? live.vorschlag : null };
+  return s.erholH != null || s.status || s.fokus || s.vorschlag ? s : null;
+}
+
+// src/components/GarminZweitmeinung.tsx
+var import_react5 = __toESM(require_react(), 1);
+
 // src/lib/cloudLLM.ts
 var SENTINEL = "__PORT_5000__";
 var SERVER_BASE = SENTINEL.startsWith("__PORT") ? "" : "/" + SENTINEL.replace(/^\/+/, "");
+
+// src/components/GarminZweitmeinung.tsx
+var import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
 
 // src/lib/format.ts
 function fmtNum(v, digits = 0) {
@@ -3353,11 +3467,11 @@ function fmtNum(v, digits = 0) {
 }
 
 // src/components/UI.tsx
-var import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
 
 // src/screens/CorrelationPanel.tsx
-var import_react5 = __toESM(require_react(), 1);
-var import_jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
+var import_react6 = __toESM(require_react(), 1);
+var import_jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
 var VARS = [
   { key: "readiness", label: "Readiness", short: "Ready", unit: "" },
   { key: "hrv", label: "HRV", short: "HRV", unit: "ms" },
@@ -3442,8 +3556,8 @@ var TOURFORM_SKALA = {
 };
 
 // src/components/GarminSportProfilTile.tsx
-var import_react6 = __toESM(require_react(), 1);
-var import_jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
+var import_react7 = __toESM(require_react(), 1);
+var import_jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
 
 // src/lib/monotony.ts
 var MONO = { GUT: 1.5, NORMAL: 2, UNGUENSTIG: 2.5, WARNUNG: 3 };
@@ -3527,7 +3641,7 @@ var MONOTONIE_REGEL_TEXT = [
 ].join("\n");
 
 // src/screens/RecoveryPanel.tsx
-var import_jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime7 = __toESM(require_jsx_runtime(), 1);
 
 // src/lib/chatContext.ts
 var OLLAMA_HTTP = "http://localhost:11434";
@@ -3837,6 +3951,11 @@ function decideVote(d) {
       if (vote !== before) reasons.push("Befinden 3/5 \u2192 keine Qualit\xE4tseinheit.");
     }
   }
+  for (const g of garminDeckel(d.garmin)) {
+    const before = vote;
+    senke(capVote(vote, g.cap), "garmin");
+    if (vote !== before) reasons.push(g.grund);
+  }
   return { vote, reasons, bind };
 }
 function buildDays(raw) {
@@ -3891,6 +4010,7 @@ function buildDays(raw) {
         zone: String(r.Zone || "")
       },
       befinden,
+      garmin: r.__garmin ?? null,
       hasMorningData: readiness != null || rhr != null || sleepH != null,
       levels: {
         readiness: levelReadiness(readiness),
@@ -5255,7 +5375,19 @@ var LIVE = (() => {
 })();
 var liveSumme = () => LIVE && Array.isArray(LIVE.akt) ? Math.round(LIVE.akt.reduce((s, x) => s + (Number(x.last) > 0 ? Number(x.last) : 0), 0)) : 0;
 var vorlaeufig = false;
+function mitGarmin(rows, heute2) {
+  const g = signaleAusLive(LIVE, heute2);
+  if (!g) return rows;
+  const i = rows.findIndex((r) => String(r?.date || "").slice(0, 10) === heute2);
+  if (i < 0) return rows;
+  const out = rows.slice();
+  out[i] = { ...rows[i], __garmin: g };
+  return out;
+}
 function mitLiveMorgen(rows, heute2) {
+  return mitGarmin(mitLiveMorgenRoh(rows, heute2), heute2);
+}
+function mitLiveMorgenRoh(rows, heute2) {
   if (!LIVE) return rows;
   if (process.env.CK_TEST_OHNE_MORGEN === "1") rows = rows.map((r) => String(r?.date || "").slice(0, 10) === heute2 ? { ...r, Garmin_Training_Readiness: null, rhr_bpm: null, sleep_hours: null, sleep_score_0_100: null, hrv_status: null, hrv_threshholds: null } : r);
   const hatMorgen = (r) => r && [r.Garmin_Training_Readiness, r.rhr_bpm, r.sleep_hours].some((v) => num(v) != null && num(v) > 0);
@@ -5909,7 +6041,31 @@ if (process.argv[2] === "--tour") {
   } catch {
   }
   const { _rahmen: _r, ...hRest } = h;
-  process.stdout.write(JSON.stringify({ ok: true, stand: (/* @__PURE__ */ new Date()).toISOString(), ...hRest, ziel: z, form: f, uhr: u }));
+  let garmin = null;
+  try {
+    const t = tageMerk.length ? tageMerk[tageMerk.length - 1] : null;
+    const g = t && t.date === iso() ? t.garmin : null;
+    if (g) {
+      const vote = t.vote ?? null;
+      const sp = String(hRest.last?.sportHeute || "");
+      const raten = u?.feld?.raten ? /bike|rad|gravel|cycl/i.test(sp) ? u.feld.raten.rad : u.feld.raten.lauf : null;
+      const ess = vorschlagEss(g.vorschlag, raten);
+      const r = h._rahmen;
+      const fk = fokusHinweis(vote, g.fokus);
+      const ab = vorschlagAbgleich(vote, g.vorschlag, ess, r ? { min: r.min, max: r.max } : null);
+      garmin = {
+        erholH: g.erholH ?? null,
+        status: g.status ?? null,
+        statusText: statusLabel(g.status),
+        deckel: garminDeckel(g).map((x) => x.grund),
+        fokus: fk.text,
+        fokusMangel: fk.mangel,
+        vorschlag: g.vorschlag ? { ...g.vorschlag, ess, titel: ab?.titel ?? null, urteil: ab?.urteil ?? null, lage: ab?.lage ?? null, text: ab?.text ?? null } : null
+      };
+    }
+  } catch {
+  }
+  process.stdout.write(JSON.stringify({ ok: true, stand: (/* @__PURE__ */ new Date()).toISOString(), ...hRest, garmin, ziel: z, form: f, uhr: u }));
 }
 /*! Bundled license information:
 

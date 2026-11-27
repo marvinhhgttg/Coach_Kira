@@ -7,13 +7,15 @@ Garmin-Werte und meldet sie an das Cockpit (POST /api/garmin/live, Mac-Schlüsse
   atl     akute Last, ctl chronische Last, acwr Verhältnis akut/chronisch
   status  Trainingszustand (Garmin-Kürzel)
   es      Ausdauerwert
-  erholH  Erholungszeit in Stunden, vo2 VO2max
+  erholH  Erholungszeit in Stunden (erholHMorgen: erster Wert des Tages, fürs Votum), vo2 VO2max
+  fokus   Belastungsfokus (4-Wochen-Last je Bereich mit Garmins Zielbereich, seit 27.11.2026 im Votum)
   hrv     Herzratenvariabilität (Nachtschnitt), hrvLo/Hi Unter-/Obergrenze, Status
   schlafScore   Schlafqualität-Score, schlafH Schlafdauer (Stunden)
   rhr     Ruhepuls, bbAufwachen    Body Battery beim Aufwachen
 
-Nur Anzeige: Uhr, Zifferblätter, iPhone-Widget und Heute-Seite. Die Timeline (Wahrheit) und die
-Garmin-Skills bleiben unverändert; das Votum rechnet weiter mit den Morgenwerten.
+Anzeige: Uhr, Zifferblätter, iPhone-Widget und Heute-Seite. Seit 27.11.2026 gehen Erholungszeit (Morgen),
+Trainingszustand und Belastungsfokus als Garmin-Regelstufe ins heutige Votum ein (nur senken, nur heute).
+Die Timeline (Wahrheit) und die Garmin-Skills bleiben unverändert.
 Ausnahme von der Projektregel „kein Ersatz-Workflow liest Garmin Connect“ – von Marc am 23.11.2026 freigegeben.
 
   kira_garmin_live.py          Abruf + Meldung (nachts 00:00–04:29 still), danach kira_auto.lauf (Automatik)
@@ -91,6 +93,9 @@ def abrufen(g, tag: str) -> dict:
             m0 = min(tr, key=lambda x: str(x.get("timestampLocal") or x.get("timestamp") or ""))
             w["trMorgen"] = m0.get("score")
             w["trMorgenZeit"] = str(m0.get("timestampLocal") or m0.get("timestamp") or "")[11:16]
+            # 27.11.2026: Erholungszeit am Morgen fürs Votum (der Wert nach dem Training würde es nachträglich ändern)
+            if m0.get("recoveryTime") is not None:
+                w["erholHMorgen"] = round(float(m0["recoveryTime"]) / 60.0, 1)
             x = max(tr, key=lambda x: str(x.get("timestampLocal") or x.get("timestamp") or ""))
             w["tr"] = x.get("score")
             w["trZeit"] = str(x.get("timestampLocal") or x.get("timestamp") or "")[11:16]
@@ -112,6 +117,20 @@ def abrufen(g, tag: str) -> dict:
         st = suche(ts, "trainingStatusFeedbackPhrase")
         if st:
             w["status"] = st
+        # 27.11.2026: Belastungsfokus (4-Wochen-Last niedrig aerob / hoch aerob / anaerob gegen Garmins Zielbereich)
+        lb = suche(ts, "metricsTrainingLoadBalanceDTOMap")
+        if isinstance(lb, dict) and lb:
+            x = next((v for v in lb.values() if isinstance(v, dict) and v.get("primaryTrainingDevice")), None) or next((v for v in lb.values() if isinstance(v, dict)), None)
+            if x:
+                f = {
+                    "lo": x.get("monthlyLoadAerobicLow"), "hi": x.get("monthlyLoadAerobicHigh"), "an": x.get("monthlyLoadAnaerobic"),
+                    "loMin": x.get("monthlyLoadAerobicLowTargetMin"), "loMax": x.get("monthlyLoadAerobicLowTargetMax"),
+                    "hiMin": x.get("monthlyLoadAerobicHighTargetMin"), "hiMax": x.get("monthlyLoadAerobicHighTargetMax"),
+                    "anMin": x.get("monthlyLoadAnaerobicTargetMin"), "anMax": x.get("monthlyLoadAnaerobicTargetMax"),
+                    "phrase": x.get("trainingBalanceFeedbackPhrase"),
+                }
+                if any(f[k] is not None for k in ("lo", "hi", "an")):
+                    w["fokus"] = {k: v for k, v in f.items() if v is not None}
         vo2 = suche(ts, "vo2MaxPreciseValue") or suche(ts, "vo2MaxValue")
         if vo2:
             w["vo2"] = vo2

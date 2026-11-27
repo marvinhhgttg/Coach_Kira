@@ -24,7 +24,7 @@ const ERLAUBT = {
 const TEXT = new Set(['hrv_threshholds', 'Trainingszustand', 'Sport_x', 'Zone']);
 const SPORT_OK = new Set(['Run', 'Bike', 'Hike', 'Row', 'Swim', 'Skike', 'Ski']);
 const ZUSTAND_OK = new Set(['Formaufbau', 'Formerhalt', 'Höchstform', 'Höchstleistung', 'Erholung', 'Unproduktiv', 'Formverlust', 'Überlastung', 'Ermüdet']);
-const SICHERN = ['widget_geraete', 'dashboard_token', 'pin_hash', 'pin_salt', 'wochenplan', 'wochen_budget', 'geraete_einstellungen', 'texte_einstellung', 'auto_einstellung', 'auto_vorschlag', 'garmin_workouts', 'sitzungen'];
+const SICHERN = ['widget_geraete', 'dashboard_token', 'pin_hash', 'pin_salt', 'wochenplan', 'wochen_budget', 'geraete_einstellungen', 'texte_einstellung', 'auto_einstellung', 'auto_vorschlag', 'garmin_workouts', 'sitzungen', 'garmin_vorschlag'];
 const STANDARD = { formular: true, hinweise: true, plancheck: true, workout: true, erfolg: true };
 
 const heute = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });

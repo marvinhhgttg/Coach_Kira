@@ -16,6 +16,8 @@ import {
 } from 'recharts';
 import { useErfahrung, useErfahrungAn } from '../lib/useErfahrung';
 import { persoenlichesVotum } from '../lib/votumErfahrung';
+import { signaleAusLive } from '../kern/garminSignale';
+import GarminZweitmeinung from '../components/GarminZweitmeinung';
 import { ApiError, dedupeByDateKeepLast, fetchChartData, fetchPlanSimulationWithTimeout, saveWellbeing, toNum, type Range } from '../lib/api';
 import { proxySaveWellbeing } from '../lib/proxy';
 import { fmtDateShort, fmtNum } from '../lib/format';
@@ -741,6 +743,7 @@ function TodayCard({
               ))}
             </ul>
           )}
+          <GarminZweitmeinung vote={today.vote} />
           {today.ruleVote && today.vote && today.ruleVote !== today.vote && (
             <p className="mt-1 text-2xs text-ink-dim" data-testid="votum-regel">
               Regel-Votum {VOTE_LABEL[today.ruleVote]} · persönlich angepasst auf {VOTE_LABEL[today.vote]} (abschaltbar unter Analyse → Was Kira gelernt hat).
@@ -1111,7 +1114,7 @@ export function RecoveryPanel({
 
   const todayIso = localIsoDate();
   // 23.11.2026: Garmin-Livewert vom Mac (alle 10 min) hat Vorrang vor dem Timeline-Wert
-  const [garminLive, setGarminLive] = useState<{ datum: string; at: number; tr?: number; trZeit?: string } | null>(null);
+  const [garminLive, setGarminLive] = useState<{ datum: string; at: number; tr?: number; trZeit?: string; [k: string]: any } | null>(null);
   useEffect(() => {
     let aus = false;
     const holen = () => fetch(`${SERVER_BASE}/api/garmin/live?cb=${Date.now()}`, { cache: 'no-store' }).then((r) => r.json()).then((j) => { if (!aus) setGarminLive(j?.live ?? null); }).catch(() => {});
@@ -1146,7 +1149,10 @@ export function RecoveryPanel({
   const erfahrung = useErfahrung();
   const [erfahrungEin] = useErfahrungAn();
   const days = useMemo(() => {
-    const ds = raw ? buildDays(raw).filter((d) => d.date <= todayIso) : [];
+    // 27.11.2026: Garmin-Signale (Erholungszeit morgens, Trainingszustand, Fokus, Vorschlag) nur in die heutige Zeile
+    const gs = signaleAusLive(garminLive, todayIso);
+    const rows = raw && gs ? raw.map((r: any) => (String(r?.date || '').slice(0, 10) === todayIso ? { ...r, __garmin: gs } : r)) : raw;
+    const ds = rows ? buildDays(rows).filter((d) => d.date <= todayIso) : [];
     // Erfahrungsmodell: nur das heutige Votum persönlich anpassen (Historie bleibt Regel-Votum)
     const last = ds[ds.length - 1];
     if (last && last.date === todayIso && erfahrung) {
@@ -1154,7 +1160,7 @@ export function RecoveryPanel({
       ds[ds.length - 1] = { ...last, vote: p.vote, ruleVote: p.ruleVote, erfahrung: p.hinweise };
     }
     return ds;
-  }, [raw, todayIso, erfahrung, erfahrungEin]);
+  }, [raw, todayIso, erfahrung, erfahrungEin, garminLive]);
   const today = days.length && days[days.length - 1].date === todayIso ? days[days.length - 1] : null;
   const yesterday = today ? days[days.length - 2] || null : days[days.length - 1] || null;
   const stripDays = days.slice(-7);

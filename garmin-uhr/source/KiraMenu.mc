@@ -11,6 +11,7 @@ function kiraMenuZeigen() as Void {
         m.addItem(new WatchUi.MenuItem("Plan-Vorschlag", v.get("text") != null ? v.get("text").toString() : "", :plan, null));
     }
     m.addItem(new WatchUi.MenuItem("Befinden eintragen", "1 bis 5 für heute", :befinden, null));
+    m.addItem(new WatchUi.MenuItem("Garmin-Vorschlag", "Tagesvorschlag der Uhr an Kira", :gv, null));
     m.addItem(new WatchUi.MenuItem("Tour-Rechner", "ESS für eine geplante Tour", :tour, null));
     m.addItem(new WatchUi.MenuItem("Plan ändern", "ESS, Ruhetag, Tage tauschen", :planneu, null));
     m.addItem(new WatchUi.MenuItem("Neu laden", null, :laden, null));
@@ -39,6 +40,8 @@ class KiraMenuDelegate extends WatchUi.Menu2InputDelegate {
             p.addItem(new WatchUi.MenuItem("Übernehmen", "Lasten anpassen", :ja, null));
             p.addItem(new WatchUi.MenuItem("Verwerfen", "Plan bleibt", :nein, null));
             WatchUi.switchToView(p, new KiraPlanDelegate(), WatchUi.SLIDE_LEFT);
+        } else if (id == :gv) {
+            gvTypZeigen();
         } else if (id == :tour) {
             WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
             tourMenuZeigen(true);

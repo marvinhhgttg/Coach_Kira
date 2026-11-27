@@ -18,6 +18,7 @@ import { lerneModelle, vorwaerts } from '../src/lib/essRechner';
 import { atlStep, ctlStep, windowMean } from '../src/kern/formeln';
 import { eigeneBergtouren, eigeneSkitouren, setzeGarminTage, tourLastPersoenlich } from '../src/lib/tourEss';
 import { ladeP3, schlafKonto } from '../src/lib/paket3';
+import { fokusHinweis, garminDeckel, signaleAusLive, statusLabel, vorschlagAbgleich, vorschlagEss } from '../src/kern/garminSignale';
 
 // 22.11.2026: persönliche Soll-Obergrenzen aus der ganzen Historie (wie Cockpit)
 let baenderJetzt: Baender | null = null;
@@ -52,7 +53,20 @@ const LIVE: any = (() => {
 const liveSumme = (): number => (LIVE && Array.isArray(LIVE.akt) ? Math.round(LIVE.akt.reduce((s: number, x: any) => s + (Number(x.last) > 0 ? Number(x.last) : 0), 0)) : 0);
 let vorlaeufig = false;
 /** Stufe 1: fehlen die Morgenwerte im Sheet, setzt Kira die Garmin-Livewerte für heute ein (vorläufig, Sheet hat Vorrang). */
+/** 27.11.2026: Garmin-Signale (Erholungszeit morgens, Trainingszustand, Belastungsfokus, Vorschlag) nur in die heutige Zeile. */
+function mitGarmin(rows: any[], heute: string): any[] {
+  const g = signaleAusLive(LIVE, heute);
+  if (!g) return rows;
+  const i = rows.findIndex((r: any) => String(r?.date || '').slice(0, 10) === heute);
+  if (i < 0) return rows;
+  const out = rows.slice();
+  out[i] = { ...rows[i], __garmin: g };
+  return out;
+}
 function mitLiveMorgen(rows: any[], heute: string): any[] {
+  return mitGarmin(mitLiveMorgenRoh(rows, heute), heute);
+}
+function mitLiveMorgenRoh(rows: any[], heute: string): any[] {
   if (!LIVE) return rows;
   if (process.env.CK_TEST_OHNE_MORGEN === '1') rows = rows.map((r: any) => (String(r?.date || '').slice(0, 10) === heute ? { ...r, Garmin_Training_Readiness: null, rhr_bpm: null, sleep_hours: null, sleep_score_0_100: null, hrv_status: null, hrv_threshholds: null } : r));
   const hatMorgen = (r: any) => r && [r.Garmin_Training_Readiness, r.rhr_bpm, r.sleep_hours].some((v) => num(v) != null && (num(v) as number) > 0);
@@ -613,5 +627,25 @@ let u: any = null;
 try { u = await uhrTeil((h as any)._rahmen ?? null); } catch {}
 try { if (u) u.x = await extraTeil(h, z, u); } catch {}
 const { _rahmen: _r, ...hRest } = h as any;
-process.stdout.write(JSON.stringify({ ok: true, stand: new Date().toISOString(), ...hRest, ziel: z, form: f, uhr: u }));
+// 27.11.2026: Garmin-Signale und Garmin-Vorschlag (Zweitmeinung) für Uhr, iPhone und Cockpit
+let garmin: any = null;
+try {
+  const t = tageMerk.length ? tageMerk[tageMerk.length - 1] : null;
+  const g = t && t.date === iso() ? t.garmin : null;
+  if (g) {
+    const vote = t!.vote ?? null;
+    const sp = String((hRest as any).last?.sportHeute || '');
+    const raten = u?.feld?.raten ? (/bike|rad|gravel|cycl/i.test(sp) ? u.feld.raten.rad : u.feld.raten.lauf) : null;
+    const ess = vorschlagEss(g.vorschlag, raten);
+    const r = (h as any)._rahmen;
+    const fk = fokusHinweis(vote, g.fokus);
+    const ab = vorschlagAbgleich(vote, g.vorschlag, ess, r ? { min: r.min, max: r.max } : null);
+    garmin = {
+      erholH: g.erholH ?? null, status: g.status ?? null, statusText: statusLabel(g.status),
+      deckel: garminDeckel(g).map((x) => x.grund), fokus: fk.text, fokusMangel: fk.mangel,
+      vorschlag: g.vorschlag ? { ...g.vorschlag, ess, titel: ab?.titel ?? null, urteil: ab?.urteil ?? null, lage: ab?.lage ?? null, text: ab?.text ?? null } : null,
+    };
+  }
+} catch {}
+process.stdout.write(JSON.stringify({ ok: true, stand: new Date().toISOString(), ...hRest, garmin, ziel: z, form: f, uhr: u }));
 }

@@ -195,6 +195,22 @@ class KiraNetz {
         WatchUi.requestUpdate();
     }
 
+    // 27.11.2026: Garmin-Tagesvorschlag an Kira (Zweitmeinung zum Votum)
+    function garminVorschlag(body as Dictionary) as Void {
+        var tok = Storage.getValue("tok");
+        if (tok == null) { return; }
+        body.put("aktion", "garmin_vorschlag");
+        status = "sendet Garmin-Vorschlag ...";
+        WatchUi.requestUpdate();
+        Communications.makeWebRequest(KIRA_BASIS + "/api/widget/aktion", body,
+            {
+                :method => Communications.HTTP_REQUEST_METHOD_POST,
+                :headers => { "Authorization" => "Bearer " + tok, "Content-Type" => Communications.REQUEST_CONTENT_TYPE_JSON },
+                :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
+            },
+            method(:vorschlagFertig));
+    }
+
     // 25.11.2026: Tour-Rechner – Abschnitte an den Server, Ergebnis in kiraTourErg
     function tour(teile as Array) as Void {
         var tok = Storage.getValue("tok");

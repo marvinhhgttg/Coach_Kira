@@ -50,7 +50,7 @@ export function setupWidget(app, { getSetting, setSetting, originOk, texte, apps
   function rechnen() {
     if (laufend) return laufend;
     laufend = new Promise((resolve, reject) => {
-      const p = spawn(process.execPath, [KERN], { stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, CK_LIVE: getSetting('garmin_live') || '' } });
+      const p = spawn(process.execPath, [KERN], { stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, CK_LIVE: (globalThis.ckLiveJson ? globalThis.ckLiveJson() : getSetting('garmin_live')) || '' } });
       let out = '';
       let err = '';
       const to = setTimeout(() => p.kill('SIGKILL'), 120000);
@@ -236,7 +236,7 @@ export function setupWidget(app, { getSetting, setSetting, originOk, texte, apps
     if (!originOk(req)) return res.status(403).json({ ok: false, error: 'Herkunft nicht erlaubt.' });
     try {
       const a = await antwort(false);
-      res.json({ ok: true, datum: a.datum, vote: a.votum?.vote ?? null, readiness: a.morgen?.readiness ?? null, sollHeute: a.last?.sollHeute ?? null, sollText: a.last?.sollText ?? null, planHeute: a.last?.planHeute ?? null, acwr: a.last?.acwr ?? null, tourform: a.ziel?.tourform ?? null });
+      res.json({ ok: true, datum: a.datum, vote: a.votum?.vote ?? null, readiness: a.morgen?.readiness ?? null, sollHeute: a.last?.sollHeute ?? null, sollText: a.last?.sollText ?? null, planHeute: a.last?.planHeute ?? null, acwr: a.last?.acwr ?? null, tourform: a.ziel?.tourform ?? null, garmin: a.garmin ?? null });
     } catch (e) {
       res.status(502).json({ ok: false, error: String(e.message || e) });
     }
@@ -361,6 +361,13 @@ export function setupWidget(app, { getSetting, setSetting, originOk, texte, apps
       return Promise.resolve(f(req.body || {}))
         .then((r) => res.status(r.ok ? 200 : 409).json(r))
         .catch((e) => res.status(502).json({ ok: false, error: String(e.message || e) }));
+    }
+    // 27.11.2026: Garmin-Tagesvorschlag von der Uhr (Zweitmeinung zum Votum)
+    if (aktion === 'garmin_vorschlag') {
+      const f = globalThis.ckGarminVorschlag;
+      if (!f) return res.status(503).json({ ok: false, error: 'nicht verfügbar' });
+      const r = f(req.body || {});
+      return res.status(r.ok ? 200 : 400).json(r.ok ? { ...r, text: r.vorschlag ? 'Garmin-Vorschlag gespeichert.' : 'Garmin-Vorschlag gelöscht.' } : r);
     }
     if (aktion === 'briefing_lokal') {
       const [code, body] = texte.auftragStarten({ art: 'status', engine: 'local' });
